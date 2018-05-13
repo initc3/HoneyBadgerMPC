@@ -224,12 +224,18 @@ async def test_prog2(context):
     shares = context.read_shares(open(filename))
 
     print('[%d] read %d shares' % (context.myid, len(shares)))
-    a = await shares[0].open()
-    print(context.myid, "Finished", a)
+
+    for sval in shares:
+        s = await sval.open()
+        assert s == 0
+    print('[%d] Finished' % (context.myid,))
     
 
 # Run some test cases
 if __name__ == '__main__':
+    print('Generating random shares of zero in sharedata/')
+    generate_test_zeros('sharedata/test_zeros', 1000, 3, 2)
+    
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
