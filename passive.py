@@ -20,7 +20,7 @@ class PassiveMpc(object):
         self.myid = myid
 
         # send(j, o): sends object o to party j with (current sid)
-        # recv(): returns (j, o) from party j        
+        # recv(): returns (j, o) from party j
         self.send = send
         self.recv = recv
 
@@ -244,7 +244,7 @@ async def test_prog2(context):
 
     print('[%d] read %d shares' % (context.myid, len(shares)))
 
-    for share in shares:
+    for share in shares[:100]:
         s = await share.open()
         assert s == 0
     print('[%d] Finished' % (context.myid,))
@@ -262,5 +262,6 @@ if __name__ == '__main__':
     loop.set_debug(True)
     try:
         loop.run_until_complete(runProgramInNetwork(test_prog1, 3, 2))
+        loop.run_until_complete(runProgramInNetwork(test_prog2, 3, 2))
     finally:
         loop.close()
