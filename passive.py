@@ -114,9 +114,6 @@ class PassiveMpc(object):
         write_shares(f, Field.modulus, self.myid,
                      [share.v for share in shares])
 
-    # Create a share directly from the local element
-    def share_from_element(self, v):
-        return self.Share(v)
 
 def write_shares(f, modulus, degree, myid, shares):
     print(modulus, file=f)
@@ -151,7 +148,7 @@ def shareInContext(context):
         def __rmul__(self, other): return Share(self.v * other)
         # @typecheck(Share)
         # TODO 
-        def __rmul__(self, other): raise NotImplemented
+        def __mul__(self, other): raise NotImplemented
         
         def __str__(self): return '{%d}'% (self.v)
     return Share
@@ -214,19 +211,29 @@ def generate_test_randoms(prefix, k, N, t):
 ###############
 async def test_prog1(context):
 
-    a = context.share_from_element(1)
-    b = context.share_from_element(2)
+    filename = 'sharedata/test_zeros-%d.share' % (context.myid,)
+    zeros = context.read_shares(open(filename))
 
-    x = context.share_from_element(5)
-    y = context.share_from_element(10)
-    xy = context.share_from_element(15)
+    filename = 'sharedata/test_triples-%d.share' % (context.myid,)
+    triples = context.read_shares(open(filename))
 
-    D = (a - x).open()
-    E = (b - y).open()
+    # Example of Beaver multiplication
+    x = zeros[0] + context.Share(10)
+    y = zeros[1] + context.Share(15)
 
-    d,e = await asyncio.gather(D,E)
+    a,b,ab = triples[:3]
+    # assert await a.open() * await b.open() == await ab.open()
 
-    print("Finished", a,b,d,e)
+    D = await (x - a).open()
+    E = await (y - b).open()
+
+    # This is a random share of x*y
+    xy = context.Share(D*E) + D*b + E*a + ab
+
+    X,Y,XY = await x.open(), await y.open(), await xy.open()
+    assert X * Y == XY
+    
+    print("[%d] Finished" % (context.myid,), X,Y,XY)
 
 # Read zeros from file, open them
 async def test_prog2(context):
@@ -246,11 +253,13 @@ async def test_prog2(context):
 if __name__ == '__main__':
     print('Generating random shares of zero in sharedata/')
     generate_test_zeros('sharedata/test_zeros', 1000, 3, 2)
+    print('Generating random shares of triples in sharedata/')
+    generate_test_triples('sharedata/test_triples', 1000, 3, 2)
     
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        loop.run_until_complete(runProgramInNetwork(test_prog2, 3, 2))
+        loop.run_until_complete(runProgramInNetwork(test_prog1, 3, 2))
     finally:
         loop.close()
