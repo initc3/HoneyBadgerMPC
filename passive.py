@@ -48,7 +48,7 @@ class NetworkContext(object):
         # Set the result on the future representing this share
         self._openings[shareid].set_result(s)
 
-    def openSVal(self, sval):
+    def open_share(self, share):
         # Is this already present
         opening = asyncio.Future()
         shareid = len(self._openings)
@@ -56,7 +56,7 @@ class NetworkContext(object):
 
         # Broadcast share
         for j in range(self.N):
-            self.send(j, (shareid, sval.v))
+            self.send(j, (shareid, share.v))
 
         # Reconstruct if we already had enough shares
         try: self._reconstruct(shareid)
@@ -96,7 +96,7 @@ class NetworkContext(object):
         shares = []
         # remaining lines: shared values
         for line in lines:
-            shares.append(Share(self, int(line)))
+            shares.append(Share(int(line), self))
         return shares
 
     def write_shares(self, f, shares):
@@ -105,7 +105,7 @@ class NetworkContext(object):
 
     # Create a share directly from the local element
     def share_from_element(self, v):
-        return Share(self, v)
+        return Share(v, self)
 
 def write_shares(f, modulus, degree, myid, shares):
     print(modulus, file=f)
@@ -119,7 +119,7 @@ def write_shares(f, modulus, degree, myid, shares):
 ###############
 
 class Share(object):
-    def __init__(self, context, v, id=None):
+    def __init__(self, v, context=None, id=None):
         self.context = context
 
         # v is the local value of the share
@@ -130,17 +130,20 @@ class Share(object):
         #print('share created: {%d}' % (v,))
 
     # Publicly reconstruct a shared value
-    def open(self): return self.context.openSVal(self)
+    def open(self): return self.context.open_share(self)
        
-    # Linear combinations of shares can be performed directly
-    # TODO: add type check
+    # Linear combinations of shares can be computed directly
+    # TODO: add type checks for the operators
     # @typecheck(Share)
-    def __add__(self, other): return Share(self.context, self.v + other.v)
-    def __sub__(self, other): return Share(self.context, self.v - other.v)
-    def __radd__(self, other): return Share(self.context, self.v + other.v)
-    def __rsub__(self, other): return Share(self.context, -self.v + other.v)
+    def __add__(self, other): return Share(self.v + other.v, self.context)
+    def __sub__(self, other): return Share(self.v - other.v, self.context)
+    def __radd__(self, other): return Share(self.v + other.v, self.context)
+    def __rsub__(self, other): return Share(-self.v + other.v, self.context)
     # @typecheck(int,field)
-    def __rmul__(self, other): return Share(self.context, self.v * other)
+    def __rmul__(self, other): return Share(self.v * other, self.context)
+    # @typecheck(Share)
+    # TODO 
+    def __rmul__(self, other): raise NotImplemented
 
     def __str__(self): return '{%d}'% (self.v)
 
@@ -225,8 +228,8 @@ async def test_prog2(context):
 
     print('[%d] read %d shares' % (context.myid, len(shares)))
 
-    for sval in shares:
-        s = await sval.open()
+    for share in shares:
+        s = await share.open()
         assert s == 0
     print('[%d] Finished' % (context.myid,))
     
