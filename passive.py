@@ -53,7 +53,6 @@ class PassiveMpc(object):
         self._openings[shareid].set_result(s)
 
     def open_share(self, share):
-        # Is this already present
         opening = asyncio.Future()
         shareid = len(self._openings)
         self._openings.append(opening)
