@@ -42,7 +42,6 @@ class NetworkContext(object):
 
         # print('[%d] reconstruct %s' % (self.myid, shareid,))
 
-        # TODO refer to lagrange
         s = Poly.interpolate_at(shares)
 
         # Set the result on the future representing this share
