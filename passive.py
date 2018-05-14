@@ -7,24 +7,26 @@ import random
 
 class NotEnoughShares(Exception): pass
     
-class NetworkContext(object):
+class PassiveMpc(object):
 
-    def __init__(self, sid, N, t, myid, send, recv):
-        # send(j, o): sends object o to party j with (current sid)
-        # recv(): returns (j, o) from party j
+    def __init__(self, sid, N, t, myid, send, recv, prog):
+        # Parameters for passive secure MPC
         assert type(N) is int and type(t) is int
         #assert 3*t < N
-
         self.sid = sid
         self.N = N
         self.t = t
         self.myid = myid
+
+        # send(j, o): sends object o to party j with (current sid)
+        # recv(): returns (j, o) from party j        
         self.send = send
         self.recv = recv
 
         # A Viff program should only depend on common parameters,
         # and the values of opened shares. Opened shares will
         # returned in the order that share is encountered
+        self.prog = prog
 
         # Store deferreds representing SharedValues
         self._openings = []
@@ -32,6 +34,8 @@ class NetworkContext(object):
         # Store opened shares until ready to reconstruct
         # shareid => { [playerid => share] }        
         self._share_buffers = tuple( [] for _ in range(N) )
+
+        self.Share = shareInContext(self)
 
     def _reconstruct(self, shareid):
         # Are there enough shares to reconstruct?
@@ -63,8 +67,11 @@ class NetworkContext(object):
 
         # Return future
         return opening
-    
+
     async def _run(self):
+        return await self.prog(self)
+
+    async def _recvloop(self):
         while True:
             (j, (shareid, share)) = await self.recv()
             buf = self._share_buffers[j]
@@ -95,7 +102,7 @@ class NetworkContext(object):
         shares = []
         # remaining lines: shared values
         for line in lines:
-            shares.append(Share(int(line), self))
+            shares.append(self.Share(int(line)))
         return shares
 
     def write_shares(self, f, shares):
@@ -104,7 +111,7 @@ class NetworkContext(object):
 
     # Create a share directly from the local element
     def share_from_element(self, v):
-        return Share(v, self)
+        return self.Share(v)
 
 def write_shares(f, modulus, degree, myid, shares):
     print(modulus, file=f)
@@ -117,35 +124,34 @@ def write_shares(f, modulus, degree, myid, shares):
 # Share class 
 ###############
 
-class Share(object):
-    def __init__(self, v, context=None, id=None):
-        self.context = context
+def shareInContext(context):
+    class Share(object):
+        def __init__(self, v):
+            # v is the local value of the share
+            if type(v) is int: v = Field(v)
+            assert type(v) is Field
+            self.v = v
 
-        # v is the local value of the share
-        if type(v) is int: v = Field(v)
-        assert type(v) is Field
-        self.v = v
-
-        #print('share created: {%d}' % (v,))
-
-    # Publicly reconstruct a shared value
-    def open(self): return self.context.open_share(self)
+        # Publicly reconstruct a shared value
+        def open(self): return context.open_share(self)
        
-    # Linear combinations of shares can be computed directly
-    # TODO: add type checks for the operators
-    # @typecheck(Share)
-    def __add__(self, other): return Share(self.v + other.v, self.context)
-    def __sub__(self, other): return Share(self.v - other.v, self.context)
-    def __radd__(self, other): return Share(self.v + other.v, self.context)
-    def __rsub__(self, other): return Share(-self.v + other.v, self.context)
-    # @typecheck(int,field)
-    def __rmul__(self, other): return Share(self.v * other, self.context)
-    # @typecheck(Share)
-    # TODO 
-    def __rmul__(self, other): raise NotImplemented
+        # Linear combinations of shares can be computed directly
+        # TODO: add type checks for the operators
+        # @typecheck(Share)
+        def __add__(self, other): return Share(self.v + other.v)
+        def __sub__(self, other): return Share(self.v - other.v)
+        def __radd__(self, other): return Share(self.v + other.v)
+        def __rsub__(self, other): return Share(-self.v + other.v)
+        # @typecheck(int,field)
+        def __rmul__(self, other): return Share(self.v * other)
+        # @typecheck(Share)
+        # TODO 
+        def __rmul__(self, other): raise NotImplemented
+        
+        def __str__(self): return '{%d}'% (self.v)
+    return Share
 
-    def __str__(self): return '{%d}'% (self.v)
-
+#Share = shareInContext(None)
 
 # Create a fake network with N instances of the program
 async def runProgramInNetwork(program, N, t):
@@ -155,9 +161,9 @@ async def runProgramInNetwork(program, N, t):
     tasks = []
     bgtasks = []
     for i in range(N):
-        context = NetworkContext('sid', N, t, i, sends[i], recvs[i])
-        bgtasks.append(loop.create_task(context._run()))
-        tasks.append(program(context))
+        context = PassiveMpc('sid', N, t, i, sends[i], recvs[i], program)
+        tasks.append(loop.create_task(context._run()))
+        bgtasks.append(loop.create_task(context._recvloop()))
 
     await asyncio.gather(*tasks)
     for task in bgtasks: task.cancel()
