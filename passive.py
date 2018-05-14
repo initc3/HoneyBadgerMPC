@@ -11,8 +11,9 @@ class PassiveMpc(object):
 
     def __init__(self, sid, N, t, myid, send, recv, prog):
         # Parameters for passive secure MPC
+        # Note: tolerates min(t,N-t) crash faults
         assert type(N) is int and type(t) is int
-        #assert 3*t < N
+        assert t < N
         self.sid = sid
         self.N = N
         self.t = t
