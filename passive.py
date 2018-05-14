@@ -69,7 +69,12 @@ class PassiveMpc(object):
         return opening
 
     async def _run(self):
-        return await self.prog(self)
+        # Run receive loop as background task, until self.prog finishes
+        loop = asyncio.get_event_loop()
+        bgtask = loop.create_task(self._recvloop())
+        res = await self.prog(self)
+        bgtask.cancel()
+        return res
 
     async def _recvloop(self):
         while True:
@@ -163,10 +168,8 @@ async def runProgramInNetwork(program, N, t):
     for i in range(N):
         context = PassiveMpc('sid', N, t, i, sends[i], recvs[i], program)
         tasks.append(loop.create_task(context._run()))
-        bgtasks.append(loop.create_task(context._recvloop()))
 
     await asyncio.gather(*tasks)
-    for task in bgtasks: task.cancel()
 
 #######################
 # Generating test files
