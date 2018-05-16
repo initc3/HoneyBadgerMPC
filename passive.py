@@ -1,7 +1,6 @@
 import asyncio
 from field import GF
 from polynomial import polynomialsOver
-from collections import deque
 from router import simple_router
 import random
 
@@ -24,9 +23,10 @@ class PassiveMpc(object):
         self.send = send
         self.recv = recv
 
-        # A Viff program should only depend on common parameters,
-        # and the values of opened shares. Opened shares will
-        # returned in the order that share is encountered
+        # An Mpc program should only depend on common parameters,
+        # and the values of opened shares. Opened shares will be
+        # assigned an ID based on the order that share is encountered.
+        # So the protocol must encounter the shares in the same order.
         self.prog = prog
 
         # Store deferreds representing SharedValues
