@@ -1,6 +1,6 @@
 import asyncio
-from router import simple_router
 import random
+
 
 class ACS_Functionality(object):
     def __init__(self, sid, N, f):
@@ -28,26 +28,27 @@ class ACS_Functionality(object):
             # TODO: this needs to be made into an "eventually send"
             self.outputs[i].set_result(out)
 
-class ACS_IdealProtocol(object):
-    _instances = {} # mapping from (sid,myid) to functionality shared state
+def CommonSubset_IdealProtocol(N, f):
+    class ACS_IdealProtocol(object):
+        _instances = {} # mapping from (sid,myid) to functionality shared state
     
-    def __init__(self, sid, N, f, myid):
-        # Create the ideal functionality if not already present
-        if sid not in ACS_IdealProtocol._instances:
-            ACS_IdealProtocol._instances[sid] = ACS_Functionality(sid,N,f)
-        F_ACS = ACS_IdealProtocol._instances[sid]
+        def __init__(self, sid, myid):
+            # Create the ideal functionality if not already present
+            if sid not in ACS_IdealProtocol._instances:
+                ACS_IdealProtocol._instances[sid] = ACS_Functionality(sid,N,f)
+            F_ACS = ACS_IdealProtocol._instances[sid]
 
-        # Every party can provide one input
-        self.input = F_ACS.inputs[myid]
+            # Every party can provide one input
+            self.input = F_ACS.inputs[myid]
     
-        # The output is a future
-        self.output = F_ACS.outputs[myid]
-            
+            # The output is a future
+            self.output = F_ACS.outputs[myid]
+    return ACS_IdealProtocol
 
 
 async def _test_acs_ideal(sid='sid',N=4,f=1):
-    ACS_IdealProtocol._instances = {} # Clear state
-    parties = [ACS_IdealProtocol(sid,N,f,i) for i in range(N)]
+    ACS = CommonSubset_IdealProtocol(N, f)
+    parties = [ACS(sid,i) for i in range(N)]
 
     # Provide input
     # for i in range(N-1): # if set to N-1, will still succeed, but N-2 fails

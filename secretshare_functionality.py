@@ -1,9 +1,8 @@
 import asyncio
-from router import simple_router
 import random
 
 """
-Ideal functionality for Asynchronous Verifiable Secret Sharing (AVSS)
+Ideal functionality for Asynchronous Verifiable Secret Sharing (AVSS or SecretShare)
 
 The functionality definition for AVSS is very simple:
 - One party, the Dealer, may optionally provide input
@@ -12,7 +11,7 @@ The functionality definition for AVSS is very simple:
 This module also defines an Ideal Protocol. The Ideal Protocol matches the interface of AVSS protocol construction, meaning that there is an instance created for each party. However, the instances of Ideal Protocol (with the same `sid`) all share a singleton Functionality.
 """
 
-class AVSS_Functionality(object):
+class SecretShare_Functionality(object):
     def __init__(self, sid, N, inputFromDealer=None):
         self.sid = sid
         self.N = N
@@ -27,33 +26,34 @@ class AVSS_Functionality(object):
         v = await self.inputFromDealer
         for i in range(self.N):
             # TODO: this needs to be made into an "eventually send"
+            # TODO: needs to output a random secret share
             self.outputs[i].set_result(v)
 
-class AVSS_IdealProtocol(object):
-    _instances = {} # mapping from (sid,myid) to functionality shared state
+def SecretShare_IdealProtocol(N, f):
+    class SecretShare_IdealProtocol(object):
+        _instances = {} # mapping from (sid,myid) to functionality shared state
     
-    def __init__(self, sid, N, f, Dealer, myid):
-        self.sid = sid
-        self.N = N
-        self.f = f
-        self.Dealer = Dealer
-        # Create the ideal functionality if not already present
-        if sid not in AVSS_IdealProtocol._instances:
-            AVSS_IdealProtocol._instances[sid] = \
-            AVSS_Functionality(sid,N,inputFromDealer=asyncio.Future())
-        F_AVSS = AVSS_IdealProtocol._instances[sid]
+        def __init__(self, sid, Dealer, myid):
+            self.sid = sid
+            self.Dealer = Dealer
+            # Create the ideal functionality if not already present
+            if sid not in SecretShare_IdealProtocol._instances:
+                SecretShare_IdealProtocol._instances[sid] = \
+                SecretShare_Functionality(sid,N,inputFromDealer=asyncio.Future())
+            F_SecretShare = SecretShare_IdealProtocol._instances[sid]
 
-        # If dealer, then provide input
-        if myid == Dealer: self.inputFromDealer = F_AVSS.inputFromDealer
-        else: self.inputFromDealer = None
+            # If dealer, then provide input
+            if myid == Dealer: self.inputFromDealer = F_SecretShare.inputFromDealer
+            else: self.inputFromDealer = None
 
-        # A future representing the output is available
-        self.output = F_AVSS.outputs[myid]
-
+            # A future representing the output is available
+            self.output = F_SecretShare.outputs[myid]
+    return SecretShare_IdealProtocol
 
 async def test1(sid='sid', N=4, f=1, Dealer=0):
     # Create ideal protocol for all the parties
-    parties = [AVSS_IdealProtocol(sid,N,f,Dealer,i) for i in range(N)]
+    SecretShare = SecretShare_IdealProtocol(N,f)
+    parties = [SecretShare(sid,Dealer,i) for i in range(N)]
 
     # Output (promises) are available, but not resolved yet
     for i in range(N):
