@@ -1,7 +1,7 @@
 # miniviff
 experiments in secret sharing
 
-Dependencies: python3, gmp
+Dependencies: python3, gmp, web3, ethereumjs-testrpc
 
 To run a test case:
     
