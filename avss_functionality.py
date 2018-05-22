@@ -87,7 +87,7 @@ async def test1(sid='sid', N=4, f=1, Dealer=0):
     # Reconstructed
     rec = Poly.interpolate_at([(i+1,parties[i].output.result()) for i in range(f+1)])
     print("Reconstruction:", rec)
-        
+
 if __name__ == '__main__':
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
