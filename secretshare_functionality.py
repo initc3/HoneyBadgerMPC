@@ -39,6 +39,7 @@ class SecretShare_Functionality(object):
             # TODO: the adversary should be able to choose the polynomial,
             #       as long as it is the correct degree and v0
             share = poly(i+1)
+            await asyncio.sleep(random.random()*0.5)
             self.outputs[i].set_result(share)
 
 def SecretShare_IdealProtocol(N, f):

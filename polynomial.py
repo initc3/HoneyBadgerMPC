@@ -55,8 +55,8 @@ def polynomialsOver(field):
             assert type(omega) is field
             assert omega ** n == 1, "must be an n'th root of unity"
             assert omega ** (n//2) != 1, "must be a primitive n'th root of unity"
-            coeffs = [b/n for b in fft_helper(x, 1/omega, field)]
-            return Poly(coeffs)
+            coeffs = [b/n for b in fft_helper(ys, 1/omega, field)]
+            return cls(coeffs)
 
         def evaluate_fft(self, omega, n):
             assert n & (n-1) == 0, "n must be power of two"
