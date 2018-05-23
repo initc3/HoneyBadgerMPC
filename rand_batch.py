@@ -12,12 +12,12 @@ Poly = polynomialsOver(Field)
 #######################################
 #
 # Each party contributes B shares
-# 
-# Let D be the smallest power of 2 less than (N-f)B
-#
-# Interpolate a degree-(D-1) polynomial using D points
-# Interpolate at D additional points
-# Output D-Bf of them
+# Use ACS as a synchronization point once at least N-f complete
+# Let N' be the number of parties whose shares are included
+# Let D be the nearest power of 2 >= N'B
+# Interpolate a degree-(D-1) polynomial using D points, padding w/ zeros
+# Interpolate the polynomial at D additional points
+# Output (N'-f)B of the poins
 
 class ShareRandom_Protocol(object):
     def __init__(self, B, N, f, sid, myid, AVSS, ACS):
@@ -72,13 +72,13 @@ class ShareRandom_Protocol(object):
             print('vecs with t+1 inputs:', score)
 
             # Print statistics about how much output to expect
-            def nearest_power_of_two(x): return 2**x.bit_length()
+            def nearest_power_of_two(x): return 2**(x-1).bit_length() # Round up
             valid = [score[i] >= f+1 for i in range(N)]
             print("N':", sum(valid))
             print("Parties B*N'", sum(valid)*B)
-            D = 2**((sum(valid)*B).bit_length()-1)
-            print("D (nearest pow-of-2 below):", D)
-            print("Recoverable:", D-B*f)
+            D = nearest_power_of_two(sum(valid)*B)
+            print("D (nearest pow-of-2, round up):", D)
+            print("Recoverable:", (sum(valid)-f)*B)
 
             # Wait for the appropriate AVSS to finish
             input_shares = []
@@ -88,11 +88,12 @@ class ShareRandom_Protocol(object):
                     input_shares += await asyncio.gather(*_shares)
 
             print('input_shares:', len(input_shares))
+            input_shares = input_shares + ([Field(0)] * (D-len(input_shares)))
             
             # Interpolate all the committed shares
             omega = get_omega(Field, 2*D, seed=0)
             outputs = interp_extrap(Poly, input_shares[:D], omega)
-            output_shares = outputs[1:2*(D-B*f):2] # Pick the odd shares
+            output_shares = outputs[1:2*((sum(valid)-f)*B):2] # Pick the odd shares
             print('output_shares:', len(output_shares))
 
             self.output.set_result(output_shares)
