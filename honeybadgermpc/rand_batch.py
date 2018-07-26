@@ -1,7 +1,7 @@
 import asyncio
 import random
-from field import GF
-from polynomial import polynomialsOver, interp_extrap, get_omega
+from .field import GF
+from .polynomial import polynomialsOver, interp_extrap, get_omega
 
 # Fix the field for now
 Field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
@@ -101,8 +101,8 @@ class ShareRandom_Protocol(object):
         self._task = asyncio.ensure_future(_run())
 
 # For testing use AVSS and ACS ideal protocols
-from secretshare_functionality import SecretShare_IdealProtocol
-from commonsubset_functionality import CommonSubset_IdealProtocol
+from .secretshare_functionality import SecretShare_IdealProtocol
+from .commonsubset_functionality import CommonSubset_IdealProtocol
 
 async def _test_rand(sid='sid',N=4,f=1):
     SecretShare = SecretShare_IdealProtocol(N,f)

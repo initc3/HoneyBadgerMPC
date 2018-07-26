@@ -1,7 +1,7 @@
 import asyncio
-from field import GF
-from polynomial import polynomialsOver
-from router import simple_router
+from .field import GF
+from .polynomial import polynomialsOver
+from .router import simple_router
 import random
 
 class NotEnoughShares(Exception): pass

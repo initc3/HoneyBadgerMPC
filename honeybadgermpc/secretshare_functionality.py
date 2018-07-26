@@ -1,7 +1,7 @@
 import asyncio
 import random
-from field import GF
-from polynomial import polynomialsOver
+from .field import GF
+from .polynomial import polynomialsOver
 
 """
 Ideal functionality for Asynchronous Verifiable Secret Sharing (AVSS or SecretShare)

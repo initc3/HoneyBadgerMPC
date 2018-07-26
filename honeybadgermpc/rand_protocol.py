@@ -2,9 +2,9 @@ import asyncio
 import random
 
 # For testing, use the Ideal Protocol for AVSS and ACS
-from secretshare_functionality import SecretShare_IdealProtocol
-from commonsubset_functionality import CommonSubset_IdealProtocol
-from secretshare_functionality import Field
+from .secretshare_functionality import SecretShare_IdealProtocol
+from .commonsubset_functionality import CommonSubset_IdealProtocol
+from .secretshare_functionality import Field
 
 
 #########################
