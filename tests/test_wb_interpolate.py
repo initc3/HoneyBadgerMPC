@@ -1,0 +1,45 @@
+import random
+
+from honeybadgermpc.wb_interpolate import makeEncoderDecoder
+from honeybadgermpc.field import GF
+from honeybadgermpc.polynomial import polynomialsOver
+
+
+def test_decoding():
+    integerMessage = [2, 3, 2, 8, 7, 5, 9, 5]
+    k = 8  # length of message
+    n = 13  # size of encoded message
+    p = 17  # prime
+
+    enc, dec, solveSystem = makeEncoderDecoder(n, k, p)
+    encoded = enc(integerMessage)
+
+    print("plain message is: %r" % (integerMessage,))
+    print("encoded message is: %r" % (encoded,))  # cleaner output
+
+    corrupted = encoded[:]
+    corrupted[n//2][1] = corrupted[n//2][1] + 1
+    print("corrupted message is: %r" % (corrupted,))
+
+    Q, E = solveSystem(corrupted, True)
+    P, remainder = (Q.__divmod__(E))
+
+    print("P(x) = %r" % P)
+    print("r(x) = %r" % remainder)
+    Fp = GF(p)
+    Poly = polynomialsOver(Fp)
+    original_poly = Poly(integerMessage)
+    assert(
+        (original_poly - P).isZero()), "Decoded message does not match original message!"
+
+
+def corrupt(message, numErrors, minVal=0, maxVal=131):
+    indices = random.sample(list(range(len(message))), numErrors)
+
+    for i in indices:
+        message[i][1] = random.randint(minVal, maxVal)
+
+    return message
+
+
+test_decoding()
