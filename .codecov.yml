@@ -1,0 +1,23 @@
+codecov:
+  branch: travis
+  max_report_age: off
+
+coverage:
+  range: 45..100
+  round: down
+  precision: 5
+  status:
+    project:
+      default:
+        threshold: 2%
+    patch:
+      default:
+        threshold: 1%
+
+  ignore:
+    - "docs/*"
+    - "tests/*"
+
+comment:
+  layout: "header, diff, changes, sunburst, uncovered"
+  behavior: default
