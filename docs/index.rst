@@ -10,6 +10,7 @@ HoneyBadgerMPC
     :maxdepth: 2
     :caption: Contents:
 
+    dev
 
 
 Indices and tables
