@@ -184,7 +184,8 @@ async def runProgramInNetwork(program, N, t):
         context = PassiveMpc('sid', N, t, i, sends[i], recvs[i], program)
         tasks.append(loop.create_task(context._run()))
 
-    await asyncio.gather(*tasks)
+    results = await asyncio.gather(*tasks)
+    return results
 
 #######################
 # Generating test files

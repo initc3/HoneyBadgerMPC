@@ -218,7 +218,7 @@ def interp_extrap(Poly, xs, omega):
 
 
 if __name__ == "__main__":
-    from field import GF
+    from .field import GF
     field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
     Poly = polynomialsOver(field)
     poly = Poly.random(degree=7)
