@@ -48,6 +48,15 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'm2r',
+]
+
+autodoc_default_flags = [
+    'members',
+    'undoc-members',
+    'private-members',
+    'inherited-members',
+    'show-inheritance',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
