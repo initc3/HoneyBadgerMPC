@@ -46,6 +46,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage .coverage.*
 	rm -fr htmlcov/
 	rm -fr .pytest_cache/
+	rm -f tests/.pytest.log
 
 lint: ## check style with flake8
 	flake8 honeybadgermpc tests
