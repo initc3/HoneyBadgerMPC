@@ -1,0 +1,7 @@
+.ci
+.git
+.pytest_cache
+.coverage
+.gitignore
+*.yml
+Dockerfile

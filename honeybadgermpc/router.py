@@ -1,5 +1,5 @@
 import asyncio
-import random
+
 
 def simple_router(N):
     """
@@ -11,16 +11,16 @@ def simple_router(N):
 
     def makeSend(i):
         def _send(j, o):
-            #print('SEND %8s [%2d -> %2d]' % (o, i, j))
-            #delay = random.random() * 1.0
-            #asyncio.get_event_loop().call_later(delay, mbox[j].put_nowait,(i,o))
-            mbox[j].put_nowait((i,o))
+            # print('SEND %8s [%2d -> %2d]' % (o, i, j))
+            # delay = random.random() * 1.0
+            # asyncio.get_event_loop().call_later(delay, mbox[j].put_nowait,(i,o))
+            mbox[j].put_nowait((i, o))
         return _send
 
     def makeRecv(j):
         async def _recv():
             (i, o) = await mbox[j].get()
-            #print('RECV %8s [%2d -> %2d]' % (o, i, j))
+            # print('RECV %8s [%2d -> %2d]' % (o, i, j))
             return (i, o)
         return _recv
 

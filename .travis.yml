@@ -1,0 +1,20 @@
+os: linux
+dist: xenial
+language: python
+python: 3.7
+sudo: true
+
+services:
+  - docker
+
+matrix:
+  include:
+    - env: BUILD=tests
+    - env: BUILD=flake8
+    - env: BUILD=docs
+
+install:  .ci/travis-install.sh
+
+script: .ci/travis-script.sh
+
+after_success: .ci/travis-after-success.sh

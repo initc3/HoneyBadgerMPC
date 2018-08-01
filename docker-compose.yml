@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  honeybadgermpc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/usr/src/HoneyBadgerMPC
+    command: pytest -v --cov=honeybadgermpc
+  builddocs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/usr/src/HoneyBadgerMPC
+    command: make -C docs html
+  viewdocs:
+    image: nginx
+    ports:
+      - '58888:80'
+    volumes:
+      - ./docs/_build/html:/usr/share/nginx/html
