@@ -74,9 +74,9 @@ The reason for the slightly confusing error message is that ``x`` and
 """
 
 from gmpy import mpz
-from math import log, ceil
 
 _field_cache = {}
+
 
 class FieldElement(object):
     """Common base class for elements."""
@@ -90,6 +90,7 @@ class FieldElement(object):
         return self.value
 
     __long__ = __int__
+
 
 def GF(modulus):
     """Generate a Galois (finite) field with the given modulus.
@@ -247,7 +248,7 @@ def GF(modulus):
             is a Blum prime (congruent to 3 mod 4).
             """
             assert self.modulus % 4 == 3, "Cannot compute square " \
-                   "root of %s with modulus %s" % (self, self.modulus)
+                "root of %s with modulus %s" % (self, self.modulus)
 
             # Because we assert that the modulus is a Blum prime
             # (congruent to 3 mod 4), there will be no reminder in the
@@ -275,7 +276,7 @@ def GF(modulus):
 
         def __repr__(self):
             return "{%d}" % self.value
-            #return "GFElement(%d)" % self.value
+            # return "GFElement(%d)" % self.value
 
         def __str__(self):
             """Informal string representation.
@@ -304,9 +305,13 @@ def GF(modulus):
             """Comparison."""
             try:
                 assert self.field is other.field, "Fields must be identical"
-                return cmp(self.value, other.value)
+                # TODO Replace with (a > b) - (a < b)
+                # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
+                return cmp(self.value, other.value)     # noqa  XXX until above is done
             except AttributeError:
-                return cmp(self.value, other)
+                # TODO Replace with (a > b) - (a < b)
+                # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
+                return cmp(self.value, other)   # noqa XXX until above is done
 
         def __hash__(self):
             """Hash value."""
@@ -334,6 +339,7 @@ def GF(modulus):
 
     _field_cache[modulus] = GFElement
     return GFElement
+
 
 def FakeGF(modulus):
     """Construct a fake field.
@@ -382,7 +388,7 @@ def FakeGF(modulus):
         __invert__ = sqrt = lambda self: FakeFieldElement(return_value)
 
         # Bit extraction. We pretend that the number is *very* big.
-        bit = lambda self, index: 1
+        bit = lambda self, index: 1     # noqa  XXX for the time being
 
         # Fake field elements are printed with double curly brackets.
         __repr__ = __str__ = lambda self: "{{%d}}" % self.value
@@ -391,7 +397,7 @@ def FakeGF(modulus):
     FakeFieldElement.modulus = modulus
     return FakeFieldElement
 
-if __name__ == "__main__":
-    import doctest    #pragma NO COVER
-    doctest.testmod() #pragma NO COVER
 
+if __name__ == "__main__":
+    import doctest      # pragma NO COVER
+    doctest.testmod()   # pragma NO COVER

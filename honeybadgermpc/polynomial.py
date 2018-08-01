@@ -3,25 +3,34 @@ import random
 from functools import reduce
 import sys
 import time
-    
+
+
 def strip_trailing_zeros(a):
-    for i in range(len(a),0,-1):
-        if a[i-1] != 0: break
+    for i in range(len(a), 0, -1):
+        if a[i-1] != 0:
+            break
     return a[:i]
 
+
 _poly_cache = {}
+
+
 def polynomialsOver(field):
-    if field in _poly_cache: return _poly_cache[field]
+    if field in _poly_cache:
+        return _poly_cache[field]
+
     class Polynomial(object):
         def __init__(self, coeffs):
             self.coeffs = strip_trailing_zeros(coeffs)
             self.field = field
 
         def isZero(self): return self.coeffs == []
+
         def __repr__(self):
-            if self.isZero(): return '0'
-            return ' + '.join(['%s x^%d' % (a, i) if i > 0 else '%s'%a
-                               for i,a in enumerate(self.coeffs)])
+            if self.isZero():
+                return '0'
+            return ' + '.join(['%s x^%d' % (a, i) if i > 0 else '%s' % a
+                               for i, a in enumerate(self.coeffs)])
 
         def __call__(self, x):
             y = 0
@@ -34,7 +43,8 @@ def polynomialsOver(field):
         @classmethod
         def interpolate_at(cls, shares, x_recomb=field(0)):
             # shares are in the form (x, y=f(x))
-            if type(x_recomb) is int: x_recomb = field(x_recomb)
+            if type(x_recomb) is int:
+                x_recomb = field(x_recomb)
             assert type(x_recomb) is field
             xs, ys = zip(*shares)
             vector = []
@@ -68,14 +78,15 @@ def polynomialsOver(field):
         @classmethod
         def random(cls, degree, y0=None):
             coeffs = [field(random.randint(0, field.modulus-1)) for _ in range(degree+1)]
-            if y0 is not None: coeffs[0] = y0
+            if y0 is not None:
+                coeffs[0] = y0
             return cls(coeffs)
 
     _poly_cache[field] = Polynomial
     return Polynomial
 
 
-def get_omega(field, n, seed = None):
+def get_omega(field, n, seed=None):
     """
     Given a field, this method returns an n^th root of unity.
     If the seed is not None then this method will return the
@@ -95,6 +106,7 @@ def get_omega(field, n, seed = None):
     assert pow(y, n) == 1
     assert pow(y, n//2) != 1
     return y
+
 
 def fft_helper(A, omega, field):
     """
@@ -122,11 +134,12 @@ def fft_helper(A, omega, field):
         A_bar[j] = B_bar[k] + pow(omega, j) * C_bar[k]
     return A_bar
 
+
 def nearest_power_of_two(x):
     return 2**x.bit_length()
 
-def fft(poly, n = None, omega = None, seed = None, test = False,
-            enable_profiling = False):
+
+def fft(poly, n=None, omega=None, seed=None, test=False, enable_profiling=False):
 
     coefficients = poly.coeffs
     Zp = poly.field
@@ -142,8 +155,8 @@ def fft(poly, n = None, omega = None, seed = None, test = False,
         if enable_profiling:
             print("OMEGA", omega, "TIME:", e - s)
     if test:
-        assert pow(omega,n) == 1
-        #assert pow(omega,n//2) != 1
+        assert pow(omega, n) == 1
+        # assert pow(omega,n//2) != 1
 
     s = time.time()
     output = fft_helper(padded_coefficients, omega, Zp)
@@ -177,12 +190,13 @@ def test_correctness(poly, omega, fft_helper_result):
     for i in sample:
         y = poly(omega**i)
         c += 1
-        sys.stdout.write("%d / %d points verified!"%(c,
-                            total_verification_points))
+        sys.stdout.write("%d / %d points verified!" % (c,
+                         total_verification_points))
         char = "\r" if c < len(sample) else "\n"
         sys.stdout.write(char)
         sys.stdout.flush()
         assert y == fft_helper_result[i]
+
 
 def interp_extrap(Poly, xs, omega):
     """
@@ -191,28 +205,29 @@ def interp_extrap(Poly, xs, omega):
     """
     n = len(xs)
     assert n & (n-1) == 0, "n must be power of 2"
-    assert pow(omega,2*n) == 1, "omega must be 2n'th root of unity"
-    assert pow(omega,n) != 1, "omega must be primitive 2n'th root of unity"
-    
+    assert pow(omega, 2*n) == 1, "omega must be 2n'th root of unity"
+    assert pow(omega, n) != 1, "omega must be primitive 2n'th root of unity"
+
     # Interpolate the polynomial up to degree n
     poly = Poly.interpolate_fft(xs, omega**2)
 
     # Evaluate the polynomial
-    xs2= poly.evaluate_fft(omega, 2*n)
+    xs2 = poly.evaluate_fft(omega, 2*n)
 
     return xs2
+
 
 if __name__ == "__main__":
     from field import GF
     field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
     Poly = polynomialsOver(field)
     poly = Poly.random(degree=7)
-    poly = Poly([1,5,3,15,0,3])
+    poly = Poly([1, 5, 3, 15, 0, 3])
     n = 2**3
     omega = get_omega(field, n, seed=1)
     omega2 = get_omega(field, n, seed=4)
     # FFT
-    #x = fft(poly, omega=omega, n=n, test=True, enable_profiling=True)
+    # x = fft(poly, omega=omega, n=n, test=True, enable_profiling=True)
     x = poly.evaluate_fft(omega, n)
     # IFFT
     x2 = [b/n for b in fft_helper(x, 1/omega, field)]
@@ -224,10 +239,12 @@ if __name__ == "__main__":
 
     print('eval:')
     omega = get_omega(field, 2*n)
-    for i in range(len(x)): print(omega**(2*i), x[i])
+    for i in range(len(x)):
+        print(omega**(2*i), x[i])
     print('interp_extrap:')
     x3 = interp_extrap(Poly, x, omega)
-    for i in range(len(x3)): print(omega**i, x3[i])
+    for i in range(len(x3)):
+        print(omega**i, x3[i])
 
     print("How many omegas are there?")
     for i in range(10):
