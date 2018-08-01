@@ -1,5 +1,3 @@
-import asyncio
-
 from pytest import mark
 
 

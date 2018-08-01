@@ -4,8 +4,11 @@ from .polynomial import polynomialsOver
 from .router import simple_router
 import random
 
-class NotEnoughShares(Exception): pass
-    
+
+class NotEnoughShares(Exception):
+    pass
+
+
 class PassiveMpc(object):
 
     def __init__(self, sid, N, t, myid, send, recv, prog):
@@ -33,17 +36,18 @@ class PassiveMpc(object):
         self._openings = []
 
         # Store opened shares until ready to reconstruct
-        # shareid => { [playerid => share] }        
-        self._share_buffers = tuple( [] for _ in range(N) )
+        # shareid => { [playerid => share] }
+        self._share_buffers = tuple([] for _ in range(N))
 
         self.Share = shareInContext(self)
 
     def _reconstruct(self, shareid):
         # Are there enough shares to reconstruct?
-        shares = [(i+1,self._share_buffers[i][shareid])
+        shares = [(i+1, self._share_buffers[i][shareid])
                   for i in range(self.N)
                   if len(self._share_buffers[i]) > shareid]
-        if len(shares) < self.t+1: raise NotEnoughShares
+        if len(shares) < self.t+1:
+            raise NotEnoughShares
 
         # print('[%d] reconstruct %s' % (self.myid, shareid,))
 
@@ -62,8 +66,10 @@ class PassiveMpc(object):
             self.send(j, (shareid, share.v))
 
         # Reconstruct if we already had enough shares
-        try: self._reconstruct(shareid)
-        except NotEnoughShares: pass
+        try:
+            self._reconstruct(shareid)
+        except NotEnoughShares:
+            pass
 
         # Return future
         return opening
@@ -80,7 +86,7 @@ class PassiveMpc(object):
         while True:
             (j, (shareid, share)) = await self.recv()
             buf = self._share_buffers[j]
-            
+
             # Shareid is redundant, but confirm it is one greater
             assert shareid == len(buf)
             buf.append(share)
@@ -88,9 +94,11 @@ class PassiveMpc(object):
             # Reconstruct if we now have enough shares,
             # and if the opening has been asked for
             if len(self._openings) > shareid:
-                try: self._reconstruct(shareid)
-                except NotEnoughShares: pass
-            
+                try:
+                    self._reconstruct(shareid)
+                except NotEnoughShares:
+                    pass
+
         return True
 
     # File I/O
@@ -98,12 +106,12 @@ class PassiveMpc(object):
         # Read shares from a file object
         lines = iter(f)
         # first line: field modulus
-        modulus = int(next(lines)) 
+        modulus = int(next(lines))
         assert Field.modulus == modulus
         # second line: share degree
-        degree = int(next(lines))
+        # degree = int(next(lines))
         # third line: id
-        myid = int(next(lines))
+        # myid = int(next(lines))
         shares = []
         # remaining lines: shared values
         for line in lines:
@@ -123,45 +131,55 @@ def write_shares(f, modulus, degree, myid, shares):
         print(share.value, file=f)
 
 ###############
-# Share class 
+# Share class
 ###############
+
 
 def shareInContext(context):
     class Share(object):
         def __init__(self, v):
             # v is the local value of the share
-            if type(v) is int: v = Field(v)
+            if type(v) is int:
+                v = Field(v)
             assert type(v) is Field
             self.v = v
 
         # Publicly reconstruct a shared value
-        def open(self): return context.open_share(self)
-       
+        def open(self):
+            return context.open_share(self)
+
         # Linear combinations of shares can be computed directly
         # TODO: add type checks for the operators
         # @typecheck(Share)
         def __add__(self, other): return Share(self.v + other.v)
+
         def __sub__(self, other): return Share(self.v - other.v)
+
         def __radd__(self, other): return Share(self.v + other.v)
+
         def __rsub__(self, other): return Share(-self.v + other.v)
+
         # @typecheck(int,field)
         def __rmul__(self, other): return Share(self.v * other)
+
         # @typecheck(Share)
-        # TODO 
+        # TODO
         def __mul__(self, other): raise NotImplemented
-        
-        def __str__(self): return '{%d}'% (self.v)
+
+        def __str__(self): return '{%d}' % (self.v)
+
     return Share
 
-#Share = shareInContext(None)
+# Share = shareInContext(None)
+
 
 # Create a fake network with N instances of the program
 async def runProgramInNetwork(program, N, t):
     loop = asyncio.get_event_loop()
-    sends,recvs = simple_router(N)
+    sends, recvs = simple_router(N)
 
     tasks = []
-    bgtasks = []
+    # bgtasks = []
     for i in range(N):
         context = PassiveMpc('sid', N, t, i, sends[i], recvs[i], program)
         tasks.append(loop.create_task(context._run()))
@@ -176,23 +194,26 @@ async def runProgramInNetwork(program, N, t):
 Field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
 Poly = polynomialsOver(Field)
 
+
 def write_polys(prefix, modulus, N, t, polys):
     for i in range(N):
         shares = [f(i+1) for f in polys]
         with open('%s-%d.share' % (prefix, i), 'w') as f:
             write_shares(f, modulus, t, i, shares)
 
+
 def generate_test_triples(prefix, k, N, t):
     # Generate k triples, store in files of form "prefix-%d.share"
     polys = []
     for j in range(k):
-        a = Field(random.randint(0,Field.modulus-1))
-        b = Field(random.randint(0,Field.modulus-1))
+        a = Field(random.randint(0, Field.modulus-1))
+        b = Field(random.randint(0, Field.modulus-1))
         c = a*b
         polys.append(Poly.random(t, a))
         polys.append(Poly.random(t, b))
         polys.append(Poly.random(t, c))
     write_polys(prefix, Field.modulus, N, t, polys)
+
 
 def generate_test_zeros(prefix, k, N, t):
     polys = []
@@ -200,11 +221,13 @@ def generate_test_zeros(prefix, k, N, t):
         polys.append(Poly.random(t, 0))
     write_polys(prefix, Field.modulus, N, t, polys)
 
+
 def generate_test_randoms(prefix, k, N, t):
     polys = []
     for j in range(k):
-        polys.append(Poly.random(t, random.randint(0,Field.modulus-1)))
+        polys.append(Poly.random(t, random.randint(0, Field.modulus-1)))
     write_polys(prefix, Field.modulus, N, t, polys)
+
 
 ###############
 # Test programs
@@ -221,7 +244,7 @@ async def test_prog1(context):
     x = zeros[0] + context.Share(10)
     y = zeros[1] + context.Share(15)
 
-    a,b,ab = triples[:3]
+    a, b, ab = triples[:3]
     # assert await a.open() * await b.open() == await ab.open()
 
     D = await (x - a).open()
@@ -230,10 +253,11 @@ async def test_prog1(context):
     # This is a random share of x*y
     xy = context.Share(D*E) + D*b + E*a + ab
 
-    X,Y,XY = await x.open(), await y.open(), await xy.open()
+    X, Y, XY = await x.open(), await y.open(), await xy.open()
     assert X * Y == XY
-    
-    print("[%d] Finished" % (context.myid,), X,Y,XY)
+
+    print("[%d] Finished" % (context.myid,), X, Y, XY)
+
 
 # Read zeros from file, open them
 async def test_prog2(context):
@@ -247,7 +271,7 @@ async def test_prog2(context):
         s = await share.open()
         assert s == 0
     print('[%d] Finished' % (context.myid,))
-    
+
 
 # Run some test cases
 if __name__ == '__main__':
@@ -255,7 +279,7 @@ if __name__ == '__main__':
     generate_test_zeros('sharedata/test_zeros', 1000, 3, 2)
     print('Generating random shares of triples in sharedata/')
     generate_test_triples('sharedata/test_triples', 1000, 3, 2)
-    
+
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
