@@ -109,9 +109,9 @@ class PassiveMpc(object):
         modulus = int(next(lines))
         assert Field.modulus == modulus
         # second line: share degree
-        # degree = int(next(lines))
+        degree = int(next(lines))   # noqa
         # third line: id
-        # myid = int(next(lines))
+        myid = int(next(lines))     # noqa
         shares = []
         # remaining lines: shared values
         for line in lines:
