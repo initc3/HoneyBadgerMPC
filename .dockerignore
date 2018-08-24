@@ -5,4 +5,4 @@
 .gitignore
 *.yml
 Dockerfile
-*/__pycache__
+**/*.pyc
