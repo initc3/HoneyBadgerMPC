@@ -1,5 +1,5 @@
 codecov:
-  branch: travis
+  branch: dev
   max_report_age: off
 
 coverage:
