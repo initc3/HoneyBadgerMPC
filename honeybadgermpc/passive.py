@@ -109,9 +109,9 @@ class PassiveMpc(object):
         modulus = int(next(lines))
         assert Field.modulus == modulus
         # second line: share degree
-        # degree = int(next(lines))
+        degree = int(next(lines))   # noqa
         # third line: id
-        # myid = int(next(lines))
+        myid = int(next(lines))     # noqa
         shares = []
         # remaining lines: shared values
         for line in lines:
@@ -184,7 +184,8 @@ async def runProgramInNetwork(program, N, t):
         context = PassiveMpc('sid', N, t, i, sends[i], recvs[i], program)
         tasks.append(loop.create_task(context._run()))
 
-    await asyncio.gather(*tasks)
+    results = await asyncio.gather(*tasks)
+    return results
 
 #######################
 # Generating test files
