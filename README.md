@@ -1,60 +1,119 @@
 # HoneyBadgerMPC
 
-Dependencies: python3, gmp, web3, ethereumjs-testrpc
+## Getting started for development
 
-To run a test case:
-    
+1. Fork the repository and clone your fork. (See the Github Guide
+   [Forking Projects](https://guides.github.com/activities/forking/) if
+   needed.)
+
+2. Install the latest [`docker`](https://docs.docker.com/install/) and
+   [`docker-compose`](https://docs.docker.com/compose/install/).
+
+3. Run the tests (the first time will take longer as the image will be built):
+
+   ```bash
+   $ docker-compose run --rm honeybadgermpc
+   ```
+
+   The tests should pass, and you should also see a small code coverage report
+   output to the terminal.
+
+If the above went all well, you should be setup for developing
+**HoneyBadgerMPC**!
+
+### Some recommendations
+You may find it useful when developing to have the following 3 "windows"
+opened at all times:
+
+* your text editor or IDE
+* an `ipython` session for quickly trying things out
+* a shell session for running tests, debugging, and building the docs
+
+You can run the `ipython` and shell session in separate containers:
+
+IPython session:
+
 ```bash
-python -m honeybadgermpc.passive
+$ docker-compose run --rm honeybadgermpc ipython
 ```
 
-or alternatively:
+Shell session:
+
+```bash
+$ docker-compose run --rm honeybadgermpc sh
+```
+
+Once in the session (container) you can execute commands just as you would in
+a non-container session.
+
+**Running a specific test in a container (shell session)**
+As an example, to run the tests for `passive.py`, which will generate and open
+1000 zero-sharings, `N=3` `t=2` (so no fault tolerance):
+
+Run a shell session in a container:
+
+```bash
+$ docker-compose run --rm honeybadgermpc sh
+```
+
+Run the test:
 
 ```bash
 pytest -v tests/test_passive.py -s
 ```
-     
-This generates and opens 1000 zero-sharings, `N=3` `t=2` (so no fault tolerance)
 
-# Protocol Descriptions
-#### HBAVSS
+or
+
+```bash
+python -m honeybadgermpc.passive
+```
+
+#### About code changes and building the image
+When developing, you should not need to rebuild the image nor exit running
+containers, unless new dependencies were added via the `Dockerfile`. Hence you
+can modify the code, add breakpoints, add new Python modules (files), and the
+modifications will be readily available withing the running containers.
+
+
+## Protocol Descriptions
+### HBAVSS
 An Asynchronous Verifiable Secret Sharing protocol. Allows a dealer to share a secret with n parties such that any t+1 of the honest parties can reconstruct it. For our purposes (achieving optimal Byzantine Fault Tolerance), we will always be using n = 3t+1.
 
 **Input**: One secret the size of a field element
 
 **Output**: n parties will have a t-shared share of the secret
 
-#### BatchHBAVSS
+### BatchHBAVSS
 An altered version of HBAVSS that allows for the more efficient sharing of a batch of secrets. Details to be worked out soon (TM).
 
-#### ReliableBroadcast
+### ReliableBroadcast
 A protocol which allows a broadcaster to send the same message to n different recipients in a bandwidth-saving way, while being assured that every recipient eventually receives the full correct message.
 
 **Input**: One message to be broadcasted
 
 **Output**: n parties will eventually successfully receive the message
 
-#### BatchReconstruction
+### BatchReconstruction
 A protocol to reconstruct many secrets at once with fewer messages
 
 **Input**:  At least *t+1* parties input their shares of *t+1* total *t*-shared secrets 
 
 **Output**: *t+1* reconstructed secrets are output to every participating party
 
-#### Rand
+### Rand
 A protocal that generates a random secret-shared value, which nobody will know until it is reconstructed
 
-#### BatchRand
+### BatchRand
 An effiecient batched version of Rand
 
-#### BatchBeaverMultiplication 
+### BatchBeaverMultiplication
 Perform multiple shared-secret multiplications at once
 
 **Input**: *n t*-shared pairs of secrets that one wishes to multiply and n sets of beaver triples. *2n >= t+1*
 
 **Output**: *n t*-shared secret pairs that have been successfully multiplied
 
-#### TripleTransformation: 
+### TripleTransformation
 Turns a set of triples into a set of co-related and secret-shared triples. This plus Polynomial Verification together can tell you if all of your input triples are multiplication triples.
 > Co-related triples are triples that make up points on polynomials *A*(), *B*(), and *C*() such that *A*()**B*() = *C*(), i.e. *A*(*i*)**B*(*i*) = *C*(*i*) for any *i*
 
@@ -63,14 +122,14 @@ Turns a set of triples into a set of co-related and secret-shared triples. This 
 
 **Output**:  *m t*-shared, co-related triples
 
-#### PolynomialVerification: 
+### PolynomialVerification
 Determine if the triples output from TripleTransformation are multiplication triples.
 
 **Input**: *n* different *t*-shared outputs of TripleTransformation
 
 **Output**: Knowledge of which polynomials one can extract multiplication triples from
 
-#### TripleExtraction: 
+### TripleExtraction
 Extract unknown random multiplication triples from a set of co-related multiplication triples.
 
 **Input**: *n* different polynomials formed by t-shared co-related multiplication triples
