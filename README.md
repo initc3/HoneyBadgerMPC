@@ -75,45 +75,45 @@ can modify the code, add breakpoints, add new Python modules (files), and the
 modifications will be readily available withing the running containers.
 
 
-# Protocol Descriptions
-#### HBAVSS
+## Protocol Descriptions
+### HBAVSS
 An Asynchronous Verifiable Secret Sharing protocol. Allows a dealer to share a secret with n parties such that any t+1 of the honest parties can reconstruct it. For our purposes (achieving optimal Byzantine Fault Tolerance), we will always be using n = 3t+1.
 
 **Input**: One secret the size of a field element
 
 **Output**: n parties will have a t-shared share of the secret
 
-#### BatchHBAVSS
+### BatchHBAVSS
 An altered version of HBAVSS that allows for the more efficient sharing of a batch of secrets. Details to be worked out soon (TM).
 
-#### ReliableBroadcast
+### ReliableBroadcast
 A protocol which allows a broadcaster to send the same message to n different recipients in a bandwidth-saving way, while being assured that every recipient eventually receives the full correct message.
 
 **Input**: One message to be broadcasted
 
 **Output**: n parties will eventually successfully receive the message
 
-#### BatchReconstruction
+### BatchReconstruction
 A protocol to reconstruct many secrets at once with fewer messages
 
 **Input**:  At least *t+1* parties input their shares of *t+1* total *t*-shared secrets 
 
 **Output**: *t+1* reconstructed secrets are output to every participating party
 
-#### Rand
+### Rand
 A protocal that generates a random secret-shared value, which nobody will know until it is reconstructed
 
-#### BatchRand
+### BatchRand
 An effiecient batched version of Rand
 
-#### BatchBeaverMultiplication 
+### BatchBeaverMultiplication
 Perform multiple shared-secret multiplications at once
 
 **Input**: *n t*-shared pairs of secrets that one wishes to multiply and n sets of beaver triples. *2n >= t+1*
 
 **Output**: *n t*-shared secret pairs that have been successfully multiplied
 
-#### TripleTransformation: 
+### TripleTransformation
 Turns a set of triples into a set of co-related and secret-shared triples. This plus Polynomial Verification together can tell you if all of your input triples are multiplication triples.
 > Co-related triples are triples that make up points on polynomials *A*(), *B*(), and *C*() such that *A*()**B*() = *C*(), i.e. *A*(*i*)**B*(*i*) = *C*(*i*) for any *i*
 
@@ -122,14 +122,14 @@ Turns a set of triples into a set of co-related and secret-shared triples. This 
 
 **Output**:  *m t*-shared, co-related triples
 
-#### PolynomialVerification: 
+### PolynomialVerification
 Determine if the triples output from TripleTransformation are multiplication triples.
 
 **Input**: *n* different *t*-shared outputs of TripleTransformation
 
 **Output**: Knowledge of which polynomials one can extract multiplication triples from
 
-#### TripleExtraction: 
+### TripleExtraction
 Extract unknown random multiplication triples from a set of co-related multiplication triples.
 
 **Input**: *n* different polynomials formed by t-shared co-related multiplication triples
