@@ -2,6 +2,23 @@
 Notes for Developers
 ********************
 
+Troubleshooting
+===============
+Some problems may sometimes be resolved by deleting some cached files. You can
+use the `Makefile` to remove such files:
+
+.. code-block:: bash
+
+    $ make clean
+
+
+Using `docker-compose`:
+
+.. code-block:: bash
+
+    $ docker-compose run --rm honeybadgermpc make clean
+
+
 FAQ
 ===
 
