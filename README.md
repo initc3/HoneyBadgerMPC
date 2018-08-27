@@ -1,20 +1,79 @@
 # HoneyBadgerMPC
 
-Dependencies: python3, gmp, web3, ethereumjs-testrpc
+## Getting started for development
 
-To run a test case:
-    
+1. Fork the repository and clone your fork. (See the Github Guide
+   [Forking Projects](https://guides.github.com/activities/forking/) if
+   needed.)
+
+2. Install the latest [`docker`](https://docs.docker.com/install/) and
+   [`docker-compose`](https://docs.docker.com/compose/install/).
+
+3. Run the tests (the first time will take longer as the image will be built):
+
+   ```bash
+   $ docker-compose run --rm honeybadgermpc
+   ```
+
+   The tests should pass, and you should also see a small code coverage report
+   output to the terminal.
+
+If the above went all well, you should be setup for developing
+**HoneyBadgerMPC**!
+
+### Some recommendations
+You may find it useful when developing to have the following 3 "windows"
+opened at all times:
+
+* your text editor or IDE
+* an `ipython` session for quickly trying things out
+* a shell session for running tests, debugging, and building the docs
+
+You can run the `ipython` and shell session in separate containers:
+
+IPython session:
+
 ```bash
-python -m honeybadgermpc.passive
+$ docker-compose run --rm honeybadgermpc ipython
 ```
 
-or alternatively:
+Shell session:
+
+```bash
+$ docker-compose run --rm honeybadgermpc sh
+```
+
+Once in the session (container) you can execute commands just as you would in
+a non-container session.
+
+**Running a specific test in a container (shell session)**
+As an example, to run the tests for `passive.py`, which will generate and open
+1000 zero-sharings, `N=3` `t=2` (so no fault tolerance):
+
+Run a shell session in a container:
+
+```bash
+$ docker-compose run --rm honeybadgermpc sh
+```
+
+Run the test:
 
 ```bash
 pytest -v tests/test_passive.py -s
 ```
-     
-This generates and opens 1000 zero-sharings, `N=3` `t=2` (so no fault tolerance)
+
+or
+
+```bash
+python -m honeybadgermpc.passive
+```
+
+#### About code changes and building the image
+When developing, you should not need to rebuild the image nor exit running
+containers, unless new dependencies were added via the `Dockerfile`. Hence you
+can modify the code, add breakpoints, add new Python modules (files), and the
+modifications will be readily available withing the running containers.
+
 
 # Protocol Descriptions
 #### HBAVSS
