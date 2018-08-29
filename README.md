@@ -6,10 +6,13 @@
    [Forking Projects](https://guides.github.com/activities/forking/) if
    needed.)
 
-2. Install the latest [`docker`](https://docs.docker.com/install/) and
-   [`docker-compose`](https://docs.docker.com/compose/install/).
+2. Install [`Docker`](https://docs.docker.com/install/). (For Linux, see
+   [Manage Docker as a non-root user](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
+   to run `docker` without `sudo`.)
 
-3. Run the tests (the first time will take longer as the image will be built):
+3. Install [`docker-compose`](https://docs.docker.com/compose/install/).
+
+4. Run the tests (the first time will take longer as the image will be built):
 
    ```bash
    $ docker-compose run --rm honeybadgermpc
