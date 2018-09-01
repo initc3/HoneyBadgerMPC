@@ -51,10 +51,10 @@ class PassiveMpc(object):
 
         # print('[%d] reconstruct %s' % (self.myid, shareid,))
 
-        s = Poly.interpolate_at(shares)
-
-        # Set the result on the future representing this share
-        self._openings[shareid].set_result(s)
+        if not self._openings[shareid].done():
+            s = Poly.interpolate_at(shares)
+            # Set the result on the future representing this share
+            self._openings[shareid].set_result(s)
 
     def open_share(self, share):
         opening = asyncio.Future()
