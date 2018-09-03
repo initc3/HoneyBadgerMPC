@@ -78,6 +78,14 @@ class PassiveMpc(object):
         # Run receive loop as background task, until self.prog finishes
         loop = asyncio.get_event_loop()
         bgtask = loop.create_task(self._recvloop())
+
+        def handle_result(future):
+            if future.exception():
+                # Stop the loop otherwise the loop continues to await for the prog to
+                # finish which will never happen since the recvloop has terminated.
+                loop.stop()
+                future.result()
+        bgtask.add_done_callback(handle_result)
         res = await self.prog(self)
         bgtask.cancel()
         return res
