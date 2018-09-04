@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import Future
 from .field import GF
 from .polynomial import polynomialsOver
 from .router import simple_router
@@ -144,6 +145,32 @@ def write_shares(f, modulus, degree, myid, shares):
 
 
 def shareInContext(context):
+
+    def _binopField(fut, other, op):
+        assert type(other) in [ShareFuture, FieldFuture, Share, Field]
+        if isinstance(other, ShareFuture) or isinstance(other, Share):
+            res = ShareFuture()
+        elif isinstance(other, Field) or isinstance(other, FieldFuture):
+            res = FieldFuture()
+
+        if isinstance(other, Future):
+            def cb(_): return res.set_result(op(fut.result(), other.result()))
+            asyncio.gather(fut, other).add_done_callback(cb)
+        else:
+            def cb(_): return res.set_result(op(fut.result(), other))
+            fut.add_done_callback(cb)
+        return res
+
+    class FieldFuture(Future):
+        def __add__(self, other): return _binopField(
+            self, other, lambda a, b: a + b)
+
+        def __sub__(self, other): return _binopField(
+            self, other, lambda a, b: a - b)
+
+        def __mul__(self, other): return _binopField(
+            self, other, lambda a, b: a * b)
+
     class Share(object):
         def __init__(self, v):
             # v is the local value of the share
@@ -154,16 +181,23 @@ def shareInContext(context):
 
         # Publicly reconstruct a shared value
         def open(self):
-            return context.open_share(self)
+            res = FieldFuture()
+
+            def cb(f): return res.set_result(f.result())
+            context.open_share(self).add_done_callback(cb)
+            return res
 
         # Linear combinations of shares can be computed directly
         # TODO: add type checks for the operators
         # @typecheck(Share)
-        def __add__(self, other): return Share(self.v + other.v)
+        def __add__(self, other):
+            if isinstance(other, Field):
+                return Share(self.v + other)
+            elif isinstance(other, Share):
+                return Share(self.v + other.v)
 
         def __sub__(self, other): return Share(self.v - other.v)
-
-        def __radd__(self, other): return Share(self.v + other.v)
+        __radd__ = __add__
 
         def __rsub__(self, other): return Share(-self.v + other.v)
 
@@ -175,6 +209,36 @@ def shareInContext(context):
         def __mul__(self, other): raise NotImplemented
 
         def __str__(self): return '{%d}' % (self.v)
+
+    def _binopShare(fut, other, op):
+        assert type(other) in [ShareFuture, FieldFuture, Share, Field]
+        res = ShareFuture()
+        if isinstance(other, Future):
+            def cb(_): return res.set_result(op(fut.result(), other.result()))
+            asyncio.gather(fut, other).add_done_callback(cb)
+        else:
+            def cb(_): return res.set_result(op(fut.result(), other))
+            fut.add_done_callback(cb)
+        return res
+
+    class ShareFuture(Future):
+        def __add__(self, other): return _binopShare(
+            self, other, lambda a, b: a + b)
+
+        def __sub__(self, other): return _binopShare(
+            self, other, lambda a, b: a - b)
+
+        def __mul__(self, other): return _binopShare(
+            self, other, lambda a, b: a * b)
+
+        def open(self) -> FieldFuture:
+            res = FieldFuture()
+
+            def cb2(sh): return res.set_result(sh.result())
+
+            def cb1(_): return self.result().open().add_done_callback(cb2)
+            self.add_done_callback(cb1)
+            return res
 
     return Share
 
@@ -256,12 +320,17 @@ async def test_prog1(context):
     a, b, ab = triples[:3]
     # assert await a.open() * await b.open() == await ab.open()
 
-    D = await (x - a).open()
-    E = await (y - b).open()
+    D = (x - a).open()
+    E = (y - b).open()
 
     # This is a random share of x*y
-    xy = context.Share(D*E) + D*b + E*a + ab
+    print('type(D):', type(D))
+    print('type(b):', type(b))
+    xy = D*E + D*b + E*a + ab
 
+    print('type(x):', type(x))
+    print('type(y):', type(y))
+    print('type(xy):', type(xy))
     X, Y, XY = await x.open(), await y.open(), await xy.open()
     assert X * Y == XY
 
