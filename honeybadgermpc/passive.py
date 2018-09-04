@@ -1,4 +1,3 @@
-from __future__ import annotations
 import asyncio
 from asyncio import Future
 from .field import GF
