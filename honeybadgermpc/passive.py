@@ -4,7 +4,7 @@ from .field import GF, GFElement
 from .polynomial import polynomialsOver
 from .router import simple_router
 import random
-
+import os
 
 class NotEnoughShares(Exception):
     pass
@@ -52,10 +52,10 @@ class PassiveMpc(object):
 
         # print('[%d] reconstruct %s' % (self.myid, shareid,))
 
-        if not self._openings[shareid].done():
-            s = Poly.interpolate_at(shares)
-            # Set the result on the future representing this share
-            self._openings[shareid].set_result(s)
+        s = Poly.interpolate_at(shares)
+
+        # Set the result on the future representing this share
+        self._openings[shareid].set_result(s)
 
     def open_share(self, share):
         opening = asyncio.Future()
@@ -197,7 +197,8 @@ def shareInContext(context):
                 return Share(self.v + other.v)
 
         def __sub__(self, other): return Share(self.v - other.v)
-        __radd__ = __add__
+
+        def __radd__(self, other): return Share(self.v + other.v)
 
         def __rsub__(self, other): return Share(-self.v + other.v)
 
@@ -321,17 +322,12 @@ async def test_prog1(context):
     a, b, ab = triples[:3]
     # assert await a.open() * await b.open() == await ab.open()
 
-    D = (x - a).open()
-    E = (y - b).open()
+    D = await (x - a).open()
+    E = await (y - b).open()
 
     # This is a random share of x*y
-    print('type(D):', type(D))
-    print('type(b):', type(b))
-    xy = D*E + D*b + E*a + ab
+    xy = context.Share(D*E) + D*b + E*a + ab
 
-    print('type(x):', type(x))
-    print('type(y):', type(y))
-    print('type(xy):', type(xy))
     X, Y, XY = await x.open(), await y.open(), await xy.open()
     assert X * Y == XY
 
@@ -351,13 +347,154 @@ async def test_prog2(context):
         assert s == 0
     print('[%d] Finished' % (context.myid,))
 
+async def powermix_phase1(context):
 
+    k = 32
+    batch = 1
+    inputs = [[0 for _ in range(k)] for _ in range(batch)]
+    inputs_debug = [[0 for _ in range(k)] for _ in range(batch)]
+    p = 115792089237316195423570985008687907853269984665640564039457584007913129640423
+    Zp = GF(p)
+    a_minus_b = [[0 for _ in range(k)] for _ in range(batch)]
+    precomputed_powers = [[0 for _ in range(k)] for _ in range(k)]
+
+    def load_input_from_file(k,p,batch):
+        for batchiter in range(1, batch + 1):
+            filename = "party" + str(context.myid+1) + "_butterfly_online_batch" + str(batchiter)
+
+            FD = open(filename, "r")
+            line = FD.readline()
+            #if int(line) != k:
+            #    print "k dismatch!! k in file is %d"%(int(line))
+            line = FD.readline()
+            #if int(line) != p:
+            #    print "prime dismatch!! prime in file is %d"%(int(line))
+            Zp = GF(p)
+
+            line = FD.readline()
+            i = 0
+            while line and i < k:
+                #print i
+                inputs[batchiter-1][i] = context.Share(int(line))
+                line = FD.readline()
+                i = i + 1
+
+    load_input_from_file(k,p,batch)
+
+    def load_share_from_file(k,p,row):
+        #TODO:
+        #filename = "precompute-party%d-%d.share" % (self.runtime.num_players, self.runtime.threshold, self.k, self.runtime.id,cnt)
+        filename = "precompute-party%d.share" % (context.myid+1)
+        FD = open(filename, "r")
+        line = FD.readline()
+        # if int(line) != p:
+        #     print "p dismatch!! p in file is %d"%(int(line))
+        line = FD.readline()
+        # if int(line) != k:
+        #     print "k dismatch!! k in file is %d"%(int(line))
+
+
+        line = FD.readline()
+        i = 0
+        while line and i < k:
+            #print i
+            precomputed_powers[row][i] = context.Share(int(line))
+
+            line = FD.readline()
+            i = i + 1
+
+
+    for i in range(k):
+        load_share_from_file(k,p,i)
+
+    for b in range(batch):
+            for i in range(k):
+                a_minus_b[b][i] = await (inputs[b][i] - precomputed_powers[i][0]).open()
+
+
+    def create_output(batch):
+        print( "a-b calculation finished" )
+
+        path = "party" + str(context.myid+1) + "-powermixing-online-phase1-output"
+        folder = os.path.exists(path)
+        if not folder:
+            os.makedirs(path)
+        for b in range(batch):
+            for i in range(k):
+                filename = "party" + str(context.myid+1) + "-powermixing-online-phase1-output/powermixing-online-phase1-output" + str(i+1) + "-batch" + str(b+1)
+
+                FD = open(filename, "w")
+
+                content =  str(p) + "\n" + str(inputs[b][i])[1:-1] + "\n" + str(a_minus_b[b][i])[1:-1] + "\n" + str(k) + "\n"
+
+                for share in precomputed_powers[i]:
+                    content = content + str(share)[1:-1] + "\n"
+                FD.write(content)
+                FD.close()
+        print("output to file finished")
+    create_output(batch)
+
+
+async def powermix_phase3(context):
+
+    k = 32
+    batch = 1
+    inputs = [[0 for _ in range(k)] for _ in range(batch)]
+    p = 115792089237316195423570985008687907853269984665640564039457584007913129640423
+    Zp = GF(p)
+    open_value= [[0 for _ in range(k)] for _ in range(batch)]
+
+    def load_input_from_file(k,p,b):
+        for batch in range(b):
+            filename = "powers.sum" + str(context.myid+1) + "_batch" + str(batch+1)
+
+            FD = open(filename, "r")
+            line = FD.readline()
+            #if int(line) != p:
+            #    print "p dismatch!! p in file is %d"%(int(line))
+            line = FD.readline()
+            # if int(line) != k:
+            #     print "k dismatch!! k in file is %d"%(int(line))
+
+
+            line = FD.readline()
+            i = 0
+            while line and i < k:
+                #print i
+                inputs[batch][i] = context.Share(int(line))
+
+                line = FD.readline()
+                i = i + 1
+    load_input_from_file(k,p,batch)
+
+    for b in range(batch):
+        for i in range(k):
+            open_value[b][i] = await (inputs[b][i]).open()
+
+    def create_output(batch):
+
+        print("value open finished")
+
+        for b in range(batch):
+            filename = "party" + str(context.myid+1) + "-powermixing-online-phase3-output-batch" + str(b+1)
+
+            FD = open(filename, "w")
+
+            content =  str(p) + "\n" + str(k) + "\n"
+
+            for share in open_value[b]:
+                content = content + str(share)[1:-1] + "\n"
+            FD.write(content)
+            FD.close()
+            print("file outputs finished")
+    create_output(batch)
 # Run some test cases
 if __name__ == '__main__':
-    print('Generating random shares of zero in sharedata/')
-    generate_test_zeros('sharedata/test_zeros', 1000, 3, 2)
-    print('Generating random shares of triples in sharedata/')
-    generate_test_triples('sharedata/test_triples', 1000, 3, 2)
+    #print('Generating random shares of zero in sharedata/')
+    #print(os.getcwd())
+    #generate_test_zeros('sharedata/test_zeros', 1000, 3, 2)
+    #print('Generating random shares of triples in sharedata/')
+    #generate_test_triples('sharedata/test_triples', 1000, 3, 2)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
