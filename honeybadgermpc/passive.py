@@ -12,7 +12,7 @@ class NotEnoughShares(Exception):
 
 class PassiveMpc(object):
 
-    def __init__(self, sid, N, t, myid, send, recv, prog):
+    def __init__(self, sid, N, t, myid, send, recv, prog, **progArgs):
         # Parameters for passive secure MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(N) is int and type(t) is int
@@ -32,6 +32,7 @@ class PassiveMpc(object):
         # assigned an ID based on the order that share is encountered.
         # So the protocol must encounter the shares in the same order.
         self.prog = prog
+        self.progArgs = progArgs
 
         # Store deferreds representing SharedValues
         self._openings = []
@@ -87,7 +88,7 @@ class PassiveMpc(object):
                 loop.stop()
                 future.result()
         bgtask.add_done_callback(handle_result)
-        res = await self.prog(self)
+        res = await self.prog(self, **self.progArgs)
         bgtask.cancel()
         return res
 
@@ -246,14 +247,14 @@ def shareInContext(context):
 
 
 # Create a fake network with N instances of the program
-async def runProgramAsTasks(program, N, t):
+async def runProgramAsTasks(program, N, t, **kwargs):
     loop = asyncio.get_event_loop()
     sends, recvs = simple_router(N)
 
     tasks = []
     # bgtasks = []
     for i in range(N):
-        context = PassiveMpc('sid', N, t, i, sends[i], recvs[i], program)
+        context = PassiveMpc('sid', N, t, i, sends[i], recvs[i], program, **kwargs)
         tasks.append(loop.create_task(context._run()))
 
     results = await asyncio.gather(*tasks)

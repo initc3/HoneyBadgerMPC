@@ -15,6 +15,7 @@ REQUIRED = [
     'gmpy2',
     'zfec',
     'pycrypto',
+    'cffi',
 ]
 
 TESTS_REQUIRES = [

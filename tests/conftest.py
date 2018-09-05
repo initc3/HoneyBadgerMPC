@@ -6,6 +6,11 @@ from pytest import fixture
 
 
 @fixture
+def sharedatadir():
+    os.makedirs('sharedata', exist_ok=True)
+
+
+@fixture
 def sharedata_tmpdir(tmpdir):
     return tmpdir.mkdir('sharedata')
 

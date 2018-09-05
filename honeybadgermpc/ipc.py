@@ -9,10 +9,11 @@ from .passive import PassiveMpc
 
 
 class Senders(object):
-    def __init__(self, queues, config):
+    def __init__(self, queues, config, nodeid):
         self.queues = queues
         self.config = config
         self.totalBytesSent = 0
+        self.benchlogger = BenchmarkLogger.get(nodeid)
 
     async def connect(self):
         # Setup all connections first before sending messages
@@ -75,7 +76,7 @@ class Senders(object):
     def close(self):
         for q in self.queues:
             q.put_nowait(None)
-        benchmarkLogger.info("Total bytes sent out: %d", self.totalBytesSent)
+        self.benchlogger.info("Total bytes sent out: %d", self.totalBytesSent)
 
 
 class Listener(object):
@@ -127,11 +128,11 @@ class NodeDetails(object):
         self.port = port
 
 
-def setup_sockets(config, n, id):
+def setup_sockets(config, n, nodeid):
     senderQueues = [asyncio.Queue() for _ in range(n)]
-    sender = Senders(senderQueues, config)
+    sender = Senders(senderQueues, config, nodeid)
     listenerQueue = asyncio.Queue()
-    listener = Listener(listenerQueue, config[id].port)
+    listener = Listener(listenerQueue, config[nodeid].port)
 
     def makeSend(i):
         def _send(j, o):
@@ -152,12 +153,11 @@ def setup_sockets(config, n, id):
             return (i, o)
         return _recv
 
-    return (makeSend(id), makeRecv(id), sender, listener)
+    return (makeSend(nodeid), makeRecv(nodeid), sender, listener)
 
 
-async def runProgramAsProcesses(program, config, t, id):
-
-    send, recv, sender, listener = setup_sockets(config, len(config), id)
+async def runProgramAsProcesses(program, config, N, t, nodeid, **kwargs):
+    send, recv, sender, listener = setup_sockets(config, len(config), nodeid)
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
 
@@ -166,7 +166,7 @@ async def runProgramAsProcesses(program, config, t, id):
     await asyncio.sleep(2)
     await sender.connect()
     await asyncio.sleep(1)
-    context = PassiveMpc('sid', N, t, id, send, recv, program)
+    context = PassiveMpc('sid', N, t, nodeid, send, recv, program, **kwargs)
     results = await asyncio.ensure_future(context._run())
     await asyncio.sleep(1)
     sender.close()
@@ -200,7 +200,6 @@ if __name__ == "__main__":
                                  ' or a config file must be given as second argument.')
 
     nodeid = int(nodeid)
-    benchmarkLogger = BenchmarkLogger.get(nodeid)
     config_dict = load_config(configfile)
     N = config_dict['N']
     t = config_dict['t']
@@ -221,8 +220,8 @@ if __name__ == "__main__":
     loop.set_debug(True)
     try:
         loop.run_until_complete(
-            runProgramAsProcesses(test_prog1, network_info, t, nodeid))
+            runProgramAsProcesses(test_prog1, network_info, N, t, nodeid))
         loop.run_until_complete(
-            runProgramAsProcesses(test_prog2, network_info, t, nodeid))
+            runProgramAsProcesses(test_prog2, network_info, N, t, nodeid))
     finally:
         loop.close()

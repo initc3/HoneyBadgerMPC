@@ -8,9 +8,8 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly-201
 
 ENV PATH /root/.cargo/bin:$PATH
 
-RUN apt-get update && apt-get install -y libgmp-dev libmpc-dev libmpfr-dev
+RUN apt-get update && apt-get install -y libgmp-dev libmpc-dev libmpfr-dev libntl-dev libflint-dev
 
-RUN mkdir -p /usr/src/HoneyBadgerMPC
 WORKDIR /usr/src/HoneyBadgerMPC
 
 RUN pip install --upgrade pip
@@ -21,3 +20,7 @@ RUN pip install -e pairing/
 
 ARG BUILD
 RUN pip install --no-cache-dir .[$BUILD]
+
+RUN make -C honeybadgermpc/apps/shuffle/cpp
+RUN sed -i '30c #include "flint/flint.h"' /usr/include/flint/flintxx/flint_classes.h
+RUN python honeybadgermpc/apps/shuffle/solver/solver_build.py
