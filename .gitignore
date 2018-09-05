@@ -114,5 +114,15 @@ venv.bak/
 # AWS
 current.vms
 
+# CPP binaries
+compute-power-sums
+*.o
+
+# CFFI generated file
+lib_solver.cpp
+
+# Lock file
+lock.file
+
 *~
 sharedata/
