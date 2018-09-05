@@ -26,7 +26,7 @@ random_files_prefix = 'sharedata/test_random'
 
 class PassiveMpc(object):
 
-    def __init__(self, sid, N, t, myid, pid, send, recv, prog):
+    def __init__(self, sid, N, t, myid, pid, send, recv, prog, **progArgs):
         # Parameters for passive secure MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(N) is int and type(t) is int
@@ -47,6 +47,7 @@ class PassiveMpc(object):
         # assigned an ID based on the order that share is encountered.
         # So the protocol must encounter the shares in the same order.
         self.prog = prog
+        self.progArgs = progArgs
 
         # A task representing the opened values
         # { shareid => Future (field list(field)) }
@@ -133,7 +134,7 @@ class PassiveMpc(object):
         # Run receive loop as background task, until self.prog finishes
         # Cancel the background task, even if there's an exception
         bgtask = asyncio.create_task(self._recvloop())
-        result = asyncio.create_task(self.prog(self))
+        result = asyncio.create_task(self.prog(self, **self.progArgs))
         await asyncio.wait((bgtask, result), return_when=asyncio.FIRST_COMPLETED)
 
         if result.done():
@@ -341,11 +342,11 @@ class TaskProgramRunner(ProgramRunner):
         self.tasks = []
         self.loop = asyncio.get_event_loop()
 
-    def add(self, program):
+    def add(self, program, **kwargs):
         sends, recvs = simple_router(self.N)
         for i in range(self.N):
             context = PassiveMpc(
-                'sid', self.N, self.t, i, self.pid, sends[i], recvs[i], program
+                'sid', self.N, self.t, i, self.pid, sends[i], recvs[i], program, **kwargs
             )
             self.tasks.append(self.loop.create_task(context._run()))
         self.pid += 1

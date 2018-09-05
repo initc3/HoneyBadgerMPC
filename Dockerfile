@@ -8,9 +8,8 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly-201
 
 ENV PATH /root/.cargo/bin:$PATH
 
-RUN apt-get update && apt-get install -y libgmp-dev libmpc-dev libmpfr-dev
+RUN apt-get update && apt-get install -y libgmp-dev libmpc-dev libmpfr-dev libntl-dev libflint-dev
 
-RUN mkdir -p /usr/src/HoneyBadgerMPC
 WORKDIR /usr/src/HoneyBadgerMPC
 
 RUN pip install --upgrade pip
@@ -19,5 +18,14 @@ COPY . /usr/src/HoneyBadgerMPC
 
 RUN pip install -e pairing/
 
+# This is needed otherwise the build for the power sum solver will fail.
+# This is a known issue in the version of libflint-dev in apt.
+# https://github.com/wbhart/flint2/issues/217
+# This has been fixed if we pull the latest code from the repo. However, we want
+# to avoid compiling the lib from the source since it adds 20 minutes to the build.
+RUN sed -i '30c #include "flint/flint.h"' /usr/include/flint/flintxx/flint_classes.h
+
 ARG BUILD
 RUN pip install --no-cache-dir .[$BUILD]
+
+RUN make -C apps/shuffle/cpp

@@ -167,15 +167,17 @@ class ProcessProgramRunner(ProgramRunner):
 
         return makeSend(self.nodeid, self.pid), makeRecv(self.nodeid, self.pid)
 
-    def add(self, program):
+    def add(self, program, **kwargs):
         send, recv = self.getSendAndRecv()
         self.pid += 1
-        context = PassiveMpc('sid', N, t, self.nodeid, self.pid, send, recv, program)
+        context = PassiveMpc(
+            'sid', self.N, self.t, self.nodeid, self.pid, send, recv, program, **kwargs
+        )
         self.programs.append(asyncio.ensure_future(context._run()))
         return send, recv
 
     async def join(self):
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
         await self.senders.connect()
         results = await asyncio.gather(*self.programs)
         self.senders.close()
