@@ -6,11 +6,11 @@
    [Forking Projects](https://guides.github.com/activities/forking/) if
    needed.)
 
-2. Install [`Docker`](https://docs.docker.com/install/). (For Linux, see
+2. Install [Docker](https://docs.docker.com/install/). (For Linux, see
    [Manage Docker as a non-root user](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
    to run `docker` without `sudo`.)
 
-3. Install [`docker-compose`](https://docs.docker.com/compose/install/).
+3. Install [docker-compose](https://docs.docker.com/compose/install/).
 
 4. Run the tests (the first time will take longer as the image will be built):
 
