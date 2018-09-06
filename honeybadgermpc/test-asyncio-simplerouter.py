@@ -51,7 +51,7 @@ class Runtime():
 
     async def _run(self):
         while True:
-            await   # noqa TODO fix: await ?; e.g.: await asyncio.sleep(1)
+            await asyncio.sleep(1)
 
     def createshare(self, val):
         s = Share(self)
