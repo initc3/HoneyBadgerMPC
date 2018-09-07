@@ -1,3 +1,4 @@
+import asyncio
 import os
 import random
 
@@ -96,3 +97,92 @@ def triples_shares_files(request, GaloisField, triples_polys, triples_files_pref
     t = request.param['t']
     write_polys(
         triples_files_prefix, GaloisField.modulus, N, t, triples_polys)
+
+
+@fixture
+def simple_router():
+
+    def _simple_router(N):
+        """
+        Builds a set of connected channels
+
+        :return: broadcasting and receiving functions: ``(sends, receives)``
+        :rtype: tuple
+        """
+        # Create a mailbox for each party
+        mbox = [asyncio.Queue() for _ in range(N)]
+
+        def make_send(i):
+            def _send(j, o):
+                # print('SEND %8s [%2d -> %2d]' % (o[0], i, j))
+                # random delay
+                asyncio.get_event_loop().call_later(
+                    random.random()*1, mbox[j].put_nowait, (i, o))
+            return _send
+
+        def make_recv(j):
+            async def _recv():
+                i, o = await mbox[j].get()
+                # print('RECV %8s [%2d -> %2d]' % (o[0], i, j))
+                return i, o
+            return _recv
+
+        sends = {}
+        receives = {}
+        for i in range(N):
+            sends[i] = make_send(i)
+            receives[i] = make_recv(i)
+        return (sends, receives)
+
+    return _simple_router
+
+
+@fixture
+def random_element():
+    # TODO parametrize for `order`
+    order = 17
+    return random.randint(0, order)
+
+
+class Runtime():
+    def __init__(self, id, N, t, send, recv):
+        assert type(n) in (int, long)   # noqa TODO n is undefined
+        assert 3 <= k <= n  # noqa TODO fix: k is undefined
+        self.N = N
+        self.t = t
+        self.id = id
+
+        asyncio.get_event_loop().create_task(self._run)
+
+    async def _run(self):
+        while True:
+            await asyncio.sleep(1)
+
+    def createshare(self, val):
+        s = Share(self)
+        s._val = val
+        return s
+
+    def _send():
+        pass
+
+
+@fixture
+def runtime():
+    return Runtime()
+
+
+class Share():
+    def __init__(self, runtime):
+        pass
+
+    async def open(self, _):
+        # reveal share
+
+        # wait for shares
+        pass
+
+
+@fixture
+def share():
+    return Share()
