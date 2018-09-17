@@ -51,13 +51,13 @@ extensions = [
     'm2r',
 ]
 
-autodoc_default_flags = [
-    'members',
-    'undoc-members',
-    'private-members',
-    'inherited-members',
-    'show-inheritance',
-]
+autodoc_default_options = {
+    'members': None,
+    'undoc-members': None,
+    'private-members': None,
+    'inherited-members': None,
+    'show-inheritance': None,
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
