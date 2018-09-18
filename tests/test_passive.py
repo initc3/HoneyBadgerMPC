@@ -48,11 +48,11 @@ async def test_beaver_mul_with_zeros(zeros_files_prefix, triples_files_prefix):
         a, b, ab = triples[:3]
         assert await a.open() * await b.open() == await ab.open()
 
-        D = await (x - a).open()
-        E = await (y - b).open()
+        D = (x - a).open()
+        E = (y - b).open()
 
         # This is a random share of x*y
-        xy = context.Share(D*E) + D*b + E*a + ab
+        xy = D*E + D*b + E*a + ab
 
         X, Y, XY = await x.open(), await y.open(), await xy.open()
         assert X * Y == XY
@@ -85,11 +85,11 @@ async def test_beaver_mul(random_polys, random_files_prefix, triples_files_prefi
         a, b, ab = triples[:3]
         assert await a.open() * await b.open() == await ab.open()
 
-        D = await (x - a).open()
-        E = await (y - b).open()
+        D = (x - a).open()
+        E = (y - b).open()
 
         # This is a random share of x*y
-        xy = context.Share(D*E) + D*b + E*a + ab
+        xy = D*E + D*b + E*a + ab
 
         X, Y, XY = await x.open(), await y.open(), await xy.open()
         assert X * Y == XY
