@@ -81,7 +81,7 @@ class PassiveMpc(object):
         bgtask = loop.create_task(self._recvloop())
 
         def handle_result(future):
-            if future.exception():
+            if not future.cancelled() and future.exception():
                 # Stop the loop otherwise the loop continues to await for the prog to
                 # finish which will never happen since the recvloop has terminated.
                 loop.stop()
