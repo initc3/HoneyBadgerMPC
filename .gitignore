@@ -105,5 +105,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# VSCode
+.vscode/
+
 *~
 sharedata/
