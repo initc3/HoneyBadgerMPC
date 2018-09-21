@@ -1,6 +1,7 @@
 import operator
 import random
 from functools import reduce
+from .field import GF, GFElement
 
 
 def strip_trailing_zeros(a):
@@ -43,7 +44,7 @@ def polynomialsOver(field):
             # shares are in the form (x, y=f(x))
             if type(x_recomb) is int:
                 x_recomb = field(x_recomb)
-            assert type(x_recomb) is field
+            assert type(x_recomb) is GFElement
             xs, ys = zip(*shares)
             vector = []
             for i, x_i in enumerate(xs):
@@ -60,7 +61,7 @@ def polynomialsOver(field):
             """
             n = len(ys)
             assert n & (n-1) == 0, "n must be power of two"
-            assert type(omega) is field
+            assert type(omega) is GFElement
             assert omega ** n == 1, "must be an n'th root of unity"
             assert omega ** (n//2) != 1, "must be a primitive n'th root of unity"
             coeffs = [b/n for b in fft_helper(ys, 1/omega, field)]
@@ -68,7 +69,7 @@ def polynomialsOver(field):
 
         def evaluate_fft(self, omega, n):
             assert n & (n-1) == 0, "n must be power of two"
-            assert type(omega) is field
+            assert type(omega) is GFElement
             assert omega ** n == 1, "must be an n'th root of unity"
             assert omega ** (n//2) != 1, "must be a primitive n'th root of unity"
             return fft(self, omega, n)
@@ -158,7 +159,6 @@ def fft(poly, omega, n, seed=None):
 
 
 if __name__ == "__main__":
-    from .field import GF
     field = GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
     Poly = polynomialsOver(field)
     poly = Poly.random(degree=7)

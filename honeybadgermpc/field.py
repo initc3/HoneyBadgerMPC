@@ -76,6 +76,10 @@ The reason for the slightly confusing error message is that ``x`` and
 from gmpy import mpz
 
 
+class FieldsNotIdentical(Exception):
+    pass
+
+
 class FieldElement(object):
     """Common base class for elements."""
 
@@ -90,9 +94,33 @@ class FieldElement(object):
     __long__ = __int__
 
 
+class GF(object):
+    _field_cache = {}
+
+    def __init__(self, modulus):
+        self.modulus = modulus
+
+    def __call__(self, value):
+        return GFElement(value, self)
+
+    @staticmethod
+    def get(modulus):
+        if modulus in GF._field_cache:
+            return GF._field_cache[modulus]
+
+        if not mpz(modulus).is_prime():
+            raise ValueError("%d is not a prime" % modulus)
+
+        gf = GF(modulus)
+        GF._field_cache[modulus] = gf
+        return gf
+
+
 class GFElement(FieldElement):
 
-    def __init__(self, value):
+    def __init__(self, value, gf):
+        self.modulus = gf.modulus
+        self.field = gf
         self.value = value % self.modulus
 
     def __add__(self, other):
@@ -103,10 +131,11 @@ class GFElement(FieldElement):
             # We can do a quick test using 'is' here since
             # there will only be one class representing this
             # field.
-            assert self.field is other.field, "Fields must be identical"
-            return GFElement(self.value + other.value)
+            if self.field is not other.field:
+                raise FieldsNotIdentical
+            return GFElement(self.value + other.value, self.field)
         except AttributeError:
-            return GFElement(self.value + other)
+            return GFElement(self.value + other, self.field)
 
     __radd__ = __add__
 
@@ -115,48 +144,51 @@ class GFElement(FieldElement):
         if not isinstance(other, (GFElement, int)):
             return NotImplemented
         try:
-            assert self.field is other.field, "Fields must be identical"
-            return GFElement(self.value - other.value)
+            if self.field is not other.field:
+                raise FieldsNotIdentical
+            return GFElement(self.value - other.value, self.field)
         except AttributeError:
-            return GFElement(self.value - other)
+            return GFElement(self.value - other, self.field)
 
     def __rsub__(self, other):
         """Subtraction (reflected argument version)."""
-        return GFElement(other - self.value)
+        return GFElement(other - self.value, self.field)
 
     def __xor__(self, other):
         """Xor for bitvalues."""
         if not isinstance(other, (GFElement, int)):
             return NotImplemented
         try:
-            assert self.field is other.field, "Fields must be identical"
-            return GFElement(self.value ^ other.value)
+            if self.field is not other.field:
+                raise FieldsNotIdentical
+            return GFElement(self.value ^ other.value, self.field)
         except AttributeError:
-            return GFElement(self.value ^ other)
+            return GFElement(self.value ^ other, self.field)
 
     def __rxor__(self, other):
         """Xor for bitvalues (reflected argument version)."""
-        return GFElement(other ^ self.value)
+        return GFElement(other ^ self.value, self.field)
 
     def __mul__(self, other):
         """Multiplication."""
         if not isinstance(other, (GFElement, int)):
             return NotImplemented
         try:
-            assert self.field is other.field, "Fields must be identical"
-            return GFElement(self.value * other.value)
+            if self.field is not other.field:
+                raise FieldsNotIdentical
+            return GFElement(self.value * other.value, self.field)
         except AttributeError:
-            return GFElement(self.value * other)
+            return GFElement(self.value * other, self.field)
 
     __rmul__ = __mul__
 
     def __pow__(self, exponent):
         """Exponentiation."""
-        return GFElement(pow(self.value, exponent, self.modulus))
+        return GFElement(pow(self.value, exponent, self.modulus), self.field)
 
     def __neg__(self):
         """Negation."""
-        return GFElement(-self.value)
+        return GFElement(-self.value, self.field)
 
     def __invert__(self):
         """Inversion.
@@ -181,22 +213,23 @@ class GFElement(FieldElement):
             return (lastx, lasty, a)
 
         inverse = extended_gcd(self.value, self.modulus)[0]
-        return GFElement(inverse)
+        return GFElement(inverse, self.field)
 
     def __div__(self, other):
         """Division."""
         try:
-            assert self.field is other.field, "Fields must be identical"
+            if self.field is not other.field:
+                raise FieldsNotIdentical
             return self * ~other
         except AttributeError:
-            return self * ~GFElement(other)
+            return self * ~GFElement(other, self.field)
 
     __truediv__ = __div__
     __floordiv__ = __div__
 
     def __rdiv__(self, other):
         """Division (reflected argument version)."""
-        return GFElement(other) / self
+        return GFElement(other, self.field) / self
 
     __rtruediv__ = __rdiv__
     __rfloordiv__ = __rdiv__
@@ -216,7 +249,7 @@ class GFElement(FieldElement):
         # (congruent to 3 mod 4), there will be no reminder in the
         # division below.
         root = pow(self.value, (self.modulus+1)//4, self.modulus)
-        return GFElement(root)
+        return GFElement(root, self.field)
 
     def bit(self, index):
         """Extract a bit (index is counted from zero)."""
@@ -250,7 +283,8 @@ class GFElement(FieldElement):
     def __eq__(self, other):
         """Equality test."""
         try:
-            assert self.field is other.field, "Fields must be identical"
+            if self.field is not other.field:
+                raise FieldsNotIdentical
             return self.value == other.value
         except AttributeError:
             return self.value == other
@@ -258,7 +292,8 @@ class GFElement(FieldElement):
     def __ne__(self, other):
         """Inequality test."""
         try:
-            assert self.field is other.field, "Fields must be identical"
+            if self.field is not other.field:
+                raise FieldsNotIdentical
             return self.value != other.value
         except AttributeError:
             return self.value != other
@@ -266,7 +301,8 @@ class GFElement(FieldElement):
     def __cmp__(self, other):
         """Comparison."""
         try:
-            assert self.field is other.field, "Fields must be identical"
+            if self.field is not other.field:
+                raise FieldsNotIdentical
             # TODO Replace with (a > b) - (a < b)
             # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
             return cmp(self.value, other.value)     # noqa  XXX until above is done
@@ -295,24 +331,6 @@ class GFElement(FieldElement):
         False
         """
         return self.value != 0
-
-
-class GF(object):
-    _field_cache = {}
-
-    @staticmethod
-    def get(modulus):
-        if modulus in GF._field_cache:
-            return GF._field_cache[modulus]
-
-        if not mpz(modulus).is_prime():
-            raise ValueError("%d is not a prime" % modulus)
-
-        GFElement.modulus = modulus
-        GFElement.field = GFElement
-
-        GF._field_cache[modulus] = GFElement
-        return GFElement
 
 
 def FakeGF(modulus):

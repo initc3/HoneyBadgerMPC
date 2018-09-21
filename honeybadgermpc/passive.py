@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Future
-from .field import GF
+from .field import GF, GFElement
 from .polynomial import polynomialsOver
 from .router import simple_router
 from .ipc import process_router
@@ -148,11 +148,11 @@ def write_shares(f, modulus, degree, myid, shares):
 def shareInContext(context):
 
     def _binopField(fut, other, op):
-        assert type(other) in [ShareFuture, FieldFuture, Share, Field]
+        assert type(other) in [ShareFuture, GFElementFuture, Share, GFElement]
         if isinstance(other, ShareFuture) or isinstance(other, Share):
             res = ShareFuture()
-        elif isinstance(other, Field) or isinstance(other, FieldFuture):
-            res = FieldFuture()
+        elif isinstance(other, GFElement) or isinstance(other, GFElementFuture):
+            res = GFElementFuture()
 
         if isinstance(other, Future):
             def cb(_): return res.set_result(op(fut.result(), other.result()))
@@ -162,7 +162,7 @@ def shareInContext(context):
             fut.add_done_callback(cb)
         return res
 
-    class FieldFuture(Future):
+    class GFElementFuture(Future):
         def __add__(self, other): return _binopField(
             self, other, lambda a, b: a + b)
 
@@ -177,12 +177,12 @@ def shareInContext(context):
             # v is the local value of the share
             if type(v) is int:
                 v = Field(v)
-            assert type(v) is Field
+            assert type(v) is GFElement
             self.v = v
 
         # Publicly reconstruct a shared value
         def open(self):
-            res = FieldFuture()
+            res = GFElementFuture()
 
             def cb(f): return res.set_result(f.result())
             context.open_share(self).add_done_callback(cb)
@@ -192,7 +192,7 @@ def shareInContext(context):
         # TODO: add type checks for the operators
         # @typecheck(Share)
         def __add__(self, other):
-            if isinstance(other, Field):
+            if isinstance(other, GFElement):
                 return Share(self.v + other)
             elif isinstance(other, Share):
                 return Share(self.v + other.v)
@@ -212,7 +212,7 @@ def shareInContext(context):
         def __str__(self): return '{%d}' % (self.v)
 
     def _binopShare(fut, other, op):
-        assert type(other) in [ShareFuture, FieldFuture, Share, Field]
+        assert type(other) in [ShareFuture, GFElementFuture, Share, GFElement]
         res = ShareFuture()
         if isinstance(other, Future):
             def cb(_): return res.set_result(op(fut.result(), other.result()))
@@ -232,8 +232,8 @@ def shareInContext(context):
         def __mul__(self, other): return _binopShare(
             self, other, lambda a, b: a * b)
 
-        def open(self) -> FieldFuture:
-            res = FieldFuture()
+        def open(self) -> GFElementFuture:
+            res = GFElementFuture()
 
             def cb2(sh): return res.set_result(sh.result())
 
