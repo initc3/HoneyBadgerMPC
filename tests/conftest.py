@@ -30,7 +30,7 @@ def triples_files_prefix(sharedata_tmpdir):
 # e.g.: bls12_381_field?
 def GaloisField():
     from honeybadgermpc.field import GF
-    return GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+    return GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
 
 
 @fixture

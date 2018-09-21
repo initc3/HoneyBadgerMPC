@@ -24,7 +24,7 @@ arithmetic one would expect: addition, multiplication, etc.
 
 Defining a field:
 
->>> Zp = GF(19)
+>>> Zp = GF.get(19)
 
 Defining field elements:
 
@@ -62,7 +62,7 @@ prime modulus (see :func:`GF` for more information):
 Field elements from different fields cannot be mixed, you will get a
 type error if you try:
 
->>> Zq = GF(17)
+>>> Zq = GF.get(17)
 >>> z = Zq(2)
 >>> x + z
 Traceback (most recent call last):
@@ -74,8 +74,6 @@ The reason for the slightly confusing error message is that ``x`` and
 """
 
 from gmpy import mpz
-
-_field_cache = {}
 
 
 class FieldElement(object):
@@ -92,253 +90,229 @@ class FieldElement(object):
     __long__ = __int__
 
 
-def GF(modulus):
-    """Generate a Galois (finite) field with the given modulus.
+class GFElement(FieldElement):
 
-    The modulus must be a prime:
+    def __init__(self, value):
+        self.value = value % self.modulus
 
-    >>> Z23 = GF(23) # works
-    >>> Z10 = GF(10) # not a prime
-    Traceback (most recent call last):
-        ...
-    ValueError: 10 is not a prime
+    def __add__(self, other):
+        """Addition."""
+        if not isinstance(other, (GFElement, int)):
+            return NotImplemented
+        try:
+            # We can do a quick test using 'is' here since
+            # there will only be one class representing this
+            # field.
+            assert self.field is other.field, "Fields must be identical"
+            return GFElement(self.value + other.value)
+        except AttributeError:
+            return GFElement(self.value + other)
 
-    A modulus of 256 is special since it returns the GF(2^8) field
-    even though 256 is no prime:
+    __radd__ = __add__
 
-    >>> GF256 = GF(256)
-    >>> print GF256(1)
-    [1]
+    def __sub__(self, other):
+        """Subtraction."""
+        if not isinstance(other, (GFElement, int)):
+            return NotImplemented
+        try:
+            assert self.field is other.field, "Fields must be identical"
+            return GFElement(self.value - other.value)
+        except AttributeError:
+            return GFElement(self.value - other)
 
-    Please note, that if you wish to calculate square roots, the
-    modulus must be a Blum prime (congruent to 3 mod 4):
+    def __rsub__(self, other):
+        """Subtraction (reflected argument version)."""
+        return GFElement(other - self.value)
 
-    >>> Z17 = GF(17) # 17 % 4 == 1, so 17 is no Blum prime
-    >>> x = Z17(10)
-    >>> x.sqrt()
-    Traceback (most recent call last):
-        ...
-    AssertionError: Cannot compute square root of {10} with modulus 17
-    """
-    if modulus in _field_cache:
-        return _field_cache[modulus]
+    def __xor__(self, other):
+        """Xor for bitvalues."""
+        if not isinstance(other, (GFElement, int)):
+            return NotImplemented
+        try:
+            assert self.field is other.field, "Fields must be identical"
+            return GFElement(self.value ^ other.value)
+        except AttributeError:
+            return GFElement(self.value ^ other)
 
-    if not mpz(modulus).is_prime():
-        raise ValueError("%d is not a prime" % modulus)
+    def __rxor__(self, other):
+        """Xor for bitvalues (reflected argument version)."""
+        return GFElement(other ^ self.value)
 
-    # Define a new class representing the field. This class will be
-    # returned at the end of the function.
-    class GFElement(FieldElement):
+    def __mul__(self, other):
+        """Multiplication."""
+        if not isinstance(other, (GFElement, int)):
+            return NotImplemented
+        try:
+            assert self.field is other.field, "Fields must be identical"
+            return GFElement(self.value * other.value)
+        except AttributeError:
+            return GFElement(self.value * other)
 
-        def __init__(self, value):
-            self.value = value % self.modulus
+    __rmul__ = __mul__
 
-        def __add__(self, other):
-            """Addition."""
-            if not isinstance(other, (GFElement, int)):
-                return NotImplemented
-            try:
-                # We can do a quick test using 'is' here since
-                # there will only be one class representing this
-                # field.
-                assert self.field is other.field, "Fields must be identical"
-                return GFElement(self.value + other.value)
-            except AttributeError:
-                return GFElement(self.value + other)
+    def __pow__(self, exponent):
+        """Exponentiation."""
+        return GFElement(pow(self.value, exponent, self.modulus))
 
-        __radd__ = __add__
+    def __neg__(self):
+        """Negation."""
+        return GFElement(-self.value)
 
-        def __sub__(self, other):
-            """Subtraction."""
-            if not isinstance(other, (GFElement, int)):
-                return NotImplemented
-            try:
-                assert self.field is other.field, "Fields must be identical"
-                return GFElement(self.value - other.value)
-            except AttributeError:
-                return GFElement(self.value - other)
+    def __invert__(self):
+        """Inversion.
 
-        def __rsub__(self, other):
-            """Subtraction (reflected argument version)."""
-            return GFElement(other - self.value)
+        Note that zero cannot be inverted, trying to do so
+        will raise a ZeroDivisionError.
+        """
+        if self.value == 0:
+            raise ZeroDivisionError("Cannot invert zero")
 
-        def __xor__(self, other):
-            """Xor for bitvalues."""
-            if not isinstance(other, (GFElement, int)):
-                return NotImplemented
-            try:
-                assert self.field is other.field, "Fields must be identical"
-                return GFElement(self.value ^ other.value)
-            except AttributeError:
-                return GFElement(self.value ^ other)
+        def extended_gcd(a, b):
+            """The extended Euclidean algorithm."""
+            x = 0
+            lastx = 1
+            y = 1
+            lasty = 0
+            while b != 0:
+                quotient = a // b
+                a, b = b, a % b
+                x, lastx = lastx - quotient*x, x
+                y, lasty = lasty - quotient*y, y
+            return (lastx, lasty, a)
 
-        def __rxor__(self, other):
-            """Xor for bitvalues (reflected argument version)."""
-            return GFElement(other ^ self.value)
+        inverse = extended_gcd(self.value, self.modulus)[0]
+        return GFElement(inverse)
 
-        def __mul__(self, other):
-            """Multiplication."""
-            if not isinstance(other, (GFElement, int)):
-                return NotImplemented
-            try:
-                assert self.field is other.field, "Fields must be identical"
-                return GFElement(self.value * other.value)
-            except AttributeError:
-                return GFElement(self.value * other)
+    def __div__(self, other):
+        """Division."""
+        try:
+            assert self.field is other.field, "Fields must be identical"
+            return self * ~other
+        except AttributeError:
+            return self * ~GFElement(other)
 
-        __rmul__ = __mul__
+    __truediv__ = __div__
+    __floordiv__ = __div__
 
-        def __pow__(self, exponent):
-            """Exponentiation."""
-            return GFElement(pow(self.value, exponent, self.modulus))
+    def __rdiv__(self, other):
+        """Division (reflected argument version)."""
+        return GFElement(other) / self
 
-        def __neg__(self):
-            """Negation."""
-            return GFElement(-self.value)
+    __rtruediv__ = __rdiv__
+    __rfloordiv__ = __rdiv__
 
-        def __invert__(self):
-            """Inversion.
+    def sqrt(self):
+        """Square root.
 
-            Note that zero cannot be inverted, trying to do so
-            will raise a ZeroDivisionError.
-            """
-            if self.value == 0:
-                raise ZeroDivisionError("Cannot invert zero")
+        No attempt is made the to return the positive square root.
 
-            def extended_gcd(a, b):
-                """The extended Euclidean algorithm."""
-                x = 0
-                lastx = 1
-                y = 1
-                lasty = 0
-                while b != 0:
-                    quotient = a // b
-                    a, b = b, a % b
-                    x, lastx = lastx - quotient*x, x
-                    y, lasty = lasty - quotient*y, y
-                return (lastx, lasty, a)
+        Computing square roots is only possible when the modulus
+        is a Blum prime (congruent to 3 mod 4).
+        """
+        assert self.modulus % 4 == 3, "Cannot compute square " \
+            "root of %s with modulus %s" % (self, self.modulus)
 
-            inverse = extended_gcd(self.value, self.modulus)[0]
-            return GFElement(inverse)
+        # Because we assert that the modulus is a Blum prime
+        # (congruent to 3 mod 4), there will be no reminder in the
+        # division below.
+        root = pow(self.value, (self.modulus+1)//4, self.modulus)
+        return GFElement(root)
 
-        def __div__(self, other):
-            """Division."""
-            try:
-                assert self.field is other.field, "Fields must be identical"
-                return self * ~other
-            except AttributeError:
-                return self * ~GFElement(other)
+    def bit(self, index):
+        """Extract a bit (index is counted from zero)."""
+        return (self.value >> index) & 1
 
-        __truediv__ = __div__
-        __floordiv__ = __div__
+    def signed(self):
+        """Return a signed integer representation of the value.
 
-        def __rdiv__(self, other):
-            """Division (reflected argument version)."""
-            return GFElement(other) / self
-
-        __rtruediv__ = __rdiv__
-        __rfloordiv__ = __rdiv__
-
-        def sqrt(self):
-            """Square root.
-
-            No attempt is made the to return the positive square root.
-
-            Computing square roots is only possible when the modulus
-            is a Blum prime (congruent to 3 mod 4).
-            """
-            assert self.modulus % 4 == 3, "Cannot compute square " \
-                "root of %s with modulus %s" % (self, self.modulus)
-
-            # Because we assert that the modulus is a Blum prime
-            # (congruent to 3 mod 4), there will be no reminder in the
-            # division below.
-            root = pow(self.value, (self.modulus+1)//4, self.modulus)
-            return GFElement(root)
-
-        def bit(self, index):
-            """Extract a bit (index is counted from zero)."""
-            return (self.value >> index) & 1
-
-        def signed(self):
-            """Return a signed integer representation of the value.
-
-            If x > floor(p/2) then subtract p to obtain negative integer.
-            """
-            if self.value > ((self.modulus-1)/2):
-                return self.value - self.modulus
-            else:
-                return self.value
-
-        def unsigned(self):
-            """Return a unsigned representation of the value"""
+        If x > floor(p/2) then subtract p to obtain negative integer.
+        """
+        if self.value > ((self.modulus-1)/2):
+            return self.value - self.modulus
+        else:
             return self.value
 
-        def __repr__(self):
-            return "{%d}" % self.value
-            # return "GFElement(%d)" % self.value
+    def unsigned(self):
+        """Return a unsigned representation of the value"""
+        return self.value
 
-        def __str__(self):
-            """Informal string representation.
+    def __repr__(self):
+        return "{%d}" % self.value
+        # return "GFElement(%d)" % self.value
 
-            This is simply the value enclosed in curly braces.
-            """
-            return "{%d}" % self.unsigned()
+    def __str__(self):
+        """Informal string representation.
 
-        def __eq__(self, other):
-            """Equality test."""
-            try:
-                assert self.field is other.field, "Fields must be identical"
-                return self.value == other.value
-            except AttributeError:
-                return self.value == other
+        This is simply the value enclosed in curly braces.
+        """
+        return "{%d}" % self.unsigned()
 
-        def __ne__(self, other):
-            """Inequality test."""
-            try:
-                assert self.field is other.field, "Fields must be identical"
-                return self.value != other.value
-            except AttributeError:
-                return self.value != other
+    def __eq__(self, other):
+        """Equality test."""
+        try:
+            assert self.field is other.field, "Fields must be identical"
+            return self.value == other.value
+        except AttributeError:
+            return self.value == other
 
-        def __cmp__(self, other):
-            """Comparison."""
-            try:
-                assert self.field is other.field, "Fields must be identical"
-                # TODO Replace with (a > b) - (a < b)
-                # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
-                return cmp(self.value, other.value)     # noqa  XXX until above is done
-            except AttributeError:
-                # TODO Replace with (a > b) - (a < b)
-                # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
-                return cmp(self.value, other)   # noqa XXX until above is done
+    def __ne__(self, other):
+        """Inequality test."""
+        try:
+            assert self.field is other.field, "Fields must be identical"
+            return self.value != other.value
+        except AttributeError:
+            return self.value != other
 
-        def __hash__(self):
-            """Hash value."""
-            return hash((self.field, self.value))
+    def __cmp__(self, other):
+        """Comparison."""
+        try:
+            assert self.field is other.field, "Fields must be identical"
+            # TODO Replace with (a > b) - (a < b)
+            # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
+            return cmp(self.value, other.value)     # noqa  XXX until above is done
+        except AttributeError:
+            # TODO Replace with (a > b) - (a < b)
+            # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
+            return cmp(self.value, other)   # noqa XXX until above is done
 
-        def __nonzero__(self):
-            """Truth value testing.
+    def __hash__(self):
+        """Hash value."""
+        return hash((self.field, self.value))
 
-            Returns False if this element is zero, True otherwise.
-            This allows GF elements to be used directly in Boolean
-            formula:
+    def __nonzero__(self):
+        """Truth value testing.
 
-            >>> bool(GF256(0))
-            False
-            >>> bool(GF256(1))
-            True
-            >>> x = GF256(1)
-            >>> not x
-            False
-            """
-            return self.value != 0
+        Returns False if this element is zero, True otherwise.
+        This allows GF elements to be used directly in Boolean
+        formula:
 
-    GFElement.modulus = modulus
-    GFElement.field = GFElement
+        >>> bool(GF256(0))
+        False
+        >>> bool(GF256(1))
+        True
+        >>> x = GF256(1)
+        >>> not x
+        False
+        """
+        return self.value != 0
 
-    _field_cache[modulus] = GFElement
-    return GFElement
+
+class GF(object):
+    _field_cache = {}
+
+    @staticmethod
+    def get(modulus):
+        if modulus in GF._field_cache:
+            return GF._field_cache[modulus]
+
+        if not mpz(modulus).is_prime():
+            raise ValueError("%d is not a prime" % modulus)
+
+        GFElement.modulus = modulus
+        GFElement.field = GFElement
+
+        GF._field_cache[modulus] = GFElement
+        return GFElement
 
 
 def FakeGF(modulus):
