@@ -19,6 +19,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .:/usr/src/HoneyBadgerMPC
+    environment:
+      - O=-W --keep-going
     command: make -C docs html
   viewdocs:
     image: nginx
