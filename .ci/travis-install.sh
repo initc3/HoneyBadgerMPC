@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ev
+
 pip install --upgrade pip
 
 if [ "${BUILD}" == "tests" ]; then
