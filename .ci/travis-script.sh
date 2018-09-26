@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ev
+
 BASE_CMD="docker-compose -f .travis.compose.yml run --rm test-hbmpc"
 
 if [ "${BUILD}" == "tests" ]; then
