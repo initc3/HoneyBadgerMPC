@@ -33,6 +33,7 @@ DOCS_REQUIRE = [
     'sphinx-autobuild',
     'sphinx_rtd_theme',
     'm2r',
+    'doc8',
 ]
 
 ETH_REQUIRES = ['web3', 'ethereum']
