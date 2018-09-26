@@ -1,8 +1,3 @@
-import asyncio
-import random
-from .field import GF, GFElement
-from .polynomial import polynomialsOver
-
 """
 Ideal functionality for Asynchronous Verifiable Secret Sharing (AVSS or SecretShare)
 
@@ -15,6 +10,11 @@ of AVSS protocol construction, meaning that there is an instance created for eac
 party. However, the instances of Ideal Protocol (with the same `sid`) all share a
 singleton Functionality.
 """
+import asyncio
+import random
+from .field import GF, GFElement
+from .polynomial import polynomialsOver
+
 
 # Fix the field for now
 Field = GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)

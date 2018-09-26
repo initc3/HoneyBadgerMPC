@@ -8,7 +8,7 @@ This module can be used to:
 
 example of config dict:
 
-code-block:: python
+.. code-block:: python
 
     {
         'N': 4,

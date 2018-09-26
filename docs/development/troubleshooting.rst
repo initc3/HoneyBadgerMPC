@@ -1,7 +1,3 @@
-********************
-Notes for Developers
-********************
-
 Troubleshooting
 ===============
 Some problems may sometimes be resolved by deleting some cached files. You can
@@ -18,6 +14,8 @@ Using `docker-compose`:
 
     $ docker-compose run --rm honeybadgermpc make clean
 
+Debugging ``asyncio``
+---------------------
 
 :py:data:`sys.path`/:py:envvar:`PYTHONPATH` issues
 --------------------------------------------------
@@ -58,15 +56,6 @@ Relevant links
   <https://docs.pytest.org/en/latest/pythonpath.html>`_
 * `pytest Good Integration Practices
   <https://docs.pytest.org/en/latest/goodpractices.html>`_
-
-
-FAQ
-===
-
-**Q.** Why some test functions import modules-under-test or related ones locally
-instead of importing at the top?
-
-**A.** See https://pylonsproject.org/community-unit-testing-guidelines.html
 
 
 .. _development mode: https://packaging.python.org/tutorials/installing-packages/#installing-from-a-local-src-tree

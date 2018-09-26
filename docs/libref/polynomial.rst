@@ -1,0 +1,3 @@
+polynomial
+==========
+.. automodule:: honeybadgermpc.polynomial
