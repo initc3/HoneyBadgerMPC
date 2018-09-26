@@ -1,9 +1,9 @@
-import asyncio
-import random
 """
 Ideal functionality for Random Share
 This protocol returns a single random share
 """
+import asyncio
+import random
 
 
 class ShareSingle_Functionality(object):

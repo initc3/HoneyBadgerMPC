@@ -1,0 +1,3 @@
+router
+======
+.. automodule:: honeybadgermpc.router
