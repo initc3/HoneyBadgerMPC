@@ -15,7 +15,7 @@ REQUIRED = [
     'gmpy2',
 ]
 
-TEST_REQUIRES = [
+TESTS_REQUIRES = [
     'flake8',
     'pytest',
     'pytest-asyncio',
@@ -38,8 +38,8 @@ DOCS_REQUIRE = [
 ETH_REQUIRES = ['web3', 'ethereum']
 
 EXTRAS = {
-    'test': TEST_REQUIRES,
-    'dev': DEV_REQUIRES + TEST_REQUIRES + DOCS_REQUIRE,
+    'tests': TESTS_REQUIRES,
+    'dev': DEV_REQUIRES + TESTS_REQUIRES + DOCS_REQUIRE,
     'docs': DOCS_REQUIRE,
     'eth': ETH_REQUIRES,
 }
