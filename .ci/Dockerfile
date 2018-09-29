@@ -11,4 +11,5 @@ RUN pip install --upgrade pip
 
 COPY . /usr/src/HoneyBadgerMPC
 
-RUN pip install --no-cache-dir -e .[test]
+ARG BUILD
+RUN pip install --no-cache-dir .[$BUILD]

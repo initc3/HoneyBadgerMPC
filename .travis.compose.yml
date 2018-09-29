@@ -5,5 +5,7 @@ services:
     build:
       context: .
       dockerfile: .ci/Dockerfile
+      args:
+        - BUILD
     volumes:
       - .:/usr/src/HoneyBadgerMPC

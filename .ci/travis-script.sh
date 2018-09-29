@@ -9,5 +9,5 @@ if [ "${BUILD}" == "tests" ]; then
 elif [ "${BUILD}" == "flake8" ]; then
     flake8
 elif [ "${BUILD}" == "docs" ]; then
-    sphinx-build -M html docs docs/_build -c docs -W
+    $BASE_CMD sphinx-build -M html docs docs/_build -c docs -W
 fi
