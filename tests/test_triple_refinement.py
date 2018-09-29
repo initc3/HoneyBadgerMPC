@@ -4,7 +4,7 @@ import asyncio
 
 @mark.asyncio
 async def test_triple_refinement(triples_files_prefix):
-    from honeybadgermpc.passive import runProgramInNetwork, generate_test_triples
+    from honeybadgermpc.passive import runProgramAsTasks, generate_test_triples
     from honeybadgermpc.triple_refinement import refineTriples
     N, t = 7, 3
     # FIXME: This needs to be replaced with a fixture
@@ -27,4 +27,4 @@ async def test_triple_refinement(triples_files_prefix):
             # print("\n[%d] %d * %d == %d" % (context.myid, d, e, de))
             assert d * e == de
 
-    await runProgramInNetwork(_prog, N, t)
+    await runProgramAsTasks(_prog, N, t)
