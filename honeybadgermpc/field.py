@@ -73,7 +73,7 @@ The reason for the slightly confusing error message is that ``x`` and
 ``z`` are instances of two *different* classes called ``GFElement``.
 """
 
-from gmpy import mpz
+from gmpy2 import is_prime, mpz
 
 
 class FieldsNotIdentical(Exception):
@@ -111,7 +111,7 @@ class GF(object):
         if modulus in GF._field_cache:
             return GF._field_cache[modulus]
 
-        if not mpz(modulus).is_prime():
+        if not is_prime(mpz(modulus)):
             raise ValueError("%d is not a prime" % modulus)
 
         gf = GF(modulus)

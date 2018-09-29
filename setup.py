@@ -12,7 +12,7 @@ REQUIRES_PYTHON = '>=3.7.0'
 VERSION = None
 
 REQUIRED = [
-    'gmpy',
+    'gmpy2',
 ]
 
 TEST_REQUIRES = [
