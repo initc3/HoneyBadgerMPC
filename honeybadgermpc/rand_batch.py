@@ -1,10 +1,10 @@
 import asyncio
 import random
 from .field import GF
-from .polynomial import polynomialsOver, interp_extrap, get_omega
+from .polynomial import polynomialsOver, get_omega
 
 # Fix the field for now
-Field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+Field = GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
 Poly = polynomialsOver(Field)
 
 #######################################
@@ -97,7 +97,7 @@ class ShareRandom_Protocol(object):
 
             # Interpolate all the committed shares
             omega = get_omega(Field, 2*D, seed=0)
-            outputs = interp_extrap(Poly, input_shares[:D], omega)
+            outputs = Poly.interp_extrap(input_shares[:D], omega)
             output_shares = outputs[1:2*((sum(valid)-f)*B):2]   # Pick the odd shares
             print('output_shares:', len(output_shares))
 
