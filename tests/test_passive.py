@@ -4,7 +4,7 @@ from pytest import mark
 @mark.asyncio
 @mark.usefixtures('zeros_shares_files')
 async def test_open_shares(zeros_files_prefix):
-    from honeybadgermpc.passive import runProgramAsTasks
+    from honeybadgermpc.passive import runProgramInNetwork
     N, t = 3, 2
     number_of_secrets = 100
 
@@ -22,7 +22,7 @@ async def test_open_shares(zeros_files_prefix):
         print('[%d] Finished' % (context.myid,))
         return secrets
 
-    results = await runProgramAsTasks(_prog, N, t)
+    results = await runProgramInNetwork(_prog, N, t)
     assert len(results) == N
     assert all(len(secrets) == number_of_secrets for secrets in results)
     assert all(secret == 0 for secrets in results for secret in secrets)
@@ -31,7 +31,7 @@ async def test_open_shares(zeros_files_prefix):
 @mark.asyncio
 @mark.usefixtures('zeros_shares_files', 'triples_shares_files')
 async def test_beaver_mul_with_zeros(zeros_files_prefix, triples_files_prefix):
-    from honeybadgermpc.passive import runProgramAsTasks
+    from honeybadgermpc.passive import runProgramInNetwork
     N, t = 3, 2
     x_secret, y_secret = 10, 15
 
@@ -60,7 +60,7 @@ async def test_beaver_mul_with_zeros(zeros_files_prefix, triples_files_prefix):
         print("[%d] Finished" % (context.myid,), X, Y, XY)
         return XY
 
-    results = await runProgramAsTasks(_prog, N, t)
+    results = await runProgramInNetwork(_prog, N, t)
     assert len(results) == N
     assert all(res == x_secret * y_secret for res in results)
 
@@ -68,7 +68,7 @@ async def test_beaver_mul_with_zeros(zeros_files_prefix, triples_files_prefix):
 @mark.asyncio
 @mark.usefixtures('random_shares_files', 'triples_shares_files')
 async def test_beaver_mul(random_polys, random_files_prefix, triples_files_prefix):
-    from honeybadgermpc.passive import runProgramAsTasks
+    from honeybadgermpc.passive import runProgramInNetwork
     N, t = 3, 2
     f, g = random_polys[:2]
     x_secret, y_secret = f(0), g(0)
@@ -97,6 +97,6 @@ async def test_beaver_mul(random_polys, random_files_prefix, triples_files_prefi
         print("[%d] Finished" % (context.myid,), X, Y, XY)
         return XY
 
-    results = await runProgramAsTasks(_prog, N, t)
+    results = await runProgramInNetwork(_prog, N, t)
     assert len(results) == N
     assert all(res == x_secret * y_secret for res in results)
