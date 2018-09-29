@@ -3,6 +3,7 @@ from asyncio import Future
 from .field import GF
 from .polynomial import polynomialsOver
 from .router import simple_router
+from .ipc import process_router
 import random
 
 
@@ -97,7 +98,7 @@ class PassiveMpc(object):
             buf = self._share_buffers[j]
 
             # Shareid is redundant, but confirm it is one greater
-            assert shareid == len(buf)
+            assert shareid == len(buf), "shareid: %d, len: %d" % (shareid, len(buf))
             buf.append(share)
 
             # Reconstruct if we now have enough shares,
@@ -246,7 +247,7 @@ def shareInContext(context):
 
 
 # Create a fake network with N instances of the program
-async def runProgramInNetwork(program, N, t):
+async def runProgramAsTasks(program, N, t):
     loop = asyncio.get_event_loop()
     sends, recvs = simple_router(N)
 
@@ -259,12 +260,26 @@ async def runProgramInNetwork(program, N, t):
     results = await asyncio.gather(*tasks)
     return results
 
+
+async def runProgramAsProcesses(program, config, N, t, id):
+    loop = asyncio.get_event_loop()
+    send, recv, sender, listener = process_router(config, id)
+    # Need to give time to the listener coroutine to start
+    #  or else the sender will get a connection refused.
+    await asyncio.sleep(1)
+    context = PassiveMpc('sid', N, t, id, send, recv, program)
+    results = await loop.create_task(context._run())
+    sender.close()
+    listener.close()
+    return results
+
+
 #######################
 # Generating test files
 #######################
 
 # Fix the field for now
-Field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+Field = GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
 Poly = polynomialsOver(Field)
 
 
@@ -362,7 +377,7 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        loop.run_until_complete(runProgramInNetwork(test_prog1, 3, 2))
-        loop.run_until_complete(runProgramInNetwork(test_prog2, 3, 2))
+        loop.run_until_complete(runProgramAsTasks(test_prog1, 3, 2))
+        loop.run_until_complete(runProgramAsTasks(test_prog2, 3, 2))
     finally:
         loop.close()

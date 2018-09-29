@@ -159,7 +159,7 @@ def fft(poly, omega, n, seed=None):
 
 if __name__ == "__main__":
     from .field import GF
-    field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+    field = GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
     Poly = polynomialsOver(field)
     poly = Poly.random(degree=7)
     poly = Poly([1, 5, 3, 15, 0, 3])

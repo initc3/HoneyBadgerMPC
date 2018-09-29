@@ -4,7 +4,7 @@ from .field import GF
 from .polynomial import polynomialsOver, get_omega
 
 # Fix the field for now
-Field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+Field = GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
 Poly = polynomialsOver(Field)
 
 #######################################
