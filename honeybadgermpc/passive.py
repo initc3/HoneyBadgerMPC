@@ -3,7 +3,6 @@ from asyncio import Future
 from .field import GF, GFElement
 from .polynomial import polynomialsOver
 from .router import simple_router
-from .ipc import process_router
 import random
 
 
@@ -258,19 +257,6 @@ async def runProgramAsTasks(program, N, t):
         tasks.append(loop.create_task(context._run()))
 
     results = await asyncio.gather(*tasks)
-    return results
-
-
-async def runProgramAsProcesses(program, config, N, t, id):
-    loop = asyncio.get_event_loop()
-    send, recv, sender, listener = process_router(config, id)
-    # Need to give time to the listener coroutine to start
-    #  or else the sender will get a connection refused.
-    await asyncio.sleep(1)
-    context = PassiveMpc('sid', N, t, id, send, recv, program)
-    results = await loop.create_task(context._run())
-    sender.close()
-    listener.close()
     return results
 
 

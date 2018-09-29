@@ -103,6 +103,9 @@ class GF(object):
     def __call__(self, value):
         return GFElement(value, self)
 
+    def __reduce__(self):
+        return (GF.get, (self.modulus,))
+
     @staticmethod
     def get(modulus):
         if modulus in GF._field_cache:
