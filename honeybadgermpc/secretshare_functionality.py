@@ -1,6 +1,6 @@
 import asyncio
 import random
-from .field import GF, GFElement
+from .field import GF
 from .polynomial import polynomialsOver
 
 """
@@ -17,7 +17,7 @@ singleton Functionality.
 """
 
 # Fix the field for now
-Field = GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+Field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
 Poly = polynomialsOver(Field)
 
 
@@ -37,7 +37,7 @@ class SecretShare_Functionality(object):
     async def _run(self):
         v = await self.inputFromDealer
         # TODO: allow v to be arbitrary strings, or a parameter?
-        assert type(v) is GFElement
+        assert type(v) is Field
         poly = Poly.random(self.f, y0=v)
         for i in range(self.N):
             # TODO: this needs to be made into an "eventually send"

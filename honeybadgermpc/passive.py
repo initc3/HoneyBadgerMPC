@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Future
-from .field import GF, GFElement
+from .field import GF
 from .polynomial import polynomialsOver
 from .router import simple_router
 import random
@@ -147,10 +147,10 @@ def write_shares(f, modulus, degree, myid, shares):
 def shareInContext(context):
 
     def _binopField(fut, other, op):
-        assert type(other) in [ShareFuture, GFElementFuture, Share, GFElement]
+        assert type(other) in [ShareFuture, GFElementFuture, Share, Field]
         if isinstance(other, ShareFuture) or isinstance(other, Share):
             res = ShareFuture()
-        elif isinstance(other, GFElement) or isinstance(other, GFElementFuture):
+        elif isinstance(other, Field) or isinstance(other, GFElementFuture):
             res = GFElementFuture()
 
         if isinstance(other, Future):
@@ -176,7 +176,7 @@ def shareInContext(context):
             # v is the local value of the share
             if type(v) is int:
                 v = Field(v)
-            assert type(v) is GFElement
+            assert type(v) is Field
             self.v = v
 
         # Publicly reconstruct a shared value
@@ -191,7 +191,7 @@ def shareInContext(context):
         # TODO: add type checks for the operators
         # @typecheck(Share)
         def __add__(self, other):
-            if isinstance(other, GFElement):
+            if isinstance(other, Field):
                 return Share(self.v + other)
             elif isinstance(other, Share):
                 return Share(self.v + other.v)
@@ -211,7 +211,7 @@ def shareInContext(context):
         def __str__(self): return '{%d}' % (self.v)
 
     def _binopShare(fut, other, op):
-        assert type(other) in [ShareFuture, GFElementFuture, Share, GFElement]
+        assert type(other) in [ShareFuture, GFElementFuture, Share, Field]
         res = ShareFuture()
         if isinstance(other, Future):
             def cb(_): return res.set_result(op(fut.result(), other.result()))
@@ -265,7 +265,7 @@ async def runProgramAsTasks(program, N, t):
 #######################
 
 # Fix the field for now
-Field = GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+Field = GF(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
 Poly = polynomialsOver(Field)
 
 
