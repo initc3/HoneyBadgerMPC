@@ -1,0 +1,4 @@
+ipc
+===
+
+.. automodule:: honeybadgermpc.ipc
