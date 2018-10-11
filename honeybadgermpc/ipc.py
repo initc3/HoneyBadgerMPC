@@ -22,7 +22,7 @@ class Senders(object):
         # Setup tasks to consume messages from queues
         # This is to ensure that messages are delivered in the correct order
         for i, q in enumerate(self.queues):
-            recvid = "%s:%d" % (config[i].ip, config[i].port)
+            recvid = "%s:%d" % (self.config[i].ip, self.config[i].port)
             asyncio.ensure_future(self.process_queue(writers[i], q, recvid))
 
     async def process_queue(self, writer, q, recvid):
