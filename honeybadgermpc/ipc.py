@@ -30,6 +30,9 @@ class Senders(object):
             while True:
                 msg = await q.get()
                 if msg is None:
+                    print('Close the connection')
+                    writer.close()
+                    await writer.wait_closed()
                     break
                 # print('SEND %8s [%2d -> %s]' % (msg[1][0], msg[0], recvid))
                 data = pickle.dumps(msg)
