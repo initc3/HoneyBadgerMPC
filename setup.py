@@ -32,6 +32,7 @@ DOCS_REQUIRE = [
     'Sphinx',
     'sphinx-autobuild',
     'sphinx_rtd_theme',
+    'sphinx_tabs',
     'm2r',
     'doc8',
 ]
@@ -40,8 +41,8 @@ ETH_REQUIRES = ['web3', 'ethereum']
 
 EXTRAS = {
     'tests': TESTS_REQUIRES,
-    'dev': DEV_REQUIRES + TESTS_REQUIRES + DOCS_REQUIRE,
-    'docs': DOCS_REQUIRE,
+    'dev': DEV_REQUIRES + TESTS_REQUIRES + DOCS_REQUIRE + ETH_REQUIRES,
+    'docs': DOCS_REQUIRE + ETH_REQUIRES,
     'eth': ETH_REQUIRES,
 }
 
