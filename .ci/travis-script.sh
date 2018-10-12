@@ -10,5 +10,5 @@ elif [ "${BUILD}" == "flake8" ]; then
     flake8
 elif [ "${BUILD}" == "docs" ]; then
     $BASE_CMD sphinx-build -M html docs docs/_build -c docs -W
-    doc8 docs/
+    $BASE_CMD doc8 docs/
 fi
