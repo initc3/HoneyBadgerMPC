@@ -16,3 +16,4 @@ honeybadgermpc
     polynomial
     router
     ipc
+    config
