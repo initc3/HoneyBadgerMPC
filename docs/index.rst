@@ -6,9 +6,6 @@
 .. HoneyBadgerMPC
 .. ==============
 
-.. .. mdinclude:: ../README.md
-
-
 .. toctree::
     :maxdepth: 1
     :caption: The Honeybadger of MPC Protocols
@@ -25,12 +22,6 @@
     guides/acs-evm
     guides/passive
 
-.. .. note:: A tutorial should show some primary use cases in more detail. The
-    reader will follow a step-by-step procedure to set-up a working prototype.
-
-..    source: https://docs.python-guide.org/writing/documentation/#project-publication
-
-
 .. toctree::
     :maxdepth: 1
     :caption: Integrations
@@ -42,16 +33,7 @@
     :caption: Library Reference
 
     libref/honeybadgermpc
-..    libref/passive
-..    libref/commonsubset
-..    libref/triple_refinement
-..    libref/rand
-..    libref/secretshare
-..    libref/field
-..    libref/polynomial
-..    libref/router
 
-.. development/index
 .. toctree::
     :maxdepth: 2
     :caption: Contributing to HoneyBadgerMPC

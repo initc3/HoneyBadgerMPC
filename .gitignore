@@ -109,3 +109,6 @@ venv.bak/
 
 *~
 sharedata/
+
+.ci/deploy_key
+.ci/deploy_key.pub

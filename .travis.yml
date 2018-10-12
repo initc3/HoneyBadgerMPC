@@ -7,6 +7,10 @@ sudo: true
 services:
   - docker
 
+env:
+  global:
+    - DOCS_DEPLOY_KEY_LABEL: 63cc0c40c9de
+
 matrix:
   include:
     - env: BUILD=tests
@@ -18,3 +22,12 @@ install:  .ci/travis-install.sh
 script: .ci/travis-script.sh
 
 after_success: .ci/travis-after-success.sh
+
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: .ci/travis-publish-docs.sh
+  on:
+    repo: initc3/HoneyBadgerMPC
+    branch: docs-on-github-pages
+    condition: '"${BUILD}" == *docs*'
