@@ -7,4 +7,5 @@ Integration with Hyperledger Fabric
     * General idea
     * Roadmap (planned iterations, etc)
     * Status of the integration work
+    * How to contribute
     * etc
