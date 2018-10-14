@@ -1,0 +1,375 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Continuous integration &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Packaging and Distributing HoneyBadgerMPC" href="packaging.html" />
+    <link rel="prev" title="Reviewing and merging pull requests" href="development/reviewing-contributions.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="libref/honeybadgermpc.html">honeybadgermpc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Continuous integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#travis-yml">.travis.yml</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shell-scripts-under-ci">Shell scripts under .ci/</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#travis-compose-yml">.travis.compose.yml</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-coverage">Code coverage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#github-integration">Github integration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#recommended-readings">Recommended readings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Continuous integration</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/ci.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="continuous-integration">
+<h1>Continuous integration<a class="headerlink" href="#continuous-integration" title="Permalink to this headline">¶</a></h1>
+<blockquote class="epigraph">
+<div><p><em>Continuous Integration (CI) is a development practice that requires
+developers to integrate code into a shared repository several times a day.
+Each check-in is then verified by an automated build, allowing teams to
+detect problems early.</em></p>
+<p><em>By integrating regularly, you can detect errors quickly, and locate them
+more easily.</em></p>
+<p class="attribution">&mdash;<a class="reference external" href="ThoughtWorks:ContinuousIntegration">ThoughtWorks</a></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">honeybadgermpc</span></code> currently uses <a class="reference external" href="https://docs.travis-ci.com/">Travis CI</a> to perform various checks when
+one wishes to merge new code into a shared branch under the shared repository
+<a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC">initc3/HoneyBadgerMPC</a>. The file <code class="docutils literal notranslate"><span class="pre">.travis.yml</span></code> under the root of the
+project is used to instruct Travis CI on what to do whenever a build is
+triggered.</p>
+<div class="section" id="travis-yml">
+<h2>.travis.yml<a class="headerlink" href="#travis-yml" title="Permalink to this headline">¶</a></h2>
+<p>Whenever a build is triggered, three checks are currently performed:</p>
+<ol class="arabic simple">
+<li>tests</li>
+<li>code quality via <a class="reference external" href="http://flake8.pycqa.org/en/latest/index.html">flake8</a>. and</li>
+<li>documentation generation.</li>
+</ol>
+<p>Each of these checks corresponds to a row in the <a class="reference external" href="https://docs.travis-ci.com/user/customizing-the-build/#build-matrix">build matrix</a>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">matrix</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">include</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">env</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">BUILD=tests</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">env</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">BUILD=flake8</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">env</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">BUILD=docs</span>
+</pre></div>
+</div>
+<p>Depending on the value of the <code class="docutils literal notranslate"><span class="pre">BUILD</span></code> variable the various steps (e.g.:
+<a class="reference external" href="https://docs.travis-ci.com/user/customizing-the-build/#customizing-the-installation-step">install</a>, <a class="reference external" href="https://docs.travis-ci.com/user/customizing-the-build/#customizing-the-build-step">script</a>) of the <a class="reference external" href="https://docs.travis-ci.com/user/customizing-the-build/#the-build-lifecycle">build lifecycle</a> may differ.</p>
+<p class="rubric">Using Python 3.7 on Travis CI</p>
+<p>In order to use Python 3.7 the following workaround is used in
+<code class="docutils literal notranslate"><span class="pre">.travis.yml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">os</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">linux</span>
+<span class="l l-Scalar l-Scalar-Plain">dist</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">xenial</span>
+<span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">python</span>
+<span class="l l-Scalar l-Scalar-Plain">python</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">3.7</span>
+<span class="l l-Scalar l-Scalar-Plain">sudo</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+<p>See currently opened issue on this matter:
+<a class="reference external" href="https://github.com/travis-ci/travis-ci/issues/9815">https://github.com/travis-ci/travis-ci/issues/9815</a></p>
+<p class="rubric">Using Docker on Travis CI</p>
+<p>In order to use Docker the following settings are needed in
+<code class="docutils literal notranslate"><span class="pre">travis.yml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">sudo</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="l l-Scalar l-Scalar-Plain">services</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">docker</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="#docker-in-travis"><span class="std std-ref">.travis.compose.yml</span></a> below for more information on how we use
+<code class="docutils literal notranslate"><span class="pre">docker</span></code> and <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> on Travis CI to run the tests for
+<code class="docutils literal notranslate"><span class="pre">honeybadgermpc</span></code>.</p>
+</div>
+<div class="section" id="shell-scripts-under-ci">
+<h2>Shell scripts under .ci/<a class="headerlink" href="#shell-scripts-under-ci" title="Permalink to this headline">¶</a></h2>
+<p>In order to simplify the <code class="docutils literal notranslate"><span class="pre">.travis.yml</span></code> file, <a class="reference external" href="implementingcomplexbuildsteps">shell scripts are invoked</a> for the <code class="docutils literal notranslate"><span class="pre">install</span></code>, <code class="docutils literal notranslate"><span class="pre">script</span></code> and
+<code class="docutils literal notranslate"><span class="pre">after_success</span></code> steps. These scripts are located under the <code class="docutils literal notranslate"><span class="pre">.ci</span></code>
+directory and should be edited as needed but with care since it is important
+that the results of the checks be reliable.</p>
+</div>
+<div class="section" id="travis-compose-yml">
+<span id="docker-in-travis"></span><h2>.travis.compose.yml<a class="headerlink" href="#travis-compose-yml" title="Permalink to this headline">¶</a></h2>
+<p>For the <code class="docutils literal notranslate"><span class="pre">docs</span></code> and <code class="docutils literal notranslate"><span class="pre">tests</span></code> build jobs (i.e.: <code class="docutils literal notranslate"><span class="pre">BUILD=docs</span></code> and
+<code class="docutils literal notranslate"><span class="pre">BUILD=tests</span></code> matrix rows), <a class="reference external" href="usingdockerinbuilds">docker-compose is used</a>. The <code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code> used is located under the
+<code class="docutils literal notranslate"><span class="pre">.ci/</span></code> directory whereas the <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> file is under the root of
+the project and is named <code class="docutils literal notranslate"><span class="pre">.travis.compose.yml</span></code>. Both files are similar to
+the ones used for development. One key difference is that only the docs or
+tests requirements are installed, depending on the value of the <code class="docutils literal notranslate"><span class="pre">BUILD</span></code>
+environment variable.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Some work could perhaps be done to limit the duplication accross the
+two Dockerfiles, by using a base Dockerfile for instance, but this may
+also complicate things so for now some duplication is tolerated.</p>
+</div>
+</div>
+<div class="section" id="code-coverage">
+<h2>Code coverage<a class="headerlink" href="#code-coverage" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Code_coverage">Code coverage</a> is used to check whether code is executed when the tests are
+run. Making sure that the code is executed when tests are run helps detecting
+errors.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">tests</span></code> build job on Travis CI a code coverage report is generated at
+the end of the <code class="docutils literal notranslate"><span class="pre">script</span></code> step, with the <code class="docutils literal notranslate"><span class="pre">--cov-report=xml</span></code> option:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># .ci/travis-install.sh</span>
+<span class="nv">$BASE_CMD</span> pytest -v --cov --cov-report<span class="o">=</span>term-missing --cov-report<span class="o">=</span>xml
+</pre></div>
+</div>
+<p>If the test run was successful the report is uploaded to <a class="reference external" href="https://codecov.io/gh/initc3/HoneyBadgerMPC">codecov</a> in the
+<code class="docutils literal notranslate"><span class="pre">after_success</span></code> step:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># .travis.yml</span>
+<span class="l l-Scalar l-Scalar-Plain">after_success</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">.ci/travis-after-success.sh</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">It is important to note that the coverage measurement happens
+in a docker container meanwhile the report upload happens outside the
+container. There are different ways to handle this situation and the
+current approach used is a variation of what is outlined in
+<a class="reference external" href="https://docs.codecov.io/docs/testing-with-docker#section-codecov-outside-docker">Codecov Outside Docker</a>.</p>
+</div>
+<div class="section" id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<p>Configuring codecov is done via the <code class="docutils literal notranslate"><span class="pre">.codecov.yml</span></code> file which is in the
+project root. Consult the <a class="reference external" href="https://codecov.io/gh/initc3/HoneyBadgerMPC">codecov</a> documentation for information on how to
+work with the <code class="docutils literal notranslate"><span class="pre">.codecov.yml</span></code> configuration file. The most relevant sections
+are <a class="reference external" href="https://docs.codecov.io/docs/codecov-yaml">About the Codecov yaml</a> and <a class="reference external" href="https://docs.codecov.io/docs/coverage-configuration">Coverage Configuration</a>.</p>
+</div>
+<div class="section" id="github-integration">
+<h3>Github integration<a class="headerlink" href="#github-integration" title="Permalink to this headline">¶</a></h3>
+<p>A pull request may fail the code coverage check and if so the pull request
+will be marked as failing on Github. The Github integration may require having
+a  <a class="reference external" href="https://docs.codecov.io/docs/team-bot">team bot</a> set up to be fully operational. See issue
+<a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/issues/66">https://github.com/initc3/HoneyBadgerMPC/issues/66</a> for more details.</p>
+</div>
+</div>
+<div class="section" id="recommended-readings">
+<h2>Recommended readings<a class="headerlink" href="#recommended-readings" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="https://docs.travis-ci.com/user/for-beginners">Travis CI: Core Concepts for Beginners</a></li>
+<li><a class="reference external" href="https://www.thoughtworks.com/continuous-integration">ThoughtWorks: Continuous Integration</a></li>
+<li><a class="reference external" href="https://docs.python-guide.org/scenarios/ci/">https://docs.python-guide.org/scenarios/ci/</a></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="packaging.html" class="btn btn-neutral float-right" title="Packaging and Distributing HoneyBadgerMPC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="development/reviewing-contributions.html" class="btn btn-neutral" title="Reviewing and merging pull requests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

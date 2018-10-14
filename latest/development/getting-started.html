@@ -1,0 +1,591 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting started &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contributing new code" href="contributing.html" />
+    <link rel="prev" title="config" href="../libref/config.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#development-environment">Development environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#managing-your-development-environment-with-docker-compose">Managing your development environment with docker-compose</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#managing-your-development-environment-with-pipenv">Managing your development environment with Pipenv</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#useful-resources-on-pipenv">Useful resources on Pipenv</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-tests">Running the tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#code-coverage">Code coverage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coverage-configuration-file">Coverage configuration file</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#code-quality">Code quality</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#flake8-configuration-file">Flake8 configuration file</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#building-and-viewing-the-documentation">Building and viewing the documentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#alternative-ways-to-build-and-view-the-docs">Alternative ways to build and view the docs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Getting started</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/development/getting-started.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="getting-started">
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>To start developing and contributing to HoneyBadgerMPC:</p>
+<ol class="arabic">
+<li><p class="first"><a class="reference external" href="https://help.github.com/articles/fork-a-repo/">Fork</a> the <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC">HoneyBadgerMPC</a> repository.</p>
+</li>
+<li><p class="first">Clone your fork:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone --branch dev git@github.com:&lt;username&gt;/HoneyBadgerMPC.git
+</pre></div>
+</div>
+</li>
+<li><p class="first"><a class="reference external" href="https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes#_adding_remote_repositories">Add the remote</a> repository <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC">initc3/HoneyBadgerMPC</a>:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git remote add upstream git@github.com:initc3/HoneyBadgerMPC.git
+</pre></div>
+</div>
+</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The remote name <code class="docutils literal notranslate"><span class="pre">upstream</span></code> is just a convention and you are free
+to name your remotes whatever you like.</p>
+<p class="last">See <a class="reference internal" href="contributing.html#git-remotes"><span class="std std-ref">Working with Git Remotes</span></a> for more information about remotes.</p>
+</div>
+<p><strong>Next step:</strong> <a class="reference internal" href="#devenv"><span class="std std-ref">setup a development environment</span></a>.</p>
+<div class="section" id="development-environment">
+<span id="devenv"></span><h2>Development environment<a class="headerlink" href="#development-environment" title="Permalink to this headline">¶</a></h2>
+<p>You are free to manage your development environment the way you prefer. Two
+possible approaches are documented:</p>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#managing-your-development-environment-with-docker-compose" id="id1">Managing your development environment with docker-compose</a></li>
+<li><a class="reference internal" href="#managing-your-development-environment-with-pipenv" id="id2">Managing your development environment with Pipenv</a></li>
+</ul>
+</div>
+<p>Using <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> has the advantage that you do not need to manage
+dependencies as everything is taking care of in the <code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code>.</p>
+<p>You are encouraged to consult the <a class="reference external" href="https://docs.python-guide.org/dev/env/">Your Development Environment</a> section in the
+<a class="reference external" href="https://docs.python-guide.org/">The Hitchhiker’s Guide to Python</a>  for tips and tricks about text editors,
+IDEs, and interpreter tools.</p>
+<div class="section" id="managing-your-development-environment-with-docker-compose">
+<h3><a class="toc-backref" href="#id1">Managing your development environment with docker-compose</a><a class="headerlink" href="#managing-your-development-environment-with-docker-compose" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first">Install <a class="reference external" href="https://docs.docker.com/install/">Docker</a>. (For Linux, see <a class="reference external" href="https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user">Manage Docker as a non-root user</a>) to
+run <code class="docutils literal notranslate"><span class="pre">docker</span></code> without <code class="docutils literal notranslate"><span class="pre">sudo</span></code>.)</p>
+</li>
+<li><p class="first">Install <a class="reference external" href="https://docs.docker.com/compose/install/">docker-compose</a>.</p>
+</li>
+<li><p class="first">Run the tests (the first time will take longer as the image will be built):</p>
+<blockquote>
+<div><div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose run --rm honeybadgermpc
+</pre></div>
+</div>
+</div></blockquote>
+<p>The tests should pass, and you should also see a small code coverage report
+output to the terminal.</p>
+</li>
+</ol>
+<p>If the above went all well, you should be setup for developing
+<strong>HoneyBadgerMPC</strong>!</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>You may find it useful when developing to have the following 3
+“windows” opened at all times:</p>
+<ul class="simple">
+<li>your text editor or IDE</li>
+<li>an <code class="docutils literal notranslate"><span class="pre">ipython</span></code> session for quickly trying things out</li>
+<li>a shell session for running tests, debugging, and building the docs</li>
+</ul>
+<p>You can run the <code class="docutils literal notranslate"><span class="pre">ipython</span></code> and shell session in separate containers:</p>
+<p>IPython session:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose run --rm honeybadgermpc ipython
+</pre></div>
+</div>
+<p>Shell session:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose run --rm honeybadgermpc sh
+</pre></div>
+</div>
+<p class="last">Once in the session (container) you can execute commands just as you would
+in a non-container session.</p>
+</div>
+<p><strong>Running a specific test in a container (shell session)</strong>
+As an example, to run the tests for <code class="docutils literal notranslate"><span class="pre">passive.py</span></code>, which will generate and
+open 1000 zero-sharings, <span class="math notranslate nohighlight">\(N=3\)</span> <span class="math notranslate nohighlight">\(t=2\)</span> (so no fault tolerance):</p>
+<p>Run a shell session in a container:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose run --rm honeybadgermpc sh
+</pre></div>
+</div>
+<p>Run the test:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest -v tests/test_passive.py -s
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python -m honeybadgermpc.passive
+</pre></div>
+</div>
+<p class="rubric">About code changes and building the image</p>
+<p>When developing, you should not need to rebuild the image nor exit running
+containers, unless new dependencies were added via the <code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code>. Hence
+you can modify the code, add breakpoints, add new Python modules (files), and
+the modifications will be readily available withing the running containers.</p>
+</div>
+<div class="section" id="managing-your-development-environment-with-pipenv">
+<h3><a class="toc-backref" href="#id2">Managing your development environment with Pipenv</a><a class="headerlink" href="#managing-your-development-environment-with-pipenv" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first"><a class="reference external" href="https://pipenv.readthedocs.io/en/latest/#install-pipenv-today">Install pipenv</a>.</p>
+</li>
+<li><p class="first">Install the <a class="reference external" href="https://gmplib.org/">GMP</a>, <a class="reference external" href="http://www.multiprecision.org/">MPC</a> and <a class="reference external" href="https://www.mpfr.org/">MPFR</a> development packages:</p>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-0 docutils container">
+<div class="docutils container">
+<p>Debian</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-1 docutils container">
+<div class="docutils container">
+<p>Fedora</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-2 docutils container">
+<div class="docutils container">
+<p>Mac OS X</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-3 docutils container">
+<div class="docutils container">
+<p>Windows</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0 active docutils container">
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> apt install libgmp-dev libmpc-dev libmpfr-dev
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1 docutils container">
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> dnf install gmp-devel libmpc-devel mpfr-devel
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2 docutils container">
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> brew install gmp libmpc mpfr
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3 docutils container">
+<p>Should not be needed as <a class="reference external" href="https://pypi.org/project/gmpy2/#files">pre-compiled versions</a> of <code class="docutils literal notranslate"><span class="pre">gmpy2</span></code> are
+available on PyPI. See <a class="reference external" href="https://gmpy2.readthedocs.io/en/latest/intro.html#installing-gmpy2-on-windows">gmpy2 docs for Windows</a> for more information.</p>
+</div>
+</div>
+</li>
+<li><p class="first">Install <code class="docutils literal notranslate"><span class="pre">honeybadgermpc</span></code> in <a class="reference external" href="https://pipenv.readthedocs.io/en/latest/basics/#editable-dependencies-e-g-e">editable mode</a> for development:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> HoneyBadgerMPC/
+<span class="gp">$</span> pipenv install -e .<span class="o">[</span>dev<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Activate a virtualenv:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pipenv shell
+</pre></div>
+</div>
+</li>
+<li><p class="first">Run the tests to check that you are well setup:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest -v --cov
+</pre></div>
+</div>
+</li>
+</ol>
+<p>The tests should pass, and you should also see a small code coverage report
+output to the terminal.</p>
+<div class="section" id="useful-resources-on-pipenv">
+<h4>Useful resources on Pipenv<a class="headerlink" href="#useful-resources-on-pipenv" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><a class="reference external" href="https://pipenv.readthedocs.io/en/latest/">Pipenv documentation</a></li>
+<li><a class="reference external" href="https://realpython.com/pipenv-guide/#package-distribution">Real Python: A Guide to Pipenv</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="running-the-tests">
+<h2>Running the tests<a class="headerlink" href="#running-the-tests" title="Permalink to this headline">¶</a></h2>
+<p>The tests for <code class="docutils literal notranslate"><span class="pre">honeybadgermpc</span></code> are located under the <code class="file docutils literal notranslate"><span class="pre">tests/</span></code>
+directory and can be run with <a class="reference external" href="https://docs.pytest.org/">pytest</a>:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest
+</pre></div>
+</div>
+<p>Running in verbose mode:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest -v
+</pre></div>
+</div>
+<p>Running a specific test:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest -v tests/test_passive.py::test_open_share
+</pre></div>
+</div>
+<p>When debugging, i.e. if one has put breakpoints in the code, use the <code class="docutils literal notranslate"><span class="pre">-s</span></code>
+option (or its equivalent <code class="docutils literal notranslate"><span class="pre">--capture=no</span></code>):</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest -v -s
+<span class="gp">#</span> or
+<span class="gp">$</span> pytest -v --capture<span class="o">=</span>no
+</pre></div>
+</div>
+<p>To exit instantly on first error or failed test:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest -x
+</pre></div>
+</div>
+<p>To re-run only the tests that failed in the last run:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest --lf
+</pre></div>
+</div>
+<p>See <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--help</span></code> for more options or the <a class="reference external" href="https://docs.pytest.org/">pytest</a> docs.</p>
+<div class="section" id="code-coverage">
+<h3>Code coverage<a class="headerlink" href="#code-coverage" title="Permalink to this headline">¶</a></h3>
+<p>Measuring the code coverage:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest --cov
+</pre></div>
+</div>
+<p>Generating an html coverage report:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pytest --cov --cov-report html
+</pre></div>
+</div>
+<p>View the report:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> firefox htmlcov/index.html
+</pre></div>
+</div>
+<div class="section" id="coverage-configuration-file">
+<h4>Coverage configuration file<a class="headerlink" href="#coverage-configuration-file" title="Permalink to this headline">¶</a></h4>
+<p>Configuration for code coverage is located under the file <code class="file docutils literal notranslate"><span class="pre">.coveragerc</span></code>.</p>
+<p class="rubric">Code coverage tools</p>
+<p>The code coverage is measured using the <a class="reference external" href="https://pytest-cov.readthedocs.io/">pytest-cov</a> plugin which is based on
+<a class="reference external" href="https://coverage.readthedocs.io/">coverage.py</a>. The documentation of both projects is important when working
+on code coverage related issues. As an example, documentation for
+configuration can be first found in <a class="reference external" href="https://pytest-cov.readthedocs.io/en/latest/config.html">pytest-cov configuration</a> but details about
+the coverage config file need to be looked up in <a class="reference external" href="https://coverage.readthedocs.io/en/latest/config.html">coverage.py configuration</a> docs.</p>
+</div>
+</div>
+<div class="section" id="code-quality">
+<h3>Code quality<a class="headerlink" href="#code-quality" title="Permalink to this headline">¶</a></h3>
+<p>In order to keep a minimal level of “code quality” <a class="reference external" href="http://flake8.pycqa.org/en/latest/index.html">flake8</a> is used. To run
+the check:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> flake8
+</pre></div>
+</div>
+<div class="section" id="flake8-configuration-file">
+<h4>Flake8 configuration file<a class="headerlink" href="#flake8-configuration-file" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="http://flake8.pycqa.org/en/latest/user/configuration.html">Configuration for flake8</a> is under the <code class="file docutils literal notranslate"><span class="pre">.flake8</span></code> file.</p>
+</div>
+</div>
+</div>
+<div class="section" id="building-and-viewing-the-documentation">
+<h2>Building and viewing the documentation<a class="headerlink" href="#building-and-viewing-the-documentation" title="Permalink to this headline">¶</a></h2>
+<p>Documentation for <code class="docutils literal notranslate"><span class="pre">honeybadgermpc</span></code> is located under the <code class="file docutils literal notranslate"><span class="pre">docs/</span></code>
+directory. <a class="reference external" href="http://www.sphinx-doc.org">Sphinx</a> is used to build the documentation, which is written
+using the markup language <a class="reference external" href="http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html">reStructuredText</a>.</p>
+<p>The <code class="file docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> can be used to quickly build the docs and view
+them.</p>
+<p><strong>To build the docs:</strong></p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose up builddocs
+</pre></div>
+</div>
+<p><strong>To view the docs</strong>:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose up -d viewdocs
+</pre></div>
+</div>
+<p>Visit <a class="reference external" href="http://localhost:58888/">http://localhost:58888/</a> in a web browser.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>To view the port mapping you can use the command:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose port viewdocs <span class="m">80</span>
+</pre></div>
+</div>
+<p>or, alternatively</p>
+<div class="last highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose ps viewdocs
+</pre></div>
+</div>
+</div>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>One may get a <code class="docutils literal notranslate"><span class="pre">403</span> <span class="pre">Forbidden</span></code> error when trying to view the docs
+at <a class="reference external" href="http://localhost:58888/">http://localhost:58888/</a>. This may because the generated html docs were
+removed. Using the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">clean</span></code> command under the <code class="file docutils literal notranslate"><span class="pre">docs/</span></code>
+directory, e.g.:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose run --rm builddocs make -C docs clean
+</pre></div>
+</div>
+<p>wipes out the <code class="file docutils literal notranslate"><span class="pre">_build/</span></code> directory, and one has to restart the
+<code class="docutils literal notranslate"><span class="pre">viewdocs</span></code> (<code class="docutils literal notranslate"><span class="pre">nginx</span></code>) service, i.e.:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose restart viewdocs
+</pre></div>
+</div>
+<p>and then re-build the docs:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker-compose up builddocs
+</pre></div>
+</div>
+<p class="last">Or vice-versa: build the docs and restart the server.</p>
+</div>
+<div class="section" id="alternative-ways-to-build-and-view-the-docs">
+<h3>Alternative ways to build and view the docs<a class="headerlink" href="#alternative-ways-to-build-and-view-the-docs" title="Permalink to this headline">¶</a></h3>
+<p>To build the documentation, one can use the <code class="file docutils literal notranslate"><span class="pre">Makefile</span></code> under the
+<code class="file docutils literal notranslate"><span class="pre">docs/</span></code> directory:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> make -C docs html
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> docs
+<span class="gp">$</span> make html
+</pre></div>
+</div>
+<p>The <code class="file docutils literal notranslate"><span class="pre">Makefile</span></code> makes use of the <a class="reference external" href="http://www.sphinx-doc.org/en/master/man/sphinx-build.html">sphinx-build</a> command, which one can
+also use directly:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> sphinx-build -M html docs docs/_build -c docs -W --keep-going
+</pre></div>
+</div>
+<p>It is possible to set some Sphinx <a class="reference external" href="http://www.sphinx-doc.org/en/master/man/sphinx-build.html#environment-variables">environment variables</a> when using the
+<code class="file docutils literal notranslate"><span class="pre">Makefile</span></code>, and more particularly <code class="docutils literal notranslate"><span class="pre">SPHINXOPTS</span></code> via the shortcut <code class="docutils literal notranslate"><span class="pre">O</span></code>.
+For instance, to <a class="reference external" href="http://www.sphinx-doc.org/en/master/man/sphinx-build.html#id6">treat warnings as errors</a> and to <a class="reference external" href="http://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-keep-going">keep going</a> with
+building the docs when a warning occurs:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nv">O</span><span class="o">=</span><span class="s1">&#39;-W --keep-going&#39;</span> make html
+</pre></div>
+</div>
+<p>By default the generated docs are under <code class="file docutils literal notranslate"><span class="pre">docs/_build/html/</span></code> and one
+can view them using a browser, e.g.:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> firefox docs/_build/html/index.html
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing new code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../libref/config.html" class="btn btn-neutral" title="config" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/sphinx_tabs/tabs.js"></script>
+        <script type="text/javascript" src="../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

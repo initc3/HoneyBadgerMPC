@@ -1,0 +1,401 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>field &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="polynomial" href="polynomial.html" />
+    <link rel="prev" title="secretshare" href="secretshare.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="honeybadgermpc.html">honeybadgermpc</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="passive.html">passive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonsubset.html">commonsubset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="triple_refinement.html">triple_refinement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rand.html">rand</a></li>
+<li class="toctree-l2"><a class="reference internal" href="secretshare.html">secretshare</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="polynomial.html">polynomial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="router.html">router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ipc.html">ipc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">config</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="honeybadgermpc.html">honeybadgermpc</a> &raquo;</li>
+        
+      <li>field</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/libref/field.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-honeybadgermpc.field">
+<span id="field"></span><h1>field<a class="headerlink" href="#module-honeybadgermpc.field" title="Permalink to this headline">¶</a></h1>
+<p>Modeling of Galois (finite) fields. The GF function creates classes
+which implements Galois (finite) fields of prime order</p>
+<p>All fields work the same: instantiate an object from a field to get
+hold of an element of that field. Elements implement the normal
+arithmetic one would expect: addition, multiplication, etc.</p>
+<p>Defining a field:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Zp</span> <span class="o">=</span> <span class="n">GF</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Defining field elements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Zp</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">Zp</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Zp</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Addition and subtraction (with modulo reduction):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+<span class="go">{6}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span>
+<span class="go">{14}</span>
+</pre></div>
+</div>
+<p>Bitwise xor for field elements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">^</span> <span class="n">z</span>
+<span class="go">{0}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">^</span> <span class="mi">0</span>
+<span class="go">{1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span> <span class="o">^</span> <span class="n">z</span>
+<span class="go">{0}</span>
+</pre></div>
+</div>
+<p>Exponentiation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">**</span><span class="mi">3</span>
+<span class="go">{12}</span>
+</pre></div>
+</div>
+<p>Square roots can be found for elements based on GF fields with a Blum
+prime modulus (see <a class="reference internal" href="#honeybadgermpc.field.GF" title="honeybadgermpc.field.GF"><code class="xref py py-func docutils literal notranslate"><span class="pre">GF()</span></code></a> for more information):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+<span class="go">{3}</span>
+</pre></div>
+</div>
+<p>Field elements from different fields cannot be mixed, you will get a
+type error if you try:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Zq</span> <span class="o">=</span> <span class="n">GF</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Zq</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="n">z</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">TypeError</span>: <span class="n">unsupported operand type(s) for +: &#39;GFElement&#39; and &#39;GFElement&#39;</span>
+</pre></div>
+</div>
+<p>The reason for the slightly confusing error message is that <code class="docutils literal notranslate"><span class="pre">x</span></code> and
+<code class="docutils literal notranslate"><span class="pre">z</span></code> are instances of two <em>different</em> classes called <code class="docutils literal notranslate"><span class="pre">GFElement</span></code>.</p>
+<dl class="function">
+<dt id="honeybadgermpc.field.FakeGF">
+<code class="descclassname">honeybadgermpc.field.</code><code class="descname">FakeGF</code><span class="sig-paren">(</span><em>modulus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/field.html#FakeGF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.FakeGF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a fake field.</p>
+<p>These fields should only be used in benchmarking. They work like
+any other field except that all computations will give <code class="docutils literal notranslate"><span class="pre">-1</span></code> as
+the result:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">FakeGF</span><span class="p">(</span><span class="mi">1031</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">F</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">F</span><span class="p">(</span><span class="mi">234</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<span class="go">{{1030}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+<span class="go">{{1030}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+<span class="go">{{1030}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">bit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="honeybadgermpc.field.FieldElement">
+<em class="property">class </em><code class="descclassname">honeybadgermpc.field.</code><code class="descname">FieldElement</code><a class="reference internal" href="../_modules/honeybadgermpc/field.html#FieldElement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.FieldElement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Common base class for elements.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="honeybadgermpc.field.FieldsNotIdentical">
+<em class="property">exception </em><code class="descclassname">honeybadgermpc.field.</code><code class="descname">FieldsNotIdentical</code><a class="reference internal" href="../_modules/honeybadgermpc/field.html#FieldsNotIdentical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.FieldsNotIdentical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<dl class="attribute">
+<dt id="honeybadgermpc.field.FieldsNotIdentical.args">
+<code class="descname">args</code><a class="headerlink" href="#honeybadgermpc.field.FieldsNotIdentical.args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.field.FieldsNotIdentical.with_traceback">
+<code class="descname">with_traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.field.FieldsNotIdentical.with_traceback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="honeybadgermpc.field.GF">
+<em class="property">class </em><code class="descclassname">honeybadgermpc.field.</code><code class="descname">GF</code><span class="sig-paren">(</span><em>modulus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/field.html#GF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="attribute">
+<dt id="honeybadgermpc.field.GF._field_cache">
+<code class="descname">_field_cache</code><em class="property"> = {}</em><a class="headerlink" href="#honeybadgermpc.field.GF._field_cache" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="honeybadgermpc.field.GF.get">
+<em class="property">static </em><code class="descname">get</code><span class="sig-paren">(</span><em>modulus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/field.html#GF.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GF.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="honeybadgermpc.field.GFElement">
+<em class="property">class </em><code class="descclassname">honeybadgermpc.field.</code><code class="descname">GFElement</code><span class="sig-paren">(</span><em>value</em>, <em>gf</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/field.html#GFElement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#honeybadgermpc.field.FieldElement" title="honeybadgermpc.field.FieldElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">honeybadgermpc.field.FieldElement</span></code></a></p>
+<dl class="method">
+<dt id="honeybadgermpc.field.GFElement.bit">
+<code class="descname">bit</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/field.html#GFElement.bit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement.bit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract a bit (index is counted from zero).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.field.GFElement.signed">
+<code class="descname">signed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/field.html#GFElement.signed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement.signed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a signed integer representation of the value.</p>
+<p>If x &gt; floor(p/2) then subtract p to obtain negative integer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.field.GFElement.sqrt">
+<code class="descname">sqrt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/field.html#GFElement.sqrt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement.sqrt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Square root.</p>
+<p>No attempt is made the to return the positive square root.</p>
+<p>Computing square roots is only possible when the modulus
+is a Blum prime (congruent to 3 mod 4).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.field.GFElement.unsigned">
+<code class="descname">unsigned</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/field.html#GFElement.unsigned"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement.unsigned" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a unsigned representation of the value</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="polynomial.html" class="btn btn-neutral float-right" title="polynomial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="secretshare.html" class="btn btn-neutral" title="secretshare" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

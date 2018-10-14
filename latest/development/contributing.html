@@ -1,0 +1,506 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Contributing new code &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reviewing and merging pull requests" href="reviewing-contributions.html" />
+    <link rel="prev" title="Getting started" href="getting-started.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing new code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#suggested-git-github-workflow">Suggested Git/Github workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#working-with-git-remotes">Working with Git Remotes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#identify-the-shared-remote-branch">Identify the shared remote branch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#create-a-new-branch">Create a new branch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#do-you-work-backup-and-stay-in-sync">Do you work, backup, and stay in sync</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#git-commit-best-practices">Git commit best practices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#signing-commits">Signing commits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#making-a-pull-request">Making a pull request</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coding-conventions">Coding Conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#documentation-conventions">Documentation Conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ignoring-conventions">Ignoring conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logging">Logging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#important-resources-on-logging">Important resources on logging</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rust-bindings">Rust bindings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Contributing new code</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/development/contributing.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="contributing-new-code">
+<h1>Contributing new code<a class="headerlink" href="#contributing-new-code" title="Permalink to this headline">¶</a></h1>
+<p>Since <a class="reference external" href="https://git-scm.com/">git</a>  and <a class="reference external" href="https://help.github.com/">github</a> are used to version and host the code, one needs
+to learn to work with both tools.</p>
+<div class="section" id="suggested-git-github-workflow">
+<h2>Suggested Git/Github workflow<a class="headerlink" href="#suggested-git-github-workflow" title="Permalink to this headline">¶</a></h2>
+<p>A small example of a possible workflow is provided here. This is by no means a
+complete guide on how to work with Git and Github. The <a class="reference external" href="https://git-scm.com/book/en/v2">Pro Git book</a> can be
+a very useful reference, whether one is a beginner or an advanced user.</p>
+<div class="section" id="working-with-git-remotes">
+<span id="git-remotes"></span><h3>Working with Git Remotes<a class="headerlink" href="#working-with-git-remotes" title="Permalink to this headline">¶</a></h3>
+<p>First make sure your <strong>git remotes</strong> are properly set, and if not consult
+<a class="reference external" href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">Configuring a remote for a fork</a> or <a class="reference external" href="https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes">Git Basics - Working with Remotes</a> for
+more detailed explanations about remotes. The remote names are just
+conventions but in order to simplify this documentation we’ll adopt the
+conventions. So by convention, <code class="docutils literal notranslate"><span class="pre">upstream</span></code> should point to the “shared”
+repository, whereas <code class="docutils literal notranslate"><span class="pre">origin</span></code> should point to your fork. Use
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">remote</span> <span class="pre">-v</span></code> to perform the check:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git remote -v
+<span class="go">origin  git@github.com:&lt;github_username&gt;/HoneyBadgerMPC.git (fetch)</span>
+<span class="go">origin  git@github.com:&lt;github_username&gt;/HoneyBadgerMPC.git (push)</span>
+<span class="go">upstream        git@github.com:initc3/HoneyBadgerMPC.git (fetch)</span>
+<span class="go">upstream        git@github.com:initc3/HoneyBadgerMPC.git (push)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="identify-the-shared-remote-branch">
+<h3>Identify the shared remote branch<a class="headerlink" href="#identify-the-shared-remote-branch" title="Permalink to this headline">¶</a></h3>
+<p>What should be the base (remote) branch for your work? In many cases, if not
+most, it’ll be the default <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/tree/dev">dev</a> branch, but in other cases you may need to
+base your work on some other branch, such as <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/tree/jubjub">jubjub</a>.</p>
+<p>It is convenient to have a local copy of the remote shared branch that you
+need to work on. As an example, if you need to contribute work to the
+<a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/tree/jubjub">jubjub</a> branch:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git fetch upstream
+<span class="gp">$</span> git checkout -b jubjub upstream/jubjub
+</pre></div>
+</div>
+<p>In order to keep your local copy up-to-date you should periodically sync it
+with the remote. First switch to the local branch:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git fetch upstream
+<span class="gp">$</span> git rebase upstream/jubjub jubjub
+</pre></div>
+</div>
+<p>There are multiple ways to work with remote branches. See
+<a class="reference external" href="https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches">https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches</a> for more
+information.</p>
+<p>For a small discussion regarding the differences between rebasing and merging
+see <a class="reference external" href="https://git-scm.com/book/en/v2/Git-Branching-Rebasing#_rebase_vs_merge">https://git-scm.com/book/en/v2/Git-Branching-Rebasing#_rebase_vs_merge</a>.</p>
+</div>
+<div class="section" id="create-a-new-branch">
+<h3>Create a new branch<a class="headerlink" href="#create-a-new-branch" title="Permalink to this headline">¶</a></h3>
+<p>Create a new branch from the shared remote branch to which you wish to
+contribute. As an example, say you are working on <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/issues/23">issue #23 (Implement jubjub
+elliptic curve MPC programs)</a>, then you could create a new branch like so:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git checkout -b issue-23-jujub-ec-mpc jubjub
+</pre></div>
+</div>
+<p>You can name the branch whatever you like, but you may find it useful to
+choose a meaningful name along with the issue number you are working on.</p>
+</div>
+<div class="section" id="do-you-work-backup-and-stay-in-sync">
+<h3>Do you work, backup, and stay in sync<a class="headerlink" href="#do-you-work-backup-and-stay-in-sync" title="Permalink to this headline">¶</a></h3>
+<p>As you are adding new code, making changes etc you may want to push your work
+to your remote on Github, as this will serve as a backup:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git push origin issue-23-jujub-ec-mpc
+</pre></div>
+</div>
+<p>In addtion to backing up your work on Github you should stay in sync with
+the shared remote branch. To do so, periodically <code class="docutils literal notranslate"><span class="pre">fetch</span></code> and <code class="docutils literal notranslate"><span class="pre">rebase</span></code>:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git fetch upstream
+<span class="gp">$</span> git rebase upstream/jubjub issue-23-jujub-ec-mpc
+</pre></div>
+</div>
+</div>
+<div class="section" id="git-commit-best-practices">
+<h3>Git commit best practices<a class="headerlink" href="#git-commit-best-practices" title="Permalink to this headline">¶</a></h3>
+<p>It is a good idea to familiarize yourself with good practices for the commits
+you make when preparing a pull request. A few references are provided here for
+the time being and as the <code class="docutils literal notranslate"><span class="pre">honeybadgermpc</span></code> project evolves we’ll document
+good practices that are most relevant to the project.</p>
+<ul class="simple">
+<li><a class="reference external" href="https://en.wikipedia.org/wiki/Separation_of_concerns">https://en.wikipedia.org/wiki/Separation_of_concerns</a></li>
+<li><a class="reference external" href="https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages">https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages</a></li>
+<li><a class="reference external" href="https://www.slideshare.net/TarinGamberini/commit-messages-goodpractices">https://www.slideshare.net/TarinGamberini/commit-messages-goodpractices</a></li>
+<li><a class="reference external" href="http://who-t.blogspot.com/2009/12/on-commit-messages.html">http://who-t.blogspot.com/2009/12/on-commit-messages.html</a></li>
+</ul>
+</div>
+<div class="section" id="signing-commits">
+<h3>Signing commits<a class="headerlink" href="#signing-commits" title="Permalink to this headline">¶</a></h3>
+<p>To sign your commits follow the steps outlined at
+<a class="reference external" href="https://help.github.com/articles/signing-commits/">https://help.github.com/articles/signing-commits/</a>.</p>
+<p class="rubric">Resources</p>
+<ul class="simple">
+<li><a class="reference external" href="https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work">https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work</a></li>
+<li><a class="reference external" href="https://softwareengineering.stackexchange.com/questions/212192/what-are-the-advantages-and-disadvantages-of-cryptographically-signing-commits-a">https://softwareengineering.stackexchange.com/questions/212192/what-are-the-advantages-and-disadvantages-of-cryptographically-signing-commits-a</a></li>
+</ul>
+</div>
+<div class="section" id="making-a-pull-request">
+<h3>Making a pull request<a class="headerlink" href="#making-a-pull-request" title="Permalink to this headline">¶</a></h3>
+<p>Once you are done with your work, you have to push it to your remote:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git push origin issue-23-jujub-ec-mpc
+</pre></div>
+</div>
+<p>and then you can <a class="reference external" href="https://help.github.com/articles/creating-a-pull-request-from-a-fork/">make a pull request</a> to merge your work with the shared
+remote branch that you have based your work on.</p>
+<p>Pull requests go through the following checks:</p>
+<ul class="simple">
+<li>unit tests</li>
+<li>code quality</li>
+<li>documentation quality</li>
+<li>code coverage</li>
+</ul>
+<p>These checks are performed using <a class="reference external" href="https://docs.travis-ci.com/">Travis CI</a> and <a class="reference external" href="https://codecov.io/">Codecov</a>. These checks are
+there to help keeping the code in good shape and pull requests should ideally
+pass these 4 checks before being merged.</p>
+</div>
+</div>
+<div class="section" id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
+<p>A pull request should ideally be accompanied by some tests. Code coverage is
+checked on Travis CI via codecov. The coverage requirements are defined in the
+<code class="file docutils literal notranslate"><span class="pre">.codecov.yaml</span></code> file. See codecov’s documentation on
+<a class="reference external" href="https://docs.codecov.io/docs/coverage-configuration">coverage configuration</a> for more information about the codecov.yaml file.</p>
+<p><a class="reference external" href="https://docs.pytest.org/">pytest</a> is the framework used to write tests and it is probably a good idea
+to consult its documentation once in a while to learn new tricks as it may
+help a lot when writing tests. For instance, learning to work with
+<a class="reference external" href="https://docs.pytest.org/en/latest/fixture.html#fixture">pytest fixtures</a> can help greatly to simplify tests, and re-use test
+components throughout the test code.</p>
+<p><strong>Interesting resource on writing unit tests:</strong>:
+<a class="reference external" href="https://pylonsproject.org/community-unit-testing-guidelines.html">https://pylonsproject.org/community-unit-testing-guidelines.html</a></p>
+</div>
+<div class="section" id="coding-conventions">
+<h2>Coding Conventions<a class="headerlink" href="#coding-conventions" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://pep8.org/">PEP 8</a> is used as a guide for coding conventions. The maximum line length is
+set at 89 characters.</p>
+<p>The <a class="reference external" href="http://flake8.pycqa.org/en/latest/index.html">flake8</a> tool is used in the continuous integration phase to check the
+code quality. The configuration file, <code class="docutils literal notranslate"><span class="pre">.flake8</span></code>, is under the project root.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last"><strong>Recommended reading:</strong> The <a class="reference external" href="https://docs.python-guide.org/writing/style/">Code Style</a> section in the
+<a class="reference external" href="https://docs.python-guide.org/">The Hitchhiker’s Guide to Python!</a>.</p>
+</div>
+</div>
+<div class="section" id="documentation-conventions">
+<h2>Documentation Conventions<a class="headerlink" href="#documentation-conventions" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://www.python.org/dev/peps/pep-0257/">PEP 257</a> is used for docstring conventions. The docstrings are extracted out
+into the documentation with the <a class="reference external" href="http://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html">autodoc</a> Sphinx extension and should be
+valid reStructuredText. Here’s an example of how a function may be documented:</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Use a HoneyBadgerMPC code sample instead of sample shown below.</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">send_message</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">recipient</span><span class="p">,</span> <span class="n">message_body</span><span class="p">,</span> <span class="p">[</span><span class="n">priority</span><span class="o">=</span><span class="mi">1</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Send a message to a recipient</span>
+
+<span class="sd">    :param str sender: The person sending the message</span>
+<span class="sd">    :param str recipient: The recipient of the message</span>
+<span class="sd">    :param str message_body: The body of the message</span>
+<span class="sd">    :param priority: The priority of the message, can be a number 1-5</span>
+<span class="sd">    :type priority: integer or None</span>
+<span class="sd">    :return: the message id</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    :raises ValueError: if the message_body exceeds 160 characters</span>
+<span class="sd">    :raises TypeError: if the message_body is not a basestring</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>See Sphinx documentation: <a class="reference external" href="http://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists">info field lists</a>, for more information on how to
+document Python objects.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last"><strong>Recommended reading:</strong> The <a class="reference external" href="https://docs.python-guide.org/writing/documentation/">Documentation</a> section in the
+<a class="reference external" href="https://docs.python-guide.org/">The Hitchhiker’s Guide to Python!</a> is a useful resource.</p>
+</div>
+</div>
+<div class="section" id="ignoring-conventions">
+<span id="when-to-ignore-conventions"></span><h2>Ignoring conventions<a class="headerlink" href="#ignoring-conventions" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="http://pep8.org/">PEP 8</a> style guide has a very important section at the beginning:
+<a class="reference external" href="http://pep8.org/#a-foolish-consistency-is-the-hobgoblin-of-little-minds">A Foolish Consistency is the Hobgoblin of Little Minds</a>. It says:</p>
+<blockquote>
+<div><p><em>One of Guido’s key insights is that code is read much more often than it
+is written. The guidelines provided here are intended to improve the
+readability of code and make it consistent across the wide spectrum of
+Python code. As</em> <a class="reference external" href="https://www.python.org/dev/peps/pep-0020/">PEP 20</a> <em>says, “Readability counts”.</em></p>
+<p><em>A style guide is about consistency. Consistency with this style guide is
+important. Consistency within a project is more important. Consistency
+within one module or function is the most important.</em></p>
+<p><em>However, know when to be inconsistent—sometimes style guide
+recommendations just aren’t applicable. When in doubt, use your best
+judgment. Look at other examples and decide what looks best. And don’t
+hesitate to ask!</em></p>
+</div></blockquote>
+<p>So if you need to ignore some convention(s), and doing so make one or more
+checks fail you can <a class="reference external" href="http://flake8.pycqa.org/en/latest/user/violations.html#in-line-ignoring-errors">ignore the error inline</a> with the
+<code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa:</span> <span class="pre">&lt;error</span> <span class="pre">code&gt;</span></code> comment. As an example, say you wanted to ignore
+<code class="docutils literal notranslate"><span class="pre">E221</span></code> (multiple spaces before operator) errors:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coin_recvs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>
+<span class="n">aba_recvs</span>  <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>  <span class="c1"># noqa: E221</span>
+<span class="n">rbc_recvs</span>  <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>  <span class="c1"># noqa: E221</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="http://flake8.pycqa.org/en/latest/user/violations.html">Selecting and Ignoring Violations</a> for more information about ignoring
+violations reported by <a class="reference external" href="http://flake8.pycqa.org/en/latest/index.html">flake8</a>.</p>
+<p class="rubric">Error codes</p>
+<ul class="simple">
+<li>flake8: <a class="reference external" href="http://flake8.pycqa.org/en/latest/user/error-codes.html">http://flake8.pycqa.org/en/latest/user/error-codes.html</a></li>
+<li>pycodestyle: <a class="reference external" href="https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes">https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes</a></li>
+<li>pydocstyle: <a class="reference external" href="http://www.pydocstyle.org/en/2.1.1/error_codes.html">http://www.pydocstyle.org/en/2.1.1/error_codes.html</a></li>
+</ul>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">Document how the config works.</p>
+</div>
+</div>
+<div class="section" id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>Make use of the <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.7)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module! If you are unsure about whether you
+should log or print, or when you should log, see <a class="reference external" href="https://docs.python.org/3/howto/logging.html#when-to-use-logging">When to use logging</a>.</p>
+<div class="section" id="important-resources-on-logging">
+<h3>Important resources on logging<a class="headerlink" href="#important-resources-on-logging" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Python documentation: <a class="reference external" href="https://docs.python.org/3/howto/logging.html">Logging HOWTO</a></li>
+<li>Python documentation: <a class="reference external" href="https://docs.python.org/3/howto/logging-cookbook.html">Logging Cookbook</a></li>
+<li>The Hitchhiker’s Guide to Python!: <a class="reference external" href="https://docs.python-guide.org/writing/logging/">Logging</a></li>
+<li><a class="reference external" href="http://plumberjack.blogspot.com/">Plumber Jack</a> Stuff about Python’s logging package. By <a class="reference external" href="https://github.com/vsajip">Vinay Sajip</a>,
+main author of the <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.7)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="rust-bindings">
+<h2>Rust bindings<a class="headerlink" href="#rust-bindings" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">Document important things to know when contributing to this
+component.</p>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="https://git-scm.com/book/en/v2">Pro Git Book</a></li>
+<li><a class="reference external" href="https://docs.python-guide.org/">The Hitchhiker’s Guide to Python!</a></li>
+<li><a class="reference external" href="http://www.cs.utexas.edu/users/EWD/transcriptions/EWD04xx/EWD447.html">On the role of scientific thought</a> by Edsger W. Dijkstra</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="reviewing-contributions.html" class="btn btn-neutral float-right" title="Reviewing and merging pull requests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting-started.html" class="btn btn-neutral" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

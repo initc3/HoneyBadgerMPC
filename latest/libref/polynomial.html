@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>polynomial &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="router" href="router.html" />
+    <link rel="prev" title="field" href="field.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="honeybadgermpc.html">honeybadgermpc</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="passive.html">passive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonsubset.html">commonsubset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="triple_refinement.html">triple_refinement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rand.html">rand</a></li>
+<li class="toctree-l2"><a class="reference internal" href="secretshare.html">secretshare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="field.html">field</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">polynomial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="router.html">router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ipc.html">ipc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">config</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="honeybadgermpc.html">honeybadgermpc</a> &raquo;</li>
+        
+      <li>polynomial</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/libref/polynomial.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-honeybadgermpc.polynomial">
+<span id="polynomial"></span><h1>polynomial<a class="headerlink" href="#module-honeybadgermpc.polynomial" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.fft">
+<code class="descclassname">honeybadgermpc.polynomial.</code><code class="descname">fft</code><span class="sig-paren">(</span><em>poly</em>, <em>omega</em>, <em>n</em>, <em>seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/polynomial.html#fft"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.fft" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.fft_helper">
+<code class="descclassname">honeybadgermpc.polynomial.</code><code class="descname">fft_helper</code><span class="sig-paren">(</span><em>A</em>, <em>omega</em>, <em>field</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/polynomial.html#fft_helper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.fft_helper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given coefficients A of polynomial this method does FFT and returns
+the evaluation of the polynomial at [omega^0, omega^(n-1)]</p>
+<p>If the polynomial is a0*x^0 + a1*x^1 + … + an*x^n then the coefficients
+list is of the form [a0, a1, … , an].</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.get_omega">
+<code class="descclassname">honeybadgermpc.polynomial.</code><code class="descname">get_omega</code><span class="sig-paren">(</span><em>field</em>, <em>n</em>, <em>seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/polynomial.html#get_omega"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.get_omega" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a field, this method returns an n^th root of unity.
+If the seed is not None then this method will return the
+same n’th root of unity for every run with the same seed</p>
+<p>This only makes sense if n is a power of 2!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.polynomialsOver">
+<code class="descclassname">honeybadgermpc.polynomial.</code><code class="descname">polynomialsOver</code><span class="sig-paren">(</span><em>field</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/polynomial.html#polynomialsOver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.polynomialsOver" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.strip_trailing_zeros">
+<code class="descclassname">honeybadgermpc.polynomial.</code><code class="descname">strip_trailing_zeros</code><span class="sig-paren">(</span><em>a</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/polynomial.html#strip_trailing_zeros"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.strip_trailing_zeros" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="router.html" class="btn btn-neutral float-right" title="router" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="field.html" class="btn btn-neutral" title="field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

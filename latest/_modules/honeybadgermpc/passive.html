@@ -1,0 +1,596 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>honeybadgermpc.passive &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>honeybadgermpc.passive</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for honeybadgermpc.passive</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">asyncio</span> <span class="k">import</span> <span class="n">Future</span>
+<span class="kn">from</span> <span class="nn">.field</span> <span class="k">import</span> <span class="n">GF</span><span class="p">,</span> <span class="n">GFElement</span>
+<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="k">import</span> <span class="n">polynomialsOver</span>
+<span class="kn">from</span> <span class="nn">.router</span> <span class="k">import</span> <span class="n">simple_router</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+
+<div class="viewcode-block" id="NotEnoughShares"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.NotEnoughShares">[docs]</a><span class="k">class</span> <span class="nc">NotEnoughShares</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="PassiveMpc"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.PassiveMpc">[docs]</a><span class="k">class</span> <span class="nc">PassiveMpc</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sid</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">myid</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="c1"># Parameters for passive secure MPC</span>
+        <span class="c1"># Note: tolerates min(t,N-t) crash faults</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span>
+        <span class="k">assert</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sid</span> <span class="o">=</span> <span class="n">sid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">myid</span> <span class="o">=</span> <span class="n">myid</span>
+
+        <span class="c1"># send(j, o): sends object o to party j with (current sid)</span>
+        <span class="c1"># recv(): returns (j, o) from party j</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span> <span class="o">=</span> <span class="n">send</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recv</span> <span class="o">=</span> <span class="n">recv</span>
+
+        <span class="c1"># An Mpc program should only depend on common parameters,</span>
+        <span class="c1"># and the values of opened shares. Opened shares will be</span>
+        <span class="c1"># assigned an ID based on the order that share is encountered.</span>
+        <span class="c1"># So the protocol must encounter the shares in the same order.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prog</span> <span class="o">=</span> <span class="n">prog</span>
+
+        <span class="c1"># Store deferreds representing SharedValues</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_openings</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Store opened shares until ready to reconstruct</span>
+        <span class="c1"># shareid =&gt; { [playerid =&gt; share] }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_share_buffers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Share</span> <span class="o">=</span> <span class="n">shareInContext</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PassiveMpc._reconstruct"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.PassiveMpc._reconstruct">[docs]</a>    <span class="k">def</span> <span class="nf">_reconstruct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shareid</span><span class="p">):</span>
+        <span class="c1"># Are there enough shares to reconstruct?</span>
+        <span class="n">shares</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_share_buffers</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">shareid</span><span class="p">])</span>
+                  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+                  <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_share_buffers</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">shareid</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shares</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NotEnoughShares</span>
+
+        <span class="c1"># print(&#39;[%d] reconstruct %s&#39; % (self.myid, shareid,))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_openings</span><span class="p">[</span><span class="n">shareid</span><span class="p">]</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">Poly</span><span class="o">.</span><span class="n">interpolate_at</span><span class="p">(</span><span class="n">shares</span><span class="p">)</span>
+            <span class="c1"># Set the result on the future representing this share</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_openings</span><span class="p">[</span><span class="n">shareid</span><span class="p">]</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PassiveMpc.open_share"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.PassiveMpc.open_share">[docs]</a>    <span class="k">def</span> <span class="nf">open_share</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">share</span><span class="p">):</span>
+        <span class="n">opening</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">()</span>
+        <span class="n">shareid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_openings</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_openings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opening</span><span class="p">)</span>
+
+        <span class="c1"># Broadcast share</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">shareid</span><span class="p">,</span> <span class="n">share</span><span class="o">.</span><span class="n">v</span><span class="p">))</span>
+
+        <span class="c1"># Reconstruct if we already had enough shares</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruct</span><span class="p">(</span><span class="n">shareid</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">NotEnoughShares</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Return future</span>
+        <span class="k">return</span> <span class="n">opening</span></div>
+
+<div class="viewcode-block" id="PassiveMpc._run"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.PassiveMpc._run">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Run receive loop as background task, until self.prog finishes</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+        <span class="n">bgtask</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_recvloop</span><span class="p">())</span>
+
+        <span class="k">def</span> <span class="nf">handle_result</span><span class="p">(</span><span class="n">future</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">future</span><span class="o">.</span><span class="n">cancelled</span><span class="p">()</span> <span class="ow">and</span> <span class="n">future</span><span class="o">.</span><span class="n">exception</span><span class="p">():</span>
+                <span class="c1"># Stop the loop otherwise the loop continues to await for the prog to</span>
+                <span class="c1"># finish which will never happen since the recvloop has terminated.</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+                <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+        <span class="n">bgtask</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">handle_result</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">prog</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">bgtask</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="PassiveMpc._recvloop"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.PassiveMpc._recvloop">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_recvloop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">shareid</span><span class="p">,</span> <span class="n">share</span><span class="p">))</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_share_buffers</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+            <span class="c1"># Shareid is redundant, but confirm it is one greater</span>
+            <span class="k">assert</span> <span class="n">shareid</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="s2">&quot;shareid: </span><span class="si">%d</span><span class="s2">, len: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">shareid</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">))</span>
+            <span class="n">buf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">share</span><span class="p">)</span>
+
+            <span class="c1"># Reconstruct if we now have enough shares,</span>
+            <span class="c1"># and if the opening has been asked for</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_openings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">shareid</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruct</span><span class="p">(</span><span class="n">shareid</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">NotEnoughShares</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="c1"># File I/O</span>
+<div class="viewcode-block" id="PassiveMpc.read_shares"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.PassiveMpc.read_shares">[docs]</a>    <span class="k">def</span> <span class="nf">read_shares</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="c1"># Read shares from a file object</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="c1"># first line: field modulus</span>
+        <span class="n">modulus</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">Field</span><span class="o">.</span><span class="n">modulus</span> <span class="o">==</span> <span class="n">modulus</span>
+        <span class="c1"># second line: share degree</span>
+        <span class="n">degree</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>   <span class="c1"># noqa</span>
+        <span class="c1"># third line: id</span>
+        <span class="n">myid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>     <span class="c1"># noqa</span>
+        <span class="n">shares</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># remaining lines: shared values</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="n">shares</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">shares</span></div>
+
+<div class="viewcode-block" id="PassiveMpc.write_shares"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.PassiveMpc.write_shares">[docs]</a>    <span class="k">def</span> <span class="nf">write_shares</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">shares</span><span class="p">):</span>
+        <span class="n">write_shares</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Field</span><span class="o">.</span><span class="n">modulus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">myid</span><span class="p">,</span>
+                     <span class="p">[</span><span class="n">share</span><span class="o">.</span><span class="n">v</span> <span class="k">for</span> <span class="n">share</span> <span class="ow">in</span> <span class="n">shares</span><span class="p">])</span></div></div>
+
+
+<div class="viewcode-block" id="write_shares"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.write_shares">[docs]</a><span class="k">def</span> <span class="nf">write_shares</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">myid</span><span class="p">,</span> <span class="n">shares</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">modulus</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">degree</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">myid</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">share</span> <span class="ow">in</span> <span class="n">shares</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">share</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span></div>
+
+<span class="c1">###############</span>
+<span class="c1"># Share class</span>
+<span class="c1">###############</span>
+
+
+<div class="viewcode-block" id="shareInContext"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.shareInContext">[docs]</a><span class="k">def</span> <span class="nf">shareInContext</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">_binopField</span><span class="p">(</span><span class="n">fut</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ShareFuture</span><span class="p">,</span> <span class="n">GFElementFuture</span><span class="p">,</span> <span class="n">Share</span><span class="p">,</span> <span class="n">GFElement</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ShareFuture</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Share</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">ShareFuture</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">GFElement</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">GFElementFuture</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">GFElementFuture</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Future</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">_</span><span class="p">):</span> <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">op</span><span class="p">(</span><span class="n">fut</span><span class="o">.</span><span class="n">result</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">result</span><span class="p">()))</span>
+            <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">fut</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">_</span><span class="p">):</span> <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">op</span><span class="p">(</span><span class="n">fut</span><span class="o">.</span><span class="n">result</span><span class="p">(),</span> <span class="n">other</span><span class="p">))</span>
+            <span class="n">fut</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">class</span> <span class="nc">GFElementFuture</span><span class="p">(</span><span class="n">Future</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="n">_binopField</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="n">_binopField</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="n">_binopField</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Share</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+            <span class="c1"># v is the local value of the share</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="n">GFElement</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="c1"># Publicly reconstruct a shared value</span>
+        <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">GFElementFuture</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">f</span><span class="p">):</span> <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">open_share</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+        <span class="c1"># Linear combinations of shares can be computed directly</span>
+        <span class="c1"># TODO: add type checks for the operators</span>
+        <span class="c1"># @typecheck(Share)</span>
+        <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">GFElement</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">Share</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">+</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Share</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">Share</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="n">Share</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">v</span><span class="p">)</span>
+        <span class="fm">__radd__</span> <span class="o">=</span> <span class="fm">__add__</span>
+
+        <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="n">Share</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># @typecheck(int,field)</span>
+        <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="n">Share</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">*</span> <span class="n">other</span><span class="p">)</span>
+
+        <span class="c1"># @typecheck(Share)</span>
+        <span class="c1"># TODO</span>
+        <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">raise</span> <span class="bp">NotImplemented</span>
+
+        <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;{</span><span class="si">%d</span><span class="s1">}&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_binopShare</span><span class="p">(</span><span class="n">fut</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ShareFuture</span><span class="p">,</span> <span class="n">GFElementFuture</span><span class="p">,</span> <span class="n">Share</span><span class="p">,</span> <span class="n">GFElement</span><span class="p">]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">ShareFuture</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Future</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">_</span><span class="p">):</span> <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">op</span><span class="p">(</span><span class="n">fut</span><span class="o">.</span><span class="n">result</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">result</span><span class="p">()))</span>
+            <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">fut</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">_</span><span class="p">):</span> <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">op</span><span class="p">(</span><span class="n">fut</span><span class="o">.</span><span class="n">result</span><span class="p">(),</span> <span class="n">other</span><span class="p">))</span>
+            <span class="n">fut</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">class</span> <span class="nc">ShareFuture</span><span class="p">(</span><span class="n">Future</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="n">_binopShare</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="n">_binopShare</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="n">_binopShare</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GFElementFuture</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">GFElementFuture</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">cb2</span><span class="p">(</span><span class="n">sh</span><span class="p">):</span> <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">sh</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
+
+            <span class="k">def</span> <span class="nf">cb1</span><span class="p">(</span><span class="n">_</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">()</span><span class="o">.</span><span class="n">open</span><span class="p">()</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">return</span> <span class="n">Share</span></div>
+
+<span class="c1"># Share = shareInContext(None)</span>
+
+
+<span class="c1"># Create a fake network with N instances of the program</span>
+<div class="viewcode-block" id="runProgramAsTasks"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.runProgramAsTasks">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">runProgramAsTasks</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+    <span class="n">sends</span><span class="p">,</span> <span class="n">recvs</span> <span class="o">=</span> <span class="n">simple_router</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+
+    <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># bgtasks = []</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">PassiveMpc</span><span class="p">(</span><span class="s1">&#39;sid&#39;</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">sends</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">recvs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">program</span><span class="p">)</span>
+        <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loop</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">_run</span><span class="p">()))</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">tasks</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<span class="c1">#######################</span>
+<span class="c1"># Generating test files</span>
+<span class="c1">#######################</span>
+
+<span class="c1"># Fix the field for now</span>
+<span class="n">Field</span> <span class="o">=</span> <span class="n">GF</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mh">0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001</span><span class="p">)</span>
+<span class="n">Poly</span> <span class="o">=</span> <span class="n">polynomialsOver</span><span class="p">(</span><span class="n">Field</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="write_polys"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.write_polys">[docs]</a><span class="k">def</span> <span class="nf">write_polys</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">polys</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">shares</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">polys</span><span class="p">]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.share&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">write_shares</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">shares</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="generate_test_triples"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.generate_test_triples">[docs]</a><span class="k">def</span> <span class="nf">generate_test_triples</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="c1"># Generate k triples, store in files of form &quot;prefix-%d.share&quot;</span>
+    <span class="n">polys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Field</span><span class="o">.</span><span class="n">modulus</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Field</span><span class="o">.</span><span class="n">modulus</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">b</span>
+        <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+        <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+        <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+    <span class="n">write_polys</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">Field</span><span class="o">.</span><span class="n">modulus</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">polys</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="generate_test_zeros"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.generate_test_zeros">[docs]</a><span class="k">def</span> <span class="nf">generate_test_zeros</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="n">polys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+        <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">write_polys</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">Field</span><span class="o">.</span><span class="n">modulus</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">polys</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="generate_test_randoms"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.generate_test_randoms">[docs]</a><span class="k">def</span> <span class="nf">generate_test_randoms</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="n">polys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+        <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Field</span><span class="o">.</span><span class="n">modulus</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="n">write_polys</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">Field</span><span class="o">.</span><span class="n">modulus</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">polys</span><span class="p">)</span></div>
+
+
+<span class="c1">###############</span>
+<span class="c1"># Test programs</span>
+<span class="c1">###############</span>
+<div class="viewcode-block" id="test_prog1"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.test_prog1">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">test_prog1</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;sharedata/test_zeros-</span><span class="si">%d</span><span class="s1">.share&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,)</span>
+    <span class="n">zeros</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">read_shares</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;sharedata/test_triples-</span><span class="si">%d</span><span class="s1">.share&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,)</span>
+    <span class="n">triples</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">read_shares</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+
+    <span class="c1"># Example of Beaver multiplication</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">ab</span> <span class="o">=</span> <span class="n">triples</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="c1"># assert await a.open() * await b.open() == await ab.open()</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+
+    <span class="c1"># This is a random share of x*y</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;type(D):&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;type(b):&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+    <span class="n">xy</span> <span class="o">=</span> <span class="n">D</span><span class="o">*</span><span class="n">E</span> <span class="o">+</span> <span class="n">D</span><span class="o">*</span><span class="n">b</span> <span class="o">+</span> <span class="n">E</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="n">ab</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;type(x):&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;type(y):&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;type(xy):&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">xy</span><span class="p">))</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">XY</span> <span class="o">=</span> <span class="k">await</span> <span class="n">x</span><span class="o">.</span><span class="n">open</span><span class="p">(),</span> <span class="k">await</span> <span class="n">y</span><span class="o">.</span><span class="n">open</span><span class="p">(),</span> <span class="k">await</span> <span class="n">xy</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">X</span> <span class="o">*</span> <span class="n">Y</span> <span class="o">==</span> <span class="n">XY</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] Finished&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,),</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">XY</span><span class="p">)</span></div>
+
+
+<span class="c1"># Read zeros from file, open them</span>
+<div class="viewcode-block" id="test_prog2"><a class="viewcode-back" href="../../libref/passive.html#honeybadgermpc.passive.test_prog2">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">test_prog2</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;sharedata/test_zeros-</span><span class="si">%d</span><span class="s1">.share&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,)</span>
+    <span class="n">shares</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">read_shares</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[</span><span class="si">%d</span><span class="s1">] read </span><span class="si">%d</span><span class="s1"> shares&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">shares</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">share</span> <span class="ow">in</span> <span class="n">shares</span><span class="p">[:</span><span class="mi">100</span><span class="p">]:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="k">await</span> <span class="n">share</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[</span><span class="si">%d</span><span class="s1">] Finished&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,))</span></div>
+
+
+<span class="c1"># Run some test cases</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating random shares of zero in sharedata/&#39;</span><span class="p">)</span>
+    <span class="n">generate_test_zeros</span><span class="p">(</span><span class="s1">&#39;sharedata/test_zeros&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating random shares of triples in sharedata/&#39;</span><span class="p">)</span>
+    <span class="n">generate_test_triples</span><span class="p">(</span><span class="s1">&#39;sharedata/test_triples&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">())</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+    <span class="n">loop</span><span class="o">.</span><span class="n">set_debug</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">runProgramAsTasks</span><span class="p">(</span><span class="n">test_prog1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">runProgramAsTasks</span><span class="p">(</span><span class="n">test_prog2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

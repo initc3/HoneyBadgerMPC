@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Protocol Descriptions &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Performance" href="performance.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Protocol Descriptions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#hbavss">HBAVSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batchhbavss">BatchHBAVSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reliablebroadcast">ReliableBroadcast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batchreconstruction">BatchReconstruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rand">Rand</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batchrand">BatchRand</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batchbeavermultiplication">BatchBeaverMultiplication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tripletransformation">TripleTransformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#polynomialverification">PolynomialVerification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tripleextraction">TripleExtraction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="libref/honeybadgermpc.html">honeybadgermpc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Protocol Descriptions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/subprotocols.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="protocol-descriptions">
+<h1>Protocol Descriptions<a class="headerlink" href="#protocol-descriptions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="hbavss">
+<h2>HBAVSS<a class="headerlink" href="#hbavss" title="Permalink to this headline">¶</a></h2>
+<p>An Asynchronous Verifiable Secret Sharing protocol. Allows a dealer to share a
+secret with <span class="math notranslate nohighlight">\(n\)</span> parties such that any <span class="math notranslate nohighlight">\(t+1\)</span> of the honest parties
+can reconstruct it. For our purposes (achieving optimal Byzantine Fault
+Tolerance), we will always be using <span class="math notranslate nohighlight">\(n = 3t+1\)</span>.</p>
+<p><strong>Input</strong>: One secret the size of a field element</p>
+<p><strong>Output</strong>: <span class="math notranslate nohighlight">\(n\)</span> parties will have a <span class="math notranslate nohighlight">\(t\)</span>-shared share of the secret</p>
+</div>
+<div class="section" id="batchhbavss">
+<h2>BatchHBAVSS<a class="headerlink" href="#batchhbavss" title="Permalink to this headline">¶</a></h2>
+<p>An altered version of HBAVSS that allows for the more efficient sharing of a
+batch of secrets. Details to be worked out soon (TM).</p>
+</div>
+<div class="section" id="reliablebroadcast">
+<h2>ReliableBroadcast<a class="headerlink" href="#reliablebroadcast" title="Permalink to this headline">¶</a></h2>
+<p>A protocol which allows a broadcaster to send the same message to <span class="math notranslate nohighlight">\(n\)</span>
+different recipients in a bandwidth-saving way, while being assured that every
+recipient eventually receives the full correct message.</p>
+<p><strong>Input</strong>: One message to be broadcasted</p>
+<p><strong>Output</strong>: <span class="math notranslate nohighlight">\(n\)</span> parties will eventually successfully receive the message</p>
+</div>
+<div class="section" id="batchreconstruction">
+<h2>BatchReconstruction<a class="headerlink" href="#batchreconstruction" title="Permalink to this headline">¶</a></h2>
+<p>A protocol to reconstruct many secrets at once with fewer messages</p>
+<p><strong>Input</strong>:  At least <span class="math notranslate nohighlight">\(t+1\)</span> parties input their shares of <span class="math notranslate nohighlight">\(t+1\)</span>
+total <span class="math notranslate nohighlight">\(t\)</span>-shared secrets</p>
+<p><strong>Output</strong>: <span class="math notranslate nohighlight">\(t+1\)</span> reconstructed secrets are output to every
+participating party</p>
+</div>
+<div class="section" id="rand">
+<h2>Rand<a class="headerlink" href="#rand" title="Permalink to this headline">¶</a></h2>
+<p>A protocal that generates a random secret-shared value, which nobody will know
+until it is reconstructed</p>
+</div>
+<div class="section" id="batchrand">
+<h2>BatchRand<a class="headerlink" href="#batchrand" title="Permalink to this headline">¶</a></h2>
+<p>An effiecient batched version of Rand</p>
+</div>
+<div class="section" id="batchbeavermultiplication">
+<h2>BatchBeaverMultiplication<a class="headerlink" href="#batchbeavermultiplication" title="Permalink to this headline">¶</a></h2>
+<p>Perform multiple shared-secret multiplications at once</p>
+<p><strong>Input</strong>: <span class="math notranslate nohighlight">\(n\)</span> <span class="math notranslate nohighlight">\(t\)</span>-shared pairs of secrets that one wishes to
+multiply and <span class="math notranslate nohighlight">\(n\)</span> sets of beaver triples. <span class="math notranslate nohighlight">\(2n \geq t+1\)</span></p>
+<p><strong>Output</strong>: <span class="math notranslate nohighlight">\(n\)</span> <span class="math notranslate nohighlight">\(t\)</span>-shared secret pairs that have been
+successfully multiplied</p>
+</div>
+<div class="section" id="tripletransformation">
+<h2>TripleTransformation<a class="headerlink" href="#tripletransformation" title="Permalink to this headline">¶</a></h2>
+<p>Turns a set of triples into a set of co-related and secret-shared triples.
+This plus Polynomial Verification together can tell you if all of your input
+triples are multiplication triples.</p>
+<blockquote>
+<div><p>Co-related triples are triples that make up points on polynomials
+<span class="math notranslate nohighlight">\(A()\)</span>, <span class="math notranslate nohighlight">\(B()\)</span>, and <span class="math notranslate nohighlight">\(C()\)</span> such that</p>
+<div class="math notranslate nohighlight">
+\[A() \cdot B() = C(),\]</div>
+</div></blockquote>
+<p>i.e. <span class="math notranslate nohighlight">\(A(i) \cdot B(i) = C(i) \forall i\)</span>.</p>
+<p><strong>Input</strong>: <span class="math notranslate nohighlight">\(m\)</span> <em>independent</em> <span class="math notranslate nohighlight">\(t\)</span>-shared triples, where
+<span class="math notranslate nohighlight">\(m = 2d + 1\)</span> and <span class="math notranslate nohighlight">\(d \geq t\)</span>.</p>
+<blockquote>
+<div>Note the if we have <span class="math notranslate nohighlight">\(d == t\)</span>, then this whole process gives 1
+multiplication triple, but can tolerate the most dropouts. On the other
+hand, if <span class="math notranslate nohighlight">\(d = 3t/2\)</span>, we have <span class="math notranslate nohighlight">\(m = 3t + 1\)</span> and hence have the
+best efficiency but require all parties to provide correct input to
+proceed.</div></blockquote>
+<p><strong>Output</strong>: <span class="math notranslate nohighlight">\(m\)</span> <span class="math notranslate nohighlight">\(t\)</span>-shared, co-related triples</p>
+</div>
+<div class="section" id="polynomialverification">
+<h2>PolynomialVerification<a class="headerlink" href="#polynomialverification" title="Permalink to this headline">¶</a></h2>
+<p>Determine if the triples output from TripleTransformation are multiplication
+triples.</p>
+<p><strong>Input</strong>: <span class="math notranslate nohighlight">\(n\)</span> different <span class="math notranslate nohighlight">\(t\)</span>-shared outputs of
+TripleTransformation</p>
+<p><strong>Output</strong>: Knowledge of which polynomials one can extract multiplication
+triples from</p>
+</div>
+<div class="section" id="tripleextraction">
+<h2>TripleExtraction<a class="headerlink" href="#tripleextraction" title="Permalink to this headline">¶</a></h2>
+<p>Extract unknown random multiplication triples from a set of co-related
+multiplication triples.</p>
+<p><strong>Input</strong>: <span class="math notranslate nohighlight">\(n\)</span> different polynomials formed by <span class="math notranslate nohighlight">\(t\)</span>-shared
+co-related multiplication triples</p>
+<p><strong>Output</strong>: <span class="math notranslate nohighlight">\((d + 1 - t)\)</span> <span class="math notranslate nohighlight">\(t\)</span>-shared random triples, where
+<span class="math notranslate nohighlight">\(d\)</span> is the degree of polynomials <span class="math notranslate nohighlight">\(A()\)</span> and <span class="math notranslate nohighlight">\(B()\)</span></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="performance.html" class="btn btn-neutral float-right" title="Performance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="intro.html" class="btn btn-neutral" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>commonsubset &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="triple_refinement" href="triple_refinement.html" />
+    <link rel="prev" title="passive" href="passive.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="honeybadgermpc.html">honeybadgermpc</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="passive.html">passive</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">commonsubset</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-honeybadgermpc.commonsubset_functionality">Ideal functionality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-honeybadgermpc.commonsubset_blockchain">EVM blockchain -based implementation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="triple_refinement.html">triple_refinement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rand.html">rand</a></li>
+<li class="toctree-l2"><a class="reference internal" href="secretshare.html">secretshare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="field.html">field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="polynomial.html">polynomial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="router.html">router</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ipc.html">ipc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">config</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="honeybadgermpc.html">honeybadgermpc</a> &raquo;</li>
+        
+      <li>commonsubset</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/libref/commonsubset.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="commonsubset">
+<h1>commonsubset<a class="headerlink" href="#commonsubset" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-honeybadgermpc.commonsubset_functionality">
+<span id="ideal-functionality"></span><h2>Ideal functionality<a class="headerlink" href="#module-honeybadgermpc.commonsubset_functionality" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="honeybadgermpc.commonsubset_functionality.ACS_Functionality">
+<em class="property">class </em><code class="descclassname">honeybadgermpc.commonsubset_functionality.</code><code class="descname">ACS_Functionality</code><span class="sig-paren">(</span><em>sid</em>, <em>N</em>, <em>f</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_functionality.html#ACS_Functionality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_functionality.ACS_Functionality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="honeybadgermpc.commonsubset_functionality.ACS_Functionality._run">
+<code class="descname">_run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_functionality.html#ACS_Functionality._run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_functionality.ACS_Functionality._run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_functionality.CommonSubset_IdealProtocol">
+<code class="descclassname">honeybadgermpc.commonsubset_functionality.</code><code class="descname">CommonSubset_IdealProtocol</code><span class="sig-paren">(</span><em>N</em>, <em>f</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_functionality.html#CommonSubset_IdealProtocol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_functionality.CommonSubset_IdealProtocol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_functionality._test_acs_ideal">
+<code class="descclassname">honeybadgermpc.commonsubset_functionality.</code><code class="descname">_test_acs_ideal</code><span class="sig-paren">(</span><em>sid='sid'</em>, <em>N=4</em>, <em>f=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_functionality.html#_test_acs_ideal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_functionality._test_acs_ideal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_functionality.test_acs_ideal">
+<code class="descclassname">honeybadgermpc.commonsubset_functionality.</code><code class="descname">test_acs_ideal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_functionality.html#test_acs_ideal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_functionality.test_acs_ideal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-honeybadgermpc.commonsubset_blockchain">
+<span id="evm-blockchain-based-implementation"></span><h2>EVM blockchain -based implementation<a class="headerlink" href="#module-honeybadgermpc.commonsubset_blockchain" title="Permalink to this headline">¶</a></h2>
+<p>Implementation of Asynchronous Common Subset using an EVM blockchain</p>
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_blockchain.CommonSubsetProtocol">
+<code class="descclassname">honeybadgermpc.commonsubset_blockchain.</code><code class="descname">CommonSubsetProtocol</code><span class="sig-paren">(</span><em>w3</em>, <em>contract</em>, <em>N</em>, <em>f</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_blockchain.html#CommonSubsetProtocol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_blockchain.CommonSubsetProtocol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_blockchain.handle_event">
+<code class="descclassname">honeybadgermpc.commonsubset_blockchain.</code><code class="descname">handle_event</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_blockchain.html#handle_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_blockchain.handle_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_blockchain.log_loop">
+<code class="descclassname">honeybadgermpc.commonsubset_blockchain.</code><code class="descname">log_loop</code><span class="sig-paren">(</span><em>event_filter</em>, <em>poll_interval</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_blockchain.html#log_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_blockchain.log_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_blockchain.main">
+<code class="descclassname">honeybadgermpc.commonsubset_blockchain.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_blockchain.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_blockchain.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_blockchain.main_loop">
+<code class="descclassname">honeybadgermpc.commonsubset_blockchain.</code><code class="descname">main_loop</code><span class="sig-paren">(</span><em>w3</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_blockchain.html#main_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_blockchain.main_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_blockchain.run_and_terminate_process">
+<code class="descclassname">honeybadgermpc.commonsubset_blockchain.</code><code class="descname">run_and_terminate_process</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_blockchain.html#run_and_terminate_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_blockchain.run_and_terminate_process" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.commonsubset_blockchain.run_eth">
+<code class="descclassname">honeybadgermpc.commonsubset_blockchain.</code><code class="descname">run_eth</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/commonsubset_blockchain.html#run_eth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.commonsubset_blockchain.run_eth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="triple_refinement.html" class="btn btn-neutral float-right" title="triple_refinement" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="passive.html" class="btn btn-neutral" title="passive" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,625 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>honeybadgermpc.field &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>honeybadgermpc.field</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for honeybadgermpc.field</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2007, 2008 VIFF Development Team.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of VIFF, the Virtual Ideal Functionality Framework.</span>
+<span class="c1">#</span>
+<span class="c1"># VIFF is free software: you can redistribute it and/or modify it</span>
+<span class="c1"># under the terms of the GNU Lesser General Public License (LGPL) as</span>
+<span class="c1"># published by the Free Software Foundation, either version 3 of the</span>
+<span class="c1"># License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># VIFF is distributed in the hope that it will be useful, but WITHOUT</span>
+<span class="c1"># ANY WARRANTY; without even the implied warranty of MERCHANTABILITY</span>
+<span class="c1"># or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General</span>
+<span class="c1"># Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU Lesser General Public</span>
+<span class="c1"># License along with VIFF. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="sd">&quot;&quot;&quot;Modeling of Galois (finite) fields. The GF function creates classes</span>
+<span class="sd">which implements Galois (finite) fields of prime order</span>
+
+<span class="sd">All fields work the same: instantiate an object from a field to get</span>
+<span class="sd">hold of an element of that field. Elements implement the normal</span>
+<span class="sd">arithmetic one would expect: addition, multiplication, etc.</span>
+
+<span class="sd">Defining a field:</span>
+
+<span class="sd">&gt;&gt;&gt; Zp = GF.get(19)</span>
+
+<span class="sd">Defining field elements:</span>
+
+<span class="sd">&gt;&gt;&gt; x = Zp(10)</span>
+<span class="sd">&gt;&gt;&gt; y = Zp(15)</span>
+<span class="sd">&gt;&gt;&gt; z = Zp(1)</span>
+
+<span class="sd">Addition and subtraction (with modulo reduction):</span>
+
+<span class="sd">&gt;&gt;&gt; x + y</span>
+<span class="sd">{6}</span>
+<span class="sd">&gt;&gt;&gt; x - y</span>
+<span class="sd">{14}</span>
+
+<span class="sd">Bitwise xor for field elements:</span>
+
+<span class="sd">&gt;&gt;&gt; z ^ z</span>
+<span class="sd">{0}</span>
+<span class="sd">&gt;&gt;&gt; z ^ 0</span>
+<span class="sd">{1}</span>
+<span class="sd">&gt;&gt;&gt; 1 ^ z</span>
+<span class="sd">{0}</span>
+
+<span class="sd">Exponentiation:</span>
+
+<span class="sd">&gt;&gt;&gt; x**3</span>
+<span class="sd">{12}</span>
+
+<span class="sd">Square roots can be found for elements based on GF fields with a Blum</span>
+<span class="sd">prime modulus (see :func:`GF` for more information):</span>
+
+<span class="sd">&gt;&gt;&gt; x.sqrt()</span>
+<span class="sd">{3}</span>
+
+<span class="sd">Field elements from different fields cannot be mixed, you will get a</span>
+<span class="sd">type error if you try:</span>
+
+<span class="sd">&gt;&gt;&gt; Zq = GF.get(17)</span>
+<span class="sd">&gt;&gt;&gt; z = Zq(2)</span>
+<span class="sd">&gt;&gt;&gt; x + z</span>
+<span class="sd">Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">TypeError: unsupported operand type(s) for +: &#39;GFElement&#39; and &#39;GFElement&#39;</span>
+
+<span class="sd">The reason for the slightly confusing error message is that ``x`` and</span>
+<span class="sd">``z`` are instances of two *different* classes called ``GFElement``.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">gmpy2</span> <span class="k">import</span> <span class="n">is_prime</span><span class="p">,</span> <span class="n">mpz</span>
+
+
+<div class="viewcode-block" id="FieldsNotIdentical"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.FieldsNotIdentical">[docs]</a><span class="k">class</span> <span class="nc">FieldsNotIdentical</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="FieldElement"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.FieldElement">[docs]</a><span class="k">class</span> <span class="nc">FieldElement</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Common base class for elements.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract integer value from the field element.</span>
+
+<span class="sd">        &gt;&gt;&gt; int(GF256(10))</span>
+<span class="sd">        10</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="n">__long__</span> <span class="o">=</span> <span class="fm">__int__</span></div>
+
+
+<div class="viewcode-block" id="GF"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GF">[docs]</a><span class="k">class</span> <span class="nc">GF</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_field_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modulus</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">=</span> <span class="n">modulus</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">GF</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">,))</span>
+
+<div class="viewcode-block" id="GF.get"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GF.get">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">modulus</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">modulus</span> <span class="ow">in</span> <span class="n">GF</span><span class="o">.</span><span class="n">_field_cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">GF</span><span class="o">.</span><span class="n">_field_cache</span><span class="p">[</span><span class="n">modulus</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_prime</span><span class="p">(</span><span class="n">mpz</span><span class="p">(</span><span class="n">modulus</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> is not a prime&quot;</span> <span class="o">%</span> <span class="n">modulus</span><span class="p">)</span>
+
+        <span class="n">gf</span> <span class="o">=</span> <span class="n">GF</span><span class="p">(</span><span class="n">modulus</span><span class="p">)</span>
+        <span class="n">GF</span><span class="o">.</span><span class="n">_field_cache</span><span class="p">[</span><span class="n">modulus</span><span class="p">]</span> <span class="o">=</span> <span class="n">gf</span>
+        <span class="k">return</span> <span class="n">gf</span></div></div>
+
+
+<div class="viewcode-block" id="GFElement"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement">[docs]</a><span class="k">class</span> <span class="nc">GFElement</span><span class="p">(</span><span class="n">FieldElement</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">gf</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">=</span> <span class="n">gf</span><span class="o">.</span><span class="n">modulus</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">gf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Addition.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">GFElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># We can do a quick test using &#39;is&#39; here since</span>
+            <span class="c1"># there will only be one class representing this</span>
+            <span class="c1"># field.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
+            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="fm">__radd__</span> <span class="o">=</span> <span class="fm">__add__</span>
+
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subtraction.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">GFElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
+            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subtraction (reflected argument version).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">other</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__xor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Xor for bitvalues.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">GFElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
+            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">^</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">^</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rxor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Xor for bitvalues (reflected argument version).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">other</span> <span class="o">^</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Multiplication.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">GFElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
+            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="fm">__rmul__</span> <span class="o">=</span> <span class="fm">__mul__</span>
+
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exponent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exponentiation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">exponent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Negation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inversion.</span>
+
+<span class="sd">        Note that zero cannot be inverted, trying to do so</span>
+<span class="sd">        will raise a ZeroDivisionError.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s2">&quot;Cannot invert zero&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">extended_gcd</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;The extended Euclidean algorithm.&quot;&quot;&quot;</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">lastx</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">lasty</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">quotient</span> <span class="o">=</span> <span class="n">a</span> <span class="o">//</span> <span class="n">b</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">%</span> <span class="n">b</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">lastx</span> <span class="o">=</span> <span class="n">lastx</span> <span class="o">-</span> <span class="n">quotient</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span>
+                <span class="n">y</span><span class="p">,</span> <span class="n">lasty</span> <span class="o">=</span> <span class="n">lasty</span> <span class="o">-</span> <span class="n">quotient</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">lastx</span><span class="p">,</span> <span class="n">lasty</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+
+        <span class="n">inverse</span> <span class="o">=</span> <span class="n">extended_gcd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">inverse</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Division.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="o">~</span><span class="n">other</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="o">~</span><span class="n">GFElement</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+    <span class="fm">__floordiv__</span> <span class="o">=</span> <span class="n">__div__</span>
+
+    <span class="k">def</span> <span class="nf">__rdiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Division (reflected argument version).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span>
+
+    <span class="fm">__rtruediv__</span> <span class="o">=</span> <span class="n">__rdiv__</span>
+    <span class="fm">__rfloordiv__</span> <span class="o">=</span> <span class="n">__rdiv__</span>
+
+<div class="viewcode-block" id="GFElement.sqrt"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.sqrt">[docs]</a>    <span class="k">def</span> <span class="nf">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Square root.</span>
+
+<span class="sd">        No attempt is made the to return the positive square root.</span>
+
+<span class="sd">        Computing square roots is only possible when the modulus</span>
+<span class="sd">        is a Blum prime (congruent to 3 mod 4).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Cannot compute square &quot;</span> \
+            <span class="s2">&quot;root of </span><span class="si">%s</span><span class="s2"> with modulus </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">)</span>
+
+        <span class="c1"># Because we assert that the modulus is a Blum prime</span>
+        <span class="c1"># (congruent to 3 mod 4), there will be no reminder in the</span>
+        <span class="c1"># division below.</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GFElement.bit"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.bit">[docs]</a>    <span class="k">def</span> <span class="nf">bit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract a bit (index is counted from zero).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;&gt;</span> <span class="n">index</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="GFElement.signed"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.signed">[docs]</a>    <span class="k">def</span> <span class="nf">signed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a signed integer representation of the value.</span>
+
+<span class="sd">        If x &gt; floor(p/2) then subtract p to obtain negative integer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
+
+<div class="viewcode-block" id="GFElement.unsigned"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.unsigned">[docs]</a>    <span class="k">def</span> <span class="nf">unsigned</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a unsigned representation of the value&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;{</span><span class="si">%d</span><span class="s2">}&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="c1"># return &quot;GFElement(%d)&quot; % self.value</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Informal string representation.</span>
+
+<span class="sd">        This is simply the value enclosed in curly braces.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;{</span><span class="si">%d</span><span class="s2">}&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">unsigned</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equality test.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inequality test.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__cmp__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Comparison.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
+            <span class="c1"># TODO Replace with (a &gt; b) - (a &lt; b)</span>
+            <span class="c1"># see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons</span>
+            <span class="k">return</span> <span class="nb">cmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>     <span class="c1"># noqa  XXX until above is done</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># TODO Replace with (a &gt; b) - (a &lt; b)</span>
+            <span class="c1"># see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons</span>
+            <span class="k">return</span> <span class="nb">cmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>   <span class="c1"># noqa XXX until above is done</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Hash value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__nonzero__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Truth value testing.</span>
+
+<span class="sd">        Returns False if this element is zero, True otherwise.</span>
+<span class="sd">        This allows GF elements to be used directly in Boolean</span>
+<span class="sd">        formula:</span>
+
+<span class="sd">        &gt;&gt;&gt; bool(GF256(0))</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; bool(GF256(1))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; x = GF256(1)</span>
+<span class="sd">        &gt;&gt;&gt; not x</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="FakeGF"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.FakeGF">[docs]</a><span class="k">def</span> <span class="nf">FakeGF</span><span class="p">(</span><span class="n">modulus</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Construct a fake field.</span>
+
+<span class="sd">    These fields should only be used in benchmarking. They work like</span>
+<span class="sd">    any other field except that all computations will give ``-1`` as</span>
+<span class="sd">    the result:</span>
+
+<span class="sd">    &gt;&gt;&gt; F = FakeGF(1031)</span>
+<span class="sd">    &gt;&gt;&gt; a = F(123)</span>
+<span class="sd">    &gt;&gt;&gt; b = F(234)</span>
+<span class="sd">    &gt;&gt;&gt; a + b</span>
+<span class="sd">    {{1030}}</span>
+<span class="sd">    &gt;&gt;&gt; a * b</span>
+<span class="sd">    {{1030}}</span>
+<span class="sd">    &gt;&gt;&gt; a.sqrt()</span>
+<span class="sd">    {{1030}}</span>
+<span class="sd">    &gt;&gt;&gt; a.bit(100)</span>
+<span class="sd">    1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Return value of all operations on FakeFieldElements. We choose</span>
+    <span class="c1"># this value to maximize the communication complexity.</span>
+    <span class="n">return_value</span> <span class="o">=</span> <span class="n">modulus</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">class</span> <span class="nc">FakeFieldElement</span><span class="p">(</span><span class="n">FieldElement</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fake field which does no computations.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Create a fake field element.</span>
+
+<span class="sd">            The element will store *value* in order to take up a realistic</span>
+<span class="sd">            amount of RAM, but any further computation will yield the</span>
+<span class="sd">            value ``-1``.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="c1"># Binary operations.</span>
+        <span class="fm">__add__</span> <span class="o">=</span> <span class="fm">__radd__</span> <span class="o">=</span> <span class="fm">__sub__</span> <span class="o">=</span> <span class="fm">__rsub__</span> \
+            <span class="o">=</span> <span class="fm">__mul__</span> <span class="o">=</span> <span class="fm">__rmul__</span> <span class="o">=</span> <span class="n">__div__</span> <span class="o">=</span> <span class="n">__rdiv__</span> \
+            <span class="o">=</span> <span class="fm">__truediv__</span> <span class="o">=</span> <span class="fm">__rtruediv__</span> <span class="o">=</span> <span class="fm">__floordiv__</span> <span class="o">=</span> <span class="fm">__rfloordiv__</span> \
+            <span class="o">=</span> <span class="fm">__pow__</span> <span class="o">=</span> <span class="fm">__neg__</span> \
+            <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">FakeFieldElement</span><span class="p">(</span><span class="n">return_value</span><span class="p">)</span>
+
+        <span class="c1"># Unary operations.</span>
+        <span class="fm">__invert__</span> <span class="o">=</span> <span class="n">sqrt</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="n">FakeFieldElement</span><span class="p">(</span><span class="n">return_value</span><span class="p">)</span>
+
+        <span class="c1"># Bit extraction. We pretend that the number is *very* big.</span>
+        <span class="n">bit</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="mi">1</span>     <span class="c1"># noqa  XXX for the time being</span>
+
+        <span class="c1"># Fake field elements are printed with double curly brackets.</span>
+        <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="s2">&quot;{{</span><span class="si">%d</span><span class="s2">}}&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="n">FakeFieldElement</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">FakeFieldElement</span>
+    <span class="n">FakeFieldElement</span><span class="o">.</span><span class="n">modulus</span> <span class="o">=</span> <span class="n">modulus</span>
+    <span class="k">return</span> <span class="n">FakeFieldElement</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>      <span class="c1"># pragma NO COVER</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>   <span class="c1"># pragma NO COVER</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
