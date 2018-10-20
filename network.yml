@@ -8,8 +8,8 @@ services:
     volumes:
       - .:/usr/src/HoneyBadgerMPC
     environment:
-      HBMPC_CONFIG: conf/ipc.network.docker/hbmpc_0.ini
-    command: python -m honeybadgermpc.ipc
+      HBMPC_CONFIG: conf/ipc.network.docker/hbmpc.ini
+    command: python -m honeybadgermpc.ipc 0
   hbmpc_1:
     build:
       context: .
@@ -17,8 +17,8 @@ services:
     volumes:
       - .:/usr/src/HoneyBadgerMPC
     environment:
-      HBMPC_CONFIG: conf/ipc.network.docker/hbmpc_1.ini
-    command: python -m honeybadgermpc.ipc
+      HBMPC_CONFIG: conf/ipc.network.docker/hbmpc.ini
+    command: python -m honeybadgermpc.ipc 1
   hbmpc_2:
     build:
       context: .
@@ -26,8 +26,8 @@ services:
     volumes:
       - .:/usr/src/HoneyBadgerMPC
     environment:
-      HBMPC_CONFIG: conf/ipc.network.docker/hbmpc_2.ini
-    command: python -m honeybadgermpc.ipc
+      HBMPC_CONFIG: conf/ipc.network.docker/hbmpc.ini
+    command: python -m honeybadgermpc.ipc 2
   hbmpc_3:
     build:
       context: .
@@ -35,5 +35,5 @@ services:
     volumes:
       - .:/usr/src/HoneyBadgerMPC
     environment:
-      HBMPC_CONFIG: conf/ipc.network.docker/hbmpc_3.ini
-    command: python -m honeybadgermpc.ipc
+      HBMPC_CONFIG: conf/ipc.network.docker/hbmpc.ini
+    command: python -m honeybadgermpc.ipc 3

@@ -13,10 +13,8 @@ example of config dict:
     {
         'N': 4,
         't': 1,
-        'nodeid': '0',
-        'host': 'hbmpc_node_0',
-        'port': 23264,
         'peers': {
+            '0': hbmpc_node_0:23264,
             '1': hbmpc_node_1:23265,
             '2': hbmpc_node_2:23266,
             '3': hbmpc_node_3:23267,
