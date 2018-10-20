@@ -179,9 +179,10 @@ if __name__ == "__main__":
 
     configfile = os.environ.get('HBMPC_CONFIG')
 
+    nodeid = int(sys.argv[1])
     # override configfile if passed to command
     try:
-        configfile = sys.argv[1]
+        configfile = sys.argv[2]
     except IndexError:
         pass
 
@@ -192,14 +193,10 @@ if __name__ == "__main__":
     config_dict = load_config(configfile)
     N = config_dict['N']
     t = config_dict['t']
-    nodeid = int(config_dict['nodeid'])
-    host = config_dict['host']
-    port = config_dict['port']
     network_info = {
         int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
         for peerid, addrinfo in config_dict['peers'].items()
     }
-    network_info[nodeid] = NodeDetails(host, port)
 
     # Only one party needs to generate the initial shares
     if nodeid == 0:

@@ -10,8 +10,8 @@
 CMD="python -m honeybadgermpc.ipc"
 CONFIG_PATH=conf/ipc.network.local
 set -x
-tmux new-session     "${CMD} ${CONFIG_PATH}/hbmpc_0.ini; sh" \; \
-     splitw -h -p 50 "${CMD} ${CONFIG_PATH}/hbmpc_1.ini; sh" \; \
-     splitw -v -p 50 "${CMD} ${CONFIG_PATH}/hbmpc_2.ini; sh" \; \
+tmux new-session     "${CMD} 0 ${CONFIG_PATH}/hbmpc.ini; sh" \; \
+     splitw -h -p 50 "${CMD} 1 ${CONFIG_PATH}/hbmpc.ini; sh" \; \
+     splitw -v -p 50 "${CMD} 2 ${CONFIG_PATH}/hbmpc.ini; sh" \; \
      selectp -t 0 \; \
-     splitw -v -p 50 "${CMD} ${CONFIG_PATH}/hbmpc_3.ini; sh"
+     splitw -v -p 50 "${CMD} 3 ${CONFIG_PATH}/hbmpc.ini; sh"
