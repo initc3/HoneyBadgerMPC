@@ -6,3 +6,5 @@
 *.yml
 Dockerfile
 **/*.pyc
+sharedata/**
+aws/

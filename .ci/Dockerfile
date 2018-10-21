@@ -12,7 +12,9 @@ COPY --from=wheel_builder /usr/src/pairing/scripts/_manylinux.py /usr/local/bin/
 
 ENV PYTHONUNBUFFERED=1
 
-RUN apk --update add gcc musl-dev gmp-dev libc6-compat mpc1-dev mpfr-dev
+RUN apk --update add make gcc
+
+RUN apk --update add musl-dev gmp-dev mpc1-dev mpfr-dev libressl-dev libffi-dev libc6-compat
 
 RUN mkdir -p /usr/src/HoneyBadgerMPC
 WORKDIR /usr/src/HoneyBadgerMPC

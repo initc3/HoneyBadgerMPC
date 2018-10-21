@@ -107,5 +107,12 @@ venv.bak/
 # VSCode
 .vscode/
 
+# Secrets
+*.secret.json
+*.pem
+
+# AWS
+current.vms
+
 *~
 sharedata/
