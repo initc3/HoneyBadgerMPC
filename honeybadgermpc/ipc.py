@@ -4,7 +4,7 @@ import asyncio
 import sys
 import struct
 import socket
-
+from .logger import BenchmarkLogger
 from .passive import PassiveMpc
 
 
@@ -12,6 +12,7 @@ class Senders(object):
     def __init__(self, queues, config):
         self.queues = queues
         self.config = config
+        self.totalBytesSent = 0
 
     async def connect(self):
         # Setup all connections first before sending messages
@@ -61,6 +62,7 @@ class Senders(object):
                 # print('SEND %8s [%2d -> %s]' % (msg[1][0], msg[0], recvid))
                 data = pickle.dumps(msg)
                 padded_msg = struct.pack('>I', len(data)) + data
+                self.totalBytesSent += len(padded_msg)
                 writer.write(padded_msg)
                 await writer.drain()
         except ConnectionResetError:
@@ -73,6 +75,7 @@ class Senders(object):
     def close(self):
         for q in self.queues:
             q.put_nowait(None)
+        benchmarkLogger.info("Total bytes sent out: %d", self.totalBytesSent)
 
 
 class Listener(object):
@@ -153,6 +156,7 @@ def setup_sockets(config, n, id):
 
 
 async def runProgramAsProcesses(program, config, t, id):
+
     send, recv, sender, listener = setup_sockets(config, len(config), id)
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
@@ -178,18 +182,25 @@ if __name__ == "__main__":
     from .config import load_config
 
     configfile = os.environ.get('HBMPC_CONFIG')
+    nodeid = os.environ.get('HBMPC_NODE_ID')
 
-    nodeid = int(sys.argv[1])
     # override configfile if passed to command
     try:
+        nodeid = sys.argv[1]
         configfile = sys.argv[2]
     except IndexError:
         pass
 
+    if not nodeid:
+        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
+                                 ' or a node id must be given as first argument.')
+
     if not configfile:
         raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
-                                 ' or a config file must be given as first argument.')
+                                 ' or a config file must be given as second argument.')
 
+    nodeid = int(nodeid)
+    benchmarkLogger = BenchmarkLogger.get(nodeid)
     config_dict = load_config(configfile)
     N = config_dict['N']
     t = config_dict['t']
@@ -199,7 +210,7 @@ if __name__ == "__main__":
     }
 
     # Only one party needs to generate the initial shares
-    if nodeid == 0:
+    if not config_dict['skipPreprocessing'] and nodeid == 0:
         print('Generating random shares of zero in sharedata/')
         generate_test_zeros('sharedata/test_zeros', 1000, N, t)
         print('Generating random shares of triples in sharedata/')
