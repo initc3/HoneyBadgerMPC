@@ -13,6 +13,8 @@ VERSION = None
 
 REQUIRED = [
     'gmpy2',
+    'boto3',
+    'paramiko',
 ]
 
 TESTS_REQUIRES = [

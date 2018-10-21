@@ -13,6 +13,7 @@ example of config dict:
     {
         'N': 4,
         't': 1,
+        'skipPreprocessing': False,
         'peers': {
             '0': hbmpc_node_0:23264,
             '1': hbmpc_node_1:23265,
