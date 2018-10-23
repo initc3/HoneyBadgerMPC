@@ -5,20 +5,12 @@ import asyncio
 @mark.asyncio
 async def test_triple_refinement(triples_files_prefix):
     from honeybadgermpc.passive import runProgramAsTasks
-    from honeybadgermpc.passive import generate_test_triples, \
-        generate_test_zeros, generate_test_randoms
-    from honeybadgermpc.passive import zeros_files_prefix as pzero
-    from honeybadgermpc.passive import random_files_prefix as prandom
-    from honeybadgermpc.passive import triples_files_prefix as ptriple
+    from honeybadgermpc.passive import generate_test_triples
     from honeybadgermpc.triple_refinement import refineTriples
 
     N, t = 7, 2
     # FIXME: This needs to be replaced with a fixture
     generate_test_triples(triples_files_prefix, N, N, t)
-
-    generate_test_zeros(pzero,     N, N, t)
-    generate_test_randoms(prandom, N, N, t)
-    generate_test_triples(ptriple, N, N, t)
 
     async def _prog(context):
         filename = f'{triples_files_prefix}-{context.myid}.share'

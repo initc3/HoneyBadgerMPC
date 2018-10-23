@@ -7,6 +7,7 @@ import random
 from .robust_reconstruction import robust_reconstruct
 from .batch_reconstruction import batch_reconstruct
 from collections import defaultdict
+import os
 
 
 class NotEnoughShares(Exception):
@@ -63,13 +64,19 @@ class PassiveMpc(object):
 
         # Preprocessing elements
         filename = f'{zeros_files_prefix}-{self.myid}.share'
-        self._zeros = iter(self.read_shares(open(filename)))
+        self._zeros = []
+        if os.path.exists(filename):
+            self._zeros = iter(self.read_shares(open(filename)))
 
+        self._rands = []
         filename = f'{random_files_prefix}-{self.myid}.share'
-        self._rands = iter(self.read_shares(open(filename)))
+        if os.path.exists(filename):
+            self._rands = iter(self.read_shares(open(filename)))
 
+        self._triples = []
         filename = f'{triples_files_prefix}-{self.myid}.share'
-        self._triples = iter(self.read_shares(open(filename)))
+        if os.path.exists(filename):
+            self._triples = iter(self.read_shares(open(filename)))
 
     # Access to preprocessing data
     def get_triple(self):
