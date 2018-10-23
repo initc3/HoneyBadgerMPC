@@ -399,6 +399,8 @@ async def test_batchopening(context):
     xs = [context.get_zero() + context.Share(i) for i in range(100)]
     xs = context.ShareArray(xs)
     Xs = await xs.open()
+    for i, x in enumerate(Xs):
+        assert x.v == i
     print("[%d] Finished batch opening" % (context.myid,))
 
 

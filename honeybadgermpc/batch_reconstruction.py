@@ -95,6 +95,23 @@ def attempt_reconstruct_batch(data, field, n, t, point):
 
 
 async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False):
+    """
+    args:
+      shared_secrets: an array of points representing shared secrets S1 - SB
+      p: field modulus
+      t: degree t polynomial
+      n: total number of nodes n >= 3t+1
+      myid: id of the specific node running batch_reconstruction function
+
+    output:
+      the reconstructed array of B shares
+
+    Communication takes place over two rounds,
+      objects sent/received of the form ('R1', shares) or ('R2', shares)
+      up to one of each for each party
+
+    Reconstruction takes places in chunks of t+1 values
+    """
     Fp = field = GF.get(p)
     Poly = polynomialsOver(Fp)
 

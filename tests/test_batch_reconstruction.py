@@ -1,7 +1,6 @@
 from pytest import mark
 import pytest
 import asyncio
-import random
 from honeybadgermpc.batch_reconstruction import batch_reconstruct
 from honeybadgermpc.router import simple_router
 
@@ -35,7 +34,7 @@ async def test():
     for i in range(N):
         ss = shared_secrets[i]
         towait.append(batch_reconstruct(ss, p, t, N, i,
-                                        sends[i], recvs[i], False))
+                                        sends[i], recvs[i], True))
     results = await asyncio.gather(*towait)
     for r in results:
         assert r == [2, 4]
@@ -66,46 +65,6 @@ async def test():
                                         sends[i], recvs[i], False))
     with pytest.raises(asyncio.TimeoutError):
         results = await asyncio.wait_for(asyncio.gather(*towait), timeout=1)
-
-    # Test 4: N = 49 bench mark
-    N = 49
-    t = 16
-    # The final constructed polynomial should be p = 17x^16 + 16x^15 + ...+ 2x + 1
-    # print("hahaha")
-    sends, recvs = simple_router(N)
-    towait = []
-
-    def evaluate_poly_at_n(poly, n):
-        x = 0
-        for i in range(len(poly)):
-            x += (n**i)*poly[len(poly) - i - 1]
-        return x
-    # generate shared_secrets
-    # generate 17 polynomials of degree 16
-    polys = []
-    for i in range(t + 1):
-        coeff_poly = [random.randint(1, 20)
-                      for _ in range(t)]  # randomly choose a range
-        coeff_poly.append(i + 1)
-        print(coeff_poly)
-        polys.append(coeff_poly)
-    # generate 17 points for 49 nodes and stored in shared_secrets_49 = []
-    # shared_secrets_49 = []
-    for i in range(N):
-        ss = []
-        for j in range(t + 1):
-            # print("evaluate_poly{} at{}".format(polys[j], i+1))
-            # print(evaluate_poly_at_n(polys[j], i + 1))
-            ss.append(evaluate_poly_at_n(polys[j], i + 1))
-        # shared_secrets_49.append(points)
-        towait.append(batch_reconstruct(ss, p, t, N, i,
-                                        sends[i], recvs[i], False))
-    results = await asyncio.gather(*towait)
-    for r in results:
-        print(r)
-        for i in range(len(r)):
-            print(r[i])
-            assert r[i] == i + 1
 
 
 if __name__ == '__main__':
