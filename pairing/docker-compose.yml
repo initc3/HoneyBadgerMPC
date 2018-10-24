@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  pairing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./pypairing/__init__.py:/usr/src/pairing/pypairing/__init__.py
+      - ./src:/usr/src/pairing/src
+      - ./benches:/usr/src/pairing/benches
+      - ./Cargo.toml:/usr/src/pairing/Cargo.toml
+      - ./setup.py:/usr/src/pairing/setup.py
+  build_wheel:
+    build:
+      context: .
+      dockerfile: wheel.Dockerfile
