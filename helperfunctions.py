@@ -1,4 +1,7 @@
 from betterpairing import *
+import hashlib
+import pickle
+from Crypto.Cipher import AES
 
 def polynomial_divide(numerator, denominator):
     temp = list(numerator)
@@ -100,3 +103,30 @@ def interpolate_poly(coords):
             temp = polynomial_divide(temp, [myone * coords[i][0] - myone * coords[j][0]])
         poly = polynomial_add(poly, polynomial_multiply_constant(temp,coords[i][1]))
     return poly
+    
+#wrapper for encryption that nicely converts crypto-things to something you can encrypt
+def encrypt(key, plaintext):
+    key_bytes = hashlib.sha256(pickle.dumps(key)).digest()
+    encryptor = AES.new(key_bytes[:32], AES.MODE_CBC, 'This is an IV456')
+    plaintext_bytes = pickle.dumps(plaintext)
+    #seriously, why do I have to do the padding...
+    #TODO: test that this padding is okay in more cases
+    while len(plaintext_bytes) %16 != 0:
+        plaintext_bytes = plaintext_bytes + b'\x00'
+    #print("enc")
+    #print (plaintext_bytes)
+    return encryptor.encrypt(plaintext_bytes)
+    
+def decrypt(key, ciphertext):
+        key_bytes = hashlib.sha256(pickle.dumps(key)).digest()
+        decryptor = AES.new(key_bytes[:32], AES.MODE_CBC, 'This is an IV456')
+        plaintext_bytes = decryptor.decrypt(ciphertext)
+        #now we need to strip the padding off the end
+        #if it's stupid but it works...
+        #elementsize = len(pickle.dumps(ZR.rand()))
+        #paddingsize = (16 -elementsize%16)%16
+        #print len(plaintext_bytes)
+        #plaintext_bytes = plaintext_bytes[:len(plaintext_bytes) - paddingsize]
+        #print len(plaintext_bytes)
+        #print (plaintext_bytes)
+        return pickle.loads(plaintext_bytes)

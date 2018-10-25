@@ -7,6 +7,7 @@ import os
 import pickle
 import asyncio
 from reliablebroadcast import *
+from betterpairing import *
 
 #Class representing a the dealer in the scheme. t is the threshold and k is the number of participants
 class HbAvssDealer:
@@ -34,20 +35,10 @@ class HbAvssDealer:
             witnesses[j] = f(polyhat, j)
             encryptedwitnesses[j] = encrypt(sharedkeys[j], witnesses[j])
         message = pickle.dumps((c, encryptedwitnesses, encryptedshares, crs[0] ** sk))
-        print ("sent as...")
-        print (message)
+        print("kd is " + str(crs[0] ** sk))
+        print("dealer sk is " + str(sk))
+        print(sharedkeys[2])
         print ("Dealer Time: " + str(os.times()[4] - time2[4]))
         loop = asyncio.get_event_loop()
-        loop.create_task(reliablebroadcast(sid, pid=pid, N=n+1, f=t, leader=pid, input=str(message), receive=recv, send=send))
-
-
-#wrapper for encryption that nicely converts crypto-things to something you can encrypt
-def encrypt(key, plaintext):
-    key_bytes = hashlib.sha256(pickle.dumps(key)).digest()
-    encryptor = AES.new(key_bytes[:32], AES.MODE_CBC, 'This is an IV456')
-    plaintext_bytes = pickle.dumps(plaintext)
-    #seriously, why do I have to do the padding...
-    while len(plaintext_bytes) %16 != 0:
-        plaintext_bytes = plaintext_bytes + b'\x00'
-    return encryptor.encrypt(plaintext_bytes)
+        loop.create_task(reliablebroadcast(sid, pid=pid, N=n+1, f=t, leader=pid, input=message, receive=recv, send=send))
     

@@ -143,9 +143,10 @@ impl PyG1 {
         })
     }
     
-    fn loadfq(&mut self, fqx: &PyFq, fqy: &PyFq) -> PyResult<()> {
+    fn loadfq(&mut self, fqx: &PyFq, fqy: &PyFq, fqz: &PyFq) -> PyResult<()> {
         self.g1.x = fqx.fq;
         self.g1.y = fqy.fq;
+        self.g1.z = fqz.fq;
         Ok(())
     }
     
@@ -168,6 +169,18 @@ impl PyG1 {
 
     fn double(&mut self) -> PyResult<()> {
         self.g1.double();
+        Ok(())
+    }
+    
+    fn negate(&mut self) -> PyResult<()> {
+        self.g1.negate();
+        Ok(())
+    }
+    
+    fn affine_negate(&mut self) -> PyResult<()> {
+        let mut a = self.g1.into_affine();
+        a.negate();
+        self.g1 = a.into_projective();
         Ok(())
     }
     
@@ -197,7 +210,7 @@ impl PyG1 {
         Ok(())
     }
     pub fn projective(&self) -> PyResult<String> {
-        Ok(format!("({}, {})",self.g1.x, self.g1.y))                
+        Ok(format!("({}, {}, {})",self.g1.x, self.g1.y, self.g1.z))
     }
     pub fn __str__(&self) -> PyResult<String> {
         Ok(format!("({}, {})",self.g1.into_affine().x, self.g1.into_affine().y))                
@@ -317,7 +330,7 @@ impl PyFr {
     }
 
     fn inverse(&mut self) -> PyResult<()> {
-        self.fr.inverse();
+        self.fr = self.fr.inverse().unwrap();
         Ok(())
     }
 

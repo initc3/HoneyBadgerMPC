@@ -7,7 +7,7 @@ from listrouter import *
 import asyncio
 
 def main():
-    crs = [G1.rand(), G1.rand()]
+    crs = [G1(PyG1(12,12,23,23)), G1.rand()]
     t = 2
     n = 3*t + 1
     participantids = list(range(1,n+1))
