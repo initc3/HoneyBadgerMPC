@@ -24,6 +24,7 @@ class HbAvssDealer:
         for i in range(t+1):
             poly.append(ZR.rand())
             polyhat.append(ZR.rand())
+        poly[0] = ZR(secret)
         sk = ZR.rand()
         for j in participantids:
             sharedkeys[j] = participantkeys[j] ** sk

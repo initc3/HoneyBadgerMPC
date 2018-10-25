@@ -74,23 +74,28 @@ def interpolate_at_x(coords, x, order=-1):
     #The following line makes it so this code works for both members of G and ZR
     out = coords[0][1] - coords[0][1]
     for i in range(order):
-        out = out + (lagrange_at_x(S,xs[i],x,group) * sortedcoords[i][1])
+        out = out + (lagrange_at_x(S,xs[i],x) * sortedcoords[i][1])
     return out
 
 def lagrange_at_x(S,j,x):
-    ONE = group.random(ZR)*0 + 1
+    ONE = ZR(1)
     S = sorted(S)
     assert j in S
-    mul = lambda a,b: a*b
-    num = reduce(mul, [x - jj  for jj in S if jj != j], ONE)
-    den = reduce(mul, [j - jj  for jj in S if jj != j], ONE)
+    #mul = lambda a,b: a*b
+    #num = reduce(mul, [x - jj  for jj in S if jj != j], ONE)
+    #den = reduce(mul, [j - jj  for jj in S if jj != j], ONE)
+    l1 = [x - jj  for jj in S if jj != j]
+    l2 = [j - jj  for jj in S if jj != j]
+    (num,den) = (ZR(1), ZR(1))
+    for item in l1:
+        num *= item
+    for item in l2:
+        den *= item
     return num / den
 
 def interpolate_poly(coords):
     myone = ZR(1)
     myzero = ZR(0)
-    if group is not None:
-        myone = group.random(ZR)*0 + 1
     #print "IT'SA ME " + str(myzero) + ", THE IDENTITY ELEMENT!"
     #print "Before: " + str(coords[0][1]) + " After: " + str(myzero + coords[0][1])
     poly = [myzero] * len(coords)
@@ -113,8 +118,6 @@ def encrypt(key, plaintext):
     #TODO: test that this padding is okay in more cases
     while len(plaintext_bytes) %16 != 0:
         plaintext_bytes = plaintext_bytes + b'\x00'
-    #print("enc")
-    #print (plaintext_bytes)
     return encryptor.encrypt(plaintext_bytes)
     
 def decrypt(key, ciphertext):
@@ -125,8 +128,4 @@ def decrypt(key, ciphertext):
         #if it's stupid but it works...
         #elementsize = len(pickle.dumps(ZR.rand()))
         #paddingsize = (16 -elementsize%16)%16
-        #print len(plaintext_bytes)
-        #plaintext_bytes = plaintext_bytes[:len(plaintext_bytes) - paddingsize]
-        #print len(plaintext_bytes)
-        #print (plaintext_bytes)
         return pickle.loads(plaintext_bytes)

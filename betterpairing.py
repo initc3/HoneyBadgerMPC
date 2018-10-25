@@ -293,7 +293,26 @@ class ZR:
             return self
         else:
             raise TypeError('Invalid multiplication param. Expected ZR or int. Got '+ str(type(other)))
-            
+    def __truediv__(self, other):
+        if type(other) is ZR:
+            out = dupe_pyfr(self.val)
+            div = dupe_pyfr(other.val)
+            div.inverse()
+            out.mul_assign(div)
+            return ZR(out)
+        elif type(other) is int:
+            out = dupe_pyfr(self.val)
+            if other < 0:
+                other *= -1
+                prodend = PyFr(str(other))
+                prodend.negate()
+            else:
+                prodend = PyFr(str(other))
+            prodend.inverse()
+            out.mul_assign(prodend)
+            return ZR(out)
+        else:
+            raise TypeError('Invalid division param. Expected ZR or int. Got '+ str(type(other)))
     def __pow__(self, other):
         if type(other) is int:
             if other == 0:

@@ -53,12 +53,10 @@ class HbAvssRecipient:
         if msg[1] == "send":
             self.rbfinished = True
             #print(msg)
+            
             message = pickle.loads(msg[2])
             (self.commit, self.encwitnesses, self.encshares, pk_d) = message
             self.sharedkey = pk_d**self.sk
-            if self.pid == 2:
-                print ("rec sk is " +str(self.sk))
-                print(self.sharedkey)
             self.share = decrypt(self.sharedkey, self.encshares[self.pid])
             self.witness = decrypt(self.sharedkey, self.encwitnesses[self.pid])
             if self.pc.verify_eval(self.commit, self.pid, self.share, self.witness):
@@ -68,7 +66,7 @@ class HbAvssRecipient:
                 print("verifyeval failed")
                 self.send_implicate_msgs()
             while not self.queues["hbavss"].empty():
-                (i,o) = self.queues["hbavss"].get()
+                (i,o) = self.queues["hbavss"].get_nowait()
                 self.receive_msg(i,o)
         if not self.rbfinished:
             self.queues["hbavss"].put_nowait((sender,msg))
@@ -99,7 +97,7 @@ class HbAvssRecipient:
                     self.send_rec_msgs()
                     self.sendrecs = False
             #TODO: Fix this part so it's fault tolerant
-            if self.okcount == self.k and not self.reconstruction:
+            if self.okcount == self.n and not self.reconstruction:
                 self.finished = True
         elif msg[1] == 'implicate':
             if self.check_implication(int(sender), msg[2], msg[3]):
@@ -122,16 +120,16 @@ class HbAvssRecipient:
                 self.shares[sender] = msg[2]
             if len(self.shares) == self.t + 1:
                 coords = []
-                for key, value in self.shares.iteritems():
+                for key, value in self.shares.items():
                     coords.append([key, value])
-                self.secret = interpolate_at_x(coords, 0, self.group)
-                #print self.secret
+                self.secret = interpolate_at_x(coords, 0)
+                print (self.secret)
                 self.finished = True
 
     #checks if an implicate message is valid
     def check_implication(self, implicatorid, key, proof):
         #First check if they key that was sent is valid
-        if not check_same_exponent_proof(proof, self.pk[0],self.participantkeys[self.dealerid], self.participantkeys[implicatorid], key, self.group):
+        if not check_same_exponent_proof(proof, self.pk[0],self.participantkeys[self.dealerid], self.participantkeys[implicatorid], key):
             #print "Bad Key!"
             return False
         share = decrypt(key, self.encshares[implicatorid])
@@ -150,7 +148,7 @@ class HbAvssRecipient:
         msg.append(self.sid)
         msg.append("implicate")
         msg.append(self.sharedkey)
-        msg.append(prove_same_exponent(self.pk[0], self.participantkeys[self.dealerid],self.sk,self.group))
+        msg.append(prove_same_exponent(self.pk[0], self.participantkeys[self.dealerid],self.sk))
         for j in self.participantids:
             self.send(j, msg)
 
