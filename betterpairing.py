@@ -17,26 +17,22 @@ class G1:
         #if type(other) is bytes:
         #    other = list(other)        
         if type(other) is list:
-            assert len(other) == 3
+            assert len(other) == 2
             assert len(other[0]) == 6
             x=PyFqRepr(other[0][0], other[0][1], other[0][2], other[0][3], other[0][4], other[0][5])
             y=PyFqRepr(other[1][0], other[1][1], other[1][2], other[1][3], other[1][4], other[1][5])
-            z=PyFqRepr(other[2][0], other[2][1], other[2][2], other[2][3], other[2][4], other[2][5])
             xq = PyFq(0,0,0,1)
             yq = PyFq(0,0,0,1)
-            zq = PyFq(0,0,0,1)
             xq.from_repr(x)
             yq.from_repr(y)
-            zq.from_repr(z)
             self.pyg1 = PyG1(0, 0, 0, 1)
-            self.pyg1.loadfq(xq,yq,zq)
+            self.pyg1.load_fq_affine(xq,yq)
         elif type(other) is PyG1:
             self.pyg1 = other
     def __str__(self):
-        x = int(self.pyg1.projective()[4:102],0)
-        y = int(self.pyg1.projective()[108:206],0)
-        z = int(self.pyg1.projective()[212:310],0)
-        return "(" + str(x) + ", " + str(y) + ", " + str(z)+ ")"
+        x = int(self.pyg1.__str__()[4:102],0)
+        y = int(self.pyg1.__str__()[108:206],0)
+        return "(" + str(x) + ", " + str(y) + ")"
     #def __bytes__(self):
     #    listlist = self.__getstate__()
     #    return bytes(listlist[0] + listlist[1])
@@ -127,17 +123,15 @@ class G1:
         return self.pyg1.equals(other.pyg1)
         
     def __getstate__(self):
-        x = self.pyg1.projective()[6:102]
-        y = self.pyg1.projective()[110:206]
-        z = self.pyg1.projective()[214:310]
+        coords = self.pyg1.__str__()
+        x = coords[6:102]
+        y = coords[110:206]
         xlist = [x[80:96],x[64:80],x[48:64],x[32:48],x[16:32],x[0:16]]
         ylist = [y[80:96],y[64:80],y[48:64],y[32:48],y[16:32],y[0:16]]
-        zlist = [z[80:96],z[64:80],z[48:64],z[32:48],z[16:32],z[0:16]]
         for i in range(6):
             xlist[i] = int(xlist[i],16)
             ylist[i] = int(ylist[i],16)
-            zlist[i] = int(zlist[i],16)
-        return [xlist, ylist, zlist]
+        return [xlist, ylist]
         
     def __setstate__(self, d):
         self.__init__(d)

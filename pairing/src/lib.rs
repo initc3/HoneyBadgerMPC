@@ -143,10 +143,18 @@ impl PyG1 {
         })
     }
     
-    fn loadfq(&mut self, fqx: &PyFq, fqy: &PyFq, fqz: &PyFq) -> PyResult<()> {
+    fn load_fq_proj(&mut self, fqx: &PyFq, fqy: &PyFq, fqz: &PyFq) -> PyResult<()> {
         self.g1.x = fqx.fq;
         self.g1.y = fqy.fq;
         self.g1.z = fqz.fq;
+        Ok(())
+    }
+    
+    fn load_fq_affine(&mut self, fqx: &PyFq, fqy: &PyFq) -> PyResult<()> {
+        let mut a = self.g1.into_affine();
+        a.x = fqx.fq;
+        a.y = fqy.fq;
+        self.g1 = a.into_projective();
         Ok(())
     }
     
