@@ -19,6 +19,4 @@ class PolyCommitNP:
         for j in range(len(c)):
             lhs = lhs * c[j]**(i**j)
         rhs = (self.g**polyeval)*(self.h**secretpolyeval)
-        print (lhs)
-        print (rhs)
         return  lhs == rhs
