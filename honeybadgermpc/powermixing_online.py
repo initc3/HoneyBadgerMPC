@@ -2,7 +2,6 @@ import asyncio
 from field import GF
 from polynomial import polynomialsOver
 from router import simple_router
-import random
 import math
 import sys
 import os
@@ -31,6 +30,7 @@ async def beaver_mult(context, x, y, a, b, ab):
 
     return context.Share(await xy.open())
 
+
 async def butterfly_network(context):
 #----------------------------------------------------------------------------
     def mul(x, y):
@@ -39,7 +39,7 @@ async def butterfly_network(context):
 #----------------------------------------------------------------------------
     k = 128
     delta = 0
-    ramdom_shares = [0 for i in range(k * int(math.log(k,2)))]
+    ramdom_shares = [0 for i in range(k * int(math.log(k, 2)))]
     inputs = [0 for i in range(k)]
     p = 115792089237316195423570985008687907853269984665640564039457584007913129640423
     Zp = GF(p)
@@ -49,17 +49,16 @@ async def butterfly_network(context):
         inputs[i] = context.get_zero() + context.Share(i)
 
 #----------------------------------------------------------------------------
-    def load_from_file(k,p):
-        filename = "party" + str(context.myid+1) + "_butterfly_random_share"
+    def load_from_file(k, p):
+        filename = "party" + str(context.myid + 1) + "_butterfly_random_share"
     
         FD = open(filename, "r")
         line = FD.readline()
         if int(line) != k:
-            print("k dismatch!! k in file is %d"%(int(line)))
+            print("k dismatch!! k in file is %d"% (int(line)))
         line = FD.readline()
         if int(line) != p:
-            print("prime dismatch!! prime in file is %d"%(int(line)) )
-
+            print("prime dismatch!! prime in file is %d"% (int(line)) )
 
         line = FD.readline()
         i = 0
@@ -72,48 +71,48 @@ async def butterfly_network(context):
 #----------------------------------------------------------------------------
     async def switch(input1,input2):
         select_bit = ramdom_shares.pop()
-        m =(await mul(select_bit , (input1 - input2)))
+        m =(await mul(select_bit, (input1 - input2)))
         n = 1/Zp(2) 
 
         output1 = context.Share(n.value * (input1 + input2 + m).v)
         output2 = context.Share(n.value * (input1 + input2 - m).v)
 
-        return output1,output2  
+        return output1, output2  
 
-    async def permutation_network(input,num,level = 0):
+    async def permutation_network(input, num, level = 0):
 
-        if level == int(math.log(k,2)) - delta:
+        if level == int(math.log(k, 2)) - delta:
             return None
             # result = gather_shares(input)
             # result.addCallback(self.write_share_to_file,input)
-        if level > int(math.log(k,2)) - delta:
+        if level > int(math.log(k, 2)) - delta:
             return None
-        if num ==2:     
-            temp1,temp2 =await switch(input[0],input[1])        
-            result =  [temp1,temp2]
+        if num == 2:     
+            temp1,temp2 =await switch(input[0], input[1])        
+            result =  [temp1, temp2]
             return result   
         else:   
             first_layer_output1 = []
             first_layer_output2 = []
             result = []
             for i in range(int(num/2)):
-                temp1,temp2 =await switch(input[i * 2],input[i * 2 + 1])
+                temp1,temp2 =await switch(input[i * 2], input[i * 2 + 1])
                 first_layer_output1.append(temp1)
                 first_layer_output2.append(temp2)
 
-            second_layer_output1 = await permutation_network(first_layer_output1,num/2,level + 1)
-            second_layer_output2 = await permutation_network(first_layer_output2,num/2,level + 1)
+            second_layer_output1 = await permutation_network(first_layer_output1,num/2, level + 1)
+            second_layer_output2 = await permutation_network(first_layer_output2,num/2, level + 1)
             if second_layer_output1 == None or second_layer_output2 == None:
                 return None
                         
             for i in range(int(num/2)):
-                temp1,temp2 =await switch(second_layer_output1[i],second_layer_output2[i])
+                temp1, temp2 =await switch(second_layer_output1[i], second_layer_output2[i])
                 result.append(temp1)
                 result.append(temp2)            
 
             return result
 #----------------------------------------------------------------------------
-    output = await permutation_network(inputs,k)
+    output = await permutation_network(inputs, k)
     print("shuffle done")
 
     if delta == 0:
@@ -122,9 +121,6 @@ async def butterfly_network(context):
             open_tx[i] = await (output[i]).open()
         list = [open_tx[i] for i in range(k)] 
         print(list)
-
-
-
 
 
 async def powermix_phase1(context):
@@ -138,9 +134,9 @@ async def powermix_phase1(context):
     a_minus_b = [[0 for _ in range(k)] for _ in range(batch)]
     precomputed_powers = [[0 for _ in range(k)] for _ in range(k)]
 
-    def load_input_from_file(k,p,batch):
+    def load_input_from_file(k, p, batch):
         for batchiter in range(1, batch + 1):
-            filename = "party" + str(context.myid+1) + "_butterfly_online_batch" + str(batchiter)
+            filename = "party" + str(context.myid + 1) + "_butterfly_online_batch" + str(batchiter)
             
             FD = open(filename, "r")
             line = FD.readline()
@@ -159,10 +155,10 @@ async def powermix_phase1(context):
                 line = FD.readline()  
                 i = i + 1
 
-    load_input_from_file(k,p,batch)
+    load_input_from_file(k, p, batch)
 
-    def load_share_from_file(k,p,row):
-        filename = "precompute-party%d.share" % (context.myid+1)
+    def load_share_from_file(k, p, row):
+        filename = "precompute-party%d.share" % (context.myid + 1)
         FD = open(filename, "r")
         line = FD.readline()
         # if int(line) != p:
@@ -182,7 +178,7 @@ async def powermix_phase1(context):
 
 
     for i in range(k):
-        load_share_from_file(k,p,i)
+        load_share_from_file(k, p, i)
 
     for b in range(batch):
             for i in range(k):
@@ -192,13 +188,13 @@ async def powermix_phase1(context):
     def create_output(batch):
         print( "a-b calculation finished" )
 
-        path = "party" + str(context.myid+1) + "-powermixing-online-phase1-output"
+        path = "party" + str(context.myid + 1) + "-powermixing-online-phase1-output"
         folder = os.path.exists(path)  
         if not folder:                  
             os.makedirs(path) 
         for b in range(batch):
             for i in range(k):
-                filename = "party" + str(context.myid+1) + "-powermixing-online-phase1-output/powermixing-online-phase1-output" + str(i+1) + "-batch" + str(b+1)
+                filename = "party" + str(context.myid + 1) + "-powermixing-online-phase1-output/powermixing-online-phase1-output" + str(i+1) + "-batch" + str(b+1)
 
                 FD = open(filename, "w")
 
@@ -221,9 +217,9 @@ async def powermix_phase3(context):
     Zp = GF(p)
     open_value= [[0 for _ in range(k)] for _ in range(batch)]
 
-    def load_input_from_file(k,p,b):
+    def load_input_from_file(k, p, b):
         for batch in range(b):
-            filename = "powers.sum" + str(context.myid+1) + "_batch" + str(batch+1)
+            filename = "powers.sum" + str(context.myid + 1) + "_batch" + str(batch + 1)
         
             FD = open(filename, "r")
             line = FD.readline()
@@ -241,7 +237,7 @@ async def powermix_phase3(context):
 
                 line = FD.readline()  
                 i = i + 1
-    load_input_from_file(k,p,batch)
+    load_input_from_file(k, p, batch)
 
     for b in range(batch):
         for i in range(k):
@@ -264,10 +260,6 @@ async def powermix_phase3(context):
             FD.close()
             print("file outputs finished")
     create_output(batch)
-
-
-
-
 
 
 async def runProgramInNetwork(program, N, t):
