@@ -6,7 +6,7 @@ import random
 import math
 import sys
 import os
-from passive import PassiveMpc, generate_test_zeros, generate_test_triples, write_shares
+from passive import PassiveMpc, generate_test_zeros, generate_test_triples
 
 
 class NotEnoughShares(Exception):
@@ -21,28 +21,22 @@ class NotEnoughShares(Exception):
 Field = GF(115792089237316195423570985008687907853269984665640564039457584007913129640423)
 Poly = polynomialsOver(Field)
 
-def generate_test_randoms(prefix, k, N, t):
-    polys = []
-    for j in range(k):
-        polys.append(Poly.random(t, random.randint(0, Field.modulus-1)))
-    write_polys(prefix, Field.modulus, N, t, polys)
-
 
 async def beaver_mult(context, x, y, a, b, ab):
     D = await (x - a).open()
     E = await (y - b).open()
 
-    # This is a random share of x*y
+# This is a random share of x*y
     xy = context.Share(D*E) + D*b + E*a + ab
 
     return context.Share(await xy.open())
 
 async def butterfly_network(context):
-    #----------------------------------------------------------------------------
+#----------------------------------------------------------------------------
     def mul(x, y):
         a, b, ab = context.get_triple()
         return beaver_mult(context, x, y, a, b, ab)
-    #----------------------------------------------------------------------------
+#----------------------------------------------------------------------------
     k = 128
     delta = 0
     ramdom_shares = [0 for i in range(k * int(math.log(k,2)))]
@@ -54,7 +48,7 @@ async def butterfly_network(context):
     for i in range(k):
         inputs[i] = context.get_zero() + context.Share(i)
 
-    #----------------------------------------------------------------------------
+#----------------------------------------------------------------------------
     def load_from_file(k,p):
         filename = "party" + str(context.myid+1) + "_butterfly_random_share"
     
@@ -70,40 +64,29 @@ async def butterfly_network(context):
         line = FD.readline()
         i = 0
         while line:
-            #print i
             ramdom_shares[i] = context.Share(int(line))
 
             line = FD.readline()  
-            i = i + 1
-    #----------------------------------------------------------------------------
+#----------------------------------------------------------------------------
     load_from_file(k,p)
-    #----------------------------------------------------------------------------
+#----------------------------------------------------------------------------
     async def switch(input1,input2):
-
         select_bit = ramdom_shares.pop()
-
-        #print((input1 - input2).v)
-        #print(select_bit.v)
-
         m =(await mul(select_bit , (input1 - input2)))
         n = 1/Zp(2) 
 
         output1 = context.Share(n.value * (input1 + input2 + m).v)
         output2 = context.Share(n.value * (input1 + input2 - m).v)
-        #output1 = n *(input1 + input2 + m)
-        #output2 = n *(input1 + input2 - m)
 
         return output1,output2  
 
     async def permutation_network(input,num,level = 0):
 
-        #print("new layer%d"%(level))
         if level == int(math.log(k,2)) - delta:
             return None
             # result = gather_shares(input)
             # result.addCallback(self.write_share_to_file,input)
         if level > int(math.log(k,2)) - delta:
-            #print "pls shutdown"
             return None
         if num ==2:     
             temp1,temp2 =await switch(input[0],input[1])        
@@ -129,7 +112,7 @@ async def butterfly_network(context):
                 result.append(temp2)            
 
             return result
-    #----------------------------------------------------------------------------
+#----------------------------------------------------------------------------
     output = await permutation_network(inputs,k)
     print("shuffle done")
 
@@ -179,8 +162,6 @@ async def powermix_phase1(context):
     load_input_from_file(k,p,batch)
 
     def load_share_from_file(k,p,row):
-        #TODO: 
-        #filename = "precompute-party%d-%d.share" % (self.runtime.num_players, self.runtime.threshold, self.k, self.runtime.id,cnt)
         filename = "precompute-party%d.share" % (context.myid+1)
         FD = open(filename, "r")
         line = FD.readline()
@@ -194,7 +175,6 @@ async def powermix_phase1(context):
         line = FD.readline()
         i = 0
         while line and i < k:
-            #print i
             precomputed_powers[row][i] = context.Share(int(line))
 
             line = FD.readline()  
@@ -257,7 +237,6 @@ async def powermix_phase3(context):
             line = FD.readline()
             i = 0
             while line and i < k:
-                #print i
                 inputs[batch][i] = context.Share(int(line))
 
                 line = FD.readline()  
@@ -296,7 +275,7 @@ async def runProgramInNetwork(program, N, t):
     sends, recvs = simple_router(N)
 
     tasks = []
-    # bgtasks = []
+
     for i in range(N):
         context = PassiveMpc('sid', N, t, i, sends[i], recvs[i], program)
         tasks.append(loop.create_task(context._run()))
