@@ -8,10 +8,6 @@ import os
 from passive import PassiveMpc, generate_test_randoms, generate_test_triples
 
 
-class NotEnoughShares(Exception):
-    pass
-
-
 #######################
 # Generating test files
 #######################
