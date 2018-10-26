@@ -53,32 +53,32 @@ async def butterfly_network(context):
         FD = open(filename, "r")
         line = FD.readline()
         if int(line) != k:
-            print("k dismatch!! k in file is %d"% (int(line)))
+            print("k dismatch!! k in file is %d" % (int(line)))
         line = FD.readline()
         if int(line) != p:
-            print("prime dismatch!! prime in file is %d"% (int(line)) )
+            print("prime dismatch!! prime in file is %d" % (int(line)))
 
         line = FD.readline()
         i = 0
         while line:
             ramdom_shares[i] = context.Share(int(line))
 
-            line = FD.readline()  
+            line = FD.readline()
 # ----------------------------------------------------------------------------
     load_from_file(k, p)
 # ----------------------------------------------------------------------------
 
-    async def switch(input1,input2):
+    async def switch(input1, input2):
         select_bit = ramdom_shares.pop()
-        m =(await mul(select_bit, (input1 - input2 )))
-        n = 1 / Zp(2) 
+        m = (await mul(select_bit, (input1 - input2)))
+        n = 1 / Zp(2)
 
-        output1 = context.Share(n.value * (input1 + input2 + m).v )
-        output2 = context.Share(n.value * (input1 + input2 - m).v )
+        output1 = context.Share(n.value * (input1 + input2 + m).v)
+        output2 = context.Share(n.value * (input1 + input2 - m).v)
 
-        return output1, output2  
+        return output1, output2
 
-    async def permutation_network(input, num, level = 0):
+    async def permutation_network(input, num, level= 0):
 
         if level == int(math.log(k, 2)) - delta:
             return None
@@ -87,27 +87,27 @@ async def butterfly_network(context):
         if level > int(math.log(k, 2)) - delta:
             return None
         if num == 2:     
-            temp1,temp2 =await switch(input[0], input[1])        
-            result =  [temp1, temp2]
-            return result   
-        else:   
+            temp1, temp2 = await switch(input[0], input[1])        
+            result = [temp1, temp2]
+            return result
+        else:
             first_layer_output1 = []
             first_layer_output2 = []
             result = []
             for i in range(int(num/2)):
-                temp1,temp2 =await switch(input[i * 2], input[i * 2 + 1])
+                temp1, temp2 = await switch(input[i * 2], input[i * 2 + 1])
                 first_layer_output1.append(temp1)
                 first_layer_output2.append(temp2)
 
-            second_layer_output1 = await permutation_network(first_layer_output1,num/2, level + 1)
-            second_layer_output2 = await permutation_network(first_layer_output2,num/2, level + 1)
+            second_layer_output1 = await permutation_network(first_layer_output1, num/2, level + 1)
+            second_layer_output2 = await permutation_network(first_layer_output2, num/2, level + 1)
             if second_layer_output1 is None or second_layer_output2 is None:
                 return None
-                        
+
             for i in range(int(num/2)):
-                temp1, temp2 =await switch(second_layer_output1[i], second_layer_output2[i])
+                temp1, temp2 = await switch(second_layer_output1[i], second_layer_output2[i])
                 result.append(temp1)
-                result.append(temp2)            
+                result.append(temp2)
 
             return result
 # ----------------------------------------------------------------------------
@@ -118,12 +118,12 @@ async def butterfly_network(context):
         open_tx = [0 for i in range(k)]
         for i in range(k):
             open_tx[i] = await (output[i]).open()
-        list = [open_tx[i] for i in range(k)] 
+        list = [open_tx[i] for i in range(k)]
         print(list)
 
 
 async def powermix_phase1(context):
-    
+
     k = 32
     batch = 1
     inputs = [[0 for _ in range(k)] for _ in range(batch)]
@@ -134,7 +134,6 @@ async def powermix_phase1(context):
     def load_input_from_file(k, p, batch):
         for batchiter in range(1, batch + 1):
             filename = "party" + str(context.myid + 1) + "_butterfly_online_batch" + str(batchiter)
-            
             FD = open(filename, "r")
             line = FD.readline()
             # if int(line) != k:
@@ -147,7 +146,7 @@ async def powermix_phase1(context):
             i = 0
             while line and i < k:
                 inputs[batchiter-1][i] = context.Share(int(line))
-                line = FD.readline()  
+                line = FD.readline()
                 i = i + 1
 
     load_input_from_file(k, p, batch)
@@ -167,7 +166,7 @@ async def powermix_phase1(context):
         while line and i < k:
             precomputed_powers[row][i] = context.Share(int(line))
 
-            line = FD.readline()  
+            line = FD.readline()
             i = i + 1
 
     for i in range(k):
@@ -175,16 +174,16 @@ async def powermix_phase1(context):
 
     for b in range(batch):
             for i in range(k):
-                a_minus_b[b][i] = await (inputs[b][i] - precomputed_powers[i][0]).open() 
+                a_minus_b[b][i] = await (inputs[b][i] - precomputed_powers[i][0]).open()
 
 
     def create_output(batch):
-        print( "a-b calculation finished" )
+        print("a-b calculation finished")
 
         path = "party" + str(context.myid + 1) + "-powermixing-online-phase1-output"
-        folder = os.path.exists(path)  
-        if not folder:                  
-            os.makedirs(path) 
+        folder = os.path.exists(path)
+        if not folder:
+            os.makedirs(path)
         for b in range(batch):
             for i in range(k):
                 filename = "party" + str(context.myid + 1) + "-powermixing-online-phase1-output/powermixing-online-phase1-output" + str(i+1) + "-batch" + str(b+1)
@@ -192,7 +191,7 @@ async def powermix_phase1(context):
                 FD = open(filename, "w")
 
                 content =  str(p) + "\n" + str(inputs[b][i])[1:-1] + "\n" + str(a_minus_b[b][i])[1:-1] + "\n" + str(k) + "\n"
-            
+
                 for share in precomputed_powers[i]:
                     content = content + str(share)[1:-1] + "\n"
                 FD.write(content)
@@ -244,7 +243,7 @@ async def powermix_phase3(context):
 
             FD = open(filename, "w")
 
-            content =  str(p) + "\n" + str(k) + "\n"
+            content = str(p) + "\n" + str(k) + "\n"
 
             for share in open_value[b]:
                 content = content + str(share)[1:-1] + "\n"
