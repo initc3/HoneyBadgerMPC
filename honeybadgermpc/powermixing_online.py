@@ -32,26 +32,24 @@ async def beaver_mult(context, x, y, a, b, ab):
 
 
 async def butterfly_network(context):
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
     def mul(x, y):
         a, b, ab = context.get_triple()
         return beaver_mult(context, x, y, a, b, ab)
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
     k = 128
     delta = 0
     ramdom_shares = [0 for i in range(k * int(math.log(k, 2)))]
     inputs = [0 for i in range(k)]
     p = 115792089237316195423570985008687907853269984665640564039457584007913129640423
     Zp = GF(p)
-    write_index = 1
     print("begin allocating input shares")
     for i in range(k):
         inputs[i] = context.get_zero() + context.Share(i)
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
     def load_from_file(k, p):
         filename = "party" + str(context.myid + 1) + "_butterfly_random_share"
-    
         FD = open(filename, "r")
         line = FD.readline()
         if int(line) != k:
@@ -66,16 +64,17 @@ async def butterfly_network(context):
             ramdom_shares[i] = context.Share(int(line))
 
             line = FD.readline()  
-#----------------------------------------------------------------------------
-    load_from_file(k,p)
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+    load_from_file(k, p)
+# ----------------------------------------------------------------------------
+
     async def switch(input1,input2):
         select_bit = ramdom_shares.pop()
-        m =(await mul(select_bit, (input1 - input2)))
-        n = 1/Zp(2) 
+        m =(await mul(select_bit, (input1 - input2 )))
+        n = 1 / Zp(2) 
 
-        output1 = context.Share(n.value * (input1 + input2 + m).v)
-        output2 = context.Share(n.value * (input1 + input2 - m).v)
+        output1 = context.Share(n.value * (input1 + input2 + m).v )
+        output2 = context.Share(n.value * (input1 + input2 - m).v )
 
         return output1, output2  
 
@@ -102,7 +101,7 @@ async def butterfly_network(context):
 
             second_layer_output1 = await permutation_network(first_layer_output1,num/2, level + 1)
             second_layer_output2 = await permutation_network(first_layer_output2,num/2, level + 1)
-            if second_layer_output1 == None or second_layer_output2 == None:
+            if second_layer_output1 is None or second_layer_output2 is None:
                 return None
                         
             for i in range(int(num/2)):
@@ -111,7 +110,7 @@ async def butterfly_network(context):
                 result.append(temp2)            
 
             return result
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
     output = await permutation_network(inputs, k)
     print("shuffle done")
 
@@ -128,9 +127,7 @@ async def powermix_phase1(context):
     k = 32
     batch = 1
     inputs = [[0 for _ in range(k)] for _ in range(batch)]
-    inputs_debug = [[0 for _ in range(k)] for _ in range(batch)]
     p = 115792089237316195423570985008687907853269984665640564039457584007913129640423
-    Zp = GF(p)
     a_minus_b = [[0 for _ in range(k)] for _ in range(batch)]
     precomputed_powers = [[0 for _ in range(k)] for _ in range(k)]
 
@@ -140,17 +137,15 @@ async def powermix_phase1(context):
             
             FD = open(filename, "r")
             line = FD.readline()
-            #if int(line) != k:
+            # if int(line) != k:
             #    print "k dismatch!! k in file is %d"%(int(line))
             line = FD.readline()
-            #if int(line) != p:
+            # if int(line) != p:
             #    print "prime dismatch!! prime in file is %d"%(int(line))
-            Zp = GF(p)
 
             line = FD.readline()
             i = 0
             while line and i < k:
-                #print i
                 inputs[batchiter-1][i] = context.Share(int(line))
                 line = FD.readline()  
                 i = i + 1
@@ -167,7 +162,6 @@ async def powermix_phase1(context):
         # if int(line) != k:
         #     print "k dismatch!! k in file is %d"%(int(line))
 
-
         line = FD.readline()
         i = 0
         while line and i < k:
@@ -175,7 +169,6 @@ async def powermix_phase1(context):
 
             line = FD.readline()  
             i = i + 1
-
 
     for i in range(k):
         load_share_from_file(k, p, i)
@@ -214,7 +207,6 @@ async def powermix_phase3(context):
     batch = 1
     inputs = [[0 for _ in range(k)] for _ in range(batch)]
     p = 115792089237316195423570985008687907853269984665640564039457584007913129640423
-    Zp = GF(p)
     open_value= [[0 for _ in range(k)] for _ in range(batch)]
 
     def load_input_from_file(k, p, b):
@@ -223,7 +215,7 @@ async def powermix_phase3(context):
         
             FD = open(filename, "r")
             line = FD.readline()
-            #if int(line) != p:
+            # if int(line) != p:
             #    print "p dismatch!! p in file is %d"%(int(line))
             line = FD.readline()
             # if int(line) != k:
@@ -286,15 +278,15 @@ if __name__ == '__main__':
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
-    #try:
-    #    loop.run_until_complete(runProgramInNetwork(butterfly_network, 3, 2))
+    # try:
+    #     loop.run_until_complete(runProgramInNetwork(butterfly_network, 3, 2))
     #
-    #finally:
-    #    loop.close()
+    # finally:
+    #     loop.close()
     phase = 1
     if len(sys.argv) > 1:
         phase = sys.argv[1]
-    if int(phase) == 1 :
+    if int(phase) == 1:
         try:
             loop.run_until_complete(runProgramInNetwork(powermix_phase1, 3, 2))
 
