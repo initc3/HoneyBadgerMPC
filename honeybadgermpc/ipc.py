@@ -75,14 +75,6 @@ class Senders(object):
             q.put_nowait(None)
 
 
-def handle_result(future):
-    if not future.cancelled() and future.exception():
-        # Stop the loop otherwise the loop continues to await for the prog to
-        # finish which will never happen since the recvloop has terminated.
-        loop.stop()
-        future.result()
-
-
 class Listener(object):
     def __init__(self, q, port):
         self.q = q
