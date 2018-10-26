@@ -1,18 +1,16 @@
 import asyncio
-from asyncio import Future
-from field import GF, GFElement
+from field import GF
 from polynomial import polynomialsOver
 from router import simple_router
 import random
 import math
 import sys
 import os
-from passive import PassiveMpc, shareInContext, generate_test_zeros, generate_test_triples, write_shares
+from passive import PassiveMpc, generate_test_zeros, generate_test_triples, write_shares
+
 
 class NotEnoughShares(Exception):
     pass
-
-
 
 
 #######################
@@ -22,34 +20,6 @@ class NotEnoughShares(Exception):
 # Fix the field for now
 Field = GF(115792089237316195423570985008687907853269984665640564039457584007913129640423)
 Poly = polynomialsOver(Field)
-
-
-def write_polys(prefix, modulus, N, t, polys):
-    for i in range(N):
-        shares = [f(i+1) for f in polys]
-        with open('%s-%d.share' % (prefix, i), 'w') as f:
-            write_shares(f, modulus, t, i, shares)
-
-
-def generate_test_triples(prefix, k, N, t):
-    # Generate k triples, store in files of form "prefix-%d.share"
-    polys = []
-    for j in range(k):
-        a = Field(random.randint(0, Field.modulus-1))
-        b = Field(random.randint(0, Field.modulus-1))
-        c = a*b
-        polys.append(Poly.random(t, a))
-        polys.append(Poly.random(t, b))
-        polys.append(Poly.random(t, c))
-    write_polys(prefix, Field.modulus, N, t, polys)
-
-
-def generate_test_zeros(prefix, k, N, t):
-    polys = []
-    for j in range(k):
-        polys.append(Poly.random(t, 0))
-    write_polys(prefix, Field.modulus, N, t, polys)
-
 
 def generate_test_randoms(prefix, k, N, t):
     polys = []
