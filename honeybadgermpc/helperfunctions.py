@@ -1,4 +1,4 @@
-from betterpairing import *
+from honeybadgermpc.betterpairing import *
 import hashlib
 import pickle
 from Crypto.Cipher import AES

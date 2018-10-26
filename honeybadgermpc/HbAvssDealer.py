@@ -1,13 +1,13 @@
 from Crypto.Cipher import AES
 import random
 import hashlib
-from PolyCommitNP import *
-from helperfunctions import *
+from honeybadgermpc.PolyCommitNP import *
+from honeybadgermpc.helperfunctions import *
 import os
 import pickle
 import asyncio
-from reliablebroadcast import *
-from betterpairing import *
+from honeybadgermpc.reliablebroadcast import *
+from honeybadgermpc.betterpairing import *
 
 #Class representing a the dealer in the scheme. t is the threshold and k is the number of participants
 class HbAvssDealer:

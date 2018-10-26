@@ -1,13 +1,13 @@
-from betterpairing import *
-from PolyCommitNP import *
-from helperfunctions import *
-from HbAvssDealer import *
-from HbAvssRecipient import *
-from listrouter import *
+from honeybadgermpc.betterpairing import *
+from honeybadgermpc.PolyCommitNP import *
+from honeybadgermpc.helperfunctions import *
+from honeybadgermpc.HbAvssDealer import *
+from honeybadgermpc.HbAvssRecipient import *
+from honeybadgermpc.listrouter import *
 import asyncio
 
 def main():
-    crs = [G1(PyG1(12,12,23,23)), G1.rand()]
+    crs = [G1.rand(), G1.rand()]
     t = 2
     n = 3*t + 1
     participantids = list(range(1,n+1))
@@ -34,8 +34,6 @@ def main():
         
     loop = asyncio.get_event_loop()
     loop.run_until_complete(_test())
-    
-    
     
 
 if __name__ == "__main__":

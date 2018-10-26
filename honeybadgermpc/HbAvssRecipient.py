@@ -8,10 +8,10 @@ import json
 import ast
 import asyncio
 import pickle
-from PolyCommitNP import *
-from helperfunctions import *
-from betterpairing import *
-from reliablebroadcast import *
+from honeybadgermpc.PolyCommitNP import *
+from honeybadgermpc.helperfunctions import *
+from honeybadgermpc.betterpairing import *
+from honeybadgermpc.reliablebroadcast import *
 
 
 #Class representing a participant in the scheme. t is the threshold and k is the number of participants

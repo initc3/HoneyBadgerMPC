@@ -1,4 +1,4 @@
-from betterpairing import *
+from honeybadgermpc.betterpairing import *
 
 class PolyCommitNP:
     def __init__ (self, t, pk):
