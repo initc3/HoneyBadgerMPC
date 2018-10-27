@@ -1,12 +1,10 @@
 from honeybadgermpc.betterpairing import *
-from honeybadgermpc.PolyCommitNP import *
-from honeybadgermpc.helperfunctions import *
-from honeybadgermpc.HbAvssDealer import *
-from honeybadgermpc.HbAvssRecipient import *
-from honeybadgermpc.listrouter import *
+from honeybadgermpc.secretshare import *
+from honeybadgermpc.router import simple_router
 import asyncio
 
 def main():
+    # TODO: We need to generate the CRS once and hardcode it as a parameter
     crs = [G1.rand(), G1.rand()]
     t = 2
     n = 3*t + 1
@@ -21,7 +19,7 @@ def main():
     pubparams = (t, n, crs, participantids, participantpubkeys, sid)
     
     async def _test():
-        sends, recvs = simple_router(participantids + [dealerid])
+        sends, recvs = simple_router(len(participantids) + 1)
         dealer = HbAvssDealer(pubparams, (42, dealerid), sends[dealerid], recvs[dealerid])
         threads = []
         #threads.append(HbAvssDealer(pubparams, (42, dealerid), sends[dealerid], recvs[dealerid]))
