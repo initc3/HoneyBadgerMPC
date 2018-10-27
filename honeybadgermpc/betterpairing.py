@@ -1,14 +1,18 @@
 ﻿from pypairing import * 
 import random
 
+
 def dupe_pyg1(pyg1):
     out = PyG1(0,0,0,1)
     out.copy(pyg1)
     return out
+
+
 def dupe_pyfr(pyfr):
     out = PyFr("1")
     out.copy(pyfr)
     return out
+
 
 class G1:
     def __init__(self, other=None):
@@ -370,7 +374,3 @@ class ZR:
         r = 52435875175126190479447740508185965837690552500527637822603658699938581184513
         r = random.SystemRandom().randint(0,r-1)
         return ZR(str(r))
-        
-            
-        
-        
