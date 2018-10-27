@@ -64,7 +64,8 @@ def solve(dc_sums):
 def load_input_from_file(id, batch):
     result = []
     for b in range(batch):
-        filename = "party" + str(id) + "-powermixing-online-phase3-output-batch" + str(b + 1)
+        filename = "party" + str(id) 
+        filename = filename + + "-powermixing-online-phase3-output-batch" + str(b + 1)
         FD = open(filename, "r")
         line = FD.readline()
 
