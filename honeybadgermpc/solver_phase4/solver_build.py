@@ -15,7 +15,7 @@ with open(os.path.join(here, 'solver.cpp')) as cpp:
         libraries=['gmp', 'flint'],
         )
 ffibuilder.cdef("""
-    int solve(char* out_messages[], const char* prime, 
+    int solve(char* out_messages[], const char* prime,
               const char* sums[], size_t n);
 """)
 
