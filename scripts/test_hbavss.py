@@ -1,5 +1,5 @@
 from honeybadgermpc.betterpairing import G1
-from honeybadgermpc.secretshare import *
+from honeybadgermpc.secretshare_hbavsslight import *
 from honeybadgermpc.router import simple_router
 import asyncio
 
