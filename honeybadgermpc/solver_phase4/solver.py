@@ -30,16 +30,16 @@ _C_RET_INVALID = 1
 _C_RET_INTERNAL_ERROR = 100
 _C_RET_INPUT_ERROR = 101
 
+
 def solve(dc_sums):
     """Solve function from protocol specification.
 
     Solves the equation system
-    forall 0 <= i < size(dc_sums). 
+    forall 0 <= i < size(dc_sums).
     sum_{j=0}^{size(dc_sums)-1)} messages[j]^{i+1} = dc_sums[i]
-    in the finite prime field F_P for messages, and checks if my_message is in the 
+    in the finite prime field F_P for messages, and checks if my_message is in the
     solution.
     Assumes that size(dc_sums) >= 2.
-
     Returns a list of messages as solution (sorted in ascending numerial order) 
     in case of success.
     Returns None if dc_sums is not a proper list of power sums, or if my_message is
@@ -67,8 +67,6 @@ def load_input_from_file(id, batch):
         filename = "party" + str(id) + "-powermixing-online-phase3-output-batch" + str(b + 1)
         FD = open(filename, "r")
         line = FD.readline()
-
-        P = int(line)
 
         line = FD.readline()
         k = int(line)
@@ -113,11 +111,3 @@ if __name__ == "__main__":
     record_stop()
     print("output to file complete")
     record_stop()
-
-
-
-
-
-
-
-
