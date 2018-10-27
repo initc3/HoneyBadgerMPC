@@ -36,9 +36,7 @@ def load_config(path):
     config = {
         'N': cfgparser.getint('general', 'N'),
         't': cfgparser.getint('general', 't'),
-        'nodeid': cfgparser.get('addrinfo', 'id'),
-        'host': cfgparser.get('addrinfo', 'host'),
-        'port': cfgparser.getint('addrinfo', 'port'),
         'peers': dict(cfgparser.items('peers')),
+        'skipPreprocessing': cfgparser.getboolean('general', 'skipPreprocessing')
     }
     return config
