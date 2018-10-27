@@ -159,7 +159,8 @@ def encrypt( key, raw ):
     raw = pad(pickle.dumps(raw))
     iv = Random.new().read( AES.block_size )
     cipher = AES.new( key, AES.MODE_CBC, iv )
-    return ( iv + cipher.encrypt( raw ) )
+    enc = ( iv + cipher.encrypt( raw ) )
+    return enc
 
 
 def decrypt( key, enc ):
@@ -237,7 +238,7 @@ class HbAvssDealer:
         self._task = reliablebroadcast(sid, pid=pid, N=n+1, f=t, leader=pid, input=message, receive=recv, send=send)
 
     async def run(self):
-        return await self._task
+        result = await self._task
 
 
 
@@ -354,7 +355,7 @@ class HbAvssRecipient:
                 for key, value in self.shares.items():
                     coords.append([key, value])
                 self.secret = interpolate_at_x(coords, 0)
-                print (self.secret)
+                print ("self.secret:", self.secret)
                 self.finished = True
 
     #checks if an implicate message is valid
@@ -432,25 +433,23 @@ async def runHBAVSSLight(config, N, t, id):
         sk = ZR.rand(seed=17+i)
         participantprivkeys[i] = sk
         participantpubkeys[i] = crs[0] ** sk
-    # Load public parameters
-    pubparams = (t, N, crs, participantids, participantpubkeys, 'sid')
+    # Form public parameters
+    dealerid = N
+    pubparams = (t, N, crs, participantids, participantpubkeys, dealerid, 'sid')
 
     # Launch the protocol
-    if id == N:
-        # The N+1'th party is the dealer
+    if id == dealerid:
         thread = HbAvssDealer(pubparams, (42, id), send, recv)
     else:
-        # Parties 0 through N-1 are recipients
-        myPrivateKey = participantprivkeys[i]
+        myPrivateKey = participantprivkeys[id]
         thread = HbAvssRecipient(pubparams, (id, myPrivateKey), send, recv)
 
     # Wait for results and clean up
-    results = await thread.run()
-    await asyncio.sleep(1)
-    await sender.close()
+    await thread.run()
+    await asyncio.sleep(2)
+    sender.close()
     await listener.close()
     await asyncio.sleep(1)
-    return results
 
 
 ############################
@@ -509,7 +508,6 @@ if __name__ == "__main__":
         int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
         for peerid, addrinfo in config_dict['peers'].items()
     }
-    print('network_info:', network_info)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
