@@ -164,7 +164,7 @@ class G1:
                 seed.append(random.SystemRandom().randint(0,4294967295))
             out = PyG1(seed[0],seed[1],seed[2],seed[3])
         else:
-            assert seed is list
+            assert type(seed) is list
             assert len(seed) == 4
             out = PyG1(seed[0],seed[1],seed[2],seed[3])
         return G1(out)
@@ -369,8 +369,12 @@ class ZR:
             power.square()
             self.pp.append(power)
         
-    def rand():
-        #megabignum = 3248875134290623212325429203829831876024364170316860259933542844758450336418538569901990710701240661702808867062612075657861768196242274635305077449545396068598317421057721935408562373834079015873933065667961469731886739181625866970316226171512545167081793907058686908697431878454091011239990119126
+    def rand(seed=None):
         r = 52435875175126190479447740508185965837690552500527637822603658699938581184513
-        r = random.SystemRandom().randint(0,r-1)
-        return ZR(str(r))
+        if seed is None:
+            r = random.SystemRandom().randint(0,r-1)
+            return ZR(str(r))
+        else:
+            # Generate pseudorandomly based on seed
+            r = random.Random(seed).randint(0,r-1)
+            return ZR(str(r))

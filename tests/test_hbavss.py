@@ -11,15 +11,15 @@ async def test_hbavss():
     crs = [G1.rand(), G1.rand()]
     t = 2
     n = 3*t + 1
-    participantids = list(range(1,n+1))
-    dealerid = 0
+    participantids = list(range(0,n))
+    dealerid = n
     sid = 1
     (participantpubkeys, participantprivkeys) = ({}, {})
     for i in participantids:
         sk = ZR.rand()
         participantprivkeys[i] = sk
         participantpubkeys[i] = crs[0] ** sk
-    pubparams = (t, n, crs, participantids, participantpubkeys, sid)
+    pubparams = (t, n, crs, participantids, participantpubkeys, dealerid, sid)
     
     sends, recvs = simple_router(len(participantids) + 1)
     dealer = HbAvssDealer(pubparams, (42, dealerid), sends[dealerid], recvs[dealerid])
@@ -29,4 +29,5 @@ async def test_hbavss():
         recipients.append(HbAvssRecipient(pubparams, (i, participantprivkeys[i]), sends[i], recvs[i]))
     for r in recipients:
         threads.append(r.run())
+    threads.append(dealer.run())
     await asyncio.wait(threads)

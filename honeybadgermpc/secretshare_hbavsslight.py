@@ -22,7 +22,6 @@ from honeybadgermpc.betterpairing import *
 from Crypto.Cipher import AES
 from base64 import encodestring, decodestring
 from asyncio import Queue
-from honeybadgermpc.reliablebroadcast import *
 
 
 
@@ -215,8 +214,9 @@ class HbAvssDealer:
         # This is structured so that t+1 points are needed to reconstruct the polynomial
         time2 = os.times()
         ONE = ZR(1)
-        (t, n, crs, participantids, participantkeys, sid) = publicparams
+        (t, n, crs, participantids, participantkeys, dealerid, sid) = publicparams
         (secret, pid) = privateparams
+        assert dealerid == pid, "HbAvssDealer called, but wrong pid"
         (poly, polyhat, sharedkeys, shares, encryptedshares, witnesses, encryptedwitnesses) = ([], [], {}, {}, {}, {}, {})
         for i in range(t+1):
             poly.append(ZR.rand())
@@ -234,8 +234,10 @@ class HbAvssDealer:
             encryptedwitnesses[j] = encrypt(str(sharedkeys[j]).encode('utf-8'), witnesses[j])
         message = pickle.dumps((c, encryptedwitnesses, encryptedshares, crs[0] ** sk))
         print ("Dealer Time: " + str(os.times()[4] - time2[4]))
-        loop = asyncio.get_event_loop()
-        loop.create_task(reliablebroadcast(sid, pid=pid, N=n+1, f=t, leader=pid, input=message, receive=recv, send=send))
+        self._task = reliablebroadcast(sid, pid=pid, N=n+1, f=t, leader=pid, input=message, receive=recv, send=send)
+
+    async def run(self):
+        return await self._task
 
 
 
@@ -250,10 +252,10 @@ class HbAvssRecipient:
         
         (self.send, self.recv) = (send, recv)
         #self.write = write_function
-        (self.t, self.n, crs, self.participantids, self.participantkeys, self.sid) = publicparams
+        (self.t, self.n, crs, self.participantids, self.participantkeys, self.dealerid, self.sid) = publicparams
         self.reconstruction = reconstruction
         (self.pid, self.sk) = privateparams
-        self.dealerid = 0
+        assert self.pid != self.dealerid, "HbAvssRecipient, but pid is dealerid"
         (self.sharedkey, self.rbfinished, self.finished, self.sendrecs, self.sharevalid) = (None, False, False, False, False)
         (self.okcount, self.implicatecount, self.output, self.secret) = (0, 0, None, None)
         self.pc = PolyCommitNP(t=self.t, pk=crs)
@@ -398,4 +400,121 @@ class HbAvssRecipient:
 
 async def rbc_and_send(sid, pid, n, t, k, ignoreme, receive, send):
     msg = await reliablebroadcast(sid, pid, n, f=t, leader=k, input=None, receive=receive, send=send)
-    send(pid, [sid, "send", msg])        
+    send(pid, [sid, "send", msg])
+
+
+################
+# Driver script
+################
+
+# Run as either node or dealer, depending on command line arguments
+# Uses the same configuration format as hbmpc
+
+async def runHBAVSSLight(config, N, t, id):
+    send, recv, sender, listener = setup_sockets(config, N+1, id)
+    # Need to give time to the listener coroutine to start
+    #  or else the sender will get a connection refused.
+
+    # XXX HACK! Increase wait time. Must find better way if possible -- e.g:
+    # try/except retry logic ...
+    await asyncio.sleep(2)
+    await sender.connect()
+    await asyncio.sleep(1)
+
+    # Generate the CRS deterministically
+    crs = [G1.rand(seed=[0,0,0,1]), G1.rand(seed=[0,0,0,2])]
+
+    # Load private parameters / secret keys
+    (participantpubkeys, participantprivkeys) = ({}, {})
+    participantids = list(range(N))
+    for i in participantids:
+        # These can also be determined pseudorandomly
+        sk = ZR.rand(seed=17+i)
+        participantprivkeys[i] = sk
+        participantpubkeys[i] = crs[0] ** sk
+    # Load public parameters
+    pubparams = (t, N, crs, participantids, participantpubkeys, 'sid')
+
+    # Launch the protocol
+    if id == N:
+        # The N+1'th party is the dealer
+        thread = HbAvssDealer(pubparams, (42, id), send, recv)
+    else:
+        # Parties 0 through N-1 are recipients
+        myPrivateKey = participantprivkeys[i]
+        thread = HbAvssRecipient(pubparams, (id, myPrivateKey), send, recv)
+
+    # Wait for results and clean up
+    results = await thread.run()
+    await asyncio.sleep(1)
+    await sender.close()
+    await listener.close()
+    await asyncio.sleep(1)
+    return results
+
+
+############################
+#  Configuration for hbavss
+###########################
+
+def make_localhost_config(n, t, base_port):
+    from configparser import ConfigParser
+    config = ConfigParser()
+
+    # General
+    config['general']['N'] = n
+    config['general']['t'] = t
+    config['general']['skipPreProcessing'] = True
+
+    # Peers
+    for i in range(n+1):  # n participants, 1 client
+        config['peers'][i] = "%s:%d" % ('localhost', base_port + i)
+    
+    # Keys
+    # Keys are omitted for now
+
+    # Write file
+    with open('conf/hbavss.ini', 'w') as configfile:
+        config.write(configfile)
+
+if __name__ == "__main__":
+    import sys
+    from .exceptions import ConfigurationError
+    from .config import load_config
+    from .ipc import setup_sockets, NodeDetails
+
+    configfile = os.environ.get('HBMPC_CONFIG')
+    nodeid = os.environ.get('HBMPC_NODE_ID')
+
+    # override configfile if passed to command
+    try:
+        nodeid = sys.argv[1]
+        configfile = sys.argv[2]
+    except IndexError:
+        pass
+    
+    if not nodeid:
+        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
+                                 ' or a node id must be given as first argument.')
+
+    if not configfile:
+        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
+                                 ' or a config file must be given as first argument.')
+    
+    config_dict = load_config(configfile)
+    N = config_dict['N']
+    t = config_dict['t']
+    nodeid = int(nodeid)
+    network_info = {
+        int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
+        for peerid, addrinfo in config_dict['peers'].items()
+    }
+    print('network_info:', network_info)
+
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    loop.set_debug(True)
+    try:
+        loop.run_until_complete(runHBAVSSLight(network_info, N, t, nodeid))
+    finally:
+        loop.close()
