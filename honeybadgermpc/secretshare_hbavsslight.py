@@ -229,9 +229,9 @@ class HbAvssDealer:
         pc = PolyCommitNP(t=t, pk=crs)
         c = pc.commit(poly, polyhat)
         for j in participantids:
-            shares[j] = f(poly, j)
+            shares[j] = f(poly, j+1) # TODO: make this omega^j
             encryptedshares[j] = encrypt(str(sharedkeys[j]).encode('utf-8'), shares[j])
-            witnesses[j] = f(polyhat, j)
+            witnesses[j] = f(polyhat, j+1)
             encryptedwitnesses[j] = encrypt(str(sharedkeys[j]).encode('utf-8'), witnesses[j])
         message = pickle.dumps((c, encryptedwitnesses, encryptedshares, crs[0] ** sk))
         print ("Dealer Time: " + str(os.times()[4] - time2[4]))
@@ -291,7 +291,7 @@ class HbAvssRecipient:
             self.sharedkey = str(pk_d**self.sk).encode('utf-8')
             self.share = decrypt(self.sharedkey, self.encshares[self.pid])
             self.witness = decrypt(self.sharedkey, self.encwitnesses[self.pid])
-            if self.pc.verify_eval(self.commit, self.pid, self.share, self.witness):
+            if self.pc.verify_eval(self.commit, self.pid+1, self.share, self.witness):
                 self.send_ok_msgs()
                 self.sendrecs = True
             else:
@@ -311,6 +311,7 @@ class HbAvssRecipient:
             if not self.sharevalid and self.okcount >= 2*self.t + 1:
                 self.sharevalid = True
                 self.output = self.share
+                print('Output available', self.output)
                 #print "WTF!"
                 #print "./shares/"+str(self.pid)+"/"+str(self.sid)
                 #f_raw = open( "./shares/"+str(self.pid)+"/"+str(self.sid), "w+" )
@@ -348,12 +349,12 @@ class HbAvssRecipient:
                 del self.encshares[sender]
                 del self.encwitnesses[sender]
         elif msg[1] == 'rec':
-            if self.pc.verify_eval(self.commit, sender, msg[2], msg[3]):
+            if self.pc.verify_eval(self.commit, sender+1, msg[2], msg[3]):
                 self.shares[sender] = msg[2]
             if len(self.shares) == self.t + 1:
                 coords = []
                 for key, value in self.shares.items():
-                    coords.append([key, value])
+                    coords.append([key + 1, value])
                 self.secret = interpolate_at_x(coords, 0)
                 print ("self.secret:", self.secret)
                 self.finished = True
@@ -442,7 +443,7 @@ async def runHBAVSSLight(config, N, t, id):
         thread = HbAvssDealer(pubparams, (42, id), send, recv)
     else:
         myPrivateKey = participantprivkeys[id]
-        thread = HbAvssRecipient(pubparams, (id, myPrivateKey), send, recv)
+        thread = HbAvssRecipient(pubparams, (id, myPrivateKey), send, recv, reconstruction=False)
 
     # Wait for results and clean up
     await thread.run()
