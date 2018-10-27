@@ -8,12 +8,19 @@ services:
     volumes:
       - .:/usr/src/HoneyBadgerMPC
     command: pytest -v --cov=honeybadgermpc
+    extra_hosts:
+      - "hbmpc_0:127.0.0.1"
+      - "hbmpc_1:127.0.0.1"
+      - "hbmpc_2:127.0.0.1"
+      - "hbmpc_3:127.0.0.1"
   builddocs:
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
       - .:/usr/src/HoneyBadgerMPC
+    environment:
+      - O=-W --keep-going
     command: make -C docs html
   viewdocs:
     image: nginx

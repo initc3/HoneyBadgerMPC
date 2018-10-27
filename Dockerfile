@@ -13,9 +13,9 @@ COPY --from=wheel_builder /usr/src/pairing/scripts/_manylinux.py /usr/local/bin/
 
 ENV PYTHONUNBUFFERED=1
 
-RUN apk --update add make vim
+RUN apk --update add make vim tmux
 
-RUN apk --update add gcc musl-dev gmp-dev libc6-compat
+RUN apk --update add gcc musl-dev gmp-dev libc6-compat mpc1-dev mpfr-dev
 
 RUN mkdir -p /usr/src/HoneyBadgerMPC
 WORKDIR /usr/src/HoneyBadgerMPC
@@ -28,4 +28,5 @@ RUN pip install pycrypto
 RUN pip install zfec
 
 RUN pip install /usr/src/wheelhouse/*.whl
+
 RUN pip install --no-cache-dir -e .[dev]
