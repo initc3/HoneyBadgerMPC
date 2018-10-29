@@ -39,14 +39,14 @@ def Polynomial(GaloisField):
     return polynomialsOver(GaloisField)
 
 
-@fixture(params=({'k': 1000, 't': 2},))
+@fixture(params=({'k': 1000, 't': 1},))
 def zero_polys(request, Polynomial):
     k = request.param['k']
     t = request.param['t']
     return [Polynomial.random(t, 0) for _ in range(k)]
 
 
-@fixture(params=({'k': 1000, 't': 2},))
+@fixture(params=({'k': 1000, 't': 1},))
 def random_polys(request, GaloisField, Polynomial):
     k = request.param['k']
     t = request.param['t']
@@ -66,7 +66,7 @@ def triples_fields(request, GaloisField, Polynomial):
     return fields_batch
 
 
-@fixture(params=(2,))
+@fixture(params=(1,))
 def triples_polys(request, triples_fields, Polynomial):
     t = request.param
     return [
@@ -74,7 +74,7 @@ def triples_polys(request, triples_fields, Polynomial):
     ]
 
 
-@fixture(params=({'N': 3, 't': 2},))
+@fixture(params=({'N': 3, 't': 1},))
 def zeros_shares_files(request, GaloisField, zero_polys, zeros_files_prefix):
     from honeybadgermpc.passive import write_polys
     N = request.param['N']
@@ -82,7 +82,7 @@ def zeros_shares_files(request, GaloisField, zero_polys, zeros_files_prefix):
     write_polys(zeros_files_prefix, GaloisField.modulus, N, t, zero_polys)
 
 
-@fixture(params=({'N': 3, 't': 2},))
+@fixture(params=({'N': 3, 't': 1},))
 def random_shares_files(request, GaloisField, random_polys, random_files_prefix):
     from honeybadgermpc.passive import write_polys
     N = request.param['N']
@@ -90,7 +90,7 @@ def random_shares_files(request, GaloisField, random_polys, random_files_prefix)
     write_polys(random_files_prefix, GaloisField.modulus, N, t, random_polys)
 
 
-@fixture(params=({'N': 3, 't': 2},))
+@fixture(params=({'N': 3, 't': 1},))
 def triples_shares_files(request, GaloisField, triples_polys, triples_files_prefix):
     from honeybadgermpc.passive import write_polys
     N = request.param['N']
