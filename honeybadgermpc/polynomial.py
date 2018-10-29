@@ -2,9 +2,12 @@ import operator
 import random
 from functools import reduce
 from .field import GF, GFElement
+from itertools import zip_longest
 
 
 def strip_trailing_zeros(a):
+    if len(a) == 0:
+        return []
     for i in range(len(a), 0, -1):
         if a[i-1] != 0:
             break
@@ -23,7 +26,8 @@ def polynomialsOver(field):
             self.coeffs = strip_trailing_zeros(coeffs)
             self.field = field
 
-        def isZero(self): return self.coeffs == []
+        def isZero(self):
+            return self.coeffs == [] or (len(self.coeffs) == 1 and self.coeffs[0] == 0)
 
         def __repr__(self):
             if self.isZero():
@@ -54,6 +58,24 @@ def polynomialsOver(field):
             return sum(map(operator.mul, ys, vector))
 
         @classmethod
+        def interpolate(cls, shares):
+            X = cls([0, 1])  # This is the polynomial f(x) = x
+            ONE = cls([1])  # This is the polynomial f(x) = 1
+            xs, ys = zip(*shares)
+
+            def lagrange(xi):
+                def mul(a, b): return a*b
+                num = reduce(mul, [X - cls([xj])
+                                   for xj in xs if xj != xi], ONE)
+                den = reduce(mul, [xi - xj for xj in xs if xj != xi], field(1))
+                return num * cls([1 / den])
+            f = cls([0])
+            for xi, yi in zip(xs, ys):
+                pi = lagrange(xi)
+                f += cls([yi]) * pi
+            return f
+
+        @classmethod
         def interpolate_fft(cls, ys, omega):
             """
             Returns a polynoial f of given degree,
@@ -63,7 +85,8 @@ def polynomialsOver(field):
             assert n & (n-1) == 0, "n must be power of two"
             assert type(omega) is GFElement
             assert omega ** n == 1, "must be an n'th root of unity"
-            assert omega ** (n//2) != 1, "must be a primitive n'th root of unity"
+            assert omega ** (n //
+                             2) != 1, "must be a primitive n'th root of unity"
             coeffs = [b/n for b in fft_helper(ys, 1/omega, field)]
             return cls(coeffs)
 
@@ -71,12 +94,14 @@ def polynomialsOver(field):
             assert n & (n-1) == 0, "n must be power of two"
             assert type(omega) is GFElement
             assert omega ** n == 1, "must be an n'th root of unity"
-            assert omega ** (n//2) != 1, "must be a primitive n'th root of unity"
+            assert omega ** (n //
+                             2) != 1, "must be a primitive n'th root of unity"
             return fft(self, omega, n)
 
         @classmethod
         def random(cls, degree, y0=None):
-            coeffs = [field(random.randint(0, field.modulus-1)) for _ in range(degree+1)]
+            coeffs = [field(random.randint(0, field.modulus-1))
+                      for _ in range(degree+1)]
             if y0 is not None:
                 coeffs[0] = y0
             return cls(coeffs)
@@ -90,7 +115,8 @@ def polynomialsOver(field):
             n = len(xs)
             assert n & (n-1) == 0, "n must be power of 2"
             assert pow(omega, 2*n) == 1, "omega must be 2n'th root of unity"
-            assert pow(omega, n) != 1, "omega must be primitive 2n'th root of unity"
+            assert pow(
+                omega, n) != 1, "omega must be primitive 2n'th root of unity"
 
             # Interpolate the polynomial up to degree n
             poly = cls.interpolate_fft(xs, omega**2)
@@ -99,6 +125,68 @@ def polynomialsOver(field):
             xs2 = poly.evaluate_fft(omega, 2*n)
 
             return xs2
+
+        # the valuation only gives 0 to the zero polynomial, i.e. 1+degree
+        def __abs__(self): return len(self.coeffs)
+
+        def __iter__(self): return iter(self.coeffs)
+
+        def __sub__(self, other): return self + (-other)
+
+        def __neg__(self): return Polynomial([-a for a in self])
+
+        def __len__(self): return len(self.coeffs)
+
+        def __add__(self, other):
+            newCoefficients = [sum(x) for x in zip_longest(
+                self, other, fillvalue=self.field(0))]
+            return Polynomial(newCoefficients)
+
+        def __mul__(self, other):
+            if self.isZero() or other.isZero():
+                return Zero()
+
+            newCoeffs = [self.field(0)
+                         for _ in range(len(self) + len(other) - 1)]
+
+            for i, a in enumerate(self):
+                for j, b in enumerate(other):
+                    newCoeffs[i+j] += a*b
+            return Polynomial(newCoeffs)
+
+        def degree(self): return abs(self) - 1
+
+        def leadingCoefficient(self): return self.coeffs[-1]
+
+        def __divmod__(self, divisor):
+            quotient, remainder = Zero(), self
+            divisorDeg = divisor.degree()
+            divisorLC = divisor.leadingCoefficient()
+
+            while remainder.degree() >= divisorDeg:
+                monomialExponent = remainder.degree() - divisorDeg
+                monomialZeros = [self.field(0)
+                                 for _ in range(monomialExponent)]
+                monomialDivisor = Polynomial(
+                    monomialZeros + [remainder.leadingCoefficient() / divisorLC])
+
+                quotient += monomialDivisor
+                remainder -= monomialDivisor * divisor
+
+            return quotient, remainder
+
+        def __truediv__(self, divisor):
+            if divisor.isZero():
+                raise ZeroDivisionError
+            return divmod(self, divisor)[0]
+
+        def __mod__(self, divisor):
+            if divisor.isZero():
+                raise ZeroDivisionError
+            return divmod(self, divisor)[1]
+
+    def Zero():
+        return Polynomial([])
 
     _poly_cache[field] = Polynomial
     return Polynomial
@@ -159,7 +247,8 @@ def fft(poly, omega, n, seed=None):
 
 
 if __name__ == "__main__":
-    field = GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+    field = GF.get(
+        0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
     Poly = polynomialsOver(field)
     poly = Poly.random(degree=7)
     poly = Poly([1, 5, 3, 15, 0, 3])
