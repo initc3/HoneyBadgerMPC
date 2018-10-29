@@ -1,3 +1,2 @@
 [flake8]
 max_line_length=89
-exclude=honeybadgermpc/betterpairing.py, honeybadgermpc/reliablebroadcast.py, honeybadgermpc/secretshare_hbavsslight.py, scripts/run_hbavss.py, tests/test_hbavss.py, pairing/
