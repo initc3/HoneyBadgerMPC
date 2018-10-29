@@ -1,9 +1,13 @@
-﻿from pypairing import * 
+﻿from pypairing import PyFq, PyFqRepr, PyG1, PyFr
 import random
 
 
+# Order of BLS group
+bls12_381_r = 52435875175126190479447740508185965837690552500527637822603658699938581184513  # (# noqa: E501)
+
+
 def dupe_pyg1(pyg1):
-    out = PyG1(0,0,0,1)
+    out = PyG1(0, 0, 0, 1)
     out.copy(pyg1)
     return out
 
@@ -18,37 +22,43 @@ class G1:
     def __init__(self, other=None):
         if other is None:
             self.pyg1 = PyG1(0, 0, 0, 1)
-        #if type(other) is bytes:
-        #    other = list(other)        
+        # if type(other) is bytes:
+        #    other = list(other)
         if type(other) is list:
             assert len(other) == 2
             assert len(other[0]) == 6
-            x=PyFqRepr(other[0][0], other[0][1], other[0][2], other[0][3], other[0][4], other[0][5])
-            y=PyFqRepr(other[1][0], other[1][1], other[1][2], other[1][3], other[1][4], other[1][5])
-            xq = PyFq(0,0,0,1)
-            yq = PyFq(0,0,0,1)
+            x = PyFqRepr(other[0][0], other[0][1], other[0]
+                         [2], other[0][3], other[0][4], other[0][5])
+            y = PyFqRepr(other[1][0], other[1][1], other[1]
+                         [2], other[1][3], other[1][4], other[1][5])
+            xq = PyFq(0, 0, 0, 1)
+            yq = PyFq(0, 0, 0, 1)
             xq.from_repr(x)
             yq.from_repr(y)
             self.pyg1 = PyG1(0, 0, 0, 1)
-            self.pyg1.load_fq_affine(xq,yq)
+            self.pyg1.load_fq_affine(xq, yq)
         elif type(other) is PyG1:
             self.pyg1 = other
+
     def __str__(self):
-        x = int(self.pyg1.__str__()[4:102],0)
-        y = int(self.pyg1.__str__()[108:206],0)
+        x = int(self.pyg1.__str__()[4:102], 0)
+        y = int(self.pyg1.__str__()[108:206], 0)
         return "(" + str(x) + ", " + str(y) + ")"
-    #def __bytes__(self):
+    # def __bytes__(self):
     #    listlist = self.__getstate__()
     #    return bytes(listlist[0] + listlist[1])
+
     def __mul__(self, other):
         if type(other) is G1:
             out = dupe_pyg1(self.pyg1)
             out.add_assign(other.pyg1)
             return G1(out)
-    def __imul__(self,other):
+
+    def __imul__(self, other):
         if type(other) is G1:
             self.pyg1.add_assign(other.pyg1)
             return self
+
     def __truediv__(self, other):
         if type(other) is G1:
             out = dupe_pyg1(self.pyg1)
@@ -56,10 +66,12 @@ class G1:
             return G1(out)
         else:
             raise TypeError
-    def __idiv__(self,other):
+
+    def __idiv__(self, other):
         if type(other) is G1:
             self.pyg1.sub_assign(other.pyg1)
             return self
+
     def __pow__(self, other):
         if type(other) is int:
             out = G1(dupe_pyg1(self.pyg1))
@@ -67,7 +79,7 @@ class G1:
                 out.pyg1.zero()
                 return out
             if other < 0:
-                #out.invert()
+                # out.invert()
                 out.pyg1.negate()
                 other = -1 * other
             prodend = ZR(other)
@@ -78,18 +90,20 @@ class G1:
             out.pyg1.mul_assign(other.val)
             return out
         else:
-            raise TypeError('Invalid exponentiation param. Expected ZR or int. Got '+ str(type(other)))
-    #Thought this might be faster. It wasn't.
-    #def __pow__(self, other):
+            raise TypeError(
+                'Invalid exponentiation param. Expected ZR or int. Got '
+                + str(type(other)))
+    # Thought this might be faster. It wasn't.
+    # def __pow__(self, other):
     #    if type(other) not in [int, ZR]:
-    #        raise TypeError('Invalid exponentiation param. Expected int or ZR. Got '+ str(type(other)))
+    #        raise TypeError('Invalid exponentiation param. Expected int or ZR. Got '
+    #        + str(type(other)))
     #    if type(other) is int:
     #        if other == 0:
     #            out = PyG1(0, 0, 0, 1)
     #            out.zero()
     #            return G1(out)
-    #        r = 52435875175126190479447740508185965837690552500527637822603658699938581184513
-    #        other = other % (r-1)
+    #        other = other % (bls12_381_r-1)
     #    else:
     #        other = int(other)
     #    out = dupe_pyg1(self.pyg1)
@@ -104,7 +118,7 @@ class G1:
     #        i+= 1
     #        other = other >> 1
     #    return G1(out)
-            
+
     def __ipow__(self, other):
         if type(other) is int:
             if other == 0:
@@ -119,60 +133,62 @@ class G1:
             self.pyg1.mul_assign(other)
             return self
         else:
-            raise TypeError('Invalid exponentiation param. Expected ZR or int. Got '+ str(type(other)))
-            
+            raise TypeError(
+                'Invalid exponentiation param. Expected ZR or int. Got '
+                + str(type(other)))
+
     def __eq__(self, other):
         if type(other) is not G1:
             return False
         return self.pyg1.equals(other.pyg1)
-        
+
     def __getstate__(self):
         coords = self.pyg1.__str__()
         x = coords[6:102]
         y = coords[110:206]
-        xlist = [x[80:96],x[64:80],x[48:64],x[32:48],x[16:32],x[0:16]]
-        ylist = [y[80:96],y[64:80],y[48:64],y[32:48],y[16:32],y[0:16]]
+        xlist = [x[80:96], x[64:80], x[48:64], x[32:48], x[16:32], x[0:16]]
+        ylist = [y[80:96], y[64:80], y[48:64], y[32:48], y[16:32], y[0:16]]
         for i in range(6):
-            xlist[i] = int(xlist[i],16)
-            ylist[i] = int(ylist[i],16)
+            xlist[i] = int(xlist[i], 16)
+            ylist[i] = int(ylist[i], 16)
         return [xlist, ylist]
-        
+
     def __setstate__(self, d):
         self.__init__(d)
-        
+
     def invert(self):
         negone = PyFr(str(1))
         negone.negate()
         self.pyg1.mul_assign(negone)
-        
+
     def duplicate(self):
         return G1(dupe_pyg1(self.pyg1))
-     
+
     def projective(self):
         return self.pyg1.projective()
-        
+
     def one():
-        out = PyG1(0,0,0,1)
+        out = PyG1(0, 0, 0, 1)
         out.zero()
-        #'G1(x = Fq(0x17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb) , y = Fq(0x08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1) )'
         return G1(out)
-    
+
     def rand(seed=None):
         if seed is None:
             seed = []
             for i in range(4):
-                seed.append(random.SystemRandom().randint(0,4294967295))
-            out = PyG1(seed[0],seed[1],seed[2],seed[3])
+                seed.append(random.SystemRandom().randint(0, 4294967295))
+            out = PyG1(seed[0], seed[1], seed[2], seed[3])
         else:
             assert type(seed) is list
             assert len(seed) == 4
-            out = PyG1(seed[0],seed[1],seed[2],seed[3])
+            out = PyG1(seed[0], seed[1], seed[2], seed[3])
         return G1(out)
-        
+
+
 class ZR:
-    def __init__(self, val = None):
+    def __init__(self, val=None):
         self.pp = []
-        if val == None:
+        if val is None:
             self.val = PyFr(0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654)
         elif type(val) is int:
             if val < 0:
@@ -192,12 +208,15 @@ class ZR:
                 self.val = PyFr(val)
         elif type(val) is PyFr:
             self.val = val
+
     def __str__(self):
         hexstr = self.val.__str__()[3:-1]
-        return str(int(hexstr,0))
+        return str(int(hexstr, 0))
+
     def __int__(self):
         hexstr = self.val.__str__()[3:-1]
-        return int(hexstr,0)
+        return int(hexstr, 0)
+
     def __add__(self, other):
         if type(other) is ZR:
             out = dupe_pyfr(self.val)
@@ -214,7 +233,10 @@ class ZR:
             out.add_assign(addend)
             return ZR(out)
         else:
-            raise TypeError('Invalid addition param. Expected ZR or int. Got '+ str(type(other)))
+            raise TypeError(
+                'Invalid addition param. Expected ZR or int. Got '
+                + str(type(other)))
+
     def __iadd__(self, other):
         if type(other) is ZR:
             self.val.add_assign(other.val)
@@ -230,7 +252,10 @@ class ZR:
             self.pp = []
             return self
         else:
-            raise TypeError('Invalid addition param. Expected ZR or int. Got '+ str(type(other)))
+            raise TypeError(
+                'Invalid addition param. Expected ZR or int. Got '
+                + str(type(other)))
+
     def __sub__(self, other):
         if type(other) is ZR:
             out = dupe_pyfr(self.val)
@@ -247,7 +272,10 @@ class ZR:
             out.sub_assign(subend)
             return ZR(out)
         else:
-            raise TypeError('Invalid addition param. Expected ZR or int. Got '+ str(type(other)))
+            raise TypeError(
+                'Invalid addition param. Expected ZR or int. Got '
+                + str(type(other)))
+
     def __isub__(self, other):
         if type(other) is ZR:
             self.val.sub_assign(other.val)
@@ -263,7 +291,10 @@ class ZR:
             self.pp = []
             return self
         else:
-            raise TypeError('Invalid addition param. Expected ZR or int. Got '+ str(type(other)))
+            raise TypeError(
+                'Invalid addition param. Expected ZR or int. Got '
+                + str(type(other)))
+
     def __mul__(self, other):
         if type(other) is ZR:
             out = dupe_pyfr(self.val)
@@ -280,7 +311,10 @@ class ZR:
             out.mul_assign(prodend)
             return ZR(out)
         else:
-            raise TypeError('Invalid multiplication param. Expected ZR or int. Got '+ str(type(other)))
+            raise TypeError(
+                'Invalid multiplication param. Expected ZR or int. Got '
+                + str(type(other)))
+
     def __imul__(self, other):
         if type(other) is ZR:
             self.val.mul_assign(other.val)
@@ -296,7 +330,10 @@ class ZR:
             self.pp = []
             return self
         else:
-            raise TypeError('Invalid multiplication param. Expected ZR or int. Got '+ str(type(other)))
+            raise TypeError(
+                'Invalid multiplication param. Expected ZR or int. Got '
+                + str(type(other)))
+
     def __truediv__(self, other):
         if type(other) is ZR:
             out = dupe_pyfr(self.val)
@@ -316,23 +353,26 @@ class ZR:
             out.mul_assign(prodend)
             return ZR(out)
         else:
-            raise TypeError('Invalid division param. Expected ZR or int. Got '+ str(type(other)))
+            raise TypeError(
+                'Invalid division param. Expected ZR or int. Got '
+                + str(type(other)))
+
     def __pow__(self, other):
         if type(other) is int:
             if other == 0:
                 return ZR(1)
-            r = 52435875175126190479447740508185965837690552500527637822603658699938581184513
+            r = bls12_381_r
             other = other % (r-1)
             out = dupe_pyfr(self.val)
             if self.pp == []:
                 self.initPP()
             i = 0
-            #Hacky solution to my off by one error
+            # Hacky solution to my off by one error
             other -= 1
             while other > 0:
                 if other % 2 == 1:
                     out.mul_assign(self.pp[i])
-                i+= 1
+                i += 1
                 other = other >> 1
             return ZR(out)
         elif type(other) is ZR:
@@ -340,41 +380,44 @@ class ZR:
             if self.pp == []:
                 self.initPP()
             i = 0
-            #Hacky solution to my off by one error
+            # Hacky solution to my off by one error
             other = int(other)
             other -= 1
             while other > 0:
                 if other % 2 == 1:
                     out.mul_assign(self.pp[i])
-                i+= 1
+                i += 1
                 other = other >> 1
             return ZR(out)
         else:
-            raise TypeError('Invalid multiplication param. Expected int or ZR. Got '+ str(type(other)))
+            raise TypeError(
+                'Invalid multiplication param. Expected int or ZR. Got '
+                + str(type(other)))
+
     def __eq__(self, other):
         if type(other) is not ZR:
             return False
         return self.pyg1.equals(other.val)
-        
+
     def __getstate__(self):
         return int(self)
-        
+
     def __setstate__(self, d):
         self.__init__(d)
-    
+
     def initPP(self):
         self.pp.append(dupe_pyfr(self.val))
-        for i in range(1,255):
+        for i in range(1, 255):
             power = dupe_pyfr(self.pp[i-1])
             power.square()
             self.pp.append(power)
-        
+
     def rand(seed=None):
-        r = 52435875175126190479447740508185965837690552500527637822603658699938581184513
+        r = bls12_381_r
         if seed is None:
-            r = random.SystemRandom().randint(0,r-1)
+            r = random.SystemRandom().randint(0, r-1)
             return ZR(str(r))
         else:
             # Generate pseudorandomly based on seed
-            r = random.Random(seed).randint(0,r-1)
+            r = random.Random(seed).randint(0, r-1)
             return ZR(str(r))

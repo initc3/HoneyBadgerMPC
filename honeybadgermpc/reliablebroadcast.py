@@ -160,9 +160,9 @@ async def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
     assert 0 <= leader < N
     assert 0 <= pid < N
 
-    K               = N - 2 * f  # Need this many to reconstruct. (# noqa: E221)
-    EchoThreshold   = N - f      # Wait for this many ECHO to send READY. (# noqa: E221)
-    ReadyThreshold  = f + 1      # Wait for this many READY to amplify READY. (# noqa: E221)
+    K               = N - 2 * f  # Wait to reconstruct. (# noqa: E221)
+    EchoThreshold   = N - f      # Wait for ECHO to send READY. (# noqa: E221)
+    ReadyThreshold  = f + 1      # Wait for READY to amplify. (# noqa: E221)
     OutputThreshold = 2 * f + 1  # Wait for this many READY to output
     # NOTE: The above thresholds  are chosen to minimize the size
     # of the erasure coding stripes, i.e. to maximize K.

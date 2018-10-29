@@ -1,6 +1,6 @@
 from pytest import mark
-from honeybadgermpc.betterpairing import G1
-from honeybadgermpc.secretshare_hbavsslight import *
+from honeybadgermpc.betterpairing import G1, ZR
+from honeybadgermpc.secretshare_hbavsslight import HbAvssDealer, HbAvssRecipient
 from honeybadgermpc.router import simple_router
 import asyncio
 
@@ -11,7 +11,7 @@ async def test_hbavss():
     crs = [G1.rand(), G1.rand()]
     t = 2
     n = 3*t + 1
-    participantids = list(range(0,n))
+    participantids = list(range(0, n))
     dealerid = n
     sid = 1
     (participantpubkeys, participantprivkeys) = ({}, {})
@@ -20,13 +20,14 @@ async def test_hbavss():
         participantprivkeys[i] = sk
         participantpubkeys[i] = crs[0] ** sk
     pubparams = (t, n, crs, participantids, participantpubkeys, dealerid, sid)
-    
+
     sends, recvs = simple_router(len(participantids) + 1)
     dealer = HbAvssDealer(pubparams, (42, dealerid), sends[dealerid], recvs[dealerid])
     threads = []
     recipients = []
     for i in participantids:
-        recipients.append(HbAvssRecipient(pubparams, (i, participantprivkeys[i]), sends[i], recvs[i]))
+        recipients.append(HbAvssRecipient(pubparams, (i, participantprivkeys[i]),
+                                          sends[i], recvs[i]))
     for r in recipients:
         threads.append(r.run())
     threads.append(dealer.run())
