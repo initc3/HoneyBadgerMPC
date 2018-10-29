@@ -1,21 +1,14 @@
-FROM quay.io/pypa/manylinux1_x86_64 as wheel_builder
-
-COPY ./pairing /usr/src/pairing
-#RUN git clone -b docker-build https://github.com/sbellem/pairing.git /usr/src/pairing
-WORKDIR /usr/src/pairing
-
-RUN sh scripts/build-wheel.sh
-
-
-FROM python:alpine3.8
-COPY --from=wheel_builder /usr/src/pairing/wheelhouse/ /usr/src/wheelhouse
-COPY --from=wheel_builder /usr/src/pairing/scripts/_manylinux.py /usr/local/bin/
+FROM python:3.7.1-stretch
 
 ENV PYTHONUNBUFFERED=1
 
-RUN apk --update add make gcc vim tmux
+RUN apt-get update && apt-get install -y vim tmux
 
-RUN apk --update add musl-dev gmp-dev mpc1-dev mpfr-dev libressl-dev libffi-dev libc6-compat
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly-2018-10-24
+
+ENV PATH /root/.cargo/bin:$PATH
+
+RUN apt-get update && apt-get install -y libgmp-dev libmpc-dev libmpfr-dev
 
 RUN mkdir -p /usr/src/HoneyBadgerMPC
 WORKDIR /usr/src/HoneyBadgerMPC
@@ -24,9 +17,7 @@ RUN pip install --upgrade pip
 
 COPY . /usr/src/HoneyBadgerMPC
 
-RUN pip install pycrypto
-RUN pip install zfec
+RUN pip install -e pairing/
 
-RUN pip install /usr/src/wheelhouse/*.whl
-
-RUN pip install --no-cache-dir -e .[dev]
+ARG BUILD
+RUN pip install --no-cache-dir .[$BUILD]

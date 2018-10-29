@@ -13,8 +13,8 @@ VERSION = None
 
 REQUIRED = [
     'gmpy2',
-    'boto3',
-    'paramiko',
+    'zfec',
+    'pycrypto',
 ]
 
 TESTS_REQUIRES = [
@@ -41,11 +41,14 @@ DOCS_REQUIRE = [
 
 ETH_REQUIRES = ['web3', 'ethereum']
 
+AWS_REQUIRES = ['boto3', 'paramiko']
+
 EXTRAS = {
     'tests': TESTS_REQUIRES,
     'dev': DEV_REQUIRES + TESTS_REQUIRES + DOCS_REQUIRE + ETH_REQUIRES,
     'docs': DOCS_REQUIRE + ETH_REQUIRES,
     'eth': ETH_REQUIRES,
+    'aws': AWS_REQUIRES,
 }
 
 here = os.path.abspath(os.path.dirname(__file__))
