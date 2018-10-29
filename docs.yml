@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  builddocs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD: docs
+    volumes:
+      - .:/usr/src/HoneyBadgerMPC
+    environment:
+      - O=-W --keep-going
+    command: make -C docs html
+  viewdocs:
+    image: nginx
+    ports:
+      - '58888:80'
+    volumes:
+      - ./docs/_build/html:/usr/share/nginx/html
