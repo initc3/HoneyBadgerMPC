@@ -3,6 +3,7 @@ from asyncio import Future
 from .field import GF, GFElement
 from .polynomial import polynomialsOver
 from .router import simple_router
+from .program_runner import ProgramRunner
 import random
 from .robust_reconstruction import robust_reconstruct
 from .batch_reconstruction import batch_reconstruct
@@ -25,7 +26,7 @@ random_files_prefix = 'sharedata/test_random'
 
 class PassiveMpc(object):
 
-    def __init__(self, sid, N, t, myid, send, recv, prog):
+    def __init__(self, sid, N, t, myid, pid, send, recv, prog):
         # Parameters for passive secure MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(N) is int and type(t) is int
@@ -34,6 +35,7 @@ class PassiveMpc(object):
         self.N = N
         self.t = t
         self.myid = myid
+        self.pid = pid
 
         # send(j, o): sends object o to party j with (current sid)
         # recv(): returns (j, o) from party j
@@ -333,23 +335,23 @@ def shareInContext(context):
 # Share = shareInContext(None)
 
 
-# Create a fake network with N instances of the program
-async def runProgramAsTasks(program, N, t):
-    assert 2*t + 1 <= N  # Necessary for robust reconstruction
-    sends, recvs = simple_router(N)
+class TaskProgramRunner(ProgramRunner):
+    def __init__(self, N, t):
+        self.N, self.t, self.pid = N, t, 0
+        self.tasks = []
+        self.loop = asyncio.get_event_loop()
 
-    tasks = []
-    # bgtasks = []
-    for i in range(N):
-        context = PassiveMpc('sid', N, t, i, sends[i], recvs[i], program)
-        tasks.append(asyncio.create_task(context._run()))
+    def add(self, program):
+        sends, recvs = simple_router(self.N)
+        for i in range(self.N):
+            context = PassiveMpc(
+                'sid', self.N, self.t, i, self.pid, sends[i], recvs[i], program
+            )
+            self.tasks.append(self.loop.create_task(context._run()))
+        self.pid += 1
 
-    try:
-        results = await asyncio.gather(*tasks)
-    finally:
-        for t in tasks:
-            t.cancel()
-    return results
+    async def join(self):
+        return await asyncio.gather(*self.tasks)
 
 
 #######################
@@ -407,7 +409,7 @@ async def test_batchopening(context):
     xs = context.ShareArray(xs)
     Xs = await xs.open()
     for i, x in enumerate(Xs):
-        assert x.v == i
+        assert x.value == i
     print("[%d] Finished batch opening" % (context.myid,))
 
 
@@ -515,9 +517,11 @@ if __name__ == '__main__':
     # loop.set_debug(True)
     try:
         print("Start")
-        loop.run_until_complete(runProgramAsTasks(test_prog1, 3, 1))
-        loop.run_until_complete(runProgramAsTasks(test_prog2, 3, 1))
-        loop.run_until_complete(runProgramAsTasks(test_batchbeaver, 3, 1))
-        loop.run_until_complete(runProgramAsTasks(test_batchopening, 3, 1))
+        programRunner = TaskProgramRunner(3, 1)
+        programRunner.add(test_prog1)
+        programRunner.add(test_prog2)
+        programRunner.add(test_batchbeaver)
+        programRunner.add(test_batchopening)
+        loop.run_until_complete(programRunner.join())
     finally:
         loop.close()
