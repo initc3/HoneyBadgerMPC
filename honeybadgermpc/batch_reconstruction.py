@@ -37,8 +37,8 @@ def subscribeRecv(recv):
         taken.add(tag)
         return tagTable[tag].get
 
-    asyncio.create_task(_recvLoop())
-    return subscribe
+    _task = asyncio.create_task(_recvLoop())
+    return _task, subscribe
 
 
 def recvEachParty(recv, n):
@@ -49,8 +49,8 @@ def recvEachParty(recv, n):
             j, o = await recv()
             queues[j].put_nowait(o)
 
-    asyncio.create_task(_recvLoop())
-    return [q.get for q in queues]
+    _task = asyncio.create_task(_recvLoop())
+    return _task, [q.get for q in queues]
 
 
 def wrapSend(tag, send):
@@ -117,12 +117,12 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
 
     def point(i): return Fp(i+1)  # TODO: make it use omega
 
-    subscribe = subscribeRecv(recv)
+    _taskSub, subscribe = subscribeRecv(recv)
     del recv  # ILC enforces this in type system, no duplication of reads
-    dataR1 = [asyncio.create_task(recv())
-              for recv in recvEachParty(subscribe('R1'), n)]
-    dataR2 = [asyncio.create_task(recv())
-              for recv in recvEachParty(subscribe('R2'), n)]
+    _taskR1, qR1 = recvEachParty(subscribe('R1'), n)
+    _taskR2, qR2 = recvEachParty(subscribe('R2'), n)
+    dataR1 = [asyncio.create_task(recv()) for recv in qR1]
+    dataR2 = [asyncio.create_task(recv()) for recv in qR2]
     del subscribe  # ILC should determine we can garbage collect after this
 
     def sendBatch(data, send, point):
@@ -170,6 +170,14 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     assert nAvailable <= n, "reconstruction failed"
     assert len(reconsP) >= len(elem_batches)
     reconsP = reconsP[:len(elem_batches)]
+
+    _taskR1.cancel()
+    _taskR2.cancel()
+    _taskSub.cancel()
+    for q in dataR1:
+        q.cancel()
+    for q in dataR2:
+        q.cancel()
 
     return reconsP
 
