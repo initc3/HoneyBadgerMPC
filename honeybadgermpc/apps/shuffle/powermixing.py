@@ -37,7 +37,10 @@ async def phase1(context, k, powers_prefix, cpp_prefix):
 async def phase2(nodeid, batchid, runid, cpp_prefix):
     filename = f"{cpp_prefix}-{nodeid}.input"
     sumFileName = f"{sharedatadir}/power-{runid}_{nodeid}.sums"
-    runcmd = f"{shufflebasedir}/cpp/compute-power-sums {filename} {sumFileName}"
+    # NOTE The binary `compute-power-sums` is generated via the command
+    # make -C honeybadgermpc/apps/shuffle/cpp
+    # and is stored under /usr/local/bin/
+    runcmd = f"compute-power-sums {filename} {sumFileName}"
     await runCommandSync(runcmd)
 
 
