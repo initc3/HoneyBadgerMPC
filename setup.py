@@ -74,7 +74,7 @@ setup(
     python_requires=REQUIRES_PYTHON,
     setup_requires=['cffi>=1.0.0'],
     install_requires=REQUIRED,
-    cffi_modules=['honeybadgermpc/apps/shuffle/solver/solver_build.py:ffibuilder'],
+    cffi_modules=['apps/shuffle/solver/solver_build.py:ffibuilder'],
     extras_require=EXTRAS,
     classifiers=[
         'Development Status :: 1 - Planning',

@@ -4,7 +4,7 @@ import uuid
 from honeybadgermpc.passive import write_polys, runProgramAsTasks, Field, Poly
 
 
-shufflebasedir = "honeybadgermpc/apps/shuffle"
+shufflebasedir = "apps/shuffle"
 sharedatadir = "sharedata"
 powersPrefix = f"{sharedatadir}/powers"
 cppPrefix = f"{sharedatadir}/cpp-phase"
@@ -38,7 +38,7 @@ async def phase2(nodeid, batchid, runid, cpp_prefix):
     filename = f"{cpp_prefix}-{nodeid}.input"
     sumFileName = f"{sharedatadir}/power-{runid}_{nodeid}.sums"
     # NOTE The binary `compute-power-sums` is generated via the command
-    # make -C honeybadgermpc/apps/shuffle/cpp
+    # make -C apps/shuffle/cpp
     # and is stored under /usr/local/bin/
     runcmd = f"compute-power-sums {filename} {sumFileName}"
     await runCommandSync(runcmd)
@@ -85,7 +85,7 @@ async def phase3(context, **kwargs):
 
 
 async def asynchronusMixing(a_s, N, t, k):
-    from honeybadgermpc.apps.shuffle.solver.solver import solve
+    from .solver.solver import solve
 
     tasks = []
     runid = uuid.uuid4().hex
@@ -129,7 +129,7 @@ def asynchronusMixingInTasks():
 
 
 async def asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid):
-    from honeybadgermpc.apps.shuffle.solver.solver import solve
+    from .solver.solver import solve
     from honeybadgermpc.ipc import runProgramAsProcesses
 
     for i in range(k):

@@ -25,4 +25,4 @@ RUN sed -i '30c #include "flint/flint.h"' /usr/include/flint/flintxx/flint_class
 ARG BUILD
 RUN pip install --no-cache-dir .[$BUILD]
 
-RUN make -C honeybadgermpc/apps/shuffle/cpp
+RUN make -C apps/shuffle/cpp

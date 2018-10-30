@@ -9,7 +9,7 @@ basedir = "sharedata"
 @mark.asyncio
 async def test_powers(sharedatadir):
     from honeybadgermpc.passive import runProgramAsTasks, Field
-    import honeybadgermpc.apps.shuffle.powermixing as pm
+    import apps.shuffle.powermixing as pm
 
     async def verify_powers(context, **kwargs):
         a_, b_, k_ = kwargs['a'], kwargs['b'], kwargs['k']
@@ -31,7 +31,7 @@ async def test_powers(sharedatadir):
 @mark.asyncio
 async def test_phase1(sharedatadir):
     from honeybadgermpc.passive import runProgramAsTasks, Field
-    import honeybadgermpc.apps.shuffle.powermixing as pm
+    import apps.shuffle.powermixing as pm
 
     async def verify_phase1(context, **kwargs):
         a_, b_, k_ = kwargs['a'], kwargs['b'], kwargs['k']
@@ -54,7 +54,7 @@ async def test_phase1(sharedatadir):
 @mark.asyncio
 async def test_phase2(sharedatadir):
     from honeybadgermpc.passive import Field
-    import honeybadgermpc.apps.shuffle.powermixing as pm
+    import apps.shuffle.powermixing as pm
     import uuid
 
     a = Field(random.randint(0, Field.modulus-1))
@@ -85,7 +85,7 @@ async def test_phase2(sharedatadir):
 @mark.asyncio
 async def test_asynchronous_mixing(sharedatadir):
     from honeybadgermpc.passive import Field
-    import honeybadgermpc.apps.shuffle.powermixing as pm
+    import apps.shuffle.powermixing as pm
 
     N, t, k = 3, 1, 2
     a_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
