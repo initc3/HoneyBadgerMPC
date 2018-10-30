@@ -6,13 +6,15 @@ import struct
 import socket
 from .logger import BenchmarkLogger
 from .passive import PassiveMpc
+from .program_runner import ProgramRunner
 
 
 class Senders(object):
-    def __init__(self, queues, config):
+    def __init__(self, queues, config, nodeid):
         self.queues = queues
         self.config = config
         self.totalBytesSent = 0
+        self.benchlogger = BenchmarkLogger.get(nodeid)
 
     async def connect(self):
         # Setup all connections first before sending messages
@@ -59,7 +61,9 @@ class Senders(object):
                     writer.close()
                     await writer.wait_closed()
                     break
-                # print('SEND %8s [%2d -> %s]' % (msg[1][0], msg[0], recvid))
+                # print('[%2d] SEND %8s [%2d -> %s]' % (
+                #     msg[0], msg[1][1][0], msg[1][0], recvid
+                # ))
                 data = pickle.dumps(msg)
                 padded_msg = struct.pack('>I', len(data)) + data
                 self.totalBytesSent += len(padded_msg)
@@ -75,15 +79,20 @@ class Senders(object):
     def close(self):
         for q in self.queues:
             q.put_nowait(None)
-        benchmarkLogger.info("Total bytes sent out: %d", self.totalBytesSent)
+        self.benchlogger.info("Total bytes sent out: %d", self.totalBytesSent)
 
 
 class Listener(object):
-    def __init__(self, q, port):
-        self.q = q
+    def __init__(self, port):
+        self.queues = {}
+        self.tasks = []
         serverFuture = asyncio.start_server(self.handle_client, "", port)
         self.serverTask = asyncio.ensure_future(serverFuture)
-        self.tasks = []
+
+    def getProgramQueue(self, pid):
+        assert pid not in self.queues
+        self.queues[pid] = asyncio.Queue()
+        return self.queues[pid]
 
     async def handle_client(self, reader, writer):
         self.tasks.append(asyncio.current_task())
@@ -96,9 +105,9 @@ class Listener(object):
             received_raw_msg = await self.recvall(reader, msglen)
             if received_raw_msg is None:
                 break
-            received_msg = pickle.loads(received_raw_msg)
+            pid, received_msg = pickle.loads(received_raw_msg)
             # print('RECV %8s [from %2d]' % (received_msg[1][0], received_msg[0]))
-            await self.q.put(received_msg)
+            await self.queues[pid].put(received_msg)
 
     async def recvall(self, reader, n):
         # Helper function to recv n bytes or return None if EOF is hit
@@ -110,8 +119,8 @@ class Listener(object):
             data += packet
         return data
 
-    async def getMessage(self):
-        return await self.q.get()
+    async def getMessage(self, pid):
+        return await self.queues[pid].get()
 
     async def close(self):
         server = await self.serverTask
@@ -127,52 +136,52 @@ class NodeDetails(object):
         self.port = port
 
 
-def setup_sockets(config, n, id):
-    senderQueues = [asyncio.Queue() for _ in range(n)]
-    sender = Senders(senderQueues, config)
-    listenerQueue = asyncio.Queue()
-    listener = Listener(listenerQueue, config[id].port)
+class ProcessProgramRunner(ProgramRunner):
+    def __init__(self, config, N, t, nodeid):
+        self.config = config
+        self.N, self.t, self.nodeid, self.pid = N, t, nodeid, 0
+        self.senders = Senders([asyncio.Queue() for _ in range(N)], config, nodeid)
+        self.listener = Listener(config[nodeid].port)
+        self.programs = []
 
-    def makeSend(i):
-        def _send(j, o):
-            # print('SEND %8s [%2d -> %2d]' % (o[0], i, j))
-            if i == j:
-                # If attempting to send the message to yourself
-                # then skip the network stack.
-                listenerQueue.put_nowait((i, o))
-            else:
-                senderQueues[j].put_nowait((i, o))
+    def getSendAndRecv(self):
+        listenerQueue = self.listener.getProgramQueue(self.pid)
 
-        return _send
+        def makeSend(i, pid):
+            def _send(j, o):
+                if i == j:
+                    # If attempting to send the message to yourself
+                    # then skip the network stack.
+                    # print('[%2d] SEND %8s [%2d -> %2d]' % (pid, o[0], i, j))
+                    listenerQueue.put_nowait((i, o))
+                else:
+                    self.senders.queues[j].put_nowait((pid, (i, o)))
+            return _send
 
-    def makeRecv(j):
-        async def _recv():
-            (i, o) = await listener.getMessage()
-            # print('RECV %8s [%2d -> %2d]' % (o[0], i, j))
-            return (i, o)
-        return _recv
+        def makeRecv(j, pid):
+            async def _recv():
+                (i, o) = await self.listener.getMessage(pid)
+                # print('[%2d] RECV %8s [%2d -> %2d]' % (pid, o[0], i, j))
+                return (i, o)
+            return _recv
 
-    return (makeSend(id), makeRecv(id), sender, listener)
+        return makeSend(self.nodeid, self.pid), makeRecv(self.nodeid, self.pid)
 
+    def add(self, program):
+        send, recv = self.getSendAndRecv()
+        self.pid += 1
+        context = PassiveMpc('sid', N, t, self.nodeid, self.pid, send, recv, program)
+        self.programs.append(asyncio.ensure_future(context._run()))
+        return send, recv
 
-async def runProgramAsProcesses(program, config, t, id):
-
-    send, recv, sender, listener = setup_sockets(config, len(config), id)
-    # Need to give time to the listener coroutine to start
-    #  or else the sender will get a connection refused.
-
-    # XXX HACK! Increase wait time. Must find better way if possible -- e.g:
-    # try/except retry logic ...
-    await asyncio.sleep(2)
-    await sender.connect()
-    await asyncio.sleep(1)
-    context = PassiveMpc('sid', N, t, id, send, recv, program)
-    results = await asyncio.ensure_future(context._run())
-    await asyncio.sleep(1)
-    sender.close()
-    await listener.close()
-    await asyncio.sleep(1)
-    return results
+    async def join(self):
+        await asyncio.sleep(1)
+        await self.senders.connect()
+        results = await asyncio.gather(*self.programs)
+        self.senders.close()
+        await asyncio.sleep(1)
+        await self.listener.close()
+        return results
 
 
 if __name__ == "__main__":
@@ -200,7 +209,6 @@ if __name__ == "__main__":
                                  ' or a config file must be given as second argument.')
 
     nodeid = int(nodeid)
-    benchmarkLogger = BenchmarkLogger.get(nodeid)
     config_dict = load_config(configfile)
     N = config_dict['N']
     t = config_dict['t']
@@ -209,20 +217,23 @@ if __name__ == "__main__":
         for peerid, addrinfo in config_dict['peers'].items()
     }
 
-    # Only one party needs to generate the initial shares
-    if not config_dict['skipPreprocessing'] and nodeid == 0:
-        print('Generating random shares of zero in sharedata/')
-        generate_test_zeros('sharedata/test_zeros', 1000, N, t)
-        print('Generating random shares of triples in sharedata/')
-        generate_test_triples('sharedata/test_triples', 1000, N, t)
-
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        loop.run_until_complete(
-            runProgramAsProcesses(test_prog1, network_info, t, nodeid))
-        loop.run_until_complete(
-            runProgramAsProcesses(test_prog2, network_info, t, nodeid))
+        if not config_dict['skipPreprocessing']:
+            # Only one party needs to generate the initial shares
+            if nodeid == 0:
+                os.makedirs("sharedata", exist_ok=True)
+                print('Generating random shares of zero in sharedata/')
+                generate_test_zeros('sharedata/test_zeros', 1000, N, t)
+                print('Generating random shares of triples in sharedata/')
+                generate_test_triples('sharedata/test_triples', 1000, N, t)
+            else:
+                loop.run_until_complete(asyncio.sleep(1))
+        programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
+        programRunner.add(test_prog1)
+        programRunner.add(test_prog2)
+        loop.run_until_complete(programRunner.join())
     finally:
         loop.close()

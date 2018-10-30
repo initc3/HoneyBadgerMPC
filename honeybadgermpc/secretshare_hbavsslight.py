@@ -435,7 +435,9 @@ async def rbc_and_send(sid, pid, n, t, k, ignoreme, receive, send):
 # Uses the same configuration format as hbmpc
 
 async def runHBAVSSLight(config, N, t, id):
-    send, recv, sender, listener = setup_sockets(config, N+1, id)
+    programRunner = ProcessProgramRunner(config, N+1, t, id)
+    sender, listener = programRunner.senders, programRunner.listener
+    send, recv = programRunner.getSendAndRecv()
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
 
@@ -506,7 +508,7 @@ if __name__ == "__main__":
     import sys
     from .exceptions import ConfigurationError
     from .config import load_config
-    from .ipc import setup_sockets, NodeDetails
+    from .ipc import NodeDetails, ProcessProgramRunner
 
     configfile = os.environ.get('HBMPC_CONFIG')
     nodeid = os.environ.get('HBMPC_NODE_ID')
