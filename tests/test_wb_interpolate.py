@@ -21,13 +21,13 @@ def test_decoding():
     assert(decoded == integerMessage)
 
     # Corrupt with maximum number of erasures:
-    cMax = n - t - 1
+    cMax = n - 2 * t - 1
     corrupted = corrupt(encoded, numErrors=0, numNones=cMax)
     coeffs = dec(corrupted, debug=False)
     assert coeffs == integerMessage
 
     # Corrupt with maximum number of errors:
-    eMax = (n - t - 1) // 2
+    eMax = (n - 2 * t - 1) // 2
     corrupted = corrupt(encoded, numErrors=eMax, numNones=0)
     coeffs = dec(corrupted, debug=False)
     assert coeffs == integerMessage
