@@ -129,11 +129,11 @@ def makeEncoderDecoder(n, k, p, omega=None):
     def decode(encodedMessage, debug=False):
         assert(len(encodedMessage) == n)
         c = sum(m is None for m in encodedMessage)  # number of erasures
-        assert(t + 1 + c <= n)
-        e = (n - c - t - 1) // 2  # number of errors to correct
+        assert(2*t + 1 + c <= n)
+        e = (n - c - (2 * t + 1))  # number of errors to correct
 
         if debug:
-            print('n:', n, 'k:', k, 't:', t)
+            print('n:', n, 'k:', k, 't:', t, 'c:', c)
             print('decoding with e:', e)
             print('decoding with c:', c)
 
