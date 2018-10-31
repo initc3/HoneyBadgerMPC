@@ -57,18 +57,26 @@ def polynomialsOver(field):
                 vector.append(reduce(operator.mul, factors))
             return sum(map(operator.mul, ys, vector))
 
+        _lagrangeCache = {}  # Cache lagrange polynomials
+
         @classmethod
         def interpolate(cls, shares):
-            X = cls([0, 1])  # This is the polynomial f(x) = x
-            ONE = cls([1])  # This is the polynomial f(x) = 1
+            X = cls([field(0), field(1)])  # This is the polynomial f(x) = x
+            ONE = cls([field(1)])  # This is the polynomial f(x) = 1
             xs, ys = zip(*shares)
 
             def lagrange(xi):
+                # Let's cache lagrange values
+                if (xs, xi) in cls._lagrangeCache:
+                    return cls._lagrangeCache[(xs, xi)]
+
                 def mul(a, b): return a*b
                 num = reduce(mul, [X - cls([xj])
                                    for xj in xs if xj != xi], ONE)
                 den = reduce(mul, [xi - xj for xj in xs if xj != xi], field(1))
-                return num * cls([1 / den])
+                p = num * cls([1 / den])
+                cls._lagrangeCache[(xs, xi)] = p
+                return p
             f = cls([0])
             for xi, yi in zip(xs, ys):
                 pi = lagrange(xi)
