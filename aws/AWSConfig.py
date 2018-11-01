@@ -11,11 +11,13 @@ class RegionConfig(object):
 
 
 class MPCConfig(object):
-    def __init__(self, command, t, port, numTriples):
+    def __init__(self, command, t, k, delta, port, numTriples):
         self.COMMAND = command
         self.T = t
         self.PORT = port
         self.NUM_TRIPLES = numTriples
+        self.K = k
+        self.DELTA = delta
 
 
 class AwsConfig:
@@ -25,6 +27,8 @@ class AwsConfig:
     MPC_CONFIG = MPCConfig(
         mpcConfig["command"],
         mpcConfig["t"],
+        mpcConfig["k"],
+        mpcConfig["delta"],
         mpcConfig["port"],
         mpcConfig["num_triples"]
     )
