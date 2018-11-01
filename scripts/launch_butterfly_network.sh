@@ -8,10 +8,10 @@
 """
 
 CMD="python -m apps.shuffle.butterfly_network"
-CONFIG_PATH=conf/ipc.network.local
+CONFIG_PATH=conf/ipc.network.local/hbmpc.ini
 set -x
-tmux new-session     "${CMD} 0 ${CONFIG_PATH}/hbmpc.ini; sh" \; \
-     splitw -h -p 50 "${CMD} 1 ${CONFIG_PATH}/hbmpc.ini; sh" \; \
-     splitw -v -p 50 "${CMD} 2 ${CONFIG_PATH}/hbmpc.ini; sh" \; \
+tmux new-session     "${CMD} 0 ${CONFIG_PATH}; sh" \; \
+     splitw -h -p 50 "${CMD} 1 ${CONFIG_PATH}; sh" \; \
+     splitw -v -p 50 "${CMD} 2 ${CONFIG_PATH}; sh" \; \
      selectp -t 0 \; \
-     splitw -v -p 50 "${CMD} 3 ${CONFIG_PATH}/hbmpc.ini; sh"
+     splitw -v -p 50 "${CMD} 3 ${CONFIG_PATH}; sh"
