@@ -153,37 +153,61 @@ if __name__ == "__main__":
     import sys
     from honeybadgermpc.config import load_config
     from honeybadgermpc.ipc import NodeDetails
+    from honeybadgermpc.exceptions import ConfigurationError
 
-    nodeid = int(sys.argv[1])
-    configfile = sys.argv[2]
+    configfile = os.environ.get('HBMPC_CONFIG')
+    nodeid = os.environ.get('HBMPC_NODE_ID')
+    runid = os.environ.get('HBMPC_RUN_ID')
+
+    # override configfile if passed to command
+    try:
+        nodeid = sys.argv[1]
+        configfile = sys.argv[2]
+        runid = sys.argv[3]
+    except IndexError:
+        pass
+
+    if not nodeid:
+        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
+                                 ' or a node id must be given as first argument.')
+
+    if not configfile:
+        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
+                                 ' or a config file must be given as second argument.')
+
+    if not runid:
+        raise ConfigurationError('Environment variable `HBMPC_RUN_ID` must be set'
+                                 ' or a config file must be given as third argument.')
+
     config_dict = load_config(configfile)
-
+    nodeid = int(nodeid)
     N = config_dict['N']
     t = config_dict['t']
+    k = config_dict['k']
 
     network_info = {
         int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
         for peerid, addrinfo in config_dict['peers'].items()
     }
 
-    # Need to keep these fixed when running on processes.
-    k = 4
-    a_s = [Field(i) for i in range(100+k, 100, -1)]
-    b_s = [Field(i) for i in range(10, 10+k)]
-    runid = "82d7c0b8040f4ca1b3ff6b9d27888fef"
-
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        if nodeid == 0:
-            os.makedirs("sharedata/", exist_ok=True)
-            loop.run_until_complete(runCommandSync("rm -f sharedata/**"))
-            for i, a in enumerate(a_s):
-                batchid = f"{runid}_{i}"
-                generate_test_powers(f"{powersPrefix}_{batchid}", a, b_s[i], k, N, t)
-        else:
-            loop.run_until_complete(asyncio.sleep(1))
+        if not config_dict['skipPreprocessing']:
+            # Need to keep these fixed when running on processes.
+            k = 4
+            a_s = [Field(i) for i in range(100+k, 100, -1)]
+            b_s = [Field(i) for i in range(10, 10+k)]
+
+            if nodeid == 0:
+                os.makedirs("sharedata/", exist_ok=True)
+                loop.run_until_complete(runCommandSync("rm -f sharedata/**"))
+                for i, a in enumerate(a_s):
+                    batchid = f"{runid}_{i}"
+                    generate_test_powers(f"{powersPrefix}_{batchid}", a, b_s[i], k, N, t)
+            else:
+                loop.run_until_complete(asyncio.sleep(1))
         loop.run_until_complete(
             asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid)
         )

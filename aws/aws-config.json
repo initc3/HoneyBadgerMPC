@@ -2,7 +2,9 @@
     "mpc" : {
         "command": "python -m honeybadgermpc.ipc",
         "t": 1,
+        "k": 8,
         "port": 7000,
+        "delta": -999,
         "num_triples": 1000
     },
 

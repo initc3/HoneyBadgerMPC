@@ -13,6 +13,8 @@ code-block:: python
     {
         'N': 4,
         't': 1,
+        'k': 4,
+        'delta': -999,
         'skipPreprocessing': False,
         'peers': {
             '0': hbmpc_node_0:23264,
@@ -35,6 +37,8 @@ def load_config(path):
     config = {
         'N': cfgparser.getint('general', 'N'),
         't': cfgparser.getint('general', 't'),
+        'k': cfgparser.getint('general', 'k'),
+        'delta': cfgparser.getint('general', 'delta'),
         'peers': dict(cfgparser.items('peers')),
         'skipPreprocessing': cfgparser.getboolean('general', 'skipPreprocessing')
     }
