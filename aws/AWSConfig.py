@@ -11,13 +11,14 @@ class RegionConfig(object):
 
 
 class MPCConfig(object):
-    def __init__(self, command, t, k, delta, port, numTriples):
+    def __init__(self, command, t, k, delta, port, numTriples, n):
         self.COMMAND = command
         self.T = t
         self.PORT = port
         self.NUM_TRIPLES = numTriples
         self.K = k
         self.DELTA = delta
+        self.n = n
 
 
 class AwsConfig:
@@ -30,7 +31,8 @@ class AwsConfig:
         mpcConfig["k"],
         mpcConfig["delta"],
         mpcConfig["port"],
-        mpcConfig["num_triples"]
+        mpcConfig["num_triples"],
+        mpcConfig["n"]
     )
 
     awsconfig = config["aws"]
