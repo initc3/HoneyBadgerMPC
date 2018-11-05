@@ -5,6 +5,7 @@ import os
 import pickle
 import asyncio
 from asyncio import Queue
+from .logger import BenchmarkLogger
 
 
 # secretshare uses reliable broadcast as a sub protocol
@@ -218,6 +219,8 @@ class HbAvssDealer:
         # [c       x        x^2        ...  x^t]
         # This is structured so that t+1 points are needed to reconstruct the polynomial
         time2 = os.times()
+        nodeid = os.environ.get('HBMPC_NODE_ID')
+        self.benchmarkLogger = BenchmarkLogger.get(nodeid)
         (t, n, crs, participantids, participantkeys, dealerid, sid) = publicparams
         (secret, pid) = privateparams
         assert dealerid == pid, "HbAvssDealer called, but wrong pid"
@@ -241,7 +244,12 @@ class HbAvssDealer:
                 str(sharedkeys[j]).encode('utf-8'), witnesses[j])
         message = pickle.dumps(
             (c, encryptedwitnesses, encryptedshares, crs[0] ** sk))
-        print("Dealer Time: " + str(os.times()[4] - time2[4]))
+
+        dealer_time = str(os.times()[4] - time2[4])
+        print("Dealer Time: " + dealer_time)
+        # benchmarking: time taken by dealer
+        self.benchmarkLogger.info("AVSS dealer time:  " + dealer_time)
+
         self._task = reliablebroadcast(
             sid, pid=pid, N=n+1, f=t, leader=pid, input=message, receive=recv, send=send)
 
@@ -263,6 +271,9 @@ class HbAvssRecipient:
         (self.t, self.n, crs, self.participantids,
          self.participantkeys, self.dealerid, self.sid) = publicparams
         self.reconstruction = reconstruction
+        self.time2 = os.times()
+        nodeid = os.environ.get('HBMPC_NODE_ID')
+        self.benchmarkLogger = BenchmarkLogger.get(nodeid)
         (self.pid, self.sk) = privateparams
         assert self.pid != self.dealerid, "HbAvssRecipient, but pid is dealerid"
         (self.sharedkey, self.rbfinished, self.finished, self.sendrecs,
@@ -300,13 +311,19 @@ class HbAvssRecipient:
         if msg[1] == "send":
             self.rbfinished = True
             # print(msg)
-
+            decrypt_start_time = os.times()
+            self.benchmarkLogger.info("Begin Decryption")
+            print("Begin Decryption")
             message = pickle.loads(msg[2])
             (self.commit, self.encwitnesses, self.encshares, pk_d) = message
             self.sharedkey = str(pk_d**self.sk).encode('utf-8')
             self.share = decrypt(self.sharedkey, self.encshares[self.pid])
             self.witness = decrypt(self.sharedkey, self.encwitnesses[self.pid])
             if self.pc.verify_eval(self.commit, self.pid+1, self.share, self.witness):
+                decryption_time = str(os.times()[4] - decrypt_start_time[4])
+                print("decryption time : " + decryption_time)
+                self.benchmarkLogger.info("decryption time :  " + decryption_time)
+
                 self.send_ok_msgs()
                 self.sendrecs = True
             else:
@@ -326,7 +343,13 @@ class HbAvssRecipient:
             if not self.sharevalid and self.okcount >= 2*self.t + 1:
                 self.sharevalid = True
                 self.output = self.share
+
                 print('Output available', self.output)
+                recipient_time = str(os.times()[4] - self.time2[4])
+                print("Recipient Time: " + recipient_time)
+                # benchmarking: time taken by dealer
+                self.benchmarkLogger.info("AVSS recipient time:  " + recipient_time)
+
                 # print "WTF!"
                 # print "./shares/"+str(self.pid)+"/"+str(self.sid)
                 # f_raw = open( "./shares/"+str(self.pid)+"/"+str(self.sid), "w+" )

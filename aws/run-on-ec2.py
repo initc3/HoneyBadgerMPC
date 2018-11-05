@@ -37,6 +37,22 @@ def runCommandsOnInstances(
         thread.join()
 
 
+def getHbAVSSCommands(s3Manager, instanceIps, instanceIds):
+    N, t = AwsConfig.MPC_CONFIG.n, AwsConfig.MPC_CONFIG.T
+    port = AwsConfig.MPC_CONFIG.PORT
+    instanceConfig = getInstanceConfig(N, t, port, instanceIps)
+    print(f">>> Uploading config file to S3 in '{AwsConfig.BUCKET_NAME}'<<<")
+    instanceConfigUrl = s3Manager.uploadConfig(instanceConfig)
+    print(">>> Config file upload complete. <<<")
+    setupCommands = [[id, [
+            "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
+            "mkdir -p config",
+            "cd config; curl -sSO %s" % (instanceConfigUrl),
+            "mkdir -p benchmark",
+        ]] for i, id in enumerate(instanceIds)]
+    return AwsConfig.MPC_CONFIG.COMMAND, setupCommands
+
+
 def getIpcCommands(s3Manager, instanceIps, instanceIds):
     N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     port = AwsConfig.MPC_CONFIG.PORT
@@ -154,6 +170,10 @@ if __name__ == "__main__":
         )
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("butterfly_network"):
         mpcCommand, setupCommands = getButterflyNetworkCommands(
+            s3Manager, instanceIps, instanceIds
+        )
+    elif AwsConfig.MPC_CONFIG.COMMAND.endswith("secretshare_hbavsslight"):
+        mpcCommand, setupCommands = getHbAVSSCommands(
             s3Manager, instanceIps, instanceIds
         )
     else:

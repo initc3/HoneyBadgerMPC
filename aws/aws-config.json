@@ -1,35 +1,30 @@
 {
     "mpc" : {
-        "command": "python -m honeybadgermpc.ipc",
+        "command": "python -m honeybadgermpc.secretshare_hbavsslight",
         "t": 1,
+        "n": 4,
         "k": 8,
         "port": 7000,
         "delta": -999,
-        "num_triples": 1000
+        "num_triples": 1000,
+        "skipPreProcessing" : true
     },
-
+    
     "aws":{
         "credentials_file_path": "./aws/credentials.secret.json",
         "setup_file_path": "./aws/setup.sh",
 
         "region":{
-            "us-east-1": {
-                "vm_count": 2,
-                "security_group_ids": ["sg-0faaf975"],
-                "image_id": "ami-0ac019f4fcb7cb7e6",
-                "key_file_path": "./aws/samarth.pem",
-                "key_name": "samarth"
-            },
             "us-east-2": {
-                "vm_count": 2,
+                "vm_count": 5,
                 "security_group_ids": ["sg-f211d79b"],
                 "image_id": "ami-0f65671a86f061fcd",
-                "key_file_path": "./aws/samarth-us-east-2.pem",
-                "key_name": "samarth-us-east-2"
+                "key_file_path": "./aws/rahul-us-east.pem",
+                "key_name": "rahul-us-east"
             }
         },
 
-        "vm_name": "samarth-vms",
+        "vm_name": "rahul-vms",
 
         "instance_type": "t2.micro",
         "instance_user_name": "ubuntu",
@@ -38,6 +33,6 @@
     },
 
     "docker": {
-        "image_path": "smkuls/honeybadgermpc:latest"
+        "image_path": "rahulsm2/honeybadgermpc:latest"
     }
 }
