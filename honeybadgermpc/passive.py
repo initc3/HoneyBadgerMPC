@@ -206,7 +206,7 @@ def shareInContext(context):
 
         # @typecheck(Share)
         # TODO
-        def __mul__(self, other): raise NotImplemented
+        def __mul__(self, other): raise NotImplementedError
 
         def __str__(self): return '{%d}' % (self.v)
 
