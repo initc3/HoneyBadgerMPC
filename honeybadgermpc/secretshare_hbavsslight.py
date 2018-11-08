@@ -460,7 +460,7 @@ async def rbc_and_send(sid, pid, n, t, k, ignoreme, receive, send):
 async def runHBAVSSLight(config, N, t, id):
     programRunner = ProcessProgramRunner(config, N+1, t, id)
     sender, listener = programRunner.senders, programRunner.listener
-    send, recv = programRunner.getSendAndRecv()
+    send, recv = programRunner.getSendAndRecv(0)
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
 
@@ -497,7 +497,7 @@ async def runHBAVSSLight(config, N, t, id):
     # Wait for results and clean up
     await thread.run()
     await asyncio.sleep(2)
-    sender.close()
+    await sender.close()
     await listener.close()
     await asyncio.sleep(1)
 
