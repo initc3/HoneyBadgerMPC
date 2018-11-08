@@ -12,6 +12,12 @@ oneminusoneprefix = f'{sharedatadir}/test_one_minusone'
 filecount = 0
 
 
+async def wait_for_preprocessing():
+    while not os.path.exists(f"{sharedatadir}/READY"):
+        print(f"waiting for preprocessing {sharedatadir}/READY")
+        await asyncio.sleep(1)
+
+
 async def multiplyShares(x, y, a, b, ab):
     D = (x - a).open()
     E = (y - b).open()
@@ -173,12 +179,15 @@ if __name__ == "__main__":
                 generate_test_triples(triplesprefix, 1000, N, t)
                 print('Generating random shares of 1/-1 in sharedata/')
                 generate_random_shares(oneminusoneprefix, k * int(log(k, 2)), N, t)
+                os.mknod(f"{sharedatadir}/READY")
             else:
-                loop.run_until_complete(asyncio.sleep(1))
+                loop.run_until_complete(wait_for_preprocessing())
 
         programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
-        programRunner.add(butterflyNetwork, k=k, delta=delta, inputs=inputs)
+        loop.run_until_complete(programRunner.start())
+        programRunner.add(0, butterflyNetwork, k=k, delta=delta, inputs=inputs)
         loop.run_until_complete(programRunner.join())
+        loop.run_until_complete(programRunner.close())
     finally:
         loop.close()
     # runButterlyNetworkInTasks()
