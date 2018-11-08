@@ -159,6 +159,8 @@ class PassiveMpc(object):
                 assert shareid not in self._sharearray_buffers
 
                 # Assert that there is not an element already
+                if buf[shareid].done():
+                    print('redundant share:', j, (tag, shareid))
                 assert not buf[shareid].done(
                 ), "Received a redundant share: %o" % shareid
                 buf[shareid].set_result(share)

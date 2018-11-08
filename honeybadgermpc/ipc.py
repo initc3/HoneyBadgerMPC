@@ -9,12 +9,30 @@ from .passive import PassiveMpc
 from .program_runner import ProgramRunner
 
 
+async def wait_for_preprocessing():
+    while not os.path.exists("sharedata/READY"):
+        print(f"waiting for preprocessing sharedata/READY")
+        await asyncio.sleep(1)
+
+
+async def robust_open_connection(host, port):
+    backoff = 1
+    for _ in range(4):
+        try:
+            return await asyncio.open_connection(host, port)
+        except (ConnectionRefusedError, ConnectionResetError):
+            print('backing off:', backoff, 'seconds')
+            await asyncio.sleep(backoff)
+            backoff *= 2
+
+
 class Senders(object):
     def __init__(self, queues, config, nodeid):
         self.queues = queues
         self.config = config
         self.totalBytesSent = 0
         self.benchlogger = BenchmarkLogger.get(nodeid)
+        self.tasks = []
 
     async def connect(self):
         # Setup all connections first before sending messages
@@ -30,7 +48,8 @@ class Senders(object):
         while True:
             try:
                 addrinfo_list = [
-                    socket.getaddrinfo(self.config[i].ip, self.config[i].port)[0][4]
+                    socket.getaddrinfo(
+                        self.config[i].ip, self.config[i].port)[0][4]
                     for i in range(len(self.queues))
                 ]
             except socket.gaierror:
@@ -39,10 +58,10 @@ class Senders(object):
                 break
         # XXX END temporary hack
 
-        streams = [asyncio.open_connection(
-                addrinfo_list[i][0],
-                addrinfo_list[i][1],
-            ) for i in range(len(self.queues))]
+        streams = [robust_open_connection(
+            addrinfo_list[i][0],
+            addrinfo_list[i][1],
+        ) for i in range(len(self.queues))]
         streams = await asyncio.gather(*streams)
         writers = [stream[1] for stream in streams]
 
@@ -50,7 +69,9 @@ class Senders(object):
         # This is to ensure that messages are delivered in the correct order
         for i, q in enumerate(self.queues):
             recvid = "%s:%d" % (self.config[i].ip, self.config[i].port)
-            asyncio.ensure_future(self.process_queue(writers[i], q, recvid))
+            self.tasks.append(
+                asyncio.ensure_future(self.process_queue(writers[i], q, recvid))
+            )
 
     async def process_queue(self, writer, q, recvid):
         try:
@@ -62,13 +83,14 @@ class Senders(object):
                     await writer.wait_closed()
                     break
                 # print('[%2d] SEND %8s [%2d -> %s]' % (
-                #     msg[0], msg[1][1][0], msg[1][0], recvid
+                #      msg[0], msg[1][1][0], msg[1][0], recvid
                 # ))
                 data = pickle.dumps(msg)
                 padded_msg = struct.pack('>I', len(data)) + data
                 self.totalBytesSent += len(padded_msg)
                 writer.write(padded_msg)
                 await writer.drain()
+                await asyncio.sleep(0.001)
         except ConnectionResetError:
             print("WARNING: Connection with peer [%s] reset." % recvid)
         except ConnectionRefusedError:
@@ -76,9 +98,10 @@ class Senders(object):
         except BrokenPipeError:
             print("WARNING: Connection with peer [%s] broken." % recvid)
 
-    def close(self):
+    async def close(self):
         for q in self.queues:
             q.put_nowait(None)
+        await asyncio.gather(*self.tasks)
         self.benchlogger.info("Total bytes sent out: %d", self.totalBytesSent)
 
 
@@ -89,13 +112,26 @@ class Listener(object):
         serverFuture = asyncio.start_server(self.handle_client, "", port)
         self.serverTask = asyncio.ensure_future(serverFuture)
 
-    def getProgramQueue(self, pid):
-        assert pid not in self.queues
-        self.queues[pid] = asyncio.Queue()
-        return self.queues[pid]
+    def getProgramQueue(self, sid):
+        assert sid not in self.queues
+        self.queues[sid] = asyncio.Queue()
+        return self.queues[sid]
+
+    def clearAllProgramQueues(self):
+        self.queues = {}
 
     async def handle_client(self, reader, writer):
-        self.tasks.append(asyncio.current_task())
+        task = asyncio.current_task()
+        self.tasks.append(task)
+
+        def cb(future):
+            try:
+                future.result()
+            except asyncio.CancelledError:
+                print("[WARNING] handle_client was cancelled.")
+                return
+        task.add_done_callback(cb)
+
         # print("Received new connection", writer.get_extra_info("peername"))
         while True:
             raw_msglen = await self.recvall(reader, 4)
@@ -105,9 +141,14 @@ class Listener(object):
             received_raw_msg = await self.recvall(reader, msglen)
             if received_raw_msg is None:
                 break
-            pid, received_msg = pickle.loads(received_raw_msg)
-            # print('RECV %8s [from %2d]' % (received_msg[1][0], received_msg[0]))
-            await self.queues[pid].put(received_msg)
+            sid, received_msg = pickle.loads(received_raw_msg)
+            # print(
+            #     '[%d] RECV %8s [from %2d]' % (sid, received_msg[1][0], received_msg[0])
+            # )
+            while sid not in self.queues:
+                # Wait for queue to get set up
+                await asyncio.sleep(1)
+            await self.queues[sid].put(received_msg)
 
     async def recvall(self, reader, n):
         # Helper function to recv n bytes or return None if EOF is hit
@@ -119,8 +160,8 @@ class Listener(object):
             data += packet
         return data
 
-    async def getMessage(self, pid):
-        return await self.queues[pid].get()
+    async def getMessage(self, sid):
+        return await self.queues[sid].get()
 
     async def close(self):
         server = await self.serverTask
@@ -139,51 +180,59 @@ class NodeDetails(object):
 class ProcessProgramRunner(ProgramRunner):
     def __init__(self, config, N, t, nodeid):
         self.config = config
-        self.N, self.t, self.nodeid, self.pid = N, t, nodeid, 0
+        self.N, self.t, self.nodeid = N, t, nodeid
         self.senders = Senders([asyncio.Queue() for _ in range(N)], config, nodeid)
         self.listener = Listener(config[nodeid].port)
         self.programs = []
 
-    def getSendAndRecv(self):
-        listenerQueue = self.listener.getProgramQueue(self.pid)
+    def getSendAndRecv(self, sid):
+        listenerQueue = self.listener.getProgramQueue(sid)
 
-        def makeSend(i, pid):
+        def makeSend(i, sid):
             def _send(j, o):
+                # print('[%s] SEND %8s [%2d -> %2d]' % (sid, o[1], i, j))
                 if i == j:
                     # If attempting to send the message to yourself
                     # then skip the network stack.
-                    # print('[%2d] SEND %8s [%2d -> %2d]' % (pid, o[0], i, j))
                     listenerQueue.put_nowait((i, o))
                 else:
-                    self.senders.queues[j].put_nowait((pid, (i, o)))
+                    self.senders.queues[j].put_nowait((sid, (i, o)))
             return _send
 
-        def makeRecv(j, pid):
+        def makeRecv(j, sid):
             async def _recv():
-                (i, o) = await self.listener.getMessage(pid)
-                # print('[%2d] RECV %8s [%2d -> %2d]' % (pid, o[0], i, j))
+                (i, o) = await self.listener.getMessage(sid)
+                # print('[%s] RECV %8s [%2d -> %2d]' % (sid, o[1], i, j))
                 return (i, o)
             return _recv
 
-        return makeSend(self.nodeid, self.pid), makeRecv(self.nodeid, self.pid)
+        return makeSend(self.nodeid, sid), makeRecv(self.nodeid, sid)
 
-    def add(self, program, **kwargs):
-        send, recv = self.getSendAndRecv()
-        self.pid += 1
+    def add(self, sid, program, **kwargs):
+        send, recv = self.getSendAndRecv(sid)
         context = PassiveMpc(
-            'sid', self.N, self.t, self.nodeid, self.pid, send, recv, program, **kwargs
+            'sid', self.N, self.t, self.nodeid, sid, send, recv, program, **kwargs
         )
         self.programs.append(asyncio.ensure_future(context._run()))
         return send, recv
 
-    async def join(self):
-        await asyncio.sleep(2)
+    async def start(self):
         await self.senders.connect()
+
+    async def join(self):
+        """
+        This method waits on all the added programs to complete.
+        Once all programs are done, it cleans up the programs and the queues.
+        """
         results = await asyncio.gather(*self.programs)
-        self.senders.close()
-        await asyncio.sleep(1)
-        await self.listener.close()
+        # Clear out all programs and queues which were using old sids
+        self.programs = []
+        self.listener.clearAllProgramQueues()
         return results
+
+    async def close(self):
+        await self.senders.close()
+        await self.listener.close()
 
 
 if __name__ == "__main__":
@@ -231,11 +280,14 @@ if __name__ == "__main__":
                 generate_test_zeros('sharedata/test_zeros', 1000, N, t)
                 print('Generating random shares of triples in sharedata/')
                 generate_test_triples('sharedata/test_triples', 1000, N, t)
+                os.mknod(f"sharedata/READY")
             else:
-                loop.run_until_complete(asyncio.sleep(1))
+                loop.run_until_complete(wait_for_preprocessing())
         programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
-        programRunner.add(test_prog1)
-        programRunner.add(test_prog2)
+        loop.run_until_complete(programRunner.start())
+        programRunner.add(1, test_prog1)
+        programRunner.add(2, test_prog2)
         loop.run_until_complete(programRunner.join())
+        loop.run_until_complete(programRunner.close())
     finally:
         loop.close()

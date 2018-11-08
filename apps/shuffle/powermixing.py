@@ -1,6 +1,7 @@
 import random
 import asyncio
 import uuid
+import os
 from honeybadgermpc.passive import write_polys, TaskProgramRunner, Field, Poly
 
 
@@ -8,6 +9,12 @@ shufflebasedir = "apps/shuffle"
 sharedatadir = "sharedata"
 powersPrefix = f"{sharedatadir}/powers"
 cppPrefix = f"{sharedatadir}/cpp-phase"
+
+
+async def wait_for_preprocessing():
+    while not os.path.exists(f"{sharedatadir}/READY"):
+        print(f"waiting for preprocessing {sharedatadir}/READY")
+        await asyncio.sleep(1)
 
 
 def generate_test_powers(prefix, a, b, k, N, t):
@@ -132,15 +139,18 @@ async def asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid):
     from .solver.solver import solve
     from honeybadgermpc.ipc import ProcessProgramRunner
 
-    pr1 = ProcessProgramRunner(network_info, N, t, nodeid)
+    programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
+    await programRunner.start()
+    sid = 0
     for i in range(k):
         batchid = f"{runid}_{i}"
-        pr1.add(prepareOneInput, k=k, batchid=batchid, runid=runid)
+        programRunner.add(sid, prepareOneInput, k=k, batchid=batchid, runid=runid)
+        sid += 1
 
-    await pr1.join()
-    pr2 = ProcessProgramRunner(network_info, N, t, nodeid)
-    pr2.add(phase3, k=k, runid=runid)
-    powerSums = (await pr2.join())[0]
+    await programRunner.join()
+    programRunner.add(sid, phase3, k=k, runid=runid)
+    powerSums = (await programRunner.join())[0]
+    await programRunner.close()
     print(f"Shares from C++ phase opened.")
     result = solve([s.value for s in powerSums])
     print(f"Equation solver completed.")
@@ -149,7 +159,6 @@ async def asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid):
 
 
 if __name__ == "__main__":
-    import os
     import sys
     from honeybadgermpc.config import load_config
     from honeybadgermpc.ipc import NodeDetails
@@ -192,22 +201,37 @@ if __name__ == "__main__":
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
+
+    def handle_async_exception(loop, ctx):
+        print('handle_async_exception:')
+        if 'exception' in ctx:
+            print('exc:', repr(ctx['exception']))
+        else:
+            print('ctx:', ctx)
+        print('msg:', ctx['message'])
+
+    loop.set_exception_handler(handle_async_exception)
     loop.set_debug(True)
     try:
         if not config_dict['skipPreprocessing']:
             # Need to keep these fixed when running on processes.
-            k = 4
-            a_s = [Field(i) for i in range(100+k, 100, -1)]
+            k = config_dict['k']
+            assert k < 1000
+            a_s = [Field(i) for i in range(1000+k, 1000, -1)]
             b_s = [Field(i) for i in range(10, 10+k)]
 
             if nodeid == 0:
                 os.makedirs("sharedata/", exist_ok=True)
-                loop.run_until_complete(runCommandSync("rm -f sharedata/**"))
+                loop.run_until_complete(
+                    runCommandSync(f"rm -f {sharedatadir}/**"))
                 for i, a in enumerate(a_s):
                     batchid = f"{runid}_{i}"
-                    generate_test_powers(f"{powersPrefix}_{batchid}", a, b_s[i], k, N, t)
+                    generate_test_powers(
+                        f"{powersPrefix}_{batchid}", a, b_s[i], k, N, t)
+                os.mknod(f"{sharedatadir}/READY")
             else:
-                loop.run_until_complete(asyncio.sleep(1))
+                loop.run_until_complete(wait_for_preprocessing())
+
         loop.run_until_complete(
             asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid)
         )
