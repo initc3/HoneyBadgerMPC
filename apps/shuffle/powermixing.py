@@ -25,7 +25,9 @@ def generate_test_powers(prefix, a, b, k, N, t):
     write_polys(prefix, Field.modulus, N, t, polys)
 
 
-async def phase1(context, k, powers_prefix, cpp_prefix):
+async def phase1(context, **kwargs):
+    k, powers_prefix = kwargs['k'], kwargs['powers_prefix']
+    cpp_prefix = kwargs['cpp_prefix']
     filename = f"{powers_prefix}-{context.myid}.share"
     shares = context.read_shares(open(filename))
     a, powers = shares[0], shares[1:]
@@ -71,7 +73,11 @@ async def runCommandSync(command, verbose=False):
 
 async def prepareOneInput(context, **kwargs):
     k, batchid, runid = kwargs['k'], kwargs['batchid'], kwargs['runid']
-    await phase1(context, k, f"{powersPrefix}_{batchid}", f"{cppPrefix}_{batchid}")
+    await phase1(
+        context,
+        k=k,
+        powers_prefix=f"{powersPrefix}_{batchid}",
+        cpp_prefix=f"{cppPrefix}_{batchid}")
     print(f"[{context.myid}] Input prepared for C++ phase.")
     await phase2(context.myid, batchid, runid, f"{cppPrefix}_{batchid}")
     print(f"[{context.myid}] C++ phase completed.")
@@ -138,16 +144,27 @@ def asynchronusMixingInTasks():
 async def asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid):
     from .solver.solver import solve
     from honeybadgermpc.ipc import ProcessProgramRunner
+    from honeybadgermpc.task_pool import TaskPool
 
     programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
     await programRunner.start()
     sid = 0
+    pool = TaskPool(256)
     for i in range(k):
         batchid = f"{runid}_{i}"
-        programRunner.add(sid, prepareOneInput, k=k, batchid=batchid, runid=runid)
+        programRunner.add(
+            sid,
+            phase1,
+            k=k,
+            powers_prefix=f"{powersPrefix}_{batchid}",
+            cpp_prefix=f"{cppPrefix}_{batchid}")
         sid += 1
 
     await programRunner.join()
+    for i in range(k):
+        batchid = f"{runid}_{i}"
+        pool.submit(phase2(nodeid, batchid, runid, f"{cppPrefix}_{batchid}"))
+    await pool.close()
     programRunner.add(sid, phase3, k=k, runid=runid)
     powerSums = (await programRunner.join())[0]
     await programRunner.close()
