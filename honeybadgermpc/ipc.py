@@ -99,8 +99,7 @@ class Senders(object):
             print("WARNING: Connection with peer [%s] broken." % recvid)
 
     async def close(self):
-        for q in self.queues:
-            q.put_nowait(None)
+        await asyncio.gather(*[q.put(None) for q in self.queues])
         await asyncio.gather(*self.tasks)
         self.benchlogger.info("Total bytes sent out: %d", self.totalBytesSent)
 
