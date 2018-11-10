@@ -12,9 +12,9 @@ polynomial
 ==========
 .. automodule:: honeybadgermpc.polynomial
 
-passive
+mpc
 =======
-.. automodule:: honeybadgermpc.passive
+.. automodule:: honeybadgermpc.mpc
 
 commonsubset
 ============

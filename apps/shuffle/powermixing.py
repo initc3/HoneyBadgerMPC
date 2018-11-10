@@ -2,7 +2,7 @@ import random
 import asyncio
 import uuid
 import os
-from honeybadgermpc.passive import write_polys, TaskProgramRunner, Field, Poly
+from honeybadgermpc.mpc import write_polys, TaskProgramRunner, Field, Poly
 
 
 shufflebasedir = "apps/shuffle"

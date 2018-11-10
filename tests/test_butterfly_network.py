@@ -7,7 +7,7 @@ import random
 @mark.asyncio
 async def test_butterfly_network(sharedatadir):
     import apps.shuffle.butterfly_network as butterfly
-    from honeybadgermpc.passive import generate_test_triples, Field, TaskProgramRunner
+    from honeybadgermpc.mpc import generate_test_triples, Field, TaskProgramRunner
 
     async def verify_output(ctx, **kwargs):
         print(kwargs)

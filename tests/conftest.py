@@ -81,7 +81,7 @@ def triples_polys(request, triples_fields, Polynomial):
 
 @fixture(params=({'N': 3, 't': 1},))
 def zeros_shares_files(request, GaloisField, zero_polys, zeros_files_prefix):
-    from honeybadgermpc.passive import write_polys
+    from honeybadgermpc.mpc import write_polys
     N = request.param['N']
     t = request.param['t']
     write_polys(zeros_files_prefix, GaloisField.modulus, N, t, zero_polys)
@@ -89,7 +89,7 @@ def zeros_shares_files(request, GaloisField, zero_polys, zeros_files_prefix):
 
 @fixture(params=({'N': 3, 't': 1},))
 def random_shares_files(request, GaloisField, random_polys, random_files_prefix):
-    from honeybadgermpc.passive import write_polys
+    from honeybadgermpc.mpc import write_polys
     N = request.param['N']
     t = request.param['t']
     write_polys(random_files_prefix, GaloisField.modulus, N, t, random_polys)
@@ -97,7 +97,7 @@ def random_shares_files(request, GaloisField, random_polys, random_files_prefix)
 
 @fixture(params=({'N': 3, 't': 1},))
 def triples_shares_files(request, GaloisField, triples_polys, triples_files_prefix):
-    from honeybadgermpc.passive import write_polys
+    from honeybadgermpc.mpc import write_polys
     N = request.param['N']
     t = request.param['t']
     write_polys(
