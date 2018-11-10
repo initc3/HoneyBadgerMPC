@@ -1,7 +1,7 @@
 import random
 from math import log
 import asyncio
-from honeybadgermpc.passive import (
+from honeybadgermpc.mpc import (
     Field, Poly, generate_test_triples, write_polys, TaskProgramRunner
 )
 

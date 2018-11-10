@@ -8,7 +8,7 @@ basedir = "sharedata"
 
 @mark.asyncio
 async def test_powers(sharedatadir):
-    from honeybadgermpc.passive import TaskProgramRunner, Field
+    from honeybadgermpc.mpc import TaskProgramRunner, Field
     import apps.shuffle.powermixing as pm
 
     async def verify_powers(context, **kwargs):
@@ -32,7 +32,7 @@ async def test_powers(sharedatadir):
 
 @mark.asyncio
 async def test_phase1(sharedatadir):
-    from honeybadgermpc.passive import TaskProgramRunner, Field
+    from honeybadgermpc.mpc import TaskProgramRunner, Field
     import apps.shuffle.powermixing as pm
 
     async def verify_phase1(context, **kwargs):
@@ -57,7 +57,7 @@ async def test_phase1(sharedatadir):
 
 @mark.asyncio
 async def test_phase2(sharedatadir):
-    from honeybadgermpc.passive import Field
+    from honeybadgermpc.mpc import Field
     import apps.shuffle.powermixing as pm
     import uuid
 
@@ -88,7 +88,7 @@ async def test_phase2(sharedatadir):
 
 @mark.asyncio
 async def test_asynchronous_mixing(sharedatadir):
-    from honeybadgermpc.passive import Field
+    from honeybadgermpc.mpc import Field
     import apps.shuffle.powermixing as pm
 
     N, t, k = 3, 1, 2

@@ -4,7 +4,7 @@ import asyncio
 
 @mark.asyncio
 async def test_triple_refinement(triples_files_prefix):
-    from honeybadgermpc.passive import TaskProgramRunner, generate_test_triples
+    from honeybadgermpc.mpc import TaskProgramRunner, generate_test_triples
     from honeybadgermpc.triple_refinement import refineTriples
 
     N, t = 7, 2

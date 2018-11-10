@@ -1,4 +1,4 @@
-from .passive import Poly, Field
+from .mpc import Poly, Field
 from .polynomial import get_omega
 import asyncio
 import itertools

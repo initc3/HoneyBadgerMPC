@@ -117,7 +117,7 @@ def getButterflyNetworkCommands(s3Manager, instanceIps, instanceIds):
 
 def getPowermixingCommands(runid, s3Manager, instanceIds, instanceIps):
     from apps.shuffle.powermixing import powersPrefix, generate_test_powers
-    from honeybadgermpc.passive import Field
+    from honeybadgermpc.mpc import Field
 
     N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     port, k = AwsConfig.MPC_CONFIG.PORT, AwsConfig.MPC_CONFIG.K
@@ -153,7 +153,7 @@ def getPowermixingCommands(runid, s3Manager, instanceIds, instanceIps):
 
 
 if __name__ == "__main__":
-    from honeybadgermpc.passive import generate_test_triples, generate_test_zeros
+    from honeybadgermpc.mpc import generate_test_triples, generate_test_zeros
 
     os.makedirs("sharedata/", exist_ok=True)
     runId = uuid.uuid4().hex
