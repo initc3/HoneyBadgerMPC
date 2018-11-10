@@ -37,7 +37,11 @@ async def test_phase1(sharedatadir):
 
     async def verify_phase1(context, **kwargs):
         a_, b_, k_ = kwargs['a'], kwargs['b'], kwargs['k']
-        await pm.phase1(context, k, f"{basedir}/test-phase1", f"{basedir}/test-cpp")
+        await pm.phase1(
+            context,
+            k=k,
+            powers_prefix=f"{basedir}/test-phase1",
+            cpp_prefix=f"{basedir}/test-cpp")
         with open(f"{basedir}/test-cpp-{context.myid}.input", "r") as f:
             assert int(f.readline()) == Field.modulus
             assert await context.Share(int(f.readline())).open() == a_.value
