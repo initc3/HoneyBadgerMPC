@@ -24,10 +24,10 @@ triples_files_prefix = 'sharedata/test_triples'
 random_files_prefix = 'sharedata/test_random'
 
 
-class PassiveMpc(object):
+class Mpc(object):
 
     def __init__(self, sid, N, t, myid, pid, send, recv, prog, **progArgs):
-        # Parameters for passive secure MPC
+        # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(N) is int and type(t) is int
         assert t < N
@@ -347,7 +347,7 @@ class TaskProgramRunner(ProgramRunner):
     def add(self, program, **kwargs):
         sends, recvs = simple_router(self.N)
         for i in range(self.N):
-            context = PassiveMpc(
+            context = Mpc(
                 'sid', self.N, self.t, i, self.pid, sends[i], recvs[i], program, **kwargs
             )
             self.tasks.append(self.loop.create_task(context._run()))

@@ -5,7 +5,7 @@ import sys
 import struct
 import socket
 from .logger import BenchmarkLogger
-from .passive import PassiveMpc
+from .mpc import Mpc
 from .program_runner import ProgramRunner
 
 
@@ -210,7 +210,7 @@ class ProcessProgramRunner(ProgramRunner):
 
     def add(self, sid, program, **kwargs):
         send, recv = self.getSendAndRecv(sid)
-        context = PassiveMpc(
+        context = Mpc(
             'sid', self.N, self.t, self.nodeid, sid, send, recv, program, **kwargs
         )
         self.programs.append(asyncio.ensure_future(context._run()))
@@ -236,8 +236,8 @@ class ProcessProgramRunner(ProgramRunner):
 
 
 if __name__ == "__main__":
-    from .passive import generate_test_zeros, generate_test_triples
-    from .passive import test_prog1, test_prog2
+    from .mpc import generate_test_zeros, generate_test_triples
+    from .mpc import test_prog1, test_prog2
     from .exceptions import ConfigurationError
     from .config import load_config
 
