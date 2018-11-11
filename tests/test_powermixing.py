@@ -37,7 +37,7 @@ async def test_phase1(sharedatadir):
 
     async def verify_phase1(context, **kwargs):
         a_, b_, k_ = kwargs['a'], kwargs['b'], kwargs['k']
-        await pm.phase1(
+        await pm.singleSecretPhase1(
             context,
             k=k,
             powers_prefix=f"{basedir}/test-phase1",

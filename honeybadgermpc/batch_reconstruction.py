@@ -2,9 +2,11 @@ import asyncio
 from .field import GF
 from .polynomial import polynomialsOver
 from .robust_reconstruction import attempt_reconstruct, robust_reconstruct
+from .logger import BenchmarkLogger
 from collections import defaultdict
 from asyncio import Queue
 from math import ceil
+from time import time
 
 
 async def waitFor(aws, to_wait):
@@ -114,6 +116,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     """
     Fp = field = GF.get(p)
     Poly = polynomialsOver(Fp)
+    benchLogger = BenchmarkLogger.get(myid)
 
     def point(i): return Fp(i+1)  # TODO: make it use omega
 
@@ -146,10 +149,12 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     for nAvailable in range(2 * t + 1, n + 1):
         data = await waitFor(dataR1, nAvailable)
         # print('data R1:', data)
+        stime = time()
         reconsR2 = attempt_reconstruct_batch(data, field, n, t, point)
         if reconsR2 is None:
             # TODO: return partial success, so we can skip these next turn
             continue
+        benchLogger.info(f"[BatchReconstruct] P1: {time() - stime}")
         break
     assert nAvailable <= n, "reconstruction failed"
     # print('reconsR2:', reconsR2)
@@ -162,10 +167,12 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     # Step 4: Attempt to reconstruct R2
     for nAvailable in range(nAvailable, n + 1):
         data = await waitFor(dataR2, nAvailable)
+        stime = time()
         reconsP = attempt_reconstruct_batch(data, field, n, t, point)
         if reconsP is None:
             # TODO: return partial success, so we can skip these next turn
             continue
+        benchLogger.info(f"[BatchReconstruct] P2: {time() - stime}")
         break
     assert nAvailable <= n, "reconstruction failed"
     assert len(reconsP) >= len(elem_batches)
