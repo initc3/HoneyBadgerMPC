@@ -2,7 +2,9 @@ import random
 import asyncio
 import uuid
 import os
+from time import time
 from honeybadgermpc.mpc import write_polys, TaskProgramRunner, Field, Poly
+from honeybadgermpc.logger import BenchmarkLogger
 
 
 shufflebasedir = "apps/shuffle"
@@ -25,7 +27,7 @@ def generate_test_powers(prefix, a, b, k, N, t):
     write_polys(prefix, Field.modulus, N, t, polys)
 
 
-async def phase1(context, **kwargs):
+async def singleSecretPhase1(context, **kwargs):
     k, powers_prefix = kwargs['k'], kwargs['powers_prefix']
     cpp_prefix = kwargs['cpp_prefix']
     filename = f"{powers_prefix}-{context.myid}.share"
@@ -41,6 +43,40 @@ async def phase1(context, **kwargs):
         print(k, file=f)
         for power in powers:
             print(power.v.value, file=f)
+
+
+async def allSecretsPhase1(context, **kwargs):
+    k, runid = kwargs['k'], kwargs['runid']
+    aS, aMinusBShares, allPowers = [], [], []
+
+    stime = time()
+    for i in range(k):
+        batchid = f"{runid}_{i}"
+        powers_prefix = f"{powersPrefix}_{batchid}"
+        filename = f"{powers_prefix}-{context.myid}.share"
+        shares = context.read_shares(open(filename))
+        aMinusBShares.append(shares[0] - shares[1])
+        aS.append(shares[0])
+        allPowers.append(shares[1:])
+    benchLogger.info(f"[Phase1] Read shares from file: {time() - stime}")
+
+    stime = time()
+    openedShares = await context.ShareArray(aMinusBShares).open()
+    benchLogger.info(
+        f"[Phase1] Open [{len(aMinusBShares)}] a-b shares: {time() - stime}")
+
+    stime = time()
+    for i in range(k):
+        batchid = f"{runid}_{i}"
+        cpp_prefix = f"{cppPrefix}_{batchid}"
+        with open(f"{cpp_prefix}-{context.myid}.input", "w") as f:
+            print(Field.modulus, file=f)
+            print(aS[i].v.value, file=f)
+            print(openedShares[i].value, file=f)
+            print(k, file=f)
+            for power in allPowers[i]:
+                print(power.v.value, file=f)
+    benchLogger.info(f"[Phase1] Write shares to file: {time() - stime}")
 
 
 async def phase2(nodeid, batchid, runid, cpp_prefix):
@@ -73,7 +109,7 @@ async def runCommandSync(command, verbose=False):
 
 async def prepareOneInput(context, **kwargs):
     k, batchid, runid = kwargs['k'], kwargs['batchid'], kwargs['runid']
-    await phase1(
+    await singleSecretPhase1(
         context,
         k=k,
         powers_prefix=f"{powersPrefix}_{batchid}",
@@ -87,13 +123,20 @@ async def phase3(context, **kwargs):
     k, runid = kwargs['k'], kwargs['runid']
     sumFileName = f"{sharedatadir}/power-{runid}_{context.myid}.sums"
     sumShares = []
+
+    benchLogger = BenchmarkLogger.get(context.myid)
+
+    stime = time()
     with open(sumFileName, "r") as f:
         assert Field.modulus == int(f.readline())
         assert k == int(f.readline())
         sumShares = [context.Share(int(s)) for s in f.read().splitlines()[:k]]
         assert len(sumShares) == k
-    tasks = [share.open() for share in sumShares]
-    openedShares = await asyncio.gather(*tasks)
+    benchLogger.info(f"[Phase3] Read shares from file: {time() - stime}")
+
+    stime = time()
+    openedShares = await context.ShareArray(sumShares).open()
+    benchLogger.info(f"[Phase3] Open [{len(sumShares)}] shares: {time() - stime}")
     return openedShares
 
 
@@ -148,28 +191,25 @@ async def asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid):
 
     programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
     await programRunner.start()
-    sid = 0
-    pool = TaskPool(256)
-    for i in range(k):
-        batchid = f"{runid}_{i}"
-        programRunner.add(
-            sid,
-            phase1,
-            k=k,
-            powers_prefix=f"{powersPrefix}_{batchid}",
-            cpp_prefix=f"{cppPrefix}_{batchid}")
-        sid += 1
-
+    programRunner.add(0, allSecretsPhase1, k=k, runid=runid)
     await programRunner.join()
+
+    pool = TaskPool(256)
+    stime = time()
     for i in range(k):
         batchid = f"{runid}_{i}"
         pool.submit(phase2(nodeid, batchid, runid, f"{cppPrefix}_{batchid}"))
     await pool.close()
-    programRunner.add(sid, phase3, k=k, runid=runid)
+    benchLogger.info(f"[Phase2] Execute CPP code for all secrets: {time() - stime}")
+
+    programRunner.add(1, phase3, k=k, runid=runid)
     powerSums = (await programRunner.join())[0]
     await programRunner.close()
+
     print(f"Shares from C++ phase opened.")
+    stime = time()
     result = solve([s.value for s in powerSums])
+    benchLogger.info(f"[SolverPhase] Run Newton Solver: {time() - stime}")
     print(f"Equation solver completed.")
     print(result)
     return result
@@ -210,6 +250,8 @@ if __name__ == "__main__":
     N = config_dict['N']
     t = config_dict['t']
     k = config_dict['k']
+
+    benchLogger = BenchmarkLogger.get(nodeid)
 
     network_info = {
         int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
