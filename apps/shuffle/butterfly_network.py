@@ -1,6 +1,7 @@
 import random
 from math import log
 import asyncio
+from itertools import islice
 from honeybadgermpc.mpc import (
     Field, Poly, generate_test_triples, write_polys, TaskProgramRunner
 )
@@ -25,6 +26,29 @@ async def multiplyShares(x, y, a, b, ab):
     return await xy.open()
 
 
+async def batchBeaver(ctx, Xs, Ys, As, Bs, ABs):
+    Ds = await (Xs - As).open()  # noqa: W606
+    Es = await (Ys - Bs).open()  # noqa: W606
+
+    XYs = [await (ctx.Share(D*E) + D*b + E*a + ab).open() for (  # noqa: W606
+        a, b, ab, D, E) in zip(As._shares, Bs._shares, ABs._shares, Ds, Es)]
+
+    return XYs
+
+
+async def batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, n):
+    Ns = [1 / Field(2) for _ in range(n)]
+
+    def toShareArray(arr):
+        return ctx.ShareArray(list(map(ctx.Share, arr)))
+    Xs, Ys, As, Bs, ABs, sbits = list(map(toShareArray, [Xs, Ys, As, Bs, ABs, sbits]))
+    Ms = list(map(ctx.Share, await batchBeaver(ctx, sbits, (Xs - Ys), As, Bs, ABs)))
+
+    t1s = [n * (x + y + m).v for x, y, m, n in zip(Xs._shares, Ys._shares, Ms, Ns)]
+    t2s = [n * (x + y - m).v for x, y, m, n in zip(Xs._shares, Ys._shares, Ms, Ns)]
+    return t1s, t2s
+
+
 async def switch(ctx, a, b, sbit, x, y, xy):
     a, b, x, y, xy, sbit = map(ctx.Share, [a, b, x, y, xy, sbit])
     m = ctx.Share(await multiplyShares(sbit, (a - b), x, y, xy))
@@ -35,7 +59,7 @@ async def switch(ctx, a, b, sbit, x, y, xy):
     return x, y
 
 
-async def writeToFile(shares, nodeid):
+def writeToFile(shares, nodeid):
     global filecount
     with open(f"{sharedatadir}/butterfly_online_{filecount}_{nodeid}.share", "w") as f:
         for share in shares:
@@ -43,46 +67,52 @@ async def writeToFile(shares, nodeid):
     filecount += 1
 
 
-async def getTriplesAndSbit(tripleshares, randshares):
+def getTriplesAndSbit(tripleshares, randshares):
     a, b, ab = next(tripleshares).v, next(tripleshares).v, next(tripleshares).v
     sbit = next(randshares).v
     return a, b, ab, sbit
 
 
-async def permutationNetwork(ctx, inputs, k, num, d, randshares, tripleshares, level=0):
+def getNTriplesAndSbits(tripleshares, randshares, n):
+    As, Bs, ABs = [], [], []
+    for _ in range(n):
+        a, b, ab = list(islice(tripleshares, 3))
+        As.append(a.v), Bs.append(b.v), ABs.append(ab.v)
+    sbits = list(map(lambda x: x.v, list(islice(randshares, n))))
+    return As, Bs, ABs, sbits
+
+
+async def permutationNetwork(ctx, inputs, k, d, randshares, tripleshares, level=0):
     if level == int(log(k, 2)) - d:
-        await writeToFile(inputs, ctx.myid)
+        writeToFile(inputs, ctx.myid)
         return None
 
     if level > int(log(k, 2)) - d:
         return None
 
-    if num == 2:
-        a, b, ab, sbit = await getTriplesAndSbit(tripleshares, randshares)
+    if len(inputs) == 2:
+        a, b, ab, sbit = getTriplesAndSbit(tripleshares, randshares)
         return await switch(ctx, inputs[0], inputs[1], sbit, a, b, ab)
 
-    layer1output1, layer1output2, result = [], [], []
-    for i in range(int(num/2)):
-        a, b, ab, sbit = await getTriplesAndSbit(tripleshares, randshares)
-        t1, t2 = await switch(ctx, inputs[2*i], inputs[2*i + 1], sbit, a, b, ab)
-        layer1output1.append(t1)
-        layer1output2.append(t2)
+    n = len(inputs)//2
+    As, Bs, ABs, sbits = getNTriplesAndSbits(tripleshares, randshares, n)
+    Xs = [inputs[2*i] for i in range(n)]
+    Ys = [inputs[2*i + 1] for i in range(n)]
+    layer1output1, layer1output2 = await batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, n)
 
-    layer2outpu1 = await permutationNetwork(
-        ctx, layer1output1, k, num/2, d, randshares, tripleshares, level+1
+    layer2output1 = await permutationNetwork(
+        ctx, layer1output1, k, d, randshares, tripleshares, level+1
     )
     layer2output2 = await permutationNetwork(
-        ctx, layer1output2, k, num/2, d, randshares, tripleshares, level+1
+        ctx, layer1output2, k, d, randshares, tripleshares, level+1
     )
 
-    if layer2outpu1 is None or layer2output2 is None:
+    if layer2output1 is None or layer2output2 is None:
         return None
 
-    for i in range(int(num/2)):
-        a, b, ab, sbit = await getTriplesAndSbit(tripleshares, randshares)
-        t1, t2 = await switch(ctx, layer2outpu1[i], layer2output2[i], sbit, a, b, ab)
-        result.append(t1)
-        result.append(t2)
+    As, Bs, ABs, sbits = getNTriplesAndSbits(tripleshares, randshares, n)
+    result = await batchSwitch(ctx, layer2output1, layer2output2, sbits, As, Bs, ABs, n)
+    result = [*sum(zip(result[0], result[1]), ())]
 
     return result
 
@@ -93,7 +123,7 @@ async def butterflyNetwork(ctx, **kwargs):
     randshares = ctx.read_shares(open(f'{oneminusoneprefix}-{ctx.myid}.share'))
     print(f"[{ctx.myid}] Running permutation network.")
     shuffled = await permutationNetwork(
-        ctx, inputs, k, k, delta, iter(randshares), iter(tripleshares)
+        ctx, inputs, k, delta, iter(randshares), iter(tripleshares)
     )
     if shuffled is not None:
         shuffledShares = list(map(ctx.Share, shuffled))
