@@ -84,7 +84,7 @@ def attempt_reconstruct_batch(data, field, n, t, point):
         try:
             P, failures = attempt_reconstruct(chunk, field, n, t, point)
             recon = P.coeffs
-            recon += [0] * (t + 1 - len(recon))
+            recon += [field(0)] * (t + 1 - len(recon))
             recons += recon
         except ValueError as e:
             if str(e) in ("Wrong degree", "no divisors found"):

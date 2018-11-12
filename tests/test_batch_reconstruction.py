@@ -3,6 +3,7 @@ import pytest
 import asyncio
 from honeybadgermpc.batch_reconstruction import batch_reconstruct
 from honeybadgermpc.router import simple_router
+from honeybadgermpc.field import GFElement
 
 
 def handle_async_exception(loop, ctx):
@@ -50,6 +51,8 @@ async def test():
                                         sends[i], recvs[i], False))
     results = await asyncio.gather(*towait)
     for r in results:
+        for elem in r:
+            assert type(elem) is GFElement
         assert r == [2, 4]
 
     # Test 3: If there is an error and one crashed node, it will time out
@@ -66,6 +69,30 @@ async def test():
     with pytest.raises(asyncio.TimeoutError):
         results = await asyncio.wait_for(asyncio.gather(*towait), timeout=1)
 
+
+@mark.asyncio
+async def test_opening_types():
+    # batch_reconstruct should always return GFElements, but doesn't
+    N = 4
+    p = 73
+    t = 1
+
+    shared_secrets = [(1, 1, 1, 1),
+                      (2, 2, 2, 2),
+                      (3, 3, 3, 3),
+                      None]
+
+    sends, recvs = simple_router(N)
+    towait = []
+    for i in range(N-1):  # one erasure
+        ss = shared_secrets[i]
+        towait.append(batch_reconstruct(ss, p, t, N, i,
+                                        sends[i], recvs[i], True))
+    results = await asyncio.gather(*towait)
+    for r in results:
+        print(r)
+        for elem in r:
+            assert type(elem) is GFElement
 
 if __name__ == '__main__':
     try:
