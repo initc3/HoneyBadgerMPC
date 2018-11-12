@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from .pypairing import PyG1, PyFr, PyG2, py_pairing, PyFq, PyFq12, PyFqRepr
+from .pypairing import PyG1, PyFr, PyG2, py_pairing, PyFq, PyFq2, PyFq12, PyFqRepr
 
-__all__ = ["PyG1", "PyFr", "PyG2", "py_pairing", "PyFq", "PyFq12", "PyFqRepr"]
+__all__ = ["PyG1", "PyFr", "PyG2", "py_pairing", "PyFq", "PyFq2", "PyFq12", "PyFqRepr"]
