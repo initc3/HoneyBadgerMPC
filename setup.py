@@ -16,6 +16,7 @@ REQUIRED = [
     'zfec',
     'pycrypto',
     'cffi',
+    'psutil',
 ]
 
 TESTS_REQUIRES = [
