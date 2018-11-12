@@ -6,6 +6,8 @@ import pickle
 import asyncio
 from asyncio import Queue
 from .logger import BenchmarkLogger
+import concurrent.futures
+import psutil
 
 
 # secretshare uses reliable broadcast as a sub protocol
@@ -16,6 +18,17 @@ from honeybadgermpc.reliablebroadcast import reliablebroadcast
 # For now we rely on the `pypairing` interface anyway.
 # When `pypairing` is improved we'll use that.
 from honeybadgermpc.betterpairing import G1, ZR
+
+
+# Run in an executor!
+async def _run_in_thread(func, *args):
+    global _HBAVSS_Executor
+    if '_HBAVSS_Executor' not in globals():
+        print('Initializing executor')
+        cpus = psutil.cpu_count(logical=False)
+        _HBAVSS_Executor = concurrent.futures.ThreadPoolExecutor(max_workers=cpus)
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(_HBAVSS_Executor, func, *args)
 
 
 ######################
@@ -40,8 +53,6 @@ def polynomial_divide(numerator, denominator):
 
 
 def polynomial_multiply_constant(poly1, c):
-    # myzero will be appropriate whether we are in ZR or G
-    # myzero = poly1[0] - poly1[0]
     product = [None] * len(poly1)
     for i in range(len(product)):
         product[i] = poly1[i] * c
@@ -79,8 +90,8 @@ def polynomial_subtract(poly1, poly2):
     negpoly2 = polynomial_multiply_constant(poly2, -1)
     return polynomial_add(poly1, negpoly2)
 
-# Polynomial evaluation
 
+# Polynomial evaluation
 
 def f(poly, x):
     assert type(poly) is list
@@ -91,6 +102,18 @@ def f(poly, x):
         xx *= x
     return y
 
+
+def f_horner(poly, x):
+    assert type(poly) is list
+    k = len(poly) - 1
+    b = ZR(0)
+    for (i, coeff) in enumerate(poly):
+        b *= x
+        b += poly[k-i]
+    return b
+
+
+# Polynomial interpolation
 
 def interpolate_at_x(coords, x, order=-1):
     if order == -1:
@@ -103,7 +126,7 @@ def interpolate_at_x(coords, x, order=-1):
     # The following line makes it so this code works for both members of G and ZR
     out = coords[0][1] - coords[0][1]
     for i in range(order):
-        out = out + (lagrange_at_x(S, xs[i], x) * sortedcoords[i][1])
+        out += (lagrange_at_x(S, xs[i], x) * sortedcoords[i][1])
     return out
 
 
@@ -185,8 +208,6 @@ def decrypt(key, enc):
 
 class PolyCommitNP:
     def __init__(self, t, pk):
-        """
-        """
         self.g = pk[0].duplicate()
         self.h = pk[1].duplicate()
         self.t = t
@@ -202,7 +223,7 @@ class PolyCommitNP:
     def verify_eval(self, c, i, polyeval, secretpolyeval, witness=None):
         lhs = G1.one()
         for j in range(len(c)):
-            lhs = lhs * c[j]**(i**j)
+            lhs *= c[j]**(i**j)
         rhs = (self.g**polyeval)*(self.h**secretpolyeval)
         return lhs == rhs
 
@@ -236,10 +257,10 @@ class HbAvssDealer:
         pc = PolyCommitNP(t=t, pk=crs)
         c = pc.commit(poly, polyhat)
         for j in participantids:
-            shares[j] = f(poly, j+1)  # TODO: make this omega^j
+            shares[j] = f_horner(poly, j+1)  # TODO: make this omega^j
             encryptedshares[j] = encrypt(
                 str(sharedkeys[j]).encode('utf-8'), shares[j])
-            witnesses[j] = f(polyhat, j+1)
+            witnesses[j] = f_horner(polyhat, j+1)
             encryptedwitnesses[j] = encrypt(
                 str(sharedkeys[j]).encode('utf-8'), witnesses[j])
         message = pickle.dumps(
@@ -264,7 +285,7 @@ class HbAvssDealer:
 # Class representing a participant in the scheme.
 # t is the threshold and k is the number of participants
 class HbAvssRecipient:
-    def __init__(self, publicparams, privateparams, send, recv, reconstruction=True):
+    def __init__(self, publicparams, privateparams, send, recv, reconstruction=False):
 
         (self.send, self.recv) = (send, recv)
         # self.write = write_function
@@ -300,9 +321,9 @@ class HbAvssRecipient:
     async def run(self):
         while not self.finished:
             sender, msg = await self.recv()
-            self.receive_msg(sender, msg)
+            await self.receive_msg(sender, msg)
 
-    def receive_msg(self, sender, msg):
+    async def receive_msg(self, sender, msg):
         # print(msg)
         if msg[0] in ["READY", "ECHO", "VAL"]:
             self.queues["rb"].put_nowait((sender, msg))
@@ -316,13 +337,20 @@ class HbAvssRecipient:
             print("Begin Decryption")
             message = pickle.loads(msg[2])
             (self.commit, self.encwitnesses, self.encshares, pk_d) = message
-            self.sharedkey = str(pk_d**self.sk).encode('utf-8')
+
+            # self.sharedkey = str(pk_d**self.sk).encode('utf-8')
+            self.sharedkey = await _run_in_thread(lambda: str(pk_d**self.sk)
+                                                  .encode('utf-8'))
+
             self.share = decrypt(self.sharedkey, self.encshares[self.pid])
             self.witness = decrypt(self.sharedkey, self.encwitnesses[self.pid])
-            if self.pc.verify_eval(self.commit, self.pid+1, self.share, self.witness):
+            # if self.pc.verify_eval(self.commit, self.pid+1, self.share, self.witness):
+            if await _run_in_thread(self.pc.verify_eval, self.commit,
+                                    self.pid+1, self.share, self.witness):
                 decryption_time = str(os.times()[4] - decrypt_start_time[4])
                 print("decryption time : " + decryption_time)
-                self.benchmarkLogger.info("decryption time :  " + decryption_time)
+                self.benchmarkLogger.info(
+                    "decryption time :  " + decryption_time)
 
                 self.send_ok_msgs()
                 self.sendrecs = True
@@ -331,7 +359,7 @@ class HbAvssRecipient:
                 self.send_implicate_msgs()
             while not self.queues["hbavss"].empty():
                 (i, o) = self.queues["hbavss"].get_nowait()
-                self.receive_msg(i, o)
+                await self.receive_msg(i, o)
         if not self.rbfinished:
             self.queues["hbavss"].put_nowait((sender, msg))
         elif msg[1] == "ok":
@@ -348,22 +376,9 @@ class HbAvssRecipient:
                 recipient_time = str(os.times()[4] - self.time2[4])
                 print("Recipient Time: " + recipient_time)
                 # benchmarking: time taken by dealer
-                self.benchmarkLogger.info("AVSS recipient time:  " + recipient_time)
+                self.benchmarkLogger.info(
+                    "AVSS recipient time:  " + recipient_time)
 
-                # print "WTF!"
-                # print "./shares/"+str(self.pid)+"/"+str(self.sid)
-                # f_raw = open( "./shares/"+str(self.pid)+"/"+str(self.sid), "w+" )
-                # f = open( "./deletme", "a+" )
-                # f = FileObjectThread(f_raw, 'a+')
-                # f = open('shares/'+str(self.pid)+"/"+str(self.sid), 'w+')
-
-                # self.write(str(self.share))
-
-                # f.close()
-                # except Exception as e:
-                #    print type(e)
-                #    print str(e)
-                # print self.share
                 if self.reconstruction and self.sendrecs:
                     self.send_rec_msgs()
                     self.sendrecs = False
@@ -481,6 +496,7 @@ async def runHBAVSSLight(config, N, t, id):
         sk = ZR.rand(seed=17+i)
         participantprivkeys[i] = sk
         participantpubkeys[i] = crs[0] ** sk
+
     # Form public parameters
     dealerid = N
     pubparams = (t, N, crs, participantids,

@@ -2,6 +2,7 @@ from honeybadgermpc.betterpairing import G1, ZR
 from honeybadgermpc.secretshare_hbavsslight import HbAvssDealer, HbAvssRecipient
 from honeybadgermpc.router import simple_router
 import asyncio
+import cProfile
 
 
 def main():
@@ -38,4 +39,6 @@ def main():
 
 if __name__ == "__main__":
     debug = True
+    # cProfile.run("main()")
+    cProfile
     main()
