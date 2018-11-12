@@ -16,7 +16,7 @@ RUN pip install --upgrade pip
 
 COPY . /usr/src/HoneyBadgerMPC
 
-RUN pip install -e pairing/
+RUN pip install pairing/
 
 # This is needed otherwise the build for the power sum solver will fail.
 # This is a known issue in the version of libflint-dev in apt.
@@ -26,6 +26,6 @@ RUN pip install -e pairing/
 RUN sed -i '30c #include "flint/flint.h"' /usr/include/flint/flintxx/flint_classes.h
 
 ARG BUILD
-RUN pip install --no-cache-dir .[$BUILD]
+RUN pip install --no-cache-dir -e .[$BUILD]
 
 RUN make -C apps/shuffle/cpp
