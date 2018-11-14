@@ -324,14 +324,10 @@ class HbAvssRecipient:
             await self.receive_msg(sender, msg)
 
     async def receive_msg(self, sender, msg):
-        # print(msg)
-        if msg[0] in ["READY", "ECHO", "VAL"]:
+        if msg[1] in ["READY", "ECHO", "VAL"]:
             self.queues["rb"].put_nowait((sender, msg))
-            if msg[1] == "VAL":
-                print(str(self.pid) + ": " + str(msg[3]) + "\n")
         if msg[1] == "send":
             self.rbfinished = True
-            # print(msg)
             decrypt_start_time = os.times()
             self.benchmarkLogger.info("Begin Decryption")
             print("Begin Decryption")
