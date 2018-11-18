@@ -1,6 +1,8 @@
 import threading
 import uuid
 import os
+import argparse
+import random
 from aws.ec2Manager import EC2Manager
 from aws.AWSConfig import AwsConfig
 from aws.s3Manager import S3Manager
@@ -37,30 +39,45 @@ def runCommandsOnInstances(
         thread.join()
 
 
-def getHbAVSSCommands(s3Manager, instanceIps, instanceIds):
-    N, t = AwsConfig.MPC_CONFIG.n, AwsConfig.MPC_CONFIG.T
-    port = AwsConfig.MPC_CONFIG.PORT
-    instanceConfig = getInstanceConfig(N, t, port, instanceIps)
-    print(f">>> Uploading config file to S3 in '{AwsConfig.BUCKET_NAME}'<<<")
-    instanceConfigUrl = s3Manager.uploadConfig(instanceConfig)
-    print(">>> Config file upload complete. <<<")
+def getHbAVSSCommands(s3Manager, instanceIds):
     setupCommands = [[id, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
-            "mkdir -p config",
-            "cd config; curl -sSO %s" % (instanceConfigUrl),
             "mkdir -p benchmark",
         ]] for i, id in enumerate(instanceIds)]
-    return AwsConfig.MPC_CONFIG.COMMAND, setupCommands
+    return setupCommands
 
 
-def getIpcCommands(s3Manager, instanceIps, instanceIds):
+def getHbAVSSInstanceConfig(instanceIps):
     N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     port = AwsConfig.MPC_CONFIG.PORT
+    return getInstanceConfig(N, t, port, instanceIps)
 
-    instanceConfig = getInstanceConfig(N, t, port, instanceIps)
-    print(f">>> Uploading config file to S3 in '{AwsConfig.BUCKET_NAME}' bucket. <<<")
-    instanceConfigUrl = s3Manager.uploadConfig(instanceConfig)
-    print(">>> Config file upload complete. <<<")
+
+def getIpcInstanceConfig(instanceIps):
+    N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
+    port = AwsConfig.MPC_CONFIG.PORT
+    return getInstanceConfig(N, t, port, instanceIps)
+
+
+def getPowermixingInstanceConfig(max_k, instanceIps):
+    N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
+    k = max_k if max_k else AwsConfig.MPC_CONFIG.K
+    port = AwsConfig.MPC_CONFIG.PORT
+    return getInstanceConfig(N, t, port, instanceIps, k)
+
+
+def getButterflyNetworkInstanceConfig(max_k, instanceIps):
+    N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
+    k = max_k if max_k else AwsConfig.MPC_CONFIG.K
+    port = AwsConfig.MPC_CONFIG.PORT
+    delta = AwsConfig.MPC_CONFIG.DELTA
+    return getInstanceConfig(N, t, port, instanceIps, k, delta)
+
+
+def getIpcCommands(s3Manager, instanceIds):
+    from honeybadgermpc.mpc import generate_test_zeros, generate_test_triples
+
+    N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
 
     numTriples = AwsConfig.MPC_CONFIG.NUM_TRIPLES
     generate_test_zeros('sharedata/test_zeros', numTriples, N, t)
@@ -71,29 +88,22 @@ def getIpcCommands(s3Manager, instanceIps, instanceIds):
         "sharedata/test_zeros-%d.share" % (i)) for i in range(N)]
     setupCommands = [[instanceId, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
-            "mkdir -p config",
-            "cd config; curl -sSO %s" % (instanceConfigUrl),
             "mkdir -p sharedata",
             "cd sharedata; curl -sSO %s" % (tripleUrls[i]),
             "cd sharedata; curl -sSO %s" % (zeroUrls[i]),
             "mkdir -p benchmark",
         ]] for i, instanceId in enumerate(instanceIds)]
 
-    return AwsConfig.MPC_CONFIG.COMMAND, setupCommands
+    return setupCommands
 
 
-def getButterflyNetworkCommands(s3Manager, instanceIps, instanceIds):
+def getButterflyNetworkCommands(max_k, s3Manager, instanceIds):
+    from honeybadgermpc.mpc import generate_test_triples
     from apps.shuffle.butterfly_network import generate_random_shares, oneminusoneprefix
     from math import log
 
     N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
-    port, k = AwsConfig.MPC_CONFIG.PORT, AwsConfig.MPC_CONFIG.K
-    delta = AwsConfig.MPC_CONFIG.DELTA
-
-    instanceConfig = getInstanceConfig(N, t, port, instanceIps, k, delta)
-    print(f">>> Uploading config file to S3 in '{AwsConfig.BUCKET_NAME}' bucket. <<<")
-    instanceConfigUrl = s3Manager.uploadConfig(instanceConfig)
-    print(">>> Config file upload complete. <<<")
+    k = max_k if max_k else AwsConfig.MPC_CONFIG.K
 
     numTriples = AwsConfig.MPC_CONFIG.NUM_TRIPLES
     generate_test_triples('sharedata/test_triples', numTriples, N, t)
@@ -104,31 +114,24 @@ def getButterflyNetworkCommands(s3Manager, instanceIps, instanceIds):
         f"{oneminusoneprefix}-{i}.share") for i in range(N)]
     setupCommands = [[instanceId, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
-            "mkdir -p config",
-            "cd config; curl -sSO %s" % (instanceConfigUrl),
             "mkdir -p sharedata",
             "cd sharedata; curl -sSO %s" % (tripleUrls[i]),
             "cd sharedata; curl -sSO %s" % (randShareUrls[i]),
             "mkdir -p benchmark",
         ]] for i, instanceId in enumerate(instanceIds)]
 
-    return AwsConfig.MPC_CONFIG.COMMAND, setupCommands
+    return setupCommands
 
 
-def getPowermixingCommands(runid, s3Manager, instanceIds, instanceIps):
+def getPowermixingSetupCommands(max_k, runid, s3Manager, instanceIds):
     from apps.shuffle.powermixing import powersPrefix, generate_test_powers
     from honeybadgermpc.mpc import Field
 
     N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
-    port, k = AwsConfig.MPC_CONFIG.PORT, AwsConfig.MPC_CONFIG.K
+    k = max_k if max_k else AwsConfig.MPC_CONFIG.K
 
-    instanceConfig = getInstanceConfig(N, t, port, instanceIps, k)
-    print(f">>> Uploading config file to S3 in '{AwsConfig.BUCKET_NAME}' bucket. <<<")
-    instanceConfigUrl = s3Manager.uploadConfig(instanceConfig)
-    print(">>> Config file upload complete. <<<")
-
-    a_s = [Field(i) for i in range(100+k, 100, -1)]
-    b_s = [Field(i) for i in range(10, 10+k)]
+    a_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
+    b_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
 
     for i, a in enumerate(a_s):
         batchid = f"{runid}_{i}"
@@ -138,8 +141,6 @@ def getPowermixingCommands(runid, s3Manager, instanceIds, instanceIps):
     for i, instanceId in enumerate(instanceIds):
         commands = [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
-            "mkdir -p config",
-            "cd config; curl -sSO %s" % (instanceConfigUrl),
             "mkdir -p sharedata",
             "mkdir -p benchmark",
         ]
@@ -148,58 +149,117 @@ def getPowermixingCommands(runid, s3Manager, instanceIds, instanceIps):
             url = s3Manager.uploadFile(fname)
             commands.append(f"cd sharedata; curl -sSO {url}")
         setupCommands.append([instanceId, commands])
-    mpcCommand = f"{AwsConfig.MPC_CONFIG.COMMAND}"
-    return mpcCommand, setupCommands
+
+    return setupCommands
 
 
-if __name__ == "__main__":
-    from honeybadgermpc.mpc import generate_test_triples, generate_test_zeros
-
+def trigger_run(runId, skip_setup, max_k, only_setup):
     os.makedirs("sharedata/", exist_ok=True)
-    runId = uuid.uuid4().hex
     print(f">>> Run Id: {runId} <<<")
     ec2Manager, s3Manager = EC2Manager(), S3Manager(runId)
     instanceIds, instanceIps = ec2Manager.createInstances()
     port = AwsConfig.MPC_CONFIG.PORT
 
     if AwsConfig.MPC_CONFIG.COMMAND.endswith("ipc"):
-        mpcCommand, setupCommands = getIpcCommands(s3Manager, instanceIps, instanceIds)
+        instanceConfig = getIpcInstanceConfig(instanceIps)
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("powermixing"):
-        mpcCommand, setupCommands = getPowermixingCommands(
-            runId, s3Manager, instanceIds, instanceIps
-        )
+        instanceConfig = getPowermixingInstanceConfig(max_k, instanceIps)
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("butterfly_network"):
-        mpcCommand, setupCommands = getButterflyNetworkCommands(
-            s3Manager, instanceIps, instanceIds
-        )
+        instanceConfig = getButterflyNetworkInstanceConfig(max_k, instanceIps)
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("secretshare_hbavsslight"):
-        mpcCommand, setupCommands = getHbAVSSCommands(
-            s3Manager, instanceIps, instanceIds
-        )
+        instanceConfig = getHbAVSSInstanceConfig(instanceIps)
     else:
         print("Application not supported to run on AWS.")
-        raise SystemExit
+        raise SystemError
 
-    print(">>> Triggering setup commands. <<<")
-    runCommandsOnInstances(ec2Manager, setupCommands, False)
+    print(f">>> Uploading config file to S3 in '{AwsConfig.BUCKET_NAME}' bucket. <<<")
+    instanceConfigUrl = s3Manager.uploadConfig(instanceConfig)
+    print(">>> Config file upload complete. <<<")
 
-    print(">>> Setup commands executed successfully. <<<")
-    instanceCommands = [[instanceId, [
-            f"sudo docker run\
-            -p {port}:{port} \
-            -v /home/ubuntu/config:/usr/src/HoneyBadgerMPC/config/ \
-            -v /home/ubuntu/sharedata:/usr/src/HoneyBadgerMPC/sharedata/ \
-            -v /home/ubuntu/benchmark:/usr/src/HoneyBadgerMPC/benchmark/ \
-            -e HBMPC_NODE_ID={i} \
-            -e HBMPC_CONFIG=config/config.ini \
-            -e HBMPC_RUN_ID={runId} \
-            {AwsConfig.DOCKER_IMAGE_PATH} \
-            {mpcCommand}"
+    print(">>> Triggering config update on instances.")
+    configUpdateCommands = [[instanceId, [
+            "mkdir -p config",
+            "cd config; curl -sSO %s" % (instanceConfigUrl),
         ]] for i, instanceId in enumerate(instanceIds)]
-    print(">>> Triggering MPC commands. <<<")
-    runCommandsOnInstances(ec2Manager, instanceCommands)
-    print(">>> Collecting logs. <<<")
-    logCollectionCommands = [[id, ["cat benchmark/*.log"]] for id in instanceIds]
-    os.makedirs(runId, exist_ok=True)
-    runCommandsOnInstances(ec2Manager, logCollectionCommands, True, f"{runId}/benchmark")
+    runCommandsOnInstances(ec2Manager, configUpdateCommands, False)
+    print(">>> Config update completed successfully")
+
+    if not skip_setup:
+        print(">>> Uploading inputs.")
+        if AwsConfig.MPC_CONFIG.COMMAND.endswith("ipc"):
+            setupCommands = getIpcCommands(s3Manager, instanceIds)
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("powermixing"):
+            setupCommands = getPowermixingSetupCommands(
+                max_k, runId, s3Manager, instanceIds
+            )
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("butterfly_network"):
+            setupCommands = getButterflyNetworkCommands(max_k, s3Manager, instanceIds)
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("secretshare_hbavsslight"):
+            setupCommands = getHbAVSSCommands(s3Manager, instanceIds)
+        print(">>> Inputs successfully uploaded.")
+
+        print(">>> Triggering setup commands. <<<")
+        runCommandsOnInstances(ec2Manager, setupCommands, False)
+
+    if not only_setup:
+        print(">>> Setup commands executed successfully. <<<")
+        instanceCommands = [[instanceId, [
+                f"sudo docker run\
+                -p {port}:{port} \
+                -v /home/ubuntu/config:/usr/src/HoneyBadgerMPC/config/ \
+                -v /home/ubuntu/sharedata:/usr/src/HoneyBadgerMPC/sharedata/ \
+                -v /home/ubuntu/benchmark:/usr/src/HoneyBadgerMPC/benchmark/ \
+                -e HBMPC_NODE_ID={i} \
+                -e HBMPC_CONFIG=config/config.ini \
+                -e HBMPC_RUN_ID={runId} \
+                {AwsConfig.DOCKER_IMAGE_PATH} \
+                {AwsConfig.MPC_CONFIG.COMMAND}"
+            ]] for i, instanceId in enumerate(instanceIds)]
+        print(">>> Triggering MPC commands. <<<")
+        runCommandsOnInstances(ec2Manager, instanceCommands)
+        print(">>> Collecting logs. <<<")
+        logCollectionCommands = [[id, ["cat benchmark/*.log"]] for id in instanceIds]
+        os.makedirs(runId, exist_ok=True)
+        runCommandsOnInstances(
+            ec2Manager, logCollectionCommands, True, f"{runId}/benchmark")
+
     s3Manager.cleanup()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Runs HBMPC code on AWS.')
+    parser.add_argument(
+        '-s',
+        '--skip-setup',
+        dest='skip_setup',
+        action="store_true",
+        help='If this is passed, then the setup commands are skipped.')
+    parser.add_argument(
+        '-k',
+        '--max-k',
+        default=AwsConfig.MPC_CONFIG.K,
+        type=int,
+        dest='max_k',
+        help='Maximum value of k for which the inputs need to be \
+        created and uploaded during the setup phase. This value is \
+        ignored if --skip-setup is passed. (default: `k` in aws_config.json)')
+    parser.add_argument(
+        '--only-setup',
+        dest='only_setup',
+        action='store_true',
+        help='If this value is passed, then only the setup phase is run,\
+         otherwise both phases are run.')
+    parser.add_argument(
+        '--run-id',
+        dest='run_id',
+        nargs='?',
+        help='If skip setup is passed, then a previous run_id for the same\
+        MPC application needs to be specified to pickup the correct input files.'
+    )
+    args = parser.parse_args()
+    if args.skip_setup and args.only_setup:
+        parser.error("--only-setup and --skip-setup are mutually exclusive.")
+    if args.skip_setup and not args.run_id:
+        parser.error("--run-id needs to be passed with --skip-setup.")
+    args.run_id = uuid.uuid4().hex if args.run_id is None else args.run_id
+    trigger_run(args.run_id, args.skip_setup, args.max_k, args.only_setup)
