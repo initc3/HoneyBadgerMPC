@@ -2,6 +2,7 @@ import random
 import asyncio
 import uuid
 import os
+import glob
 from time import time
 from honeybadgermpc.mpc import write_polys, TaskProgramRunner, Field, Poly
 from honeybadgermpc.logger import BenchmarkLogger
@@ -211,7 +212,7 @@ async def asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid):
     result = solve([s.value for s in powerSums])
     benchLogger.info(f"[SolverPhase] Run Newton Solver: {time() - stime}")
     print(f"Equation solver completed.")
-    print(result)
+    # print(result)
     return result
 
 
@@ -271,6 +272,12 @@ if __name__ == "__main__":
 
     loop.set_exception_handler(handle_async_exception)
     loop.set_debug(True)
+
+    # Cleanup pre existing sums file
+    sums_file = glob.glob(f'{sharedatadir}/*.sums')
+    for f in sums_file:
+        os.remove(f)
+
     try:
         if not config_dict['skipPreprocessing']:
             # Need to keep these fixed when running on processes.
@@ -281,8 +288,6 @@ if __name__ == "__main__":
 
             if nodeid == 0:
                 os.makedirs("sharedata/", exist_ok=True)
-                loop.run_until_complete(
-                    runCommandSync(f"rm -f {sharedatadir}/**"))
                 for i, a in enumerate(a_s):
                     batchid = f"{runid}_{i}"
                     generate_test_powers(

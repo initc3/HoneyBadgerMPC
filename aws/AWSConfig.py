@@ -1,4 +1,6 @@
 import json
+import os
+import sys
 
 
 class RegionConfig(object):
@@ -21,6 +23,15 @@ class MPCConfig(object):
         self.n = n
 
 
+def read_environment_variable(key):
+    try:
+        value = os.environ[key]
+    except KeyError:
+        print(f">>> {key} environment variable not set.")
+        sys.exit(1)
+    return value
+
+
 class AwsConfig:
     config = json.load(open('./aws/aws-config.json'))
 
@@ -36,10 +47,8 @@ class AwsConfig:
     )
 
     awsconfig = config["aws"]
-    credentials = json.load(open(awsconfig["credentials_file_path"]))
-    ACCESS_KEY_ID = credentials["access_key_id"]
-    SECRET_ACCESS_KEY = credentials["secret_access_key"]
-
+    ACCESS_KEY_ID = read_environment_variable("ACCESS_KEY_ID")
+    SECRET_ACCESS_KEY = read_environment_variable("SECRET_ACCESS_KEY")
     SETUP_FILE_PATH = awsconfig["setup_file_path"]
 
     REGION = {}

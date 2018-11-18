@@ -6,13 +6,9 @@
 
 # Configuration
 1. This code pulls the docker image with tag:`latest` from [here](https://hub.docker.com/r/smkuls/honeybadgermpc/tags/). In order to replace the docker image, update `image_path` in `aws-config.json` with the appropriate image.
-2. Create a file with `.secret.json` extension (eg: `credentials.secret.json`) containing AWS credentials with the following structure:
-```
-{
-    "access_key_id": "",
-    "secret_access_key": ""
-}
-```
+2. Make sure you have the following two environment variables set to appropriate values. Please use the export command if you are setting them within the container. Eg: `export <key>=<value>`.
+    1. `ACCESS_KEY_ID` - Set this to your AWS access key id.
+    2. `SECRET_ACCESS_KEY` - Set this to your AWS secret acces key.
 3. The description of the config is as follows. Update keys accordingly.
     1. `mpc`: This contains configuration for the MPC application.
         1. `command`: The command to run to trigger the MPC application.
@@ -20,18 +16,17 @@
         3. `port`: Port on which the node is listening.
         4. `num_triples`: Number of triples which need to be generated in the preprocessing phase.
     2. `aws`: AWS related configuration.
-        1. `credentials_file_path`: Path to the AWS credentials file created in Step 1. Must end in `.secret.json`. This is to avoid accidentally checking in the file.
-        2. `setup_file_path`: Path to a shell script which contains all commands required to be run when starting up the instance.
-        3. `region`: Contains AWS region specific information.
+        1. `setup_file_path`: Path to a shell script which contains all commands required to be run when starting up the instance.
+        2. `region`: Contains AWS region specific information.
             1. `vm_count`: Number of VMs to be created in this region.
             2. `security_group_ids`: Security groups to be associated with instances of this region. These security groups must pre-exist and should allow all traffic.
             3. `image_id`: AMI of an image for Ubuntu 18.04 LTS for this region.
             4. `key_file_path`: Path to the private key in order to SSH into the instances of this region. Make sure that the permissions of the key pair are `400`.
             5. `key_name`: Name of the key pair present in this region in order to SSH into the instances.
-        4. `vm_name`: Name of the VM to allow to distinguish them on the AWS console. All VMs will have the same name.
-        5. `instance_type`: Size of the instances.
-        6. `instance_user_name`: For an Ubuntu AMI, this is `ubuntu`. Make sure to update this if a different OS is used for the instances.
-        7. `bucket_name`: Name of the bucket in S3 where the config files will be stored. If the bucket doesn't exist, it will be created. AWS requires bucket names to be unique across all users so if the bucket creation fails specify another unique name.
+        3. `vm_name`: Name of the VM to allow to distinguish them on the AWS console. All VMs will have the same name.
+        4. `instance_type`: Size of the instances.
+        5. `instance_user_name`: For an Ubuntu AMI, this is `ubuntu`. Make sure to update this if a different OS is used for the instances.
+        6. `bucket_name`: Name of the bucket in S3 where the config files will be stored. If the bucket doesn't exist, it will be created. AWS requires bucket names to be unique across all users so if the bucket creation fails specify another unique name.
     3. `docker`:
         1. `image_path`: Path to the docker image along with the tag on DockerHub.
 

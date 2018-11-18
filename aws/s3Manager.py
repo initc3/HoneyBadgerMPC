@@ -41,11 +41,12 @@ class S3Manager(object):
             Prefix=self.prefix
         )
         keysToDelete = []
-        for obj in response['Contents']:
-            keysToDelete.append({'Key': obj["Key"]})
-        self.s3Client.delete_objects(
-            Bucket=self.bucket,
-            Delete={
-                'Objects': keysToDelete
-            }
-        )
+        if 'Contents' in response:
+            for obj in response['Contents']:
+                keysToDelete.append({'Key': obj["Key"]})
+            self.s3Client.delete_objects(
+                Bucket=self.bucket,
+                Delete={
+                    'Objects': keysToDelete
+                }
+            )
