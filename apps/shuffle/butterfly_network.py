@@ -196,7 +196,7 @@ if __name__ == "__main__":
         for peerid, addrinfo in config_dict['peers'].items()
     }
 
-    inputs = [Field(i) for i in range(1, k+1)]
+    inputs = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
