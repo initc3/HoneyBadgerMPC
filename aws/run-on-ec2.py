@@ -3,10 +3,11 @@ import uuid
 import os
 import argparse
 import random
+from queue import Queue
 from aws.ec2Manager import EC2Manager
 from aws.AWSConfig import AwsConfig
 from aws.s3Manager import S3Manager
-
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 def getInstanceConfig(N, t, port, instanceIps, k=-1, delta=-1):
     instanceConfig = "[general]\n"
@@ -129,6 +130,11 @@ def getPowermixingSetupCommands(max_k, runid, s3Manager, instanceIds):
 
     N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     k = max_k if max_k else AwsConfig.MPC_CONFIG.K
+    q = Queue()
+
+    def uploadFile(fname):
+        url = s3Manager.uploadFile(fname)
+        q.put(url)
 
     a_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
     b_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
@@ -142,12 +148,23 @@ def getPowermixingSetupCommands(max_k, runid, s3Manager, instanceIds):
         commands = [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
             "mkdir -p sharedata",
+            "git clone https://github.com/lu562/upload-script.git",
+            "cp upload-script/Download_input.sh sharedata/Download_input.sh ",
             "mkdir -p benchmark",
+            "ulimit -n 10000",
         ]
+        executor = ThreadPoolExecutor(max_workers=100)
+        threads = []
         for j in range(k):
-            fname = f"{powersPrefix}_{runid}_{j}-{i}.share"
-            url = s3Manager.uploadFile(fname)
-            commands.append(f"cd sharedata; curl -sSO {url}")
+            threads.append(executor.submit(uploadFile, f"{powersPrefix}_{runid}_{j}-{i}.share"))
+        wait(threads, return_when=ALL_COMPLETED)       
+        
+        with open('%s-%d-links' % (runid, i), 'w') as f:
+            while not q.empty():
+                print(q.get(), file=f)
+        fname = f"{runid}-{i}-links"
+        url = s3Manager.uploadFile(fname)
+        commands.append(f"cd sharedata; curl -sSO {url}; sh Download_input.sh {fname}")
         setupCommands.append([instanceId, commands])
 
     return setupCommands
