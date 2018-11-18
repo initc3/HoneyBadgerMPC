@@ -238,11 +238,15 @@ async def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
                or sender in echoSenders:
                 print("Redundant ECHO")
                 continue
-            try:
-                assert merkleVerify(N, stripe, roothash, branch, sender)
-            except AssertionError as e:
-                print("Failed to validate ECHO message:", e)
-                continue
+
+            # We can optimistically skip the merkleVerify for "ECHO", because the
+            # entire merkle tree is checked later anyway.
+
+            # try:
+            #     assert merkleVerify(N, stripe, roothash, branch, sender)
+            # except AssertionError as e:
+            #     print("Failed to validate ECHO message:", e)
+            #     continue
 
             # Update
             stripes[roothash][sender] = stripe
