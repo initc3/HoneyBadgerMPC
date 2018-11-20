@@ -9,6 +9,7 @@ from aws.AWSConfig import AwsConfig
 from aws.s3Manager import S3Manager
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
+
 def getInstanceConfig(N, t, port, instanceIps, k=-1, delta=-1):
     instanceConfig = "[general]\n"
     instanceConfig += f"N: {N}\n"
@@ -145,26 +146,28 @@ def getPowermixingSetupCommands(max_k, runid, s3Manager, instanceIds):
 
     setupCommands = []
     for i, instanceId in enumerate(instanceIds):
+        url = s3Manager.uploadFile(f"scripts/aws/download_input.sh")
         commands = [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
+            f"curl -sSO {url}",
             "mkdir -p sharedata",
-            "git clone https://github.com/lu562/upload-script.git",
-            "cp upload-script/Download_input.sh sharedata/Download_input.sh ",
+            "cp download_input.sh sharedata/download_input.sh ",
             "mkdir -p benchmark",
             "ulimit -n 10000",
         ]
-        executor = ThreadPoolExecutor(max_workers=100)
+        executor = ThreadPoolExecutor(max_workers=200)
         threads = []
         for j in range(k):
-            threads.append(executor.submit(uploadFile, f"{powersPrefix}_{runid}_{j}-{i}.share"))
-        wait(threads, return_when=ALL_COMPLETED)       
-        
+            threads.append(executor.submit(
+                uploadFile,
+                f"{powersPrefix}_{runid}_{j}-{i}.share"))
+        wait(threads, return_when=ALL_COMPLETED)
         with open('%s-%d-links' % (runid, i), 'w') as f:
             while not q.empty():
                 print(q.get(), file=f)
         fname = f"{runid}-{i}-links"
         url = s3Manager.uploadFile(fname)
-        commands.append(f"cd sharedata; curl -sSO {url}; sh Download_input.sh {fname}")
+        commands.append(f"cd sharedata; curl -sSO {url}; bash download_input.sh {fname}")
         setupCommands.append([instanceId, commands])
 
     return setupCommands
