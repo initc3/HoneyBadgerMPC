@@ -8,7 +8,7 @@ import cProfile
 def main():
     # TODO: We need to generate the CRS once and hardcode it as a parameter
     crs = [G1.rand(), G1.rand()]
-    t = 2
+    t = 16
     n = 3*t + 1
     participantids = list(range(1, n+1))
     dealerid = 0
