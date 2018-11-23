@@ -50,9 +50,16 @@ def getHbAVSSCommands(s3Manager, instanceIds):
 
 
 def getHbAVSSInstanceConfig(instanceIps):
-    N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
+    N, t = AwsConfig.MPC_CONFIG.n, AwsConfig.MPC_CONFIG.T
     port = AwsConfig.MPC_CONFIG.PORT
     return getInstanceConfig(N, t, port, instanceIps)
+
+
+def getHbAVSSMultiInstanceConfig(instanceIps):
+    N, t = AwsConfig.MPC_CONFIG.n, AwsConfig.MPC_CONFIG.T
+    k = AwsConfig.MPC_CONFIG.K
+    port = AwsConfig.MPC_CONFIG.PORT
+    return getInstanceConfig(N, t, port, instanceIps, k)
 
 
 def getIpcInstanceConfig(instanceIps):
@@ -215,6 +222,8 @@ def trigger_run(runId, skip_setup, max_k, only_setup):
         elif AwsConfig.MPC_CONFIG.COMMAND.endswith("butterfly_network"):
             setupCommands = getButterflyNetworkCommands(max_k, s3Manager, instanceIds)
         elif AwsConfig.MPC_CONFIG.COMMAND.endswith("secretshare_hbavsslight"):
+            setupCommands = getHbAVSSCommands(s3Manager, instanceIds)
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("hbavss_multi"):
             setupCommands = getHbAVSSCommands(s3Manager, instanceIds)
         print(">>> Inputs successfully uploaded.")
 
