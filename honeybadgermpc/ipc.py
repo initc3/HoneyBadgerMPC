@@ -85,12 +85,15 @@ class Senders(object):
                 # print('[%2d] SEND %8s [%2d -> %s]' % (
                 #      msg[0], msg[1][1][0], msg[1][0], recvid
                 # ))
+                # time2 = os.times()
                 data = pickle.dumps(msg)
+                # pickle_time = str(os.times()[4] - time2[4])
+                # print('pickle time ' + pickle_time)
                 padded_msg = struct.pack('>I', len(data)) + data
                 self.totalBytesSent += len(padded_msg)
                 writer.write(padded_msg)
                 await writer.drain()
-                await asyncio.sleep(0.001)
+                await asyncio.sleep(0.00000000001)
         except ConnectionResetError:
             print("WARNING: Connection with peer [%s] reset." % recvid)
         except ConnectionRefusedError:
