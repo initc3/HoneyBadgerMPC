@@ -1,7 +1,9 @@
 import random
 from math import log
+import os
 import asyncio
 from itertools import islice
+from operator import __mul__, __floordiv__
 from honeybadgermpc.mpc import (
     Field, Poly, generate_test_triples, write_polys, TaskProgramRunner
 )
@@ -19,18 +21,11 @@ async def wait_for_preprocessing():
         await asyncio.sleep(1)
 
 
-async def multiplyShares(x, y, a, b, ab):
-    D = (x - a).open()
-    E = (y - b).open()
-    xy = D*E + D*b + E*a + ab
-    return await xy.open()
-
-
 async def batchBeaver(ctx, Xs, Ys, As, Bs, ABs):
     Ds = await (Xs - As).open()  # noqa: W606
     Es = await (Ys - Bs).open()  # noqa: W606
 
-    XYs = [await (ctx.Share(D*E) + D*b + E*a + ab).open() for (  # noqa: W606
+    XYs = [(ctx.Share(D*E) + D*b + E*a + ab).v for (
         a, b, ab, D, E) in zip(As._shares, Bs._shares, ABs._shares, Ds, Es)]
 
     return XYs
@@ -47,16 +42,6 @@ async def batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, n):
     t1s = [n * (x + y + m).v for x, y, m, n in zip(Xs._shares, Ys._shares, Ms, Ns)]
     t2s = [n * (x + y - m).v for x, y, m, n in zip(Xs._shares, Ys._shares, Ms, Ns)]
     return t1s, t2s
-
-
-async def switch(ctx, a, b, sbit, x, y, xy):
-    a, b, x, y, xy, sbit = map(ctx.Share, [a, b, x, y, xy, sbit])
-    m = ctx.Share(await multiplyShares(sbit, (a - b), x, y, xy))
-    n = 1 / Field(2)
-
-    x = n * (a + b + m).v
-    y = n * (a + b - m).v
-    return x, y
 
 
 def writeToFile(shares, nodeid):
@@ -82,43 +67,33 @@ def getNTriplesAndSbits(tripleshares, randshares, n):
     return As, Bs, ABs, sbits
 
 
-async def permutationNetwork(ctx, inputs, k, d, randshares, tripleshares, level=0):
-    if level == int(log(k, 2)) - d:
-        writeToFile(inputs, ctx.myid)
-        return None
-
-    if level > int(log(k, 2)) - d:
-        return None
-
-    if len(inputs) == 2:
-        a, b, ab, sbit = getTriplesAndSbit(tripleshares, randshares)
-        return await switch(ctx, inputs[0], inputs[1], sbit, a, b, ab)
-
-    n = len(inputs)//2
-    As, Bs, ABs, sbits = getNTriplesAndSbits(tripleshares, randshares, n)
-    Xs = [inputs[2*i] for i in range(n)]
-    Ys = [inputs[2*i + 1] for i in range(n)]
-    layer1output1, layer1output2 = await batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, n)
-
-    layer2output1 = await permutationNetwork(
-        ctx, layer1output1, k, d, randshares, tripleshares, level+1
-    )
-    layer2output2 = await permutationNetwork(
-        ctx, layer1output2, k, d, randshares, tripleshares, level+1
-    )
-
-    if layer2output1 is None or layer2output2 is None:
-        return None
-
-    As, Bs, ABs, sbits = getNTriplesAndSbits(tripleshares, randshares, n)
-    result = await batchSwitch(ctx, layer2output1, layer2output2, sbits, As, Bs, ABs, n)
-    result = [*sum(zip(result[0], result[1]), ())]
-
-    return result
+async def permutationNetwork(ctx, inputs, k, delta, randshares, tripleshares):
+    assert k == len(inputs)
+    assert k & (k-1) == 0, "Size of input must be a power of 2"
+    for j in range(2):
+        s, e, op = (1, k, __mul__) if j == 0 else (k//2, 1, __floordiv__)
+        while s != e:
+            As, Bs, ABs, sbits = getNTriplesAndSbits(tripleshares, randshares, k//2)
+            Xs, Ys = [], []
+            first = True
+            i = 0
+            while i < k:
+                for _ in range(s):
+                    arr = Xs if first else Ys
+                    arr.append(inputs[i])
+                    i += 1
+                first = not first
+            assert len(Xs) == len(Ys)
+            assert len(Xs) != 0
+            result = await batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, k)
+            inputs = [*sum(zip(result[0], result[1]), ())]
+            s = op(s, 2)
+    return inputs
 
 
 async def butterflyNetwork(ctx, **kwargs):
-    k, delta, inputs = kwargs['k'], kwargs['delta'], kwargs['inputs']
+    k, delta = kwargs['k'], kwargs['delta']
+    inputs = list(map(lambda x: x.v, list(ctx._rands)[:k]))
     tripleshares = ctx.read_shares(open(f'{triplesprefix}-{ctx.myid}.share'))
     randshares = ctx.read_shares(open(f'{oneminusoneprefix}-{ctx.myid}.share'))
     print(f"[{ctx.myid}] Running permutation network.")
@@ -139,20 +114,24 @@ def generate_random_shares(prefix, k, N, t):
 
 
 def runButterlyNetworkInTasks():
-    N, t, k, delta = 3, 1, 128, 6
-    inputs = [Field(i) for i in range(1, k+1)]
+    from honeybadgermpc.mpc import generate_test_randoms, random_files_prefix
 
+    N, t, k, delta = 3, 1, 128, 6
+
+    os.makedirs("sharedata/", exist_ok=True)
     print('Generating random shares of triples in sharedata/')
     generate_test_triples(triplesprefix, 1000, N, t)
     print('Generating random shares of 1/-1 in sharedata/')
     generate_random_shares(oneminusoneprefix, k * int(log(k, 2)), N, t)
+    print('Generating random inputs in sharedata/')
+    generate_test_randoms(random_files_prefix, 1000, N, t)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
         programRunner = TaskProgramRunner(N, t)
-        programRunner.add(butterflyNetwork, k=k, delta=delta, inputs=inputs)
+        programRunner.add(butterflyNetwork, k=k, delta=delta)
         loop.run_until_complete(programRunner.join())
     finally:
         loop.close()
@@ -160,10 +139,10 @@ def runButterlyNetworkInTasks():
 
 if __name__ == "__main__":
     import sys
-    import os
     from honeybadgermpc.config import load_config
     from honeybadgermpc.ipc import NodeDetails, ProcessProgramRunner
     from honeybadgermpc.exceptions import ConfigurationError
+    from honeybadgermpc.mpc import generate_test_randoms, random_files_prefix
 
     configfile = os.environ.get('HBMPC_CONFIG')
     nodeid = os.environ.get('HBMPC_NODE_ID')
@@ -196,8 +175,6 @@ if __name__ == "__main__":
         for peerid, addrinfo in config_dict['peers'].items()
     }
 
-    inputs = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
-
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
@@ -209,13 +186,15 @@ if __name__ == "__main__":
                 generate_test_triples(triplesprefix, 1000, N, t)
                 print('Generating random shares of 1/-1 in sharedata/')
                 generate_random_shares(oneminusoneprefix, k * int(log(k, 2)), N, t)
+                print('Generating random inputs in sharedata/')
+                generate_test_randoms(random_files_prefix, 1000, N, t)
                 os.mknod(f"{sharedatadir}/READY")
             else:
                 loop.run_until_complete(wait_for_preprocessing())
 
         programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
         loop.run_until_complete(programRunner.start())
-        programRunner.add(0, butterflyNetwork, k=k, delta=delta, inputs=inputs)
+        programRunner.add(0, butterflyNetwork, k=k, delta=delta)
         loop.run_until_complete(programRunner.join())
         loop.run_until_complete(programRunner.close())
     finally:
