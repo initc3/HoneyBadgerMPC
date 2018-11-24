@@ -107,7 +107,8 @@ def getIpcCommands(s3Manager, instanceIds):
 
 
 def getButterflyNetworkCommands(max_k, s3Manager, instanceIds):
-    from honeybadgermpc.mpc import generate_test_triples
+    from honeybadgermpc.mpc import (
+        generate_test_triples, generate_test_randoms, random_files_prefix)
     from apps.shuffle.butterfly_network import generate_random_shares, oneminusoneprefix
     from math import log
 
@@ -117,8 +118,11 @@ def getButterflyNetworkCommands(max_k, s3Manager, instanceIds):
     numTriples = AwsConfig.MPC_CONFIG.NUM_TRIPLES
     generate_test_triples('sharedata/test_triples', numTriples, N, t)
     generate_random_shares(oneminusoneprefix, k * int(log(k, 2)), N, t)
+    generate_test_randoms(random_files_prefix, 5000, N, t)
     tripleUrls = [s3Manager.uploadFile(
         "sharedata/test_triples-%d.share" % (i)) for i in range(N)]
+    inputUrls = [s3Manager.uploadFile(
+        f"{random_files_prefix}-%d.share" % (i)) for i in range(N)]
     randShareUrls = [s3Manager.uploadFile(
         f"{oneminusoneprefix}-{i}.share") for i in range(N)]
     setupCommands = [[instanceId, [
@@ -126,6 +130,7 @@ def getButterflyNetworkCommands(max_k, s3Manager, instanceIds):
             "mkdir -p sharedata",
             "cd sharedata; curl -sSO %s" % (tripleUrls[i]),
             "cd sharedata; curl -sSO %s" % (randShareUrls[i]),
+            "cd sharedata; curl -sSO %s" % (inputUrls[i]),
             "mkdir -p benchmark",
         ]] for i, instanceId in enumerate(instanceIds)]
 
