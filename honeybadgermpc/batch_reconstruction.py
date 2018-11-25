@@ -96,6 +96,21 @@ def attempt_reconstruct_batch(data, field, n, t, point):
     return recons
 
 
+def withAtMostNonNone(data, k):
+    """
+    Returns an sequence made from `data`, except with at most `k` are
+    non-None
+    """
+    howMany = 0
+    for x in data:
+        if howMany >= k:
+            yield None
+        else:
+            if x is not None:
+                howMany += 1
+            yield x
+
+
 async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False):
     """
     args:
@@ -148,7 +163,8 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     # trying to reconstruct each time
     for nAvailable in range(2 * t + 1, n + 1):
         data = await waitFor(dataR1, nAvailable)
-        # print('data R1:', data)
+        data = tuple(withAtMostNonNone(data, nAvailable))
+        # print('data R1:', data, 'nAvailable:', nAvailable)
         stime = time()
         reconsR2 = attempt_reconstruct_batch(data, field, n, t, point)
         if reconsR2 is None:
@@ -167,6 +183,8 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     # Step 4: Attempt to reconstruct R2
     for nAvailable in range(nAvailable, n + 1):
         data = await waitFor(dataR2, nAvailable)
+        data = tuple(withAtMostNonNone(data, nAvailable))
+        # print('data R2:', data, 'nAvailable:', nAvailable)
         stime = time()
         reconsP = attempt_reconstruct_batch(data, field, n, t, point)
         if reconsP is None:
