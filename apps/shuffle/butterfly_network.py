@@ -7,6 +7,8 @@ from operator import __mul__, __floordiv__
 from honeybadgermpc.mpc import (
     Field, Poly, generate_test_triples, write_polys, TaskProgramRunner
 )
+from honeybadgermpc.logger import BenchmarkLogger
+from time import time
 
 
 sharedatadir = "sharedata"
@@ -70,9 +72,12 @@ def getNTriplesAndSbits(tripleshares, randshares, n):
 async def permutationNetwork(ctx, inputs, k, delta, randshares, tripleshares):
     assert k == len(inputs)
     assert k & (k-1) == 0, "Size of input must be a power of 2"
+    benchLogger = BenchmarkLogger.get(ctx.myid)
+    iteration = 0
     for j in range(2):
         s, e, op = (1, k, __mul__) if j == 0 else (k//2, 1, __floordiv__)
         while s != e:
+            stime = time()
             As, Bs, ABs, sbits = getNTriplesAndSbits(tripleshares, randshares, k//2)
             Xs, Ys = [], []
             first = True
@@ -88,6 +93,8 @@ async def permutationNetwork(ctx, inputs, k, delta, randshares, tripleshares):
             result = await batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, k)
             inputs = [*sum(zip(result[0], result[1]), ())]
             s = op(s, 2)
+            benchLogger.info(f"[ButterflyNetwork-{iteration}]: {time()-stime}")
+            iteration += 1
     return inputs
 
 
