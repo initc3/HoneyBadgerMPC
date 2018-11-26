@@ -142,8 +142,8 @@ async def butterflyNetwork(ctx, **kwargs):
         ctx, inputs, k, delta, iter(randshares), iter(tripleshares)
     )
     if shuffled is not None:
-        shuffledShares = list(map(ctx.Share, shuffled))
-        openedValues = await asyncio.gather(*[s.open() for s in shuffledShares])
+        shuffledShares = ctx.ShareArray(list(map(ctx.Share, shuffled)))
+        openedValues = await shuffledShares.open()
         print(f"[{ctx.myid}]", openedValues)
         return shuffledShares
     return None
