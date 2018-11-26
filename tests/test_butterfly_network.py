@@ -1,4 +1,3 @@
-import asyncio
 from pytest import mark
 from math import log
 
@@ -15,8 +14,8 @@ async def test_butterfly_network(sharedatadir):
         inputs = ctx.read_shares(open(f"{random_files_prefix}-{ctx.myid}.share"))[:k]
         sortedinput = sorted(await ctx.ShareArray(inputs).open(), key=lambda x: x.value)
 
-        shares = await butterfly.butterflyNetwork(ctx, k=k, delta=delta)
-        outputs = await asyncio.gather(*[s.open() for s in shares])
+        shareArr = await butterfly.butterflyNetwork(ctx, k=k, delta=delta)
+        outputs = await shareArr.open()
 
         assert len(sortedinput) == len(outputs)
         sortedoutput = sorted(outputs, key=lambda x: x.value)
