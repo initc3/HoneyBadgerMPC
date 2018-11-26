@@ -25,8 +25,9 @@ async def test_butterfly_network(sharedatadir):
 
     N, t, k, delta = 3, 1, 32, -9999
     generate_test_randoms(random_files_prefix, 1000, N, t)
-    butterfly.generate_random_shares(butterfly.oneminusoneprefix, k*int(log(k, 2)), N, t)
-    generate_test_triples(butterfly.triplesprefix, 1000, N, t)
+    NUM_SWITCHES = k*int(log(k, 2))**2
+    butterfly.generate_random_shares(butterfly.oneminusoneprefix, NUM_SWITCHES, N, t)
+    generate_test_triples(butterfly.triplesprefix, 2*NUM_SWITCHES, N, t)
     programRunner = TaskProgramRunner(N, t)
     programRunner.add(verify_output,  k=k, delta=delta)
     await programRunner.join()
