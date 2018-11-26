@@ -115,10 +115,10 @@ def getButterflyNetworkCommands(max_k, s3Manager, instanceIds):
     N, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     k = max_k if max_k else AwsConfig.MPC_CONFIG.K
 
-    numTriples = AwsConfig.MPC_CONFIG.NUM_TRIPLES
-    generate_test_triples('sharedata/test_triples', numTriples, N, t)
-    generate_random_shares(oneminusoneprefix, k * int(log(k, 2)), N, t)
-    generate_test_randoms(random_files_prefix, 5000, N, t)
+    NUM_SWITCHES = k * int(log(k, 2)) ** 2
+    generate_test_triples('sharedata/test_triples', 2 * NUM_SWITCHES, N, t)
+    generate_random_shares(oneminusoneprefix, NUM_SWITCHES, N, t)
+    generate_test_randoms(random_files_prefix, k, N, t)
     tripleUrls = [s3Manager.uploadFile(
         "sharedata/test_triples-%d.share" % (i)) for i in range(N)]
     inputUrls = [s3Manager.uploadFile(
