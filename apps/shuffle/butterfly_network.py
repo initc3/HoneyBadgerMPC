@@ -70,6 +70,40 @@ def getNTriplesAndSbits(tripleshares, randshares, n):
 
 
 async def permutationNetwork(ctx, inputs, k, delta, randshares, tripleshares):
+    # This runs O(log k) iterations of the butterfly permutation network,
+    # each of which has log k elements. The total number of switches is
+    # k (log k)^2
+    assert k == len(inputs)
+    assert k & (k-1) == 0, "Size of input must be a power of 2"
+    benchLogger = BenchmarkLogger.get(ctx.myid)
+    iteration = 0
+    num_iterations = int(log(k, 2))
+    for cur_iter in range(num_iterations):
+        stride = 1
+        while stride < k:
+            stime = time()
+            As, Bs, ABs, sbits = getNTriplesAndSbits(tripleshares, randshares, k//2)
+            assert len(As) == len(Bs) == len(ABs) == len(sbits) == k//2
+            Xs, Ys = [], []
+            first = True
+            i = 0
+            while i < k:
+                for _ in range(stride):
+                    arr = Xs if first else Ys
+                    arr.append(inputs[i])
+                    i += 1
+                first = not first
+            assert len(Xs) == len(Ys)
+            assert len(Xs) != 0
+            result = await batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, k)
+            inputs = [*sum(zip(result[0], result[1]), ())]
+            stride *= 2
+            benchLogger.info(f"[ButterflyNetwork-{iteration}]: {time()-stime}")
+            iteration += 1
+    return inputs
+
+
+async def benesNetwork(ctx, inputs, k, delta, randshares, tripleshares):
     assert k == len(inputs)
     assert k & (k-1) == 0, "Size of input must be a power of 2"
     benchLogger = BenchmarkLogger.get(ctx.myid)
@@ -93,7 +127,7 @@ async def permutationNetwork(ctx, inputs, k, delta, randshares, tripleshares):
             result = await batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, k)
             inputs = [*sum(zip(result[0], result[1]), ())]
             s = op(s, 2)
-            benchLogger.info(f"[ButterflyNetwork-{iteration}]: {time()-stime}")
+            benchLogger.info(f"[BenesNetwork-{iteration}]: {time()-stime}")
             iteration += 1
     return inputs
 
@@ -125,13 +159,15 @@ def runButterlyNetworkInTasks():
 
     N, t, k, delta = 3, 1, 128, 6
 
+    NUM_SWITCHES = k * int(log(k, 2)) ** 2
+
     os.makedirs("sharedata/", exist_ok=True)
     print('Generating random shares of triples in sharedata/')
-    generate_test_triples(triplesprefix, 1000, N, t)
+    generate_test_triples(triplesprefix, 2*NUM_SWITCHES, N, t)
     print('Generating random shares of 1/-1 in sharedata/')
-    generate_random_shares(oneminusoneprefix, k * int(log(k, 2)), N, t)
+    generate_random_shares(oneminusoneprefix, NUM_SWITCHES, N, t)
     print('Generating random inputs in sharedata/')
-    generate_test_randoms(random_files_prefix, 1000, N, t)
+    generate_test_randoms(random_files_prefix, k, N, t)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
@@ -188,13 +224,14 @@ if __name__ == "__main__":
     try:
         if not config_dict['skipPreprocessing']:
             if nodeid == 0:
+                NUM_SWITCHES = k * int(log(k, 2)) ** 2
                 os.makedirs("sharedata/", exist_ok=True)
                 print('Generating random shares of triples in sharedata/')
-                generate_test_triples(triplesprefix, 1000, N, t)
+                generate_test_triples(triplesprefix, 2 * NUM_SWITCHES, N, t)
                 print('Generating random shares of 1/-1 in sharedata/')
-                generate_random_shares(oneminusoneprefix, k * int(log(k, 2)), N, t)
+                generate_random_shares(oneminusoneprefix, NUM_SWITCHES, N, t)
                 print('Generating random inputs in sharedata/')
-                generate_test_randoms(random_files_prefix, 1000, N, t)
+                generate_test_randoms(random_files_prefix, k, N, t)
                 os.mknod(f"{sharedatadir}/READY")
             else:
                 loop.run_until_complete(wait_for_preprocessing())
