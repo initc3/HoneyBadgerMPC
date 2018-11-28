@@ -149,7 +149,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
         for chunk in toChunks(data, t + 1):
             f_poly = Poly(chunk)
             for j in range(n):
-                toSend[j].append(f_poly(point(j)))
+                toSend[j].append(f_poly(point(j)).value)  # send just the int value
         # print('batch to send:', toSend)
         for j in range(n):
             send(j, toSend[j])
@@ -165,6 +165,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
         data = await waitFor(dataR1, nAvailable)
         data = tuple(withAtMostNonNone(data, nAvailable))
         # print('data R1:', data, 'nAvailable:', nAvailable)
+        data = tuple([None if d is None else tuple(map(Fp, d)) for d in data])
         stime = time()
         reconsR2 = attempt_reconstruct_batch(data, field, n, t, point)
         if reconsR2 is None:
@@ -184,6 +185,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     for nAvailable in range(nAvailable, n + 1):
         data = await waitFor(dataR2, nAvailable)
         data = tuple(withAtMostNonNone(data, nAvailable))
+        data = tuple([None if d is None else tuple(map(Fp, d)) for d in data])
         # print('data R2:', data, 'nAvailable:', nAvailable)
         stime = time()
         reconsP = attempt_reconstruct_batch(data, field, n, t, point)
