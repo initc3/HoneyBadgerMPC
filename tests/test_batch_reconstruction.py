@@ -3,7 +3,7 @@ import pytest
 import asyncio
 from honeybadgermpc.batch_reconstruction import batch_reconstruct
 from honeybadgermpc.router import simple_router
-from honeybadgermpc.field import GFElement
+from honeybadgermpc.field import GF, GFElement
 
 
 def handle_async_exception(loop, ctx):
@@ -16,6 +16,7 @@ async def test():
     N = 4
     p = 73
     t = 1
+    Fp = GF.get(p)
 
     # loop = asyncio.get_event_loop()
     # loop.set_exception_handler(handle_async_exception)
@@ -33,7 +34,7 @@ async def test():
     sends, recvs = simple_router(N)
     towait = []
     for i in range(N):
-        ss = shared_secrets[i]
+        ss = tuple(map(Fp, shared_secrets[i]))
         towait.append(batch_reconstruct(ss, p, t, N, i,
                                         sends[i], recvs[i], True))
     results = await asyncio.gather(*towait)
@@ -46,7 +47,7 @@ async def test():
     for i in range(N):
         ss = shared_secrets[i]
         if i == 2:
-            ss = (0, 0)  # add an error
+            ss = tuple(map(Fp, (0, 0)))  # add an error
         towait.append(batch_reconstruct(ss, p, t, N, i,
                                         sends[i], recvs[i], False))
     results = await asyncio.gather(*towait)
@@ -59,11 +60,11 @@ async def test():
     sends, recvs = simple_router(N)
     towait = []
     for i in range(N):
-        ss = shared_secrets[i]
+        ss = tuple(map(Fp, shared_secrets[i]))
         if i == 2:
             continue  # skip this node
         if i == 3:
-            ss = (0, 0)  # add an error
+            ss = tuple(map(Fp, (0, 0)))  # add an error
         towait.append(batch_reconstruct(ss, p, t, N, i,
                                         sends[i], recvs[i], False))
     with pytest.raises(asyncio.TimeoutError):
@@ -76,6 +77,7 @@ async def test_opening_types():
     N = 4
     p = 73
     t = 1
+    Fp = GF.get(p)
 
     shared_secrets = [(1, 1, 1, 1),
                       (2, 2, 2, 2),
@@ -85,7 +87,7 @@ async def test_opening_types():
     sends, recvs = simple_router(N)
     towait = []
     for i in range(N-1):  # one erasure
-        ss = shared_secrets[i]
+        ss = tuple(map(Fp, shared_secrets[i]))
         towait.append(batch_reconstruct(ss, p, t, N, i,
                                         sends[i], recvs[i], True))
     results = await asyncio.gather(*towait)
