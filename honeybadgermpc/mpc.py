@@ -116,7 +116,7 @@ class Mpc(object):
         P, failures = await opening
         return P(Field(0))
 
-    async def open_share_array(self, sharearray):
+    def open_share_array(self, sharearray):
         # Choose the shareid based on the order this is called
         shareid = len(self._openings)
 
@@ -128,7 +128,7 @@ class Mpc(object):
                                     Field.modulus, self.t, self.N,
                                     self.myid, _send, _recv, debug=True)
         self._openings[shareid] = opening
-        return await opening
+        return opening
 
     async def _run(self):
         # Run receive loop as background task, until self.prog finishes
@@ -322,7 +322,6 @@ def shareInContext(context):
 
             def cb(f): return res.set_result(f.result())
             opening = asyncio.create_task(context.open_share_array(self))
-            # context._newopening.put_nowait(opening)
             opening.add_done_callback(cb)
             return res
 
