@@ -75,8 +75,20 @@ class Senders(object):
 
     async def process_queue(self, writer, q, recvid):
         try:
+            writer._bytesSent = 0
             while True:
-                msg = await q.get()
+                try:
+                    msg = await asyncio.wait_for(q.get(), timeout=4)
+                except asyncio.TimeoutError:
+                    print('timeout', recvid)
+                    # FIXME: debug diagnostic below
+                    print('timeout sending to:', recvid,
+                          'sent:', writer._bytesSent)
+                    # Option 1: heartbeat
+                    msg = "heartbeat"
+                    # Option 2: no heartbeat
+                    # continue
+
                 if msg is None:
                     print('Close the connection')
                     writer.close()
@@ -93,7 +105,7 @@ class Senders(object):
                 self.totalBytesSent += len(padded_msg)
                 writer.write(padded_msg)
                 await writer.drain()
-                await asyncio.sleep(0.00000000001)
+                writer._bytesSent += len(padded_msg)
         except ConnectionResetError:
             print("WARNING: Connection with peer [%s] reset." % recvid)
         except ConnectionRefusedError:
@@ -135,6 +147,8 @@ class Listener(object):
         task.add_done_callback(cb)
 
         # print("Received new connection", writer.get_extra_info("peername"))
+        reader._whoFrom = None
+        reader._bytesRead = 0
         while True:
             raw_msglen = await self.recvall(reader, 4)
             if raw_msglen is None:
@@ -143,7 +157,16 @@ class Listener(object):
             received_raw_msg = await self.recvall(reader, msglen)
             if received_raw_msg is None:
                 break
-            sid, received_msg = pickle.loads(received_raw_msg)
+            unpickled = pickle.loads(received_raw_msg)
+            if unpickled == "heartbeat":
+                print("received heartbeat", reader._whoFrom)
+                continue
+            sid, received_msg = unpickled
+            if reader._whoFrom is None:
+                reader._whoFrom = received_msg[0]
+                print(reader._whoFrom, reader)
+            assert reader._whoFrom == received_msg[0]
+
             # print(
             #     '[%d] RECV %8s [from %2d]' % (sid, received_msg[1][0], received_msg[0])
             # )
@@ -156,7 +179,15 @@ class Listener(object):
         # Helper function to recv n bytes or return None if EOF is hit
         data = b''
         while len(data) < n:
-            packet = await reader.read(n)
+            try:
+                packet = await asyncio.wait_for(reader.read(n - len(data)),
+                                                timeout=4)
+                reader._bytesRead += len(packet)
+            except asyncio.TimeoutError:
+                print('recv timeout', reader._whoFrom,
+                      'reading:', n - len(data),
+                      'bytesRead:', reader._bytesRead)
+                continue
             if len(packet) == 0:
                 return None
             data += packet
