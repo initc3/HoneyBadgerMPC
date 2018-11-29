@@ -98,6 +98,7 @@ async def permutationNetwork(ctx, inputs, k, delta, randshares, tripleshares):
             result = await batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, k)
             inputs = [*sum(zip(result[0], result[1]), ())]
             stride *= 2
+            print(f"[ButterflyNetwork-{iteration}]: {time()-stime}")
             benchLogger.info(f"[ButterflyNetwork-{iteration}]: {time()-stime}")
             iteration += 1
     return inputs
@@ -138,6 +139,11 @@ async def butterflyNetwork(ctx, **kwargs):
     tripleshares = ctx.read_shares(open(f'{triplesprefix}-{ctx.myid}.share'))
     randshares = ctx.read_shares(open(f'{oneminusoneprefix}-{ctx.myid}.share'))
     print(f"[{ctx.myid}] Running permutation network.")
+    # FIXME: debug diagnostic below
+    # This induces "crash" behavior in node 1
+    # if ctx.myid == 1:
+    #    await asyncio.sleep(10000)
+
     shuffled = await permutationNetwork(
         ctx, inputs, k, delta, iter(randshares), iter(tripleshares)
     )
