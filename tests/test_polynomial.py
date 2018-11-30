@@ -14,7 +14,7 @@ def test_poly_eval_at_k(GaloisField, Polynomial):
     d = randint(1, 50)
     coeffs = [randint(0, GaloisField.modulus-1) for i in range(d)]
     poly3 = Polynomial(coeffs)  # random polynomial of degree d
-    x = randint(0, GaloisField.modulus-1)
+    x = GaloisField(randint(0, GaloisField.modulus-1))
     y = sum([pow(x, i) * a for i, a in enumerate(coeffs)])
     assert y == poly3(x)
 
