@@ -3,6 +3,7 @@ import random
 from functools import reduce
 from .field import GF, GFElement
 from itertools import zip_longest
+from honeybadgermpc.betterpairing import ZR, bls12_381_r
 
 
 def strip_trailing_zeros(a):
@@ -21,9 +22,19 @@ def polynomialsOver(field):
     if field in _poly_cache:
         return _poly_cache[field]
 
+    USE_RUST = False
+    if field.modulus == bls12_381_r:
+        USE_RUST = False
+        print('using bls12_381_r')
+
     class Polynomial(object):
         def __init__(self, coeffs):
-            self.coeffs = strip_trailing_zeros(coeffs)
+            self.coeffs = list(strip_trailing_zeros(coeffs))
+            for i in range(len(self.coeffs)):
+                if type(self.coeffs[i]) is int:
+                    self.coeffs[i] = field(self.coeffs[i])
+            if USE_RUST:
+                self._zrcoeffs = [ZR(c.value) for c in self.coeffs]
             self.field = field
 
         def isZero(self):
@@ -36,12 +47,22 @@ def polynomialsOver(field):
                                for i, a in enumerate(self.coeffs)])
 
         def __call__(self, x):
-            y = 0
-            xx = 1
-            for coeff in self.coeffs:
-                y += coeff * xx
-                xx *= x
-            return y
+            if USE_RUST:
+                assert type(x) is int
+                x = ZR(x)
+                k = len(self.coeffs) - 1
+                y = ZR(0)
+                for i in range(k):
+                    y *= x
+                    y += self._zrcoeffs[k-i]
+                return field(int(y))
+            else:
+                y = 0
+                xx = 1
+                for coeff in self.coeffs:
+                    y += coeff * xx
+                    xx *= x
+                return y
 
         @classmethod
         def interpolate_at(cls, shares, x_recomb=field(0)):
