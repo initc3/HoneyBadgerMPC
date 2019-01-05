@@ -1,5 +1,5 @@
-from random import randint
-from honeybadgermpc.polynomial import get_omega
+from random import randint, shuffle
+from honeybadgermpc.polynomial import get_omega, fnt_decode_step1, fnt_decode_step2
 
 
 def test_poly_eval_at_k(galois_field, polynomial):
@@ -54,3 +54,26 @@ def test_interp_extrap(galois_field, polynomial):
     values = polynomial.interp_extrap(ys, omega)
     for a, b in zip(ys, values[0:201:2]):  # verify only 100 points
         assert a == b
+
+
+def test_fft_decode(GaloisField, Polynomial):
+    d = randint(210, 300)
+    coeffs = [randint(0, GaloisField.modulus-1) for i in range(d)]
+    P = Polynomial(coeffs)
+    n = d
+    n = n if n & n-1 == 0 else 2**n.bit_length()
+    omega2 = get_omega(GaloisField, 2*n)
+    omega = omega2 ** 2
+
+    # Create shares and erasures
+    zs = list(range(n))
+    shuffle(zs)
+    zs = zs[:d]
+    ys = list(P.evaluate_fft(omega, n))
+    ys = [ys[i] for i in zs]
+
+    As_, Ais_ = fnt_decode_step1(Polynomial, zs, omega2, n)
+    Prec_ = fnt_decode_step2(Polynomial, zs, ys, As_, Ais_, omega2, n)
+    print('Prec_(X):', Prec_)
+    print('P(X):', P)
+    assert Prec_.coeffs == P.coeffs
