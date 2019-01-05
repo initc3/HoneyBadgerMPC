@@ -277,6 +277,88 @@ def fft(poly, omega, n, seed=None):
     return fft_helper(padded_coeffs, omega, poly.field)
 
 
+def fnt_decode_step1(Poly, zs, omega2, n):
+    """
+    This needs to be run once for decoding a batch of secret shares
+    It depends only on the x values (the points the polynomial is
+    evaluated at, i.e. the IDs of the parties contributing shares) so
+    it can be reused for multiple batches.
+    Complexity: O(n^2)
+
+    args:
+        zs is a subset of [0,n)
+        omega2 is a (2*n)th root of unity
+
+    returns:
+        A(X) evaluated at 1...omega2**(2n-1)
+        Ai(xi) for each xi = omega**(zi)
+
+    where:
+        omega = omega2**2
+        where A(X) = prod( X - xj ) for each xj
+        Ai(xi) = prod( xi - xj ) for j != i
+    """
+    k = len(zs)
+    omega = omega2**2
+    xs = [omega**z for z in zs]
+
+    # Compute A(X)
+    A = Poly([1])
+    for i in range(k):
+        print(i, Poly([-xs[i], 1]))
+        A *= Poly([-xs[i], 1])
+    As = [A(omega2**i) for i in range(2*n)]
+
+    # Compute all Ai(Xi)
+    Ais = []
+    for i in range(k):
+        Ai = A.field(1)
+        for j in range(k):
+            if i != j:
+                Ai *= xs[i] - xs[j]
+        Ais.append(Ai)
+    return As, Ais
+
+
+def fnt_decode_step2(Poly, zs, ys, As, Ais, omega2, n):
+    """
+    Returns a polynomial P such that P(omega**zi) = yi
+
+    Complexity: O(n log n)
+
+    args:
+        zs is a subset of [0,n)
+        As, Ais = fnt_decode_step1(zs, omega2, n)
+        omega2 is a (2*n)th root of unity
+
+    returns:
+        P  Poly
+    """
+    k = len(ys)
+    assert len(ys) == len(Ais)
+    assert len(As) == 2*n
+    omega = omega2 ** 2
+
+    # Compute N'(x)
+    nis = [ys[i] / Ais[i] for i in range(k)]
+    Ncoeffs = [0 for _ in range(n)]
+    for i in range(k):
+        Ncoeffs[zs[i]] = nis[i]
+    N = Poly(Ncoeffs)
+
+    # Compute P/A(X)
+    # PoverA = -Poly([N(omega**(n-j-1)) for j in range(n)])
+    Nevals = N.evaluate_fft(omega, n)
+    PoverA = -Poly(Nevals[::-1])
+    pas = PoverA.evaluate_fft(omega2, 2*n)
+
+    # Recover P(X)
+    ps = [p*a for (p, a) in zip(pas, As)]
+    Prec = Poly.interpolate_fft(ps, omega2)
+    Prec.coeffs = Prec.coeffs[:k]
+    return Prec
+
+
 if __name__ == "__main__":
     field = GF.get(Subgroup.BLS12_381)
     Poly = polynomials_over(field)
