@@ -1,5 +1,6 @@
 import asyncio
 import random
+import logging
 from .field import GF
 from .polynomial import polynomialsOver, get_omega
 from .elliptic_curve import Subgroup
@@ -37,7 +38,7 @@ class ShareRandom_Protocol(object):
         self._avss = [AVSS(ssid % (i, j), Dealer=i, myid=myid)
                       for i in range(N) for j in range(B)]
 
-        print(N)
+        logging.info(N)
 
         # Create one ACS
         self._acs = ACS(sid, myid=myid)
@@ -61,7 +62,7 @@ class ShareRandom_Protocol(object):
                     break
 
             # Then provide input to ACS
-            print('vec:', vec)
+            logging.info(f'vec: {vec}')
             self._acs.input.set_result(vec)
 
             # Wait for ACS then proceed using the Rands indicated
@@ -75,16 +76,16 @@ class ShareRandom_Protocol(object):
                 for j in range(N):
                     if vecs[i][j]:
                         score[j] += 1
-            print('vecs with t+1 inputs:', score)
+            logging.info(f'vecs with t+1 inputs: {score}')
 
             # Print statistics about how much output to expect
             def nearest_power_of_two(x): return 2**(x-1).bit_length()   # Round up
             valid = [score[i] >= f+1 for i in range(N)]
-            print("N':", sum(valid))
-            print("Parties B*N'", sum(valid)*B)
+            logging.info(f"N': {sum(valid)}")
+            logging.info(f"Parties B*N' {sum(valid)*B}")
             D = nearest_power_of_two(sum(valid)*B)
-            print("D (nearest pow-of-2, round up):", D)
-            print("Recoverable:", (sum(valid)-f)*B)
+            logging.info(f"D (nearest pow-of-2, round up): {D}")
+            logging.info(f"Recoverable: {(sum(valid)-f)*B}")
 
             # Wait for the appropriate AVSS to finish
             input_shares = []
@@ -93,14 +94,14 @@ class ShareRandom_Protocol(object):
                     _shares = [a.output for a in self._avss[i*B:(i+1)*B]]
                     input_shares += await asyncio.gather(*_shares)
 
-            print('input_shares:', len(input_shares))
+            logging.info(f'input_shares: {len(input_shares)}')
             input_shares = input_shares + ([Field(0)] * (D-len(input_shares)))
 
             # Interpolate all the committed shares
             omega = get_omega(Field, 2*D, seed=0)
             outputs = Poly.interp_extrap(input_shares[:D], omega)
             output_shares = outputs[1:2*((sum(valid)-f)*B):2]   # Pick the odd shares
-            print('output_shares:', len(output_shares))
+            logging.info(f'output_shares: {len(output_shares)}')
 
             self.output.set_result(output_shares)
 
@@ -123,7 +124,7 @@ async def _test_rand(sid='sid', N=4, f=1):
         # Optionally fail to active the last one of them
         rands.append(ShareRandom_Protocol(B, N, f, sid, i, SecretShare, CommonSubset))
 
-    print('_test_rand: awaiting results...')
+    logging.info('_test_rand: awaiting results...')
     results = await asyncio.gather(*(rand.output for rand in rands))
 
     # Check reconstructions are valid
@@ -133,7 +134,7 @@ async def _test_rand(sid='sid', N=4, f=1):
         t2 = Poly.interpolate_at(shares[-(f+1):])
         assert t1 == t2
 
-    print('Done!')
+    logging.info('Done!')
     for a in SecretShare._instances.values():
         a._task.cancel()
 
