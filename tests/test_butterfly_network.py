@@ -14,7 +14,7 @@ async def test_butterfly_network(sharedatadir):
         inputs = ctx.read_shares(open(f"{random_files_prefix}-{ctx.myid}.share"))[:k]
         sortedinput = sorted(await ctx.ShareArray(inputs).open(), key=lambda x: x.value)
 
-        shareArr = await butterfly.butterflyNetwork(ctx, k=k, delta=delta)
+        shareArr = await butterfly.butterfly_network_helper(ctx, k=k, delta=delta)
         outputs = await shareArr.open()
 
         assert len(sortedinput) == len(outputs)
