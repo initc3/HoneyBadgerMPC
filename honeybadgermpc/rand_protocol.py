@@ -1,6 +1,6 @@
 import asyncio
 import random
-
+import logging
 # For testing, use the Ideal Protocol for AVSS and ACS
 from .secretshare_functionality import SecretShare_IdealProtocol
 from .commonsubset_functionality import CommonSubset_IdealProtocol
@@ -51,9 +51,9 @@ async def _test_naive(sid='sid', N=4, f=1):
         # Optionally fail to active the last one of them
         rands.append(NaiveShareRandomProtocol(N, f, sid, i, SecretShare, None))
 
-    print('_test_naive: awaiting results...')
+    logging.info('_test_naive: awaiting results...')
     results = await asyncio.gather(*(rand.output for rand in rands))
-    print('_test_naive:', results)
+    logging.info(f'_test_naive: {results}')
 
 
 def test_naive():
@@ -116,7 +116,7 @@ class ShareSingle_Protocol(object):
                 for j in range(N):
                     if vecs[i][j]:
                         score[j] += 1
-            print(score)
+            logging.info(score)
 
             # Add up the committed shares
             output = 0
@@ -124,8 +124,8 @@ class ShareSingle_Protocol(object):
                 if score[i] >= f+1:
                     output += await self._avss[i].output
 
-            print('vecs with t+1 inputs:', score)
-            print('Done')
+            logging.info(f'vecs with t+1 inputs: {score}')
+            logging.info('Done')
             self.output.set_result(output)
 
         self._task = asyncio.ensure_future(_run())
@@ -141,9 +141,9 @@ async def _test_rand(sid='sid', N=4, f=1):
         # Optionally fail to active the last one of them
         rands.append(ShareSingle_Protocol(N, f, sid, i, SecretShare, CommonSubset))
 
-    print('_test_rand: awaiting results...')
+    logging.info('_test_rand: awaiting results...')
     results = await asyncio.gather(*(rand.output for rand in rands))
-    print('_test_rand:', results)
+    logging.info(f"_test_rand: {results}")
     for a in SecretShare._instances.values():
         a._task.cancel()
 

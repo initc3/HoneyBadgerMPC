@@ -1,5 +1,6 @@
 import asyncio
 import random
+import logging
 """
 Ideal functionality for Random Share
 This protocol returns a single random share
@@ -45,7 +46,7 @@ async def _test_sharesingle_ideal(sid='sid', N=4, f=1):
     # Now can await output from each ShareSingle protocol
     for i in range(N):
         await parties[i].output
-        print(i, parties[i].output)
+        logging.info(f"{i} {parties[i].output}")
 
 
 def test_sharesingle_ideal():

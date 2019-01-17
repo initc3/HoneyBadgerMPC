@@ -2,11 +2,11 @@ import random
 from math import log
 import os
 import asyncio
+import logging
 from itertools import islice
 from honeybadgermpc.mpc import (
     Field, Poly, generate_test_triples, write_polys, TaskProgramRunner
 )
-from honeybadgermpc.logger import BenchmarkLogger
 from time import time
 
 
@@ -18,7 +18,7 @@ filecount = 0
 
 async def wait_for_preprocessing():
     while not os.path.exists(f"{sharedatadir}/READY"):
-        print(f"waiting for preprocessing {sharedatadir}/READY")
+        logging.info(f"waiting for preprocessing {sharedatadir}/READY")
         await asyncio.sleep(1)
 
 
@@ -74,7 +74,8 @@ async def iterated_butterfly_network(ctx, inputs, k, delta, randshares, triplesh
     # k (log k)^2
     assert k == len(inputs)
     assert k & (k-1) == 0, "Size of input must be a power of 2"
-    benchLogger = BenchmarkLogger.get(ctx.myid)
+    benchLogger = logging.LoggerAdapter(
+        logging.getLogger("benchmark_logger"), {"node_id": ctx.myid})
     iteration = 0
     num_iterations = int(log(k, 2))
     for cur_iter in range(num_iterations):
@@ -107,14 +108,14 @@ async def butterfly_network_helper(ctx, **kwargs):
     inputs = list(map(lambda x: x.v, list(ctx._rands)[:k]))
     tripleshares = ctx.read_shares(open(f'{triplesprefix}-{ctx.myid}.share'))
     randshares = ctx.read_shares(open(f'{oneminusoneprefix}-{ctx.myid}.share'))
-    print(f"[{ctx.myid}] Running permutation network.")
+    logging.info(f"[{ctx.myid}] Running permutation network.")
     shuffled = await iterated_butterfly_network(
         ctx, inputs, k, delta, iter(randshares), iter(tripleshares)
     )
     if shuffled is not None:
         shuffledShares = ctx.ShareArray(list(map(ctx.Share, shuffled)))
         openedValues = await shuffledShares.open()
-        print(f"[{ctx.myid}]", openedValues)
+        logging.info(f"[{ctx.myid}] {openedValues}")
         return shuffledShares
     return None
 
@@ -132,11 +133,11 @@ def runButterlyNetworkInTasks():
     NUM_SWITCHES = k * int(log(k, 2)) ** 2
 
     os.makedirs("sharedata/", exist_ok=True)
-    print('Generating random shares of triples in sharedata/')
+    logging.info('Generating random shares of triples in sharedata/')
     generate_test_triples(triplesprefix, 2*NUM_SWITCHES, N, t)
-    print('Generating random shares of 1/-1 in sharedata/')
+    logging.info('Generating random shares of 1/-1 in sharedata/')
     generate_random_shares(oneminusoneprefix, NUM_SWITCHES, N, t)
-    print('Generating random inputs in sharedata/')
+    logging.info('Generating random inputs in sharedata/')
     generate_test_randoms(random_files_prefix, k, N, t)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
@@ -196,11 +197,11 @@ if __name__ == "__main__":
             if nodeid == 0:
                 NUM_SWITCHES = k * int(log(k, 2)) ** 2
                 os.makedirs("sharedata/", exist_ok=True)
-                print('Generating random shares of triples in sharedata/')
+                logging.info('Generating random shares of triples in sharedata/')
                 generate_test_triples(triplesprefix, 2 * NUM_SWITCHES, N, t)
-                print('Generating random shares of 1/-1 in sharedata/')
+                logging.info('Generating random shares of 1/-1 in sharedata/')
                 generate_random_shares(oneminusoneprefix, NUM_SWITCHES, N, t)
-                print('Generating random inputs in sharedata/')
+                logging.info('Generating random inputs in sharedata/')
                 generate_test_randoms(random_files_prefix, k, N, t)
                 os.mknod(f"{sharedatadir}/READY")
             else:

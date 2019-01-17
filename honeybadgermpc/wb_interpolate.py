@@ -38,8 +38,8 @@
 #
 
 # for solving a linear system
+import logging
 from honeybadgermpc.linearsolver import someSolution
-
 from honeybadgermpc.field import GF
 from honeybadgermpc.polynomial import polynomialsOver
 
@@ -100,28 +100,28 @@ def makeEncoderDecoder(n, k, p, omega=None):
             )  # ensure coefficient of x^e in E(x) is 1
 
             if debug:
-                print("\ne is %r" % e)
-                print("\nsystem is:\n\n")
+                logging.debug("\ne is %r" % e)
+                logging.debug("\nsystem is:\n\n")
                 for row in system:
-                    print("\t%r" % (row,))
+                    logging.debug("\t%r" % (row,))
 
             solution = someSolution(system, freeVariableValue=1)
             E = Poly([solution[j] for j in range(e + 1)])
             Q = Poly([solution[j] for j in range(e + 1, len(solution))])
 
             if debug:
-                print("\nreduced system is:\n\n")
+                logging.debug("\nreduced system is:\n\n")
                 for row in system:
-                    print("\t%r" % (row,))
+                    logging.debug("\t%r" % (row,))
 
-                print("solution is %r" % (solution,))
-                print("Q is %r" % (Q,))
-                print("E is %r" % (E,))
+                logging.debug("solution is %r" % (solution,))
+                logging.debug("Q is %r" % (Q,))
+                logging.debug("E is %r" % (E,))
 
             P, remainder = Q.__divmod__(E)
             if debug:
-                print("P(x) = %r" % P)
-                print("r(x) = %r" % remainder)
+                logging.debug("P(x) = %r" % P)
+                logging.debug("r(x) = %r" % remainder)
             if remainder.isZero():
                 return Q, E
         raise ValueError("found no divisors!")
@@ -133,9 +133,9 @@ def makeEncoderDecoder(n, k, p, omega=None):
         e = (n - c - (2 * t + 1))  # number of errors to correct
 
         if debug:
-            print('n:', n, 'k:', k, 't:', t, 'c:', c)
-            print('decoding with e:', e)
-            print('decoding with c:', c)
+            logging.debug(f'n: {n} k: {k} t: {t} c: {c}')
+            logging.debug(f'decoding with e: {e}')
+            logging.debug(f'decoding with c: {c}')
 
         encM = [(point(i), m)
                 for i, m in enumerate(encodedMessage) if m is not None]

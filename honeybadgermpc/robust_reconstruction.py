@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from honeybadgermpc.wb_interpolate import makeEncoderDecoder
 from honeybadgermpc.polynomial import polynomialsOver
 
@@ -17,7 +18,6 @@ def attempt_reconstruct(encoded, field, n, t, point):
     assert len(encoded) == n
     assert sum(f is not None for f in encoded) >= 2*t + 1
 
-    # print("Attempting to reconstruct with points", nAvailable)
     # raise ValueError("Sentinel bug")
 
     # interpolate with error correction to get f(j,y)
@@ -55,7 +55,7 @@ async def robust_reconstruct(field_futures, field, n, t, point):
             P, failures = attempt_reconstruct(elems, field, n, t, point)
             return P, failures
         except ValueError as e:
-            # print('ValueError:', e)
+            logging.debug(f'ValueError: {e}')
             if str(e) in ("Wrong degree", "no divisors found"):
                 continue
             else:
