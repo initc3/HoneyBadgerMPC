@@ -4,7 +4,7 @@ Implementation of Asynchronous Common Subset using an EVM blockchain
 import asyncio
 from contextlib import contextmanager
 import subprocess
-
+import logging
 from ethereum.tools._solidity import compile_code as compile_source
 from web3.contract import ConciseContract
 
@@ -28,19 +28,20 @@ def CommonSubsetProtocol(w3, contract, N, f):
 
         async def _run(self):
             v = await self.input
-            print('[%d] Invoking CommonSubset contract.input(%d)' % (self.myid, v))
+            logging.info(
+                '[%d] Invoking CommonSubset contract.input(%d)' % (self.myid, v))
             contract.input(v, transact={'from': w3.eth.accounts[self.myid]})
 
             # TODO: alternative to polling?
             while True:
-                print("[%d] deadline:%d, blockno:%d" % (
+                logging.info("[%d] deadline:%d, blockno:%d" % (
                     self.myid, contract.deadline(), w3.eth.blockNumber))
                 if contract.isComplete():
                     break
                 await asyncio.sleep(3)
             count = contract.count()    # noqa XXX count is unused
             outs = [contract.values(i) for i in range(N)]
-            print('CommonSubset output ready', contract.count(), outs)
+            logging.info(f'CommonSubset output ready {contract.count()} {outs}')
             self.output.set_result(outs)
 
     return CommonSubset_BlockchainProtocol
@@ -76,12 +77,12 @@ async def main_loop(w3):
     contract_instance = w3.eth.contract(
         address=contract_address, abi=abi, ContractFactoryClass=ConciseContract)
 
-    print(tx_receipt)
-    print('N', contract_instance.N())
-    print('f', contract_instance.f())
-    print('players(0)', contract_instance.players(0))
-    print('players(6)', contract_instance.players(6))
-    # print('players(7)',contract_instance.players(7))
+    logging.info(tx_receipt)
+    logging.info(f'N {contract_instance.N()}')
+    logging.info(f'f {contract_instance.f()}')
+    logging.info(f'players(0) {contract_instance.players(0)}')
+    logging.info(f'players(6) {contract_instance.players(6)}')
+    # logging.info(f'players(7) {contract_instance.players(7)}')
 
     CommonSubset = CommonSubsetProtocol(w3, contract_instance, 7, 2)
     prots = [CommonSubset('sid', i) for i in range(5)]
@@ -91,7 +92,7 @@ async def main_loop(w3):
     await asyncio.gather(*outputs)
     for prot in prots:
         prot._task.cancel()
-    print('done')
+    logging.info('done')
 
 
 async def log_loop(event_filter, poll_interval):
@@ -107,11 +108,11 @@ def run_and_terminate_process(*args, **kwargs):
         p = subprocess.Popen(*args, **kwargs)
         yield p
     finally:
-        print("Killing ethereumjs-testrpc", p.pid)
+        logging.info(f"Killing ethereumjs-testrpc {p.pid}")
         p.terminate()   # send sigterm, or ...
         p.kill()      # send sigkill
         p.wait()
-        print('done')
+        logging.info('done')
 
 
 def run_eth():
@@ -122,13 +123,13 @@ def run_eth():
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     try:
-        print('entering loop')
+        logging.info('entering loop')
         loop.run_until_complete(
             asyncio.gather(
                 main_loop(w3),
                 ))
     finally:
-        print('closing')
+        logging.info('closing')
         loop.close()
 
 
@@ -138,7 +139,7 @@ def main():
     #   'testrpc -a 50 2>&1 | tee -a acctKeys.json', shell=True,
     #                   stdout=sys.stdout, stderr=sys.stderr) as proc:
     cmd = "testrpc -a 50 -b 1 > acctKeys.json 2>&1"
-    print("Running", cmd)
+    logging.info(f"Running {cmd}")
     with run_and_terminate_process(cmd, shell=True) as proc:    # noqa XXX proc not used
         time.sleep(2)
         run_eth()

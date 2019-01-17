@@ -25,6 +25,7 @@ TESTS_REQUIRES = [
     'pytest-asyncio',
     'pytest-cov',
     'pytest-env',
+    'pyyaml',
 ]
 
 DEV_REQUIRES = [

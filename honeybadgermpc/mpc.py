@@ -10,6 +10,7 @@ from .batch_reconstruction import batch_reconstruct
 from .elliptic_curve import Subgroup
 from collections import defaultdict
 import os
+import logging
 
 
 class NotEnoughShares(Exception):
@@ -142,7 +143,7 @@ class Mpc(object):
             bgtask.cancel()
             return result.result()
         else:
-            print('bgtask exception:', bgtask.exception())
+            logging.info(f'bgtask exception: {bgtask.exception()}')
             raise bgtask.exception()
             bgtask.cancel()
             return await result
@@ -161,7 +162,7 @@ class Mpc(object):
 
                 # Assert that there is not an element already
                 if buf[shareid].done():
-                    print('redundant share:', j, (tag, shareid))
+                    logging.info(f'redundant share: {j} {(tag, shareid)}')
                 assert not buf[shareid].done(
                 ), "Received a redundant share: %o" % shareid
                 buf[shareid].set_result(share)
@@ -412,7 +413,7 @@ async def test_batchopening(context):
     Xs = await xs.open()
     for i, x in enumerate(Xs):
         assert x.value == i
-    print("[%d] Finished batch opening" % (context.myid,))
+    logging.info("[%d] Finished batch opening" % (context.myid,))
 
 
 async def test_batchbeaver(context):
@@ -442,7 +443,7 @@ async def test_batchbeaver(context):
         xy = context.Share(D*E) + D*b + E*a + ab
         assert (await xy.open()) == i * (i + 10)
 
-    print("[%d] Finished batch beaver" % (context.myid,))
+    logging.info("[%d] Finished batch beaver" % (context.myid,))
 
 
 async def beaver_mult(context, x, y, a, b, ab):
@@ -472,17 +473,17 @@ async def test_prog1(context):
     await E
 
     # This is a random share of x*y
-    print('type(D):', type(D))
-    print('type(b):', type(b))
+    logging.info(f'type(D): {type(D)}')
+    logging.info(f'type(b): {type(b)}')
     xy = D*E + D*b + E*a + ab
 
-    print('type(x):', type(x))
-    print('type(y):', type(y))
-    print('type(xy):', type(xy))
+    logging.info(f'type(x): {type(x)}')
+    logging.info(f'type(y): {type(y)}')
+    logging.info(f'type(xy): {type(xy)}')
     X, Y, XY = await x.open(), await y.open(), await xy.open()
     assert X * Y == XY
 
-    print("[%d] Finished" % (context.myid,), X, Y, XY)
+    logging.info(f"[%d] Finished {context.myid}, {X}, {Y}, {XY}")
 
 
 async def test_prog2(context):
@@ -491,26 +492,26 @@ async def test_prog2(context):
     for share in shares[:100]:
         s = await share.open()
         assert s == 0
-    print('[%d] Finished' % (context.myid,))
+    logging.info('[%d] Finished' % (context.myid,))
 
     # Batch version
     arr = context.ShareArray(shares[:100])
     for s in await arr.open():
         assert s == 0, s
-    print('[%d] Finished batch' % (context.myid,))
+    logging.info('[%d] Finished batch' % (context.myid,))
 
 
 def handle_async_exception(loop, ctx):
-    print('handle_async_exception:', ctx)
+    logging.info(f'handle_async_exception: {ctx}')
 
 
 # Run some test cases
 if __name__ == '__main__':
-    print('Generating random shares of zero in sharedata/')
+    logging.info('Generating random shares of zero in sharedata/')
     generate_test_zeros('sharedata/test_zeros', 1000, 3, 1)
-    print('Generating random shares in sharedata/')
+    logging.info('Generating random shares in sharedata/')
     generate_test_randoms('sharedata/test_random', 1000, 3, 1)
-    print('Generating random shares of triples in sharedata/')
+    logging.info('Generating random shares of triples in sharedata/')
     generate_test_triples('sharedata/test_triples', 1000, 3, 1)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
@@ -518,7 +519,7 @@ if __name__ == '__main__':
     # loop.set_exception_handler(handle_async_exception)
     # loop.set_debug(True)
     try:
-        print("Start")
+        logging.info("Start")
         programRunner = TaskProgramRunner(3, 1)
         programRunner.add(test_prog1)
         programRunner.add(test_prog2)

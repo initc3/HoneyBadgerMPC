@@ -1,5 +1,6 @@
 import operator
 import random
+import logging
 from functools import reduce
 from .field import GF, GFElement
 from itertools import zip_longest
@@ -26,7 +27,7 @@ def polynomialsOver(field):
     USE_RUST = False
     if field.modulus == Subgroup.BLS12_381:
         USE_RUST = False
-        print('using bls12_381_r')
+        logging.debug('Using bls12_381_r')
 
     class Polynomial(object):
         def __init__(self, coeffs):
@@ -290,21 +291,21 @@ if __name__ == "__main__":
     # IFFT
     x2 = [b/n for b in fft_helper(x, 1/omega, field)]
     poly2 = Poly.interpolate_fft(x2, omega)
-    print(poly2)
+    logging.info(poly2)
 
-    print('omega1:', omega ** (n//2))
-    print('omega2:', omega2 ** (n//2))
+    logging.info(f'omega1: {omega ** (n//2)}')
+    logging.info(f'omega2: {omega2 ** (n//2)}')
 
-    print('eval:')
+    logging.info('eval:')
     omega = get_omega(field, 2*n)
     for i in range(len(x)):
-        print(omega**(2*i), x[i])
-    print('interp_extrap:')
+        logging.info(f'{omega**(2*i)} {x[i]}')
+    logging.info('interp_extrap:')
     x3 = Poly.interp_extrap(x, omega)
     for i in range(len(x3)):
-        print(omega**i, x3[i])
+        logging.info(f'{omega**i} {x3[i]}')
 
-    print("How many omegas are there?")
+    logging.info("How many omegas are there?")
     for i in range(10):
         omega = get_omega(field, 2**20)
-        print(omega, omega**(2**17))
+        logging.info(f'{omega} {omega**(2**17)}')
