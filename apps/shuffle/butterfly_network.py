@@ -3,7 +3,6 @@ from math import log
 import os
 import asyncio
 from itertools import islice
-from operator import __mul__, __floordiv__
 from honeybadgermpc.mpc import (
     Field, Poly, generate_test_triples, write_polys, TaskProgramRunner
 )
@@ -69,7 +68,7 @@ def getNTriplesAndSbits(tripleshares, randshares, n):
     return As, Bs, ABs, sbits
 
 
-async def permutationNetwork(ctx, inputs, k, delta, randshares, tripleshares):
+async def iterated_butterfly_network(ctx, inputs, k, delta, randshares, tripleshares):
     # This runs O(log k) iterations of the butterfly permutation network,
     # each of which has log k elements. The total number of switches is
     # k (log k)^2
@@ -103,42 +102,13 @@ async def permutationNetwork(ctx, inputs, k, delta, randshares, tripleshares):
     return inputs
 
 
-async def benesNetwork(ctx, inputs, k, delta, randshares, tripleshares):
-    assert k == len(inputs)
-    assert k & (k-1) == 0, "Size of input must be a power of 2"
-    benchLogger = BenchmarkLogger.get(ctx.myid)
-    iteration = 0
-    for j in range(2):
-        s, e, op = (1, k, __mul__) if j == 0 else (k//2, 1, __floordiv__)
-        while s != e:
-            stime = time()
-            As, Bs, ABs, sbits = getNTriplesAndSbits(tripleshares, randshares, k//2)
-            Xs, Ys = [], []
-            first = True
-            i = 0
-            while i < k:
-                for _ in range(s):
-                    arr = Xs if first else Ys
-                    arr.append(inputs[i])
-                    i += 1
-                first = not first
-            assert len(Xs) == len(Ys)
-            assert len(Xs) != 0
-            result = await batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, k)
-            inputs = [*sum(zip(result[0], result[1]), ())]
-            s = op(s, 2)
-            benchLogger.info(f"[BenesNetwork-{iteration}]: {time()-stime}")
-            iteration += 1
-    return inputs
-
-
-async def butterflyNetwork(ctx, **kwargs):
+async def butterfly_network_helper(ctx, **kwargs):
     k, delta = kwargs['k'], kwargs['delta']
     inputs = list(map(lambda x: x.v, list(ctx._rands)[:k]))
     tripleshares = ctx.read_shares(open(f'{triplesprefix}-{ctx.myid}.share'))
     randshares = ctx.read_shares(open(f'{oneminusoneprefix}-{ctx.myid}.share'))
     print(f"[{ctx.myid}] Running permutation network.")
-    shuffled = await permutationNetwork(
+    shuffled = await iterated_butterfly_network(
         ctx, inputs, k, delta, iter(randshares), iter(tripleshares)
     )
     if shuffled is not None:
@@ -174,7 +144,7 @@ def runButterlyNetworkInTasks():
     loop.set_debug(True)
     try:
         programRunner = TaskProgramRunner(N, t)
-        programRunner.add(butterflyNetwork, k=k, delta=delta)
+        programRunner.add(butterfly_network_helper, k=k, delta=delta)
         loop.run_until_complete(programRunner.join())
     finally:
         loop.close()
@@ -238,7 +208,7 @@ if __name__ == "__main__":
 
         programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
         loop.run_until_complete(programRunner.start())
-        programRunner.add(0, butterflyNetwork, k=k, delta=delta)
+        programRunner.add(0, butterfly_network_helper, k=k, delta=delta)
         loop.run_until_complete(programRunner.join())
         loop.run_until_complete(programRunner.close())
     finally:
