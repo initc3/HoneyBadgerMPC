@@ -1,11 +1,12 @@
 from lib_solver import ffi, lib
+from honeybadgermpc.elliptic_curve import Subgroup
 
 
 def int2hexbytes(n):
     return bytes(hex(n), 'ascii')[2:]
 
 
-P = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+P = Subgroup.BLS12_381
 _HEX_P = int2hexbytes(P)
 
 _C_RET_INVALID = 1

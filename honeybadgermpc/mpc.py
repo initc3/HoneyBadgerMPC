@@ -7,6 +7,7 @@ from .program_runner import ProgramRunner
 import random
 from .robust_reconstruction import robust_reconstruct
 from .batch_reconstruction import batch_reconstruct
+from .elliptic_curve import Subgroup
 from collections import defaultdict
 import os
 
@@ -361,8 +362,7 @@ class TaskProgramRunner(ProgramRunner):
 #######################
 
 # Fix the field for now
-Field = GF.get(
-    0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+Field = GF.get(Subgroup.BLS12_381)
 Poly = polynomialsOver(Field)
 
 
