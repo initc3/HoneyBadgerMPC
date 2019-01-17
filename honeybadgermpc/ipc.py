@@ -4,14 +4,14 @@ import asyncio
 import sys
 import struct
 import socket
-from .logger import BenchmarkLogger
+import logging
 from .mpc import Mpc
 from .program_runner import ProgramRunner
 
 
 async def wait_for_preprocessing():
     while not os.path.exists("sharedata/READY"):
-        print(f"waiting for preprocessing sharedata/READY")
+        logging.info(f"waiting for preprocessing sharedata/READY")
         await asyncio.sleep(1)
 
 
@@ -21,7 +21,7 @@ async def robust_open_connection(host, port):
         try:
             return await asyncio.open_connection(host, port)
         except (ConnectionRefusedError, ConnectionResetError):
-            print('backing off:', backoff, 'seconds')
+            logging.info(f'backing off: {backoff} seconds')
             await asyncio.sleep(backoff)
             backoff *= 2
 
@@ -31,7 +31,8 @@ class Senders(object):
         self.queues = queues
         self.config = config
         self.totalBytesSent = 0
-        self.benchlogger = BenchmarkLogger.get(nodeid)
+        self.benchlogger = logging.LoggerAdapter(
+            logging.getLogger("benchmark_logger"), {"node_id": nodeid})
         self.tasks = []
 
     async def connect(self):
@@ -81,36 +82,36 @@ class Senders(object):
                     msg = await asyncio.wait_for(q.get(), timeout=1)
                 except asyncio.TimeoutError:
                     # FIXME: debug diagnostic below
-                    # print('timeout sending to:', recvid,
-                    #       'sent:', writer._bytesSent)
+                    logging.debug(f'timeout sending to: {recvid} \
+                    sent: {writer._bytesSent}')
                     # Option 1: heartbeat
                     msg = "heartbeat"
                     # Option 2: no heartbeat
                     # continue
 
                 if msg is None:
-                    print('Close the connection')
+                    logging.debug('Close the connection')
                     writer.close()
                     await writer.wait_closed()
                     break
-                # print('[%2d] SEND %8s [%2d -> %s]' % (
+                # logging.debug('[%2d] SEND %8s [%2d -> %s]' % (
                 #      msg[0], msg[1][1][0], msg[1][0], recvid
                 # ))
-                # time2 = os.times()
+                start_time = os.times()
                 data = pickle.dumps(msg)
-                # pickle_time = str(os.times()[4] - time2[4])
-                # print('pickle time ' + pickle_time)
+                pickle_time = str(os.times()[4] - start_time[4])
+                logging.debug(f'pickle time {pickle_time}')
                 padded_msg = struct.pack('>I', len(data)) + data
                 self.totalBytesSent += len(padded_msg)
                 writer.write(padded_msg)
                 await writer.drain()
                 writer._bytesSent += len(padded_msg)
         except ConnectionResetError:
-            print("WARNING: Connection with peer [%s] reset." % recvid)
+            logging.warn(f"Connection with peer [{recvid}] reset.")
         except ConnectionRefusedError:
-            print("WARNING: Connection with peer [%s] refused." % recvid)
+            logging.warn(f"Connection with peer [{recvid}] refused.")
         except BrokenPipeError:
-            print("WARNING: Connection with peer [%s] broken." % recvid)
+            logging.warn(f"Connection with peer [{recvid}] broken   .")
 
     async def close(self):
         await asyncio.gather(*[q.put(None) for q in self.queues])
@@ -141,11 +142,11 @@ class Listener(object):
             try:
                 future.result()
             except asyncio.CancelledError:
-                print("[WARNING] handle_client was cancelled.")
+                logging.warn("handle_client was cancelled.")
                 return
         task.add_done_callback(cb)
 
-        # print("Received new connection", writer.get_extra_info("peername"))
+        logging.debug(f"Received new connection {writer.get_extra_info('peername')}")
         reader._whoFrom = None
         reader._bytesRead = 0
         while True:
@@ -158,17 +159,17 @@ class Listener(object):
                 break
             unpickled = pickle.loads(received_raw_msg)
             if unpickled == "heartbeat":
-                print("received heartbeat", reader._whoFrom)
+                logging.debug(f"received heartbeat {reader._whoFrom}")
                 continue
             sid, received_msg = unpickled
             if reader._whoFrom is None:
                 reader._whoFrom = received_msg[0]
-                print(reader._whoFrom, reader)
+                logging.debug(f"{reader._whoFrom} {reader}")
             assert reader._whoFrom == received_msg[0]
 
-            # print(
-            #     '[%d] RECV %8s [from %2d]' % (sid, received_msg[1][0], received_msg[0])
-            # )
+            logging.debug(
+                '[%d] RECV %8s [from %2d]' % (sid, received_msg[1][0], received_msg[0])
+            )
             while sid not in self.queues:
                 # Wait for queue to get set up
                 await asyncio.sleep(1)
@@ -183,9 +184,8 @@ class Listener(object):
                                                 timeout=4)
                 reader._bytesRead += len(packet)
             except asyncio.TimeoutError:
-                print('recv timeout', reader._whoFrom,
-                      'reading:', n - len(data),
-                      'bytesRead:', reader._bytesRead)
+                logging.info(f'recv timeout {reader._whoFrom} reading: \
+                {n - len(data)} bytesRead: {reader._bytesRead}')
                 continue
             if len(packet) == 0:
                 return None
@@ -226,7 +226,7 @@ class ProcessProgramRunner(ProgramRunner):
 
         def makeSend(i, sid):
             def _send(j, o):
-                # print('[%s] SEND %8s [%2d -> %2d]' % (sid, o[1], i, j))
+                logging.debug('[%s] SEND %8s [%2d -> %2d]' % (sid, o[1], i, j))
                 if i == j:
                     # If attempting to send the message to yourself
                     # then skip the network stack.
@@ -238,7 +238,7 @@ class ProcessProgramRunner(ProgramRunner):
         def makeRecv(j, sid):
             async def _recv():
                 (i, o) = await self.listener.getMessage(sid)
-                # print('[%s] RECV %8s [%2d -> %2d]' % (sid, o[1], i, j))
+                logging.debug('[%s] RECV %8s [%2d -> %2d]' % (sid, o[1], i, j))
                 return (i, o)
             return _recv
 
@@ -312,9 +312,9 @@ if __name__ == "__main__":
             # Only one party needs to generate the initial shares
             if nodeid == 0:
                 os.makedirs("sharedata", exist_ok=True)
-                print('Generating random shares of zero in sharedata/')
+                logging.info('Generating random shares of zero in sharedata/')
                 generate_test_zeros('sharedata/test_zeros', 1000, N, t)
-                print('Generating random shares of triples in sharedata/')
+                logging.info('Generating random shares of triples in sharedata/')
                 generate_test_triples('sharedata/test_triples', 1000, N, t)
                 os.mknod(f"sharedata/READY")
             else:

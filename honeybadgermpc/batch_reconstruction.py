@@ -2,7 +2,7 @@ import asyncio
 from .field import GF
 from .polynomial import polynomialsOver
 from .robust_reconstruction import attempt_reconstruct, robust_reconstruct
-from .logger import BenchmarkLogger
+import logging
 from collections import defaultdict
 from asyncio import Queue
 from math import ceil
@@ -64,7 +64,7 @@ def wrapSend(tag, send):
 def toChunks(data, chunkSize):
     res = []
     n_chunks = ceil(len(data) / chunkSize)
-    # print('toChunks:', chunkSize, len(data), n_chunks)
+    logging.debug(f'toChunks: {chunkSize} {len(data)} {n_chunks}')
     for j in range(n_chunks):
         start = chunkSize * j
         stop = chunkSize * (j + 1)
@@ -131,7 +131,8 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     """
     Fp = field = GF.get(p)
     Poly = polynomialsOver(Fp)
-    benchLogger = BenchmarkLogger.get(myid)
+    benchLogger = logging.LoggerAdapter(
+        logging.getLogger("benchmark_logger"), {"node_id": myid})
 
     def point(i): return Fp(i+1)  # TODO: make it use omega
 
@@ -144,13 +145,13 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     del subscribe  # ILC should determine we can garbage collect after this
 
     def sendBatch(data, send, point):
-        # print('sendBatch data:', data)
+        logging.debug(f'sendBatch data: {data}')
         toSend = [[] for _ in range(n)]
         for chunk in toChunks(data, t + 1):
             f_poly = Poly(chunk)
             for j in range(n):
                 toSend[j].append(f_poly(point(j)).value)  # send just the int value
-        # print('batch to send:', toSend)
+        logging.debug(f'batch to send: {toSend}')
         for j in range(n):
             send(j, toSend[j])
 
@@ -164,7 +165,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     for nAvailable in range(2 * t + 1, n + 1):
         data = await waitFor(dataR1, nAvailable)
         data = tuple(withAtMostNonNone(data, nAvailable))
-        # print('data R1:', data, 'nAvailable:', nAvailable)
+        logging.debug(f'data R1: {data} nAvailable: {nAvailable}')
         data = tuple([None if d is None else tuple(map(Fp, d)) for d in data])
         stime = time()
         reconsR2 = attempt_reconstruct_batch(data, field, n, t, point)
@@ -174,7 +175,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
         benchLogger.info(f"[BatchReconstruct] P1: {time() - stime}")
         break
     assert nAvailable <= n, "reconstruction failed"
-    # print('reconsR2:', reconsR2)
+    logging.debug(f'reconsR2: {reconsR2}')
     assert len(reconsR2) >= len(elem_batches)
     reconsR2 = reconsR2[:len(elem_batches)]
 
@@ -186,7 +187,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
         data = await waitFor(dataR2, nAvailable)
         data = tuple(withAtMostNonNone(data, nAvailable))
         data = tuple([None if d is None else tuple(map(Fp, d)) for d in data])
-        # print('data R2:', data, 'nAvailable:', nAvailable)
+        logging.debug(f'data R2: {data} nAvailable: {nAvailable}')
         stime = time()
         reconsP = attempt_reconstruct_batch(data, field, n, t, point)
         if reconsP is None:
@@ -227,8 +228,8 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
     """
 
     if debug:
-        print("my id %d" % myid)
-        print(shared_secrets)
+        logging.info("my id %d" % myid)
+        logging.info(shared_secrets)
 
     Fp = GF.get(p)
     Poly = polynomialsOver(Fp)
@@ -270,7 +271,7 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
         # Robustly reconstruct f(i,X)
         P1, failures_detected = await robust_reconstruct(round1_shares, Fp, n, t, point)
         if debug:
-            print(f"I am {myid} and evil nodes are {failures_detected}")
+            logging.info(f"I am {myid} and evil nodes are {failures_detected}")
 
         # Round 2:
         # Evaluate and send f(i,0) to each other party
@@ -280,7 +281,7 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
         # Robustly reconstruct f(X,0)
         P2, failures_detected = await robust_reconstruct(round2_shares, Fp, n, t, point)
 
-        # print(f"I am {myid} and the secret polynomial is {P2}")
+        logging.debug(f"I am {myid} and the secret polynomial is {P2}")
         return P2.coeffs
 
     finally:

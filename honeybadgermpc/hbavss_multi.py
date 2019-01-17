@@ -5,7 +5,7 @@ import os
 import pickle
 import asyncio
 from asyncio import Queue
-from .logger import BenchmarkLogger
+import logging
 import concurrent.futures
 import psutil
 import sys
@@ -28,7 +28,7 @@ total_time = 0.0
 async def _run_in_thread(func, *args):
     global _HBAVSS_Executor
     if '_HBAVSS_Executor' not in globals():
-        print('Initializing executor')
+        logging.info('Initializing executor')
         cpus = psutil.cpu_count(logical=False)
         _HBAVSS_Executor = concurrent.futures.ThreadPoolExecutor(max_workers=cpus)
     loop = asyncio.get_event_loop()
@@ -150,7 +150,8 @@ def lagrange_at_x(S, j, x):
 def interpolate_poly(coords):
     myone = ZR(1)
     myzero = ZR(0)
-    # print "Before: " + str(coords[0][1]) + " After: " + str(myzero + coords[0][1])
+    logging.debug(
+        "Before: " + str(coords[0][1]) + " After: " + str(myzero + coords[0][1]))
     poly = [myzero] * len(coords)
     for i in range(len(coords)):
         temp = [myone]
@@ -245,7 +246,8 @@ class HbAvssDealer:
         # This is structured so that t+1 points are needed to reconstruct the polynomial
         time2 = os.times()
         nodeid = os.environ.get('HBMPC_NODE_ID')
-        self.benchmarkLogger = BenchmarkLogger.get(nodeid)
+        self.benchmarkLogger = logging.LoggerAdapter(
+            logging.getLogger("benchmark_logger"), {"node_id": nodeid})
         (t, n, crs, participantids, participantkeys, dealerid, sid) = publicparams
         (secret, pid) = privateparams
         assert dealerid == pid, "HbAvssDealer called, but wrong pid"
@@ -271,7 +273,7 @@ class HbAvssDealer:
             (c, encryptedwitnesses, encryptedshares, crs[0] ** sk))
 
         dealer_time = str(os.times()[4] - time2[4])
-        print("Dealer Time: " + dealer_time)
+        logging.info("Dealer Time: " + dealer_time)
         # benchmarking: time taken by dealer
         self.benchmarkLogger.info("AVSS dealer time:  " + dealer_time)
 
@@ -295,10 +297,11 @@ class HbAvssRecipient:
         # self.write = write_function
         (self.t, self.n, crs, self.participantids,
          self.participantkeys, self.dealerid, self.sid) = publicparams
-        print('[CTR] sid is ' + str(self.sid))
+        logging.info('[CTR] sid is ' + str(self.sid))
         self.reconstruction = reconstruction
         nodeid = os.environ.get('HBMPC_NODE_ID')
-        self.benchmarkLogger = BenchmarkLogger.get(nodeid)
+        self.benchmarkLogger = logging.LoggerAdapter(
+            logging.getLogger("benchmark_logger"), {"node_id": nodeid})
         (self.pid, self.sk) = privateparams
         assert self.pid != self.dealerid, "HbAvssRecipient, but pid is dealerid"
         (self.sharedkey, self.rbfinished, self.finished, self.sendrecs,
@@ -324,9 +327,9 @@ class HbAvssRecipient:
         # loop.create_task(self.run())
 
     async def run(self):
-        print('[{}] RUN STARTED'.format(self.sid))
+        logging.info('[{}] RUN STARTED'.format(self.sid))
         while not self.finished:
-            # print('recvd message ')
+            logging.debug('recvd message ')
             sender, msg = await self.recv()
             await self.receive_msg(sender, msg)
 
@@ -338,9 +341,9 @@ class HbAvssRecipient:
             self.rbfinished = True
             decrypt_start_time = os.times()
             self.benchmarkLogger.info("Begin Decryption")
-            print("[{}]Begin Decryption".format(self.sid))
+            logging.info("[{}]Begin Decryption".format(self.sid))
             message = pickle.loads(msg[2])
-            print(" Pickle time " + str(os.times()[4] - decrypt_start_time[4]))
+            logging.info(" Pickle time " + str(os.times()[4] - decrypt_start_time[4]))
             (self.commit, self.encwitnesses, self.encshares, pk_d) = message
 
             # self.sharedkey = str(pk_d**self.sk).encode('utf-8')
@@ -353,14 +356,15 @@ class HbAvssRecipient:
             if await _run_in_thread(self.pc.verify_eval, self.commit,
                                     self.pid+1, self.share, self.witness):
                 decryption_time = (os.times()[4] - decrypt_start_time[4])
-                print("[{}] decryption time : ".format(self.sid) + str(decryption_time))
+                logging.info(
+                    "[{}] decryption time : ".format(self.sid) + str(decryption_time))
                 self.benchmarkLogger.info("decryption time :  " + str(decryption_time))
                 global total_time
                 total_time += decryption_time
                 self.send_ok_msgs()
                 self.sendrecs = True
             else:
-                print("verifyeval failed")
+                logging.info("verifyeval failed")
                 self.send_implicate_msgs()
             while not self.queues["hbavss"].empty():
                 (i, o) = self.queues["hbavss"].get_nowait()
@@ -369,7 +373,7 @@ class HbAvssRecipient:
             self.queues["hbavss"].put_nowait((sender, msg))
         elif msg[1] == "ok":
             # TODO: Enforce one OK message per participant
-            # print str(self.pid) + " got an ok from " + str(sender)
+            logging.debug(str(self.pid) + " got an ok from " + str(sender))
             self.okcount += 1
             del self.encshares[sender]
             del self.encwitnesses[sender]
@@ -377,11 +381,11 @@ class HbAvssRecipient:
                 self.sharevalid = True
                 self.output = self.share
 
-                print('[{}] Output available'.format(self.sid), self.output)
+                logging.info('[{}] Output available'.format(self.sid), self.output)
                 recipient_time = str(os.times()[4] - self.time2[4])
-                print("[{}] Recipient Time: ".format(self.sid) + recipient_time)
+                logging.info("[{}] Recipient Time: ".format(self.sid) + recipient_time)
                 service_time = str(os.times()[4] - start_time[4])
-                print("[{}] Total service Time: ".format(self.sid) + service_time)
+                logging.info("[{}] Total service Time: ".format(self.sid) + service_time)
 
                 # benchmarking: time taken by dealer
                 self.benchmarkLogger.info(
@@ -397,7 +401,7 @@ class HbAvssRecipient:
             if self.check_implication(int(sender), msg[2], msg[3]):
                 self.implicatecount += 1
                 if self.implicatecount == 2*self.t+1:
-                    print("Output: None")
+                    logging.info("Output: None")
                     self.share = None
                     self.finished = True
                 if self.sendrecs:
@@ -405,7 +409,7 @@ class HbAvssRecipient:
                     self.send_rec_msgs()
                     self.sentdrecs = False
             else:
-                # print "Bad implicate!"
+                logging.debug("Bad implicate!")
                 self.okcount += 1
                 del self.encshares[sender]
                 del self.encwitnesses[sender]
@@ -417,7 +421,7 @@ class HbAvssRecipient:
                 for key, value in self.shares.items():
                     coords.append([key + 1, value])
                 self.secret = interpolate_at_x(coords, 0)
-                print("self.secret:", self.secret)
+                logging.info(f"self.secret: {self.secret}")
                 self.finished = True
 
     # checks if an implicate message is valid
@@ -427,7 +431,7 @@ class HbAvssRecipient:
         # if not check_same_exponent_proof(proof, self.pk[0],
         #         self.participantkeys[self.dealerid],
         #         self.participantkeys[implicatorid], key):
-        #     # print "Bad Key!"
+        #    #logging.debug("Bad Key!")
         #     return False
         # share = decrypt(str(key), self.encshares[implicatorid])
         # witness = decrypt(str(key), self.encwitnesses[implicatorid])
@@ -485,7 +489,7 @@ async def runHBAVSSLightMulti(config, N, t, id, k):
     sender, listener = programRunner.senders, programRunner.listener
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
-    print(N, t, k)
+    logging.info(f"{N} {t} {k}")
     # XXX HACK! Increase wait time. Must find better way if possible -- e.g:
     # try/except retry logic ...
     await asyncio.sleep(2)
@@ -534,9 +538,10 @@ async def runHBAVSSLightMulti(config, N, t, id, k):
     await sender.close()
     await listener.close()
     await asyncio.sleep(1)
-    print('Total decrypt time ' + str(total_time))
+    logging.info('Total decrypt time ' + str(total_time))
     nodeid = os.environ.get('HBMPC_NODE_ID')
-    benchmarkLogger = BenchmarkLogger.get(nodeid)
+    benchmarkLogger = logging.LoggerAdapter(
+        logging.getLogger("benchmark_logger"), {"node_id": nodeid})
     benchmarkLogger.info('Total decrypt time ' + str(total_time))
 
 ############################

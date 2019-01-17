@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 
 class ACS_Functionality(object):
@@ -21,7 +22,7 @@ class ACS_Functionality(object):
                 pending, return_when=asyncio.FIRST_COMPLETED)
             ready.update(done)
 
-        print('ACS_Functionality done')
+        logging.info('ACS_Functionality done')
         out = [inp.result() if inp.done() else None for inp in self.inputs]
 
         for i in range(self.N):
@@ -59,7 +60,7 @@ async def _test_acs_ideal(sid='sid', N=4, f=1):
     # Now can await output from each ACS protocol
     for i in range(N):
         await parties[i].output
-        print(i, parties[i].output)
+        logging.info(f"{i} {parties[i].output}")
 
 
 def test_acs_ideal():

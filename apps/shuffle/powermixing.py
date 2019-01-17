@@ -5,7 +5,7 @@ import os
 import glob
 from time import time
 from honeybadgermpc.mpc import write_polys, TaskProgramRunner, Field, Poly
-from honeybadgermpc.logger import BenchmarkLogger
+import logging
 
 
 shufflebasedir = "apps/shuffle"
@@ -16,7 +16,7 @@ cppPrefix = f"{sharedatadir}/cpp-phase"
 
 async def wait_for_preprocessing():
     while not os.path.exists(f"{sharedatadir}/READY"):
-        print(f"waiting for preprocessing {sharedatadir}/READY")
+        logging.info(f"waiting for preprocessing {sharedatadir}/READY")
         await asyncio.sleep(1)
 
 
@@ -90,22 +90,17 @@ async def phase2(nodeid, batchid, runid, cpp_prefix):
     await runCommandSync(runcmd)
 
 
-async def runCommandSync(command, verbose=False):
+async def runCommandSync(command):
     proc = await asyncio.create_subprocess_shell(
         command,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
     stdout, stderr = await proc.communicate()
-    if verbose:
-        print(f"{'#' * 10} OUTPUT {'#' * 10}")
-        print(stdout)
-        print("#" * 30)
 
-    if len(stderr) != 0:
-        print(f"{'#' * 10} ERROR {'#' * 10}")
-        print(stderr)
-        print("#" * 30)
+    logging.debug(f"Command:{command}")
+    logging.debug(f"Output: {stdout}")
+    logging.debug(f"Error: {stderr}")
 
 
 async def prepareOneInput(context, **kwargs):
@@ -115,9 +110,9 @@ async def prepareOneInput(context, **kwargs):
         k=k,
         powers_prefix=f"{powersPrefix}_{batchid}",
         cpp_prefix=f"{cppPrefix}_{batchid}")
-    print(f"[{context.myid}] Input prepared for C++ phase.")
+    logging.info(f"[{context.myid}] Input prepared for C++ phase.")
     await phase2(context.myid, batchid, runid, f"{cppPrefix}_{batchid}")
-    print(f"[{context.myid}] C++ phase completed.")
+    logging.info(f"[{context.myid}] C++ phase completed.")
 
 
 async def phase3(context, **kwargs):
@@ -125,7 +120,8 @@ async def phase3(context, **kwargs):
     sumFileName = f"{sharedatadir}/power-{runid}_{context.myid}.sums"
     sumShares = []
 
-    benchLogger = BenchmarkLogger.get(context.myid)
+    benchLogger = logging.LoggerAdapter(
+        logging.getLogger("benchmark_logger"), {"node_id": context.myid})
 
     stime = time()
     with open(sumFileName, "r") as f:
@@ -155,9 +151,9 @@ async def asynchronusMixing(a_s, N, t, k):
     pr2 = TaskProgramRunner(N, t)
     pr2.add(phase3, k=k, runid=runid)
     powerSums = (await pr2.join())[0]
-    print(f"Shares from C++ phase opened.")
+    logging.info("Shares from C++ phase opened.")
     result = solve([s.value for s in powerSums])
-    print(f"Equation solver completed.")
+    logging.info("Equation solver completed.")
     return result
 
 
@@ -177,9 +173,9 @@ def asynchronusMixingInTasks():
     a_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
     try:
         loop.run_until_complete(buildNewtonSolver())
-        print("Solver built.")
+        logging.info("Solver built.")
         loop.run_until_complete(buildPowerMixingCppCode())
-        print("C++ code built.")
+        logging.info("C++ code built.")
         loop.run_until_complete(asynchronusMixing(a_s, N, t, k))
     finally:
         loop.close()
@@ -207,12 +203,12 @@ async def asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid):
     powerSums = (await programRunner.join())[0]
     await programRunner.close()
 
-    print(f"Shares from C++ phase opened.")
+    logging.info("Shares from C++ phase opened.")
     stime = time()
     result = solve([s.value for s in powerSums])
     benchLogger.info(f"[SolverPhase] Run Newton Solver: {time() - stime}")
-    print(f"Equation solver completed.")
-    # print(result)
+    logging.info("Equation solver completed.")
+    logging.debug(result)
     return result
 
 
@@ -252,7 +248,8 @@ if __name__ == "__main__":
     t = config_dict['t']
     k = config_dict['k']
 
-    benchLogger = BenchmarkLogger.get(nodeid)
+    benchLogger = logging.LoggerAdapter(
+        logging.getLogger("benchmark_logger"), {"node_id": nodeid})
 
     network_info = {
         int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
@@ -263,12 +260,12 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     def handle_async_exception(loop, ctx):
-        print('handle_async_exception:')
+        logging.info('handle_async_exception:')
         if 'exception' in ctx:
-            print('exc:', repr(ctx['exception']))
+            logging.info(f"exc: {repr(ctx['exception'])}")
         else:
-            print('ctx:', ctx)
-        print('msg:', ctx['message'])
+            logging.info(f'ctx: {ctx}')
+        logging.info(f"msg: {ctx['message']}")
 
     loop.set_exception_handler(handle_async_exception)
     loop.set_debug(True)
