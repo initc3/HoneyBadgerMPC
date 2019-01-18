@@ -1,7 +1,7 @@
 import asyncio
 from asyncio import Future
 from .field import GF, GFElement
-from .polynomial import polynomialsOver
+from .polynomial import polynomials_over
 from .router import simple_router
 from .program_runner import ProgramRunner
 import random
@@ -28,13 +28,13 @@ random_files_prefix = 'sharedata/test_random'
 
 class Mpc(object):
 
-    def __init__(self, sid, N, t, myid, pid, send, recv, prog, **progArgs):
+    def __init__(self, sid, n, t, myid, pid, send, recv, prog, **prog_args):
         # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
-        assert type(N) is int and type(t) is int
-        assert t < N
+        assert type(n) is int and type(t) is int
+        assert t < n
         self.sid = sid
-        self.N = N
+        self.N = n
         self.t = t
         self.myid = myid
         self.pid = pid
@@ -49,7 +49,7 @@ class Mpc(object):
         # assigned an ID based on the order that share is encountered.
         # So the protocol must encounter the shares in the same order.
         self.prog = prog
-        self.progArgs = progArgs
+        self.progArgs = prog_args
 
         # A task representing the opened values
         # { shareid => Future (field list(field)) }
@@ -58,14 +58,14 @@ class Mpc(object):
         # Store opened shares until ready to reconstruct
         # playerid => { [shareid => Future share] }
         self._share_buffers = tuple(defaultdict(asyncio.Future)
-                                    for _ in range(N))
+                                    for _ in range(n))
 
         # Batch reconstruction is handled slightly differently,
         # We'll create a separate queue for received values
         # { shareid => Queue() }
         self._sharearray_buffers = defaultdict(asyncio.Queue)
 
-        self.Share, self.ShareArray = shareInContext(self)
+        self.Share, self.ShareArray = share_in_context(self)
 
         # Preprocessing elements
         filename = f'{zeros_files_prefix}-{self.myid}.share'
@@ -212,9 +212,9 @@ def write_shares(f, modulus, degree, myid, shares):
 ###############
 
 
-def shareInContext(context):
+def share_in_context(context):
 
-    def _binopField(fut, other, op):
+    def _binop_field(fut, other, op):
         assert type(other) in [ShareFuture, GFElementFuture, Share, GFElement]
         if isinstance(other, ShareFuture) or isinstance(other, Share):
             res = ShareFuture()
@@ -230,13 +230,13 @@ def shareInContext(context):
         return res
 
     class GFElementFuture(Future):
-        def __add__(self, other): return _binopField(
+        def __add__(self, other): return _binop_field(
             self, other, lambda a, b: a + b)
 
-        def __sub__(self, other): return _binopField(
+        def __sub__(self, other): return _binop_field(
             self, other, lambda a, b: a - b)
 
-        def __mul__(self, other): return _binopField(
+        def __mul__(self, other): return _binop_field(
             self, other, lambda a, b: a * b)
 
     class Share(object):
@@ -280,7 +280,7 @@ def shareInContext(context):
 
         def __str__(self): return '{%d}' % (self.v)
 
-    def _binopShare(fut, other, op):
+    def _binop_share(fut, other, op):
         assert type(other) in [ShareFuture, GFElementFuture, Share, GFElement]
         res = ShareFuture()
         if isinstance(other, Future):
@@ -292,13 +292,13 @@ def shareInContext(context):
         return res
 
     class ShareFuture(Future):
-        def __add__(self, other): return _binopShare(
+        def __add__(self, other): return _binop_share(
             self, other, lambda a, b: a + b)
 
-        def __sub__(self, other): return _binopShare(
+        def __sub__(self, other): return _binop_share(
             self, other, lambda a, b: a - b)
 
-        def __mul__(self, other): return _binopShare(
+        def __mul__(self, other): return _binop_share(
             self, other, lambda a, b: a * b)
 
         def open(self):
@@ -340,8 +340,8 @@ def shareInContext(context):
 
 
 class TaskProgramRunner(ProgramRunner):
-    def __init__(self, N, t):
-        self.N, self.t, self.pid = N, t, 0
+    def __init__(self, n, t):
+        self.N, self.t, self.pid = n, t, 0
         self.tasks = []
         self.loop = asyncio.get_event_loop()
 
@@ -364,17 +364,17 @@ class TaskProgramRunner(ProgramRunner):
 
 # Fix the field for now
 Field = GF.get(Subgroup.BLS12_381)
-Poly = polynomialsOver(Field)
+Poly = polynomials_over(Field)
 
 
-def write_polys(prefix, modulus, N, t, polys):
-    for i in range(N):
+def write_polys(prefix, modulus, n, t, polys):
+    for i in range(n):
         shares = [f(i+1) for f in polys]
         with open('%s-%d.share' % (prefix, i), 'w') as f:
             write_shares(f, modulus, t, i, shares)
 
 
-def generate_test_triples(prefix, k, N, t):
+def generate_test_triples(prefix, k, n, t):
     # Generate k triples, store in files of form "prefix-%d.share"
     polys = []
     for j in range(k):
@@ -384,21 +384,21 @@ def generate_test_triples(prefix, k, N, t):
         polys.append(Poly.random(t, a))
         polys.append(Poly.random(t, b))
         polys.append(Poly.random(t, c))
-    write_polys(prefix, Field.modulus, N, t, polys)
+    write_polys(prefix, Field.modulus, n, t, polys)
 
 
-def generate_test_zeros(prefix, k, N, t):
+def generate_test_zeros(prefix, k, n, t):
     polys = []
     for j in range(k):
         polys.append(Poly.random(t, 0))
-    write_polys(prefix, Field.modulus, N, t, polys)
+    write_polys(prefix, Field.modulus, n, t, polys)
 
 
-def generate_test_randoms(prefix, k, N, t):
+def generate_test_randoms(prefix, k, n, t):
     polys = []
     for j in range(k):
         polys.append(Poly.random(t))
-    write_polys(prefix, Field.modulus, N, t, polys)
+    write_polys(prefix, Field.modulus, n, t, polys)
 
 
 ###############

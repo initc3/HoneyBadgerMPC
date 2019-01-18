@@ -3,12 +3,12 @@ import asyncio
 from pytest import mark
 
 
-async def progtest(N, myid, send, recv):
+async def progtest(n, myid, send, recv):
     print('myid:', myid)
     my_mailbox = []
-    for j in range(N):
+    for j in range(n):
         send(j, 'hi from ' + str(myid))
-    for _ in range(N):
+    for _ in range(n):
         (i, o) = await recv()
         print('[%2d->%2d]' % (i, myid), o)
         my_mailbox.append((i, o))

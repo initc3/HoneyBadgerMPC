@@ -20,13 +20,13 @@ def strip_trailing_zeros(a):
 _poly_cache = {}
 
 
-def polynomialsOver(field):
+def polynomials_over(field):
     if field in _poly_cache:
         return _poly_cache[field]
 
-    USE_RUST = False
+    use_rust = False
     if field.modulus == Subgroup.BLS12_381:
-        USE_RUST = False
+        use_rust = False
         logging.debug('Using bls12_381_r')
 
     class Polynomial(object):
@@ -35,21 +35,21 @@ def polynomialsOver(field):
             for i in range(len(self.coeffs)):
                 if type(self.coeffs[i]) is int:
                     self.coeffs[i] = field(self.coeffs[i])
-            if USE_RUST:
+            if use_rust:
                 self._zrcoeffs = [ZR(c.value) for c in self.coeffs]
             self.field = field
 
-        def isZero(self):
+        def is_zero(self):
             return self.coeffs == [] or (len(self.coeffs) == 1 and self.coeffs[0] == 0)
 
         def __repr__(self):
-            if self.isZero():
+            if self.is_zero():
                 return '0'
             return ' + '.join(['%s x^%d' % (a, i) if i > 0 else '%s' % a
                                for i, a in enumerate(self.coeffs)])
 
         def __call__(self, x):
-            if USE_RUST:
+            if use_rust:
                 assert type(x) is int
                 x = ZR(x)
                 k = len(self.coeffs) - 1
@@ -84,8 +84,8 @@ def polynomialsOver(field):
 
         @classmethod
         def interpolate(cls, shares):
-            X = cls([field(0), field(1)])  # This is the polynomial f(x) = x
-            ONE = cls([field(1)])  # This is the polynomial f(x) = 1
+            x = cls([field(0), field(1)])  # This is the polynomial f(x) = x
+            one = cls([field(1)])  # This is the polynomial f(x) = 1
             xs, ys = zip(*shares)
 
             def lagrange(xi):
@@ -94,8 +94,8 @@ def polynomialsOver(field):
                     return cls._lagrangeCache[(xs, xi)]
 
                 def mul(a, b): return a*b
-                num = reduce(mul, [X - cls([xj])
-                                   for xj in xs if xj != xi], ONE)
+                num = reduce(mul, [x - cls([xj])
+                                   for xj in xs if xj != xi], one)
                 den = reduce(mul, [xi - xj for xj in xs if xj != xi], field(1))
                 p = num * cls([1 / den])
                 cls._lagrangeCache[(xs, xi)] = p
@@ -169,40 +169,40 @@ def polynomialsOver(field):
         def __len__(self): return len(self.coeffs)
 
         def __add__(self, other):
-            newCoefficients = [sum(x) for x in zip_longest(
+            new_coefficients = [sum(x) for x in zip_longest(
                 self, other, fillvalue=self.field(0))]
-            return Polynomial(newCoefficients)
+            return Polynomial(new_coefficients)
 
         def __mul__(self, other):
-            if self.isZero() or other.isZero():
-                return Zero()
+            if self.is_zero() or other.is_zero():
+                return zero()
 
-            newCoeffs = [self.field(0)
-                         for _ in range(len(self) + len(other) - 1)]
+            new_coeffs = [self.field(0)
+                          for _ in range(len(self) + len(other) - 1)]
 
             for i, a in enumerate(self):
                 for j, b in enumerate(other):
-                    newCoeffs[i+j] += a*b
-            return Polynomial(newCoeffs)
+                    new_coeffs[i+j] += a*b
+            return Polynomial(new_coeffs)
 
         def degree(self): return abs(self) - 1
 
-        def leadingCoefficient(self): return self.coeffs[-1]
+        def leading_coefficient(self): return self.coeffs[-1]
 
         def __divmod__(self, divisor):
-            quotient, remainder = Zero(), self
-            divisorDeg = divisor.degree()
-            divisorLC = divisor.leadingCoefficient()
+            quotient, remainder = zero(), self
+            divisor_deg = divisor.degree()
+            divisor_lc = divisor.leading_coefficient()
 
-            while remainder.degree() >= divisorDeg:
-                monomialExponent = remainder.degree() - divisorDeg
-                monomialZeros = [self.field(0)
-                                 for _ in range(monomialExponent)]
-                monomialDivisor = Polynomial(
-                    monomialZeros + [remainder.leadingCoefficient() / divisorLC])
+            while remainder.degree() >= divisor_deg:
+                monomial_exponent = remainder.degree() - divisor_deg
+                monomial_zeros = [self.field(0)
+                                  for _ in range(monomial_exponent)]
+                monomial_divisor = Polynomial(
+                    monomial_zeros + [remainder.leading_coefficient() / divisor_lc])
 
-                quotient += monomialDivisor
-                remainder -= monomialDivisor * divisor
+                quotient += monomial_divisor
+                remainder -= monomial_divisor * divisor
 
             return quotient, remainder
 
@@ -216,7 +216,7 @@ def polynomialsOver(field):
                 raise ZeroDivisionError
             return divmod(self, divisor)[1]
 
-    def Zero():
+    def zero():
         return Polynomial([])
 
     _poly_cache[field] = Polynomial
@@ -243,7 +243,7 @@ def get_omega(field, n, seed=None):
     return y
 
 
-def fft_helper(A, omega, field):
+def fft_helper(a, omega, field):
     """
     Given coefficients A of polynomial this method does FFT and returns
     the evaluation of the polynomial at [omega^0, omega^(n-1)]
@@ -251,20 +251,20 @@ def fft_helper(A, omega, field):
     If the polynomial is a0*x^0 + a1*x^1 + ... + an*x^n then the coefficients
     list is of the form [a0, a1, ... , an].
     """
-    n = len(A)
+    n = len(a)
     assert not (n & (n-1)), "n must be a power of 2"
 
     if n == 1:
-        return A
+        return a
 
-    B, C = A[0::2], A[1::2]
-    B_bar = fft_helper(B, pow(omega, 2), field)
-    C_bar = fft_helper(C, pow(omega, 2), field)
-    A_bar = [field(1)]*(n)
+    b, c = a[0::2], a[1::2]
+    b_bar = fft_helper(b, pow(omega, 2), field)
+    c_bar = fft_helper(c, pow(omega, 2), field)
+    a_bar = [field(1)]*(n)
     for j in range(n):
         k = (j % (n//2))
-        A_bar[j] = B_bar[k] + pow(omega, j) * C_bar[k]
-    return A_bar
+        a_bar[j] = b_bar[k] + pow(omega, j) * c_bar[k]
+    return a_bar
 
 
 def fft(poly, omega, n, seed=None):
@@ -273,13 +273,13 @@ def fft(poly, omega, n, seed=None):
     assert pow(omega, n) == 1
     assert pow(omega, n//2) != 1
 
-    paddedCoeffs = poly.coeffs + ([poly.field(0)] * (n-len(poly.coeffs)))
-    return fft_helper(paddedCoeffs, omega, poly.field)
+    padded_coeffs = poly.coeffs + ([poly.field(0)] * (n-len(poly.coeffs)))
+    return fft_helper(padded_coeffs, omega, poly.field)
 
 
 if __name__ == "__main__":
     field = GF.get(Subgroup.BLS12_381)
-    Poly = polynomialsOver(field)
+    Poly = polynomials_over(field)
     poly = Poly.random(degree=7)
     poly = Poly([1, 5, 3, 15, 0, 3])
     n = 2**3

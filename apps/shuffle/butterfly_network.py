@@ -22,30 +22,31 @@ async def wait_for_preprocessing():
         await asyncio.sleep(1)
 
 
-async def batchBeaver(ctx, Xs, Ys, As, Bs, ABs):
-    Ds = await (Xs - As).open()  # noqa: W606
-    Es = await (Ys - Bs).open()  # noqa: W606
+async def batch_beaver(ctx, xs, ys, as_, bs_, abs_):
+    ds = await (xs - as_).open()  # noqa: W606
+    es = await (ys - bs_).open()  # noqa: W606
 
-    XYs = [(ctx.Share(D*E) + D*b + E*a + ab).v for (
-        a, b, ab, D, E) in zip(As._shares, Bs._shares, ABs._shares, Ds, Es)]
+    xys = [(ctx.Share(d*e) + d*b + e*a + ab).v for (
+        a, b, ab, d, e) in zip(as_._shares, bs_._shares, abs_._shares, ds, es)]
 
-    return XYs
+    return xys
 
 
-async def batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, n):
-    Ns = [1 / Field(2) for _ in range(n)]
+async def batch_switch(ctx, xs, ys, sbits, as_, bs_, abs_, n):
+    ns = [1 / Field(2) for _ in range(n)]
 
-    def toShareArray(arr):
+    def to_share_array(arr):
         return ctx.ShareArray(list(map(ctx.Share, arr)))
-    Xs, Ys, As, Bs, ABs, sbits = list(map(toShareArray, [Xs, Ys, As, Bs, ABs, sbits]))
-    Ms = list(map(ctx.Share, await batchBeaver(ctx, sbits, (Xs - Ys), As, Bs, ABs)))
+    xs, ys, as_, bs_, abs_, sbits = list(
+        map(to_share_array, [xs, ys, as_, bs_, abs_, sbits]))
+    ms = list(map(ctx.Share, await batch_beaver(ctx, sbits, (xs - ys), as_, bs_, abs_)))
 
-    t1s = [n * (x + y + m).v for x, y, m, n in zip(Xs._shares, Ys._shares, Ms, Ns)]
-    t2s = [n * (x + y - m).v for x, y, m, n in zip(Xs._shares, Ys._shares, Ms, Ns)]
+    t1s = [n * (x + y + m).v for x, y, m, n in zip(xs._shares, ys._shares, ms, ns)]
+    t2s = [n * (x + y - m).v for x, y, m, n in zip(xs._shares, ys._shares, ms, ns)]
     return t1s, t2s
 
 
-def writeToFile(shares, nodeid):
+def write_to_file(shares, nodeid):
     global filecount
     with open(f"{sharedatadir}/butterfly_online_{filecount}_{nodeid}.share", "w") as f:
         for share in shares:
@@ -53,19 +54,19 @@ def writeToFile(shares, nodeid):
     filecount += 1
 
 
-def getTriplesAndSbit(tripleshares, randshares):
+def get_triples_and_sbit(tripleshares, randshares):
     a, b, ab = next(tripleshares).v, next(tripleshares).v, next(tripleshares).v
     sbit = next(randshares).v
     return a, b, ab, sbit
 
 
-def getNTriplesAndSbits(tripleshares, randshares, n):
-    As, Bs, ABs = [], [], []
+def get_n_triple_and_sbits(tripleshares, randshares, n):
+    as_, bs_, abs_ = [], [], []
     for _ in range(n):
         a, b, ab = list(islice(tripleshares, 3))
-        As.append(a.v), Bs.append(b.v), ABs.append(ab.v)
+        as_.append(a.v), bs_.append(b.v), abs_.append(ab.v)
     sbits = list(map(lambda x: x.v, list(islice(randshares, n))))
-    return As, Bs, ABs, sbits
+    return as_, bs_, abs_, sbits
 
 
 async def iterated_butterfly_network(ctx, inputs, k, delta, randshares, tripleshares):
@@ -82,7 +83,7 @@ async def iterated_butterfly_network(ctx, inputs, k, delta, randshares, triplesh
         stride = 1
         while stride < k:
             stime = time()
-            As, Bs, ABs, sbits = getNTriplesAndSbits(tripleshares, randshares, k//2)
+            As, Bs, ABs, sbits = get_n_triple_and_sbits(tripleshares, randshares, k//2)
             assert len(As) == len(Bs) == len(ABs) == len(sbits) == k//2
             Xs, Ys = [], []
             first = True
@@ -95,7 +96,7 @@ async def iterated_butterfly_network(ctx, inputs, k, delta, randshares, triplesh
                 first = not first
             assert len(Xs) == len(Ys)
             assert len(Xs) != 0
-            result = await batchSwitch(ctx, Xs, Ys, sbits, As, Bs, ABs, k)
+            result = await batch_switch(ctx, Xs, Ys, sbits, As, Bs, ABs, k)
             inputs = [*sum(zip(result[0], result[1]), ())]
             stride *= 2
             benchLogger.info(f"[ButterflyNetwork-{iteration}]: {time()-stime}")
@@ -120,33 +121,33 @@ async def butterfly_network_helper(ctx, **kwargs):
     return None
 
 
-def generate_random_shares(prefix, k, N, t):
+def generate_random_shares(prefix, k, n, t):
     polys = [Poly.random(t, random.randint(0, 1)*2 - 1) for _ in range(k)]
-    write_polys(prefix, Field.modulus, N, t, polys)
+    write_polys(prefix, Field.modulus, n, t, polys)
 
 
-def runButterlyNetworkInTasks():
+def run_butterfly_network_in_tasks():
     from honeybadgermpc.mpc import generate_test_randoms, random_files_prefix
 
-    N, t, k, delta = 3, 1, 128, 6
+    n, t, k, delta = 3, 1, 128, 6
 
-    NUM_SWITCHES = k * int(log(k, 2)) ** 2
+    num_switches = k * int(log(k, 2)) ** 2
 
     os.makedirs("sharedata/", exist_ok=True)
     logging.info('Generating random shares of triples in sharedata/')
-    generate_test_triples(triplesprefix, 2*NUM_SWITCHES, N, t)
+    generate_test_triples(triplesprefix, 2*num_switches, n, t)
     logging.info('Generating random shares of 1/-1 in sharedata/')
-    generate_random_shares(oneminusoneprefix, NUM_SWITCHES, N, t)
+    generate_random_shares(oneminusoneprefix, num_switches, n, t)
     logging.info('Generating random inputs in sharedata/')
-    generate_test_randoms(random_files_prefix, k, N, t)
+    generate_test_randoms(random_files_prefix, k, n, t)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        programRunner = TaskProgramRunner(N, t)
-        programRunner.add(butterfly_network_helper, k=k, delta=delta)
-        loop.run_until_complete(programRunner.join())
+        pgm_runner = TaskProgramRunner(n, t)
+        pgm_runner.add(butterfly_network_helper, k=k, delta=delta)
+        loop.run_until_complete(pgm_runner.join())
     finally:
         loop.close()
 

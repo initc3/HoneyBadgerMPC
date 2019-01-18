@@ -20,32 +20,32 @@ class EC2Manager:
         self.screenLock = Semaphore(value=1)
         self.instanceIdRegion = {}
         for region in AwsConfig.REGION.keys():
-            ec2Resource = self.ec2Resources[region]
-            for instance in ec2Resource.instances.all():
+            ec2resource = self.ec2Resources[region]
+            for instance in ec2resource.instances.all():
                 self.instanceIdRegion[instance.id] = region
         self.instanceIdToNodeIdMap = None
 
-    def getSetupCommands(self):
-        with open(AwsConfig.SETUP_FILE_PATH, "r") as setupFile:
-            return setupFile.read()
+    def get_setup_commands(self):
+        with open(AwsConfig.SETUP_FILE_PATH, "r") as setup_file:
+            return setup_file.read()
 
-    def getCurrentVMInstanceIds(self):
-        with open(EC2Manager.currentVMsFileName, "r") as fileHandle:
-            data = fileHandle.readlines()
-        instanceIds = data[0].strip().split(",")
-        return instanceIds
+    def get_current_vm_instance_ids(self):
+        with open(EC2Manager.currentVMsFileName, "r") as file_handle:
+            data = file_handle.readlines()
+        instance_ids = data[0].strip().split(",")
+        return instance_ids
 
-    def createInstances(self):
+    def create_instances(self):
         if os.path.isfile(EC2Manager.currentVMsFileName):
             print(">>> Picking up VMs from current.vms file. <<<")
-            allInstanceIds = self.getCurrentVMInstanceIds()
+            all_instance_ids = self.get_current_vm_instance_ids()
         else:
             print(">>> VM creation started. <<<")
-            allInstanceIds = []
-            regionInstanceIdMap = {}
+            all_instance_ids = []
+            region_instance_id_map = {}
             for region, regionConfig in AwsConfig.REGION.items():
-                ec2Resource = self.ec2Resources[region]
-                instances = ec2Resource.create_instances(
+                ec2_resource = self.ec2Resources[region]
+                instances = ec2_resource.create_instances(
                     ImageId=regionConfig.IMAGE_ID,
                     MinCount=regionConfig.VM_COUNT,
                     MaxCount=regionConfig.VM_COUNT,
@@ -63,72 +63,72 @@ class EC2Manager:
                             ]
                         },
                     ],
-                    UserData=self.getSetupCommands()
+                    UserData=self.get_setup_commands()
                 )
 
-                regionInstanceIds = []
+                region_instance_ids = []
                 for instance in instances:
                     self.instanceIdRegion[instance.id] = region
-                    allInstanceIds.append(instance.id)
-                    regionInstanceIds.append(instance.id)
+                    all_instance_ids.append(instance.id)
+                    region_instance_ids.append(instance.id)
 
-                regionInstanceIdMap[region] = regionInstanceIds
+                region_instance_id_map[region] = region_instance_ids
 
-            for region, ids in regionInstanceIdMap.items():
-                ec2Resource = self.ec2Resources[region]
+            for region, ids in region_instance_id_map.items():
+                ec2_resource = self.ec2Resources[region]
                 for instanceId in ids:
-                    ec2Resource.Instance(id=instanceId).wait_until_running()
+                    ec2_resource.Instance(id=instanceId).wait_until_running()
 
-                ec2Client = boto3.client(
+                ec2_client = boto3.client(
                     'ec2',
                     aws_access_key_id=AwsConfig.ACCESS_KEY_ID,
                     aws_secret_access_key=AwsConfig.SECRET_ACCESS_KEY,
                     region_name=region
                 )
-                ec2Client.get_waiter('instance_status_ok').wait(
+                ec2_client.get_waiter('instance_status_ok').wait(
                     InstanceIds=ids
                 )
 
             with open(EC2Manager.currentVMsFileName, "w") as file_handle:
-                file_handle.write(",".join(allInstanceIds))
+                file_handle.write(",".join(all_instance_ids))
             print(">>> VMs successfully booted up. <<<")
-        allInstanceIps = [self.getInstancePublicIp(id) for id in allInstanceIds]
-        self.instanceIdToNodeIdMap = {id: i for i, id in enumerate(allInstanceIds)}
-        return allInstanceIds, allInstanceIps
+        all_instance_ips = [self.get_instance_public_ip(id) for id in all_instance_ids]
+        self.instanceIdToNodeIdMap = {id: i for i, id in enumerate(all_instance_ids)}
+        return all_instance_ids, all_instance_ips
 
-    def terminateInstancesById(self):
-        instanceIds = self.getCurrentVMInstanceIds()
-        for instanceId in instanceIds:
-            ec2Resource = self.ec2Resources[self.instanceIdRegion[instanceId]]
-            ec2Resource.Instance(id=instanceId).terminate()
+    def terminate_instances_by_id(self):
+        instance_ids = self.get_current_vm_instance_ids()
+        for instanceId in instance_ids:
+            ec2_resource = self.ec2Resources[self.instanceIdRegion[instanceId]]
+            ec2_resource.Instance(id=instanceId).terminate()
         if os.path.isfile(EC2Manager.currentVMsFileName):
             os.remove(EC2Manager.currentVMsFileName)
 
-    def getInstancePublicIp(self, instanceId):
-        ec2Resource = self.ec2Resources[self.instanceIdRegion[instanceId]]
-        return ec2Resource.Instance(id=instanceId).public_ip_address
+    def get_instance_public_ip(self, instance_id):
+        ec2_resource = self.ec2Resources[self.instanceIdRegion[instance_id]]
+        return ec2_resource.Instance(id=instance_id).public_ip_address
 
-    def executeCommandOnInstance(
+    def execute_command_on_instance(
         self,
-        instanceId,
+        instance_id,
         commands,
         verbose=False,
-        outputFilePrefix=None
+        output_file_prefix=None
     ):
 
-        regionConfig = AwsConfig.REGION[self.instanceIdRegion[instanceId]]
-        key = paramiko.RSAKey.from_private_key_file(regionConfig.KEY_FILE_PATH)
-        sshClient = paramiko.SSHClient()
-        sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ip = self.getInstancePublicIp(instanceId)
+        region_config = AwsConfig.REGION[self.instanceIdRegion[instance_id]]
+        key = paramiko.RSAKey.from_private_key_file(region_config.KEY_FILE_PATH)
+        ssh_client = paramiko.SSHClient()
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ip = self.get_instance_public_ip(instance_id)
 
         try:
-            sshClient.connect(
+            ssh_client.connect(
                     hostname=ip,
                     username=AwsConfig.INSTANCE_USER_NAME,
                     pkey=key)
             for command in commands:
-                _, stdout, stderr = sshClient.exec_command(command)
+                _, stdout, stderr = ssh_client.exec_command(command)
                 self.screenLock.acquire()
                 output = stdout.read()
                 if len(output) != 0:
@@ -140,13 +140,13 @@ class EC2Manager:
                         )
                         print(output)
                         print("#" * 30)
-                    if outputFilePrefix:
+                    if output_file_prefix:
                         with open(
-                                    f"{outputFilePrefix}_" +
-                                    f"{self.instanceIdToNodeIdMap[instanceId]}.log",
+                                    f"{output_file_prefix}_" +
+                                    f"{self.instanceIdToNodeIdMap[instance_id]}.log",
                                     "w"
-                                ) as outputFile:
-                            outputFile.write(output)
+                                ) as output_file:
+                            output_file.write(output)
 
                 err = stderr.read()
                 if len(err) != 0:
@@ -157,6 +157,6 @@ class EC2Manager:
                     print(err.decode('utf-8'))
                     print("~" * 30)
                 self.screenLock.release()
-            sshClient.close()
+            ssh_client.close()
         except Exception as ex:
             print(ex)

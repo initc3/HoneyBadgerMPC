@@ -1,6 +1,6 @@
 import asyncio
 from .field import GF
-from .polynomial import polynomialsOver
+from .polynomial import polynomials_over
 from .robust_reconstruction import attempt_reconstruct, robust_reconstruct
 import logging
 from collections import defaultdict
@@ -9,7 +9,7 @@ from math import ceil
 from time import time
 
 
-async def waitFor(aws, to_wait):
+async def wait_for(aws, to_wait):
     # waits for at least number `to_wait` out of the aws
     # coroutines to finish, returning None for all the ones
     # not finished yet
@@ -23,51 +23,51 @@ async def waitFor(aws, to_wait):
     return result
 
 
-def subscribeRecv(recv):
-    tagTable = defaultdict(Queue)
+def subscribe_recv(recv):
+    tag_table = defaultdict(Queue)
     taken = set()  # Replace this with a bloom filter?
 
-    async def _recvLoop():
+    async def _recv_loop():
         while True:
             j, (tag, o) = await recv()
-            tagTable[tag].put_nowait((j, o))
+            tag_table[tag].put_nowait((j, o))
 
     def subscribe(tag):
         # take everything from the queue
         # further things sent directly
         assert tag not in taken
         taken.add(tag)
-        return tagTable[tag].get
+        return tag_table[tag].get
 
-    _task = asyncio.create_task(_recvLoop())
+    _task = asyncio.create_task(_recv_loop())
     return _task, subscribe
 
 
-def recvEachParty(recv, n):
+def recv_each_party(recv, n):
     queues = [Queue() for _ in range(n)]
 
-    async def _recvLoop():
+    async def _recv_loop():
         while True:
             j, o = await recv()
             queues[j].put_nowait(o)
 
-    _task = asyncio.create_task(_recvLoop())
+    _task = asyncio.create_task(_recv_loop())
     return _task, [q.get for q in queues]
 
 
-def wrapSend(tag, send):
+def wrap_send(tag, send):
     def _send(j, o):
         send(j, (tag, o))
     return _send
 
 
-def toChunks(data, chunkSize):
+def to_chunks(data, chunk_size):
     res = []
-    n_chunks = ceil(len(data) / chunkSize)
-    logging.debug(f'toChunks: {chunkSize} {len(data)} {n_chunks}')
+    n_chunks = ceil(len(data) / chunk_size)
+    logging.debug(f'toChunks: {chunk_size} {len(data)} {n_chunks}')
     for j in range(n_chunks):
-        start = chunkSize * j
-        stop = chunkSize * (j + 1)
+        start = chunk_size * j
+        stop = chunk_size * (j + 1)
         res.append(data[start:stop])
     return res
 
@@ -77,15 +77,15 @@ def attempt_reconstruct_batch(data, field, n, t, point):
     assert sum(f is not None for f in data) >= 2 * t + 1
     assert 2*t < n, "Robust reconstruct waits for at least n=2t+1 values"
 
-    Bs = [len(f) for f in data if f is not None]
-    n_chunks = Bs[0]
-    assert all(b == n_chunks for b in Bs)
+    bs = [len(f) for f in data if f is not None]
+    n_chunks = bs[0]
+    assert all(b == n_chunks for b in bs)
     recons = []
     for i in range(n_chunks):
         chunk = [d[i] if d is not None else None for d in data]
         try:
-            P, failures = attempt_reconstruct(chunk, field, n, t, point)
-            recon = P.coeffs
+            p, failures = attempt_reconstruct(chunk, field, n, t, point)
+            recon = p.coeffs
             recon += [field(0)] * (t + 1 - len(recon))
             recons += recon
         except ValueError as e:
@@ -96,18 +96,18 @@ def attempt_reconstruct_batch(data, field, n, t, point):
     return recons
 
 
-def withAtMostNonNone(data, k):
+def with_at_most_non_none(data, k):
     """
     Returns an sequence made from `data`, except with at most `k` are
     non-None
     """
-    howMany = 0
+    how_many = 0
     for x in data:
-        if howMany >= k:
+        if how_many >= k:
             yield None
         else:
             if x is not None:
-                howMany += 1
+                how_many += 1
             yield x
 
 
@@ -130,41 +130,41 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     Reconstruction takes places in chunks of t+1 values
     """
     Fp = field = GF.get(p)
-    Poly = polynomialsOver(Fp)
+    Poly = polynomials_over(Fp)
     benchLogger = logging.LoggerAdapter(
         logging.getLogger("benchmark_logger"), {"node_id": myid})
 
     def point(i): return Fp(i+1)  # TODO: make it use omega
 
-    _taskSub, subscribe = subscribeRecv(recv)
+    _taskSub, subscribe = subscribe_recv(recv)
     del recv  # ILC enforces this in type system, no duplication of reads
-    _taskR1, qR1 = recvEachParty(subscribe('R1'), n)
-    _taskR2, qR2 = recvEachParty(subscribe('R2'), n)
+    _taskR1, qR1 = recv_each_party(subscribe('R1'), n)
+    _taskR2, qR2 = recv_each_party(subscribe('R2'), n)
     dataR1 = [asyncio.create_task(recv()) for recv in qR1]
     dataR2 = [asyncio.create_task(recv()) for recv in qR2]
     del subscribe  # ILC should determine we can garbage collect after this
 
-    def sendBatch(data, send, point):
+    def send_batch(data, send, point):
         logging.debug(f'sendBatch data: {data}')
-        toSend = [[] for _ in range(n)]
-        for chunk in toChunks(data, t + 1):
+        to_send = [[] for _ in range(n)]
+        for chunk in to_chunks(data, t + 1):
             f_poly = Poly(chunk)
             for j in range(n):
-                toSend[j].append(f_poly(point(j)).value)  # send just the int value
-        logging.debug(f'batch to send: {toSend}')
+                to_send[j].append(f_poly(point(j)).value)  # send just the int value
+        logging.debug(f'batch to send: {to_send}')
         for j in range(n):
-            send(j, toSend[j])
+            send(j, to_send[j])
 
     # Step 1: Compute the polynomial, then send
     #  Evaluate and send f(j,i) for each other participating party Pj
-    sendBatch(elem_batches, wrapSend('R1', send), point)
+    send_batch(elem_batches, wrap_send('R1', send), point)
 
     # Step 2: Attempt to reconstruct P1
     # Wait for between 2t+1 values and N values
     # trying to reconstruct each time
     for nAvailable in range(2 * t + 1, n + 1):
-        data = await waitFor(dataR1, nAvailable)
-        data = tuple(withAtMostNonNone(data, nAvailable))
+        data = await wait_for(dataR1, nAvailable)
+        data = tuple(with_at_most_non_none(data, nAvailable))
         logging.debug(f'data R1: {data} nAvailable: {nAvailable}')
         data = tuple([None if d is None else tuple(map(Fp, d)) for d in data])
         stime = time()
@@ -180,12 +180,12 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     reconsR2 = reconsR2[:len(elem_batches)]
 
     # Step 3: Send R2 points
-    sendBatch(reconsR2, wrapSend('R2', send), lambda _: Fp(0))
+    send_batch(reconsR2, wrap_send('R2', send), lambda _: Fp(0))
 
     # Step 4: Attempt to reconstruct R2
     for nAvailable in range(nAvailable, n + 1):
-        data = await waitFor(dataR2, nAvailable)
-        data = tuple(withAtMostNonNone(data, nAvailable))
+        data = await wait_for(dataR2, nAvailable)
+        data = tuple(with_at_most_non_none(data, nAvailable))
         data = tuple([None if d is None else tuple(map(Fp, d)) for d in data])
         logging.debug(f'data R2: {data} nAvailable: {nAvailable}')
         stime = time()
@@ -232,7 +232,7 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
         logging.info(shared_secrets)
 
     Fp = GF.get(p)
-    Poly = polynomialsOver(Fp)
+    Poly = polynomials_over(Fp)
 
     def point(i): return Fp(i+1)  # TODO: make it use omega
 
@@ -243,7 +243,7 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
     round1_shares = [asyncio.Future() for _ in range(n)]
     round2_shares = [asyncio.Future() for _ in range(n)]
 
-    async def _recvloop():
+    async def _recv_loop():
         while True:
             (j, (r, o)) = await recv()
             if r == 'R1':
@@ -257,7 +257,7 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
 
     # Run receive loop as background task, until self.prog finishes
     loop = asyncio.get_event_loop()
-    bgtask = loop.create_task(_recvloop())
+    bgtask = loop.create_task(_recv_loop())
 
     try:
         # Round 1:

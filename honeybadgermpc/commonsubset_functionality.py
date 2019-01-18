@@ -2,13 +2,13 @@ import asyncio
 import logging
 
 
-class ACS_Functionality(object):
-    def __init__(self, sid, N, f):
+class ACSFunctionality(object):
+    def __init__(self, sid, n, f):
         self.sid = sid
-        self.N = N
+        self.N = n
         self.f = f
-        self.inputs = [asyncio.Future() for _ in range(N)]
-        self.outputs = [asyncio.Future() for _ in range(N)]
+        self.inputs = [asyncio.Future() for _ in range(n)]
+        self.outputs = [asyncio.Future() for _ in range(n)]
 
         # Create output promises, even though we don't have input yet
         self._task = asyncio.ensure_future(self._run())
@@ -30,35 +30,35 @@ class ACS_Functionality(object):
             self.outputs[i].set_result(out)
 
 
-def CommonSubset_IdealProtocol(N, f):
-    class ACS_IdealProtocol(object):
+def common_subset_ideal_protocol(n, f):
+    class ACSIdealProtocol(object):
         _instances = {}     # mapping from (sid,myid) to functionality shared state
 
         def __init__(self, sid, myid):
             # Create the ideal functionality if not already present
-            if sid not in ACS_IdealProtocol._instances:
-                ACS_IdealProtocol._instances[sid] = ACS_Functionality(sid, N, f)
-            F_ACS = ACS_IdealProtocol._instances[sid]
+            if sid not in ACSIdealProtocol._instances:
+                ACSIdealProtocol._instances[sid] = ACSFunctionality(sid, n, f)
+            f_acs = ACSIdealProtocol._instances[sid]
 
             # Every party can provide one input
-            self.input = F_ACS.inputs[myid]
+            self.input = f_acs.inputs[myid]
 
             # The output is a future
-            self.output = F_ACS.outputs[myid]
-    return ACS_IdealProtocol
+            self.output = f_acs.outputs[myid]
+    return ACSIdealProtocol
 
 
-async def _test_acs_ideal(sid='sid', N=4, f=1):
-    ACS = CommonSubset_IdealProtocol(N, f)
-    parties = [ACS(sid, i) for i in range(N)]
+async def _test_acs_ideal(sid='sid', n=4, f=1):
+    ACS = common_subset_ideal_protocol(n, f)
+    parties = [ACS(sid, i) for i in range(n)]
 
     # Provide input
     # for i in range(N-1): # if set to N-1, will still succeed, but N-2 fails
-    for i in range(N):
+    for i in range(n):
         parties[i].input.set_result('hi'+str(i))
 
     # Now can await output from each ACS protocol
-    for i in range(N):
+    for i in range(n):
         await parties[i].output
         logging.info(f"{i} {parties[i].output}")
 

@@ -1,10 +1,10 @@
 import asyncio
 import logging
-from honeybadgermpc.wb_interpolate import makeEncoderDecoder
-from honeybadgermpc.polynomial import polynomialsOver
+from honeybadgermpc.wb_interpolate import make_encoder_decoder
+from honeybadgermpc.polynomial import polynomials_over
 
 
-async def waitFor(aws, to_wait):
+async def wait_for(aws, to_wait):
     done, pending = set(), set(aws)
     while len(done) < to_wait:
         _d, pending = await asyncio.wait(pending,
@@ -21,10 +21,10 @@ def attempt_reconstruct(encoded, field, n, t, point):
     # raise ValueError("Sentinel bug")
 
     # interpolate with error correction to get f(j,y)
-    _, decode, _ = makeEncoderDecoder(n, t+1, field.modulus)
+    _, decode, _ = make_encoder_decoder(n, t+1, field.modulus)
 
-    P = polynomialsOver(field)(decode(encoded))
-    if P.degree() > t:
+    p = polynomials_over(field)(decode(encoded))
+    if p.degree() > t:
         raise ValueError("Wrong degree")
 
     # check for errors
@@ -33,13 +33,13 @@ def attempt_reconstruct(encoded, field, n, t, point):
     for j in range(n):
         if encoded[j] is None:
             continue
-        if P(point(j)) == encoded[j]:
+        if p(point(j)) == encoded[j]:
             coincides += 1
         else:
             failures_detected.add(j)
 
     if coincides >= 2 * t + 1:
-        return P, failures_detected
+        return p, failures_detected
     else:
         raise ValueError("Did not coincide")
 
@@ -50,7 +50,7 @@ async def robust_reconstruct(field_futures, field, n, t, point):
     assert 2*t < n, "Robust reconstruct waits for at least n=2t+1 values"
     for nAvailable in range(2*t + 1, n+1):
         try:
-            await waitFor(field_futures, nAvailable)
+            await wait_for(field_futures, nAvailable)
             elems = [f.result() if f.done() else None for f in field_futures]
             P, failures = attempt_reconstruct(elems, field, n, t, point)
             return P, failures

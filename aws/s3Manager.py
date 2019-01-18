@@ -3,7 +3,7 @@ from aws.AWSConfig import AwsConfig
 
 
 class S3Manager(object):
-    def __init__(self, runId):
+    def __init__(self, run_id):
         # Always create bucket in 'us-east-1'
         self.s3Client = boto3.client(
             's3',
@@ -12,23 +12,23 @@ class S3Manager(object):
             region_name="us-east-1",
         )
         self.bucket = AwsConfig.BUCKET_NAME
-        self.prefix = runId
+        self.prefix = run_id
         self.s3Client.create_bucket(Bucket=self.bucket)
 
-    def uploadConfig(self, instanceConfig):
+    def upload_config(self, instance_config):
         key = "%s/config.ini" % (self.prefix)
         self.s3Client.put_object(
-            Body=instanceConfig.encode(),
+            Body=instance_config.encode(),
             Bucket=self.bucket,
             Key=key,
             ACL="public-read"
         )
         return "https://s3.amazonaws.com/{0}/{1}".format(self.bucket, key)
 
-    def uploadFile(self, fileName):
-        key = "%s/%s" % (self.prefix, fileName)
+    def upload_file(self, file_name):
+        key = "%s/%s" % (self.prefix, file_name)
         self.s3Client.upload_file(
-            fileName,
+            file_name,
             Bucket=self.bucket,
             Key=key,
             ExtraArgs={'ACL': 'public-read'}
@@ -40,13 +40,13 @@ class S3Manager(object):
             Bucket=self.bucket,
             Prefix=self.prefix
         )
-        keysToDelete = []
+        keys_to_delete = []
         if 'Contents' in response:
             for obj in response['Contents']:
-                keysToDelete.append({'Key': obj["Key"]})
+                keys_to_delete.append({'Key': obj["Key"]})
             self.s3Client.delete_objects(
                 Bucket=self.bucket,
                 Delete={
-                    'Objects': keysToDelete
+                    'Objects': keys_to_delete
                 }
             )
