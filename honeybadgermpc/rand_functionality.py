@@ -9,12 +9,12 @@ import asyncio
 import random
 
 
-class ShareSingle_Functionality(object):
-    def __init__(self, sid, N, f):
+class ShareSingleFunctionality(object):
+    def __init__(self, sid, n, f):
         self.sid = sid
-        self.N = N
+        self.N = n
         self.f = f
-        self.outputs = [asyncio.Future() for _ in range(N)]
+        self.outputs = [asyncio.Future() for _ in range(n)]
 
         # Create output promises, even though we don't have input yet
         self._task = asyncio.ensure_future(self._run())
@@ -27,26 +27,26 @@ class ShareSingle_Functionality(object):
             self.outputs[i].set_result(v)
 
 
-class ShareSingle_IdealProtocol(object):
+class ShareSingleIdealProtocol(object):
     _instances = {}     # mapping from (sid,myid) to functionality shared state
 
-    def __init__(self, sid, N, f, myid):
+    def __init__(self, sid, n, f, myid):
         # Create the ideal functionality if not already present
-        if sid not in ShareSingle_IdealProtocol._instances:
-            ShareSingle_IdealProtocol._instances[sid] = \
-                ShareSingle_Functionality(sid, N, f)
+        if sid not in ShareSingleIdealProtocol._instances:
+            ShareSingleIdealProtocol._instances[sid] = \
+                ShareSingleFunctionality(sid, n, f)
 
         # The output is a future
-        F_SS = ShareSingle_IdealProtocol._instances[sid]
-        self.output = F_SS.outputs[myid]
+        f_ss = ShareSingleIdealProtocol._instances[sid]
+        self.output = f_ss.outputs[myid]
 
 
-async def _test_sharesingle_ideal(sid='sid', N=4, f=1):
-    ShareSingle_IdealProtocol._instances = {}   # Clear state
-    parties = [ShareSingle_IdealProtocol(sid, N, f, i) for i in range(N)]
+async def _test_sharesingle_ideal(sid='sid', n=4, f=1):
+    ShareSingleIdealProtocol._instances = {}   # Clear state
+    parties = [ShareSingleIdealProtocol(sid, n, f, i) for i in range(n)]
 
     # Now can await output from each ShareSingle protocol
-    for i in range(N):
+    for i in range(n):
         await parties[i].output
         logging.info(f"{i} {parties[i].output}")
 

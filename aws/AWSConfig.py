@@ -4,20 +4,20 @@ import sys
 
 
 class RegionConfig(object):
-    def __init__(self, vmCount, sgIds, imageId, keyName, keyFilePath):
-        self.VM_COUNT = vmCount
-        self.SECURITY_GROUP_IDS = sgIds
-        self.IMAGE_ID = imageId
-        self.KEY_FILE_PATH = keyFilePath
-        self.KEY_NAME = keyName
+    def __init__(self, vm_count, sg_ids, image_id, key_name, key_file_path):
+        self.VM_COUNT = vm_count
+        self.SECURITY_GROUP_IDS = sg_ids
+        self.IMAGE_ID = image_id
+        self.KEY_FILE_PATH = key_file_path
+        self.KEY_NAME = key_name
 
 
 class MPCConfig(object):
-    def __init__(self, command, t, k, delta, port, numTriples, n):
+    def __init__(self, command, t, k, delta, port, num_triples, n):
         self.COMMAND = command
         self.T = t
         self.PORT = port
-        self.NUM_TRIPLES = numTriples
+        self.NUM_TRIPLES = num_triples
         self.K = k
         self.DELTA = delta
         self.n = n

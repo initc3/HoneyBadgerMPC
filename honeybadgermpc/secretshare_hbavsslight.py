@@ -122,19 +122,19 @@ def interpolate_at_x(coords, x, order=-1):
     sortedcoords = sorted(coords, key=lambda x: x[0])
     for coord in sortedcoords:
         xs.append(coord[0])
-    S = set(xs[0:order])
+    s = set(xs[0:order])
     # The following line makes it so this code works for both members of G and ZR
     out = coords[0][1] - coords[0][1]
     for i in range(order):
-        out += (lagrange_at_x(S, xs[i], x) * sortedcoords[i][1])
+        out += (lagrange_at_x(s, xs[i], x) * sortedcoords[i][1])
     return out
 
 
-def lagrange_at_x(S, j, x):
-    S = sorted(S)
-    assert j in S
-    l1 = [x - jj for jj in S if jj != j]
-    l2 = [j - jj for jj in S if jj != j]
+def lagrange_at_x(s, j, x):
+    s = sorted(s)
+    assert j in s
+    l1 = [x - jj for jj in s if jj != j]
+    l2 = [j - jj for jj in s if jj != j]
     (num, den) = (ZR(1), ZR(1))
     for item in l1:
         num *= item
@@ -274,7 +274,7 @@ class HbAvssDealer:
         self.benchmarkLogger.info("AVSS dealer time:  " + dealer_time)
 
         self._task = reliablebroadcast(
-            sid, pid=pid, N=n+1, f=t, leader=pid, input=message, receive=recv, send=send)
+            sid, pid=pid, n=n+1, f=t, leader=pid, input=message, receive=recv, send=send)
 
     async def run(self):
         return await self._task
@@ -309,7 +309,7 @@ class HbAvssRecipient:
         msgtypes = ["rb", "hbavss"]
         for msgtype in msgtypes:
             self.queues[msgtype] = Queue()
-            self.recvs[msgtype] = self.makeRecv(msgtype)
+            self.recvs[msgtype] = self.make_recv(msgtype)
         loop = asyncio.get_event_loop()
         loop.create_task(rbc_and_send(self.sid, self.pid, self.n+1,
                                       self.t, self.dealerid, None,
@@ -451,7 +451,7 @@ class HbAvssRecipient:
         for j in self.participantids:
             self.send(j, msg)
 
-    def makeRecv(self, msgtype):
+    def make_recv(self, msgtype):
         async def _recv():
             (i, o) = await self.queues[msgtype].get()
             return (i, o)
@@ -471,10 +471,10 @@ async def rbc_and_send(sid, pid, n, t, k, ignoreme, receive, send):
 # Run as either node or dealer, depending on command line arguments
 # Uses the same configuration format as hbmpc
 
-async def runHBAVSSLight(config, N, t, id):
-    programRunner = ProcessProgramRunner(config, N+1, t, id)
+async def runHBAVSSLight(config, n, t, id):
+    programRunner = ProcessProgramRunner(config, n+1, t, id)
     sender, listener = programRunner.senders, programRunner.listener
-    send, recv = programRunner.getSendAndRecv(0)
+    send, recv = programRunner.get_send_and_recv(0)
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
 
@@ -489,7 +489,7 @@ async def runHBAVSSLight(config, N, t, id):
 
     # Load private parameters / secret keys
     (participantpubkeys, participantprivkeys) = ({}, {})
-    participantids = list(range(N))
+    participantids = list(range(n))
     for i in participantids:
         # These can also be determined pseudorandomly
         sk = ZR.rand(seed=17+i)
@@ -497,8 +497,8 @@ async def runHBAVSSLight(config, N, t, id):
         participantpubkeys[i] = crs[0] ** sk
 
     # Form public parameters
-    dealerid = N
-    pubparams = (t, N, crs, participantids,
+    dealerid = n
+    pubparams = (t, n, crs, participantids,
                  participantpubkeys, dealerid, 'sid')
 
     # Launch the protocol

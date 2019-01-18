@@ -6,12 +6,12 @@ if __name__ == "__main__":
     ec2Manager = EC2Manager()
     if os.path.isfile(EC2Manager.currentVMsFileName):
         print("Do you want to terminate all VMs with the ids:",
-              ec2Manager.getCurrentVMInstanceIds(), "(y/n)?")
+              ec2Manager.get_current_vm_instance_ids(), "(y/n)?")
 
         while True:
             choice = input()
             if choice.lower() == "y":
-                ec2Manager.terminateInstancesById()
+                ec2Manager.terminate_instances_by_id()
                 print("Termination triggered successfully!")
                 break
             elif choice.lower() == "n":

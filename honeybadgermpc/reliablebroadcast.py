@@ -9,38 +9,38 @@ import math
 #####################
 #    zfec encode    #
 #####################
-def encode(K, N, m):
-    """Erasure encodes string ``m`` into ``N`` blocks, such that any ``K``
+def encode(k, n, m):
+    """Erasure encodes string ``m`` into ``n`` blocks, such that any ``k``
     can reconstruct.
-    :param int K: K
-    :param int N: number of blocks to encode string ``m`` into.
+    :param int k: k
+    :param int n: number of blocks to encode string ``m`` into.
     :param bytes m: bytestring to encode.
     :return list: Erasure codes resulting from encoding ``m`` into
-        ``N`` blocks using ``zfec`` lib.
+        ``n`` blocks using ``zfec`` lib.
     """
     try:
         m = m.encode()
     except AttributeError:
         pass
-    encoder = zfec.Encoder(K, N)
-    assert K <= 256  # TODO: Record this assumption!
+    encoder = zfec.Encoder(k, n)
+    assert k <= 256  # TODO: Record this assumption!
     # pad m to a multiple of K bytes
-    padlen = K - (len(m) % K)
-    m += padlen * chr(K-padlen).encode()
-    step = len(m)//K
-    blocks = [m[i*step: (i+1)*step] for i in range(K)]
+    padlen = k - (len(m) % k)
+    m += padlen * chr(k-padlen).encode()
+    step = len(m)//k
+    blocks = [m[i*step: (i+1)*step] for i in range(k)]
     stripes = encoder.encode(blocks)
     return stripes
 
 
-def decode(K, N, stripes):
+def decode(k, n, stripes):
     """Decodes an erasure-encoded string from a subset of stripes
-    :param list stripes: a container of :math:`N` elements,
+    :param list stripes: a container of :math:`n` elements,
         each of which is either a string or ``None``
-        at least :math:`K` elements are strings
+        at least :math:`k` elements are strings
         all string elements are the same length
     """
-    assert len(stripes) == N
+    assert len(stripes) == n
     blocks = []
     blocknums = []
     for i, block in enumerate(stripes):
@@ -48,14 +48,14 @@ def decode(K, N, stripes):
             continue
         blocks.append(block)
         blocknums.append(i)
-        if len(blocks) == K:
+        if len(blocks) == k:
             break
     else:
         raise ValueError("Too few to recover")
-    decoder = zfec.Decoder(K, N)
+    decoder = zfec.Decoder(k, n)
     rec = decoder.decode(blocks, blocknums)
     m = b''.join(rec)
-    padlen = K - m[-1]
+    padlen = k - m[-1]
     m = m[:-padlen]
     return m
 
@@ -75,24 +75,24 @@ def hash(x):
 def ceil(x): return int(math.ceil(x))
 
 
-def merkleTree(strList):
-    """Builds a merkle tree from a list of :math:`N` strings (:math:`N`
+def merkle_tree(str_list):
+    """Builds a merkle tree from a list of :math:`n` strings (:math:`n`
     at least 1)
-    :return list: Merkle tree, a list of ``2*ceil(N)`` strings. The root
+    :return list: Merkle tree, a list of ``2*ceil(n)`` strings. The root
          digest is at ``tree[1]``, ``tree[0]`` is blank.
     """
-    N = len(strList)
-    assert N >= 1
-    bottomrow = 2 ** ceil(math.log(N, 2))
+    n = len(str_list)
+    assert n >= 1
+    bottomrow = 2 ** ceil(math.log(n, 2))
     mt = [b''] * (2 * bottomrow)
-    for i in range(N):
-        mt[bottomrow + i] = hash(strList[i])
+    for i in range(n):
+        mt[bottomrow + i] = hash(str_list[i])
     for i in range(bottomrow - 1, 0, -1):
         mt[i] = hash(mt[i*2] + mt[i*2+1])
     return mt
 
 
-def getMerkleBranch(index, mt):
+def get_merkle_branch(index, mt):
     """Computes a merkle tree from a list of leaves.
     """
     res = []
@@ -103,28 +103,28 @@ def getMerkleBranch(index, mt):
     return res
 
 
-def merkleVerify(N, val, roothash, branch, index):
+def merkle_verify(n, val, root_hash, branch, index):
     """Verify a merkle tree branch proof
     """
-    assert 0 <= index < N
+    assert 0 <= index < n
     # XXX Python 3 related issue, for now let's tolerate both bytes and
     # strings
     assert isinstance(val, (str, bytes))
-    assert len(branch) == ceil(math.log(N, 2))
+    assert len(branch) == ceil(math.log(n, 2))
     # Index has information on whether we are facing a left sibling or a right sibling
     tmp = hash(val)
     tindex = index
     for br in branch:
         tmp = hash((tindex & 1) and br + tmp or tmp + br)
         tindex >>= 1
-    if tmp != roothash:
-        logging.info(f"Verification failed with {hash(val)} {roothash} \
-        {branch} {tmp == roothash}")
+    if tmp != root_hash:
+        logging.info(f"Verification failed with {hash(val)} {root_hash} \
+        {branch} {tmp == root_hash}")
         return False
     return True
 
 
-async def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
+async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
     """Reliable broadcast
     :param int pid: ``0 <= pid < N``
     :param int N:  at least 3
@@ -157,13 +157,13 @@ async def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
         but not necessarily reconstructed, then evidence incriminates
         the leader.
     """
-    assert N >= 3*f + 1
+    assert n >= 3*f + 1
     assert f >= 0
-    assert 0 <= leader < N
-    assert 0 <= pid < N
+    assert 0 <= leader < n
+    assert 0 <= pid < n
 
-    K               = N - 2 * f  # Wait to reconstruct. (# noqa: E221)
-    EchoThreshold   = N - f      # Wait for ECHO to send READY. (# noqa: E221)
+    K               = n - 2 * f  # Wait to reconstruct. (# noqa: E221)
+    EchoThreshold   = n - f      # Wait for ECHO to send READY. (# noqa: E221)
     ReadyThreshold  = f + 1      # Wait for READY to amplify. (# noqa: E221)
     OutputThreshold = 2 * f + 1  # Wait for this many READY to output
     # NOTE: The above thresholds  are chosen to minimize the size
@@ -175,7 +175,7 @@ async def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
     #   K = EchoThreshold - f
 
     def broadcast(o):
-        for i in range(N):
+        for i in range(n):
             send(i, o)
 
     if pid == leader:
@@ -187,18 +187,18 @@ async def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
         assert isinstance(m, (str, bytes))
         logging.debug('Input received: %d bytes' % (len(m),))
 
-        stripes = encode(K, N, m)
-        mt = merkleTree(stripes)  # full binary tree
+        stripes = encode(K, n, m)
+        mt = merkle_tree(stripes)  # full binary tree
         roothash = mt[1]
 
-        for i in range(N):
-            branch = getMerkleBranch(i, mt)
+        for i in range(n):
+            branch = get_merkle_branch(i, mt)
             send(i, (sid, 'VAL', roothash, branch, stripes[i]))
 
     # TODO: filter policy: if leader, discard all messages until sending VAL
 
     fromLeader = None
-    stripes = defaultdict(lambda: [None for _ in range(N)])
+    stripes = defaultdict(lambda: [None for _ in range(n)])
     echoCounter = defaultdict(lambda: 0)
     echoSenders = set()  # Peers that have sent us ECHO messages
     ready = defaultdict(set)
@@ -207,9 +207,9 @@ async def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
 
     def decode_output(roothash):
         # Rebuild the merkle tree to guarantee decoding is correct
-        m = decode(K, N, stripes[roothash])
-        _stripes = encode(K, N, m)
-        _mt = merkleTree(_stripes)
+        m = decode(K, n, stripes[roothash])
+        _stripes = encode(K, n, m)
+        _mt = merkle_tree(_stripes)
         _roothash = _mt[1]
         # TODO: Accountability: If this fails, incriminate leader
         assert _roothash == roothash
@@ -224,7 +224,7 @@ async def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
                 logging.info(f"VAL message from other than leader: {sender}")
                 continue
             try:
-                assert merkleVerify(N, stripe, roothash, branch, pid)
+                assert merkle_verify(n, stripe, roothash, branch, pid)
             except Exception as e:
                 logging.info(f"Failed to validate VAL message: {e}")
                 continue

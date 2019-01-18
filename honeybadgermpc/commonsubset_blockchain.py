@@ -11,9 +11,9 @@ from web3.contract import ConciseContract
 
 # TODO: compile solidity file commonsubset.sol
 
-def CommonSubsetProtocol(w3, contract, N, f):
+def common_subset_protocol(w3, contract, n, f):
 
-    class CommonSubset_BlockchainProtocol(object):
+    class CommonSubsetBlockchainProtocol(object):
         def __init__(self, sid, myid):
             self.sid = sid
             self.myid = myid
@@ -40,11 +40,11 @@ def CommonSubsetProtocol(w3, contract, N, f):
                     break
                 await asyncio.sleep(3)
             count = contract.count()    # noqa XXX count is unused
-            outs = [contract.values(i) for i in range(N)]
+            outs = [contract.values(i) for i in range(n)]
             logging.info(f'CommonSubset output ready {contract.count()} {outs}')
             self.output.set_result(outs)
 
-    return CommonSubset_BlockchainProtocol
+    return CommonSubsetBlockchainProtocol
 
 
 def handle_event(event):
@@ -84,7 +84,7 @@ async def main_loop(w3):
     logging.info(f'players(6) {contract_instance.players(6)}')
     # logging.info(f'players(7) {contract_instance.players(7)}')
 
-    CommonSubset = CommonSubsetProtocol(w3, contract_instance, 7, 2)
+    CommonSubset = common_subset_protocol(w3, contract_instance, 7, 2)
     prots = [CommonSubset('sid', i) for i in range(5)]
     outputs = [prot.output for prot in prots]
     for i, prot in enumerate(prots):

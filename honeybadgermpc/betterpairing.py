@@ -95,31 +95,6 @@ class G1:
             raise TypeError(
                 'Invalid exponentiation param. Expected ZR or int. Got '
                 + str(type(other)))
-    # Thought this might be faster. It wasn't.
-    # def __pow__(self, other):
-    #    if type(other) not in [int, ZR]:
-    #        raise TypeError('Invalid exponentiation param. Expected int or ZR. Got '
-    #            + str(type(other)))
-    #    if type(other) is int:
-    #        if other == 0:
-    #            out = PyG1(0, 0, 0, 1)
-    #            out.zero()
-    #            return G1(out)
-    #        other = other % (bls12_381_r-1)
-    #    else:
-    #        other = int(other)
-    #    out = dupe_pyg1(self.pyg1)
-    #    if self.pp == []:
-    #        self.initPP()
-    #    i = 0
-    #    #Hacky solution to my off by one error
-    #    other -= 1
-    #    while other > 0:
-    #        if other % 2 == 1:
-    #            out.add_assign(self.pp[i])
-    #        i+= 1
-    #        other = other >> 1
-    #    return G1(out)
 
     def __ipow__(self, other):
         if type(other) is int:
@@ -169,11 +144,13 @@ class G1:
     def projective(self):
         return self.pyg1.projective()
 
+    @staticmethod
     def one():
         out = PyG1()
         out.zero()
         return G1(out)
 
+    @staticmethod
     def rand(seed=None):
         out = PyG1()
         if seed is None:
@@ -265,31 +242,6 @@ class G2:
             raise TypeError(
                 'Invalid exponentiation param. Expected ZR or int. Got '
                 + str(type(other)))
-    # Thought this might be faster. It wasn't.
-    # def __pow__(self, other):
-    #    if type(other) not in [int, ZR]:
-    #        raise TypeError('Invalid exponentiation param. Expected int or ZR. Got '
-    #                        + str(type(other)))
-    #    if type(other) is int:
-    #        if other == 0:
-    #            out = PyG2(0, 0, 0, 1)
-    #            out.zero()
-    #            return G2(out)
-    #        other = other % (bls12_381_r-1)
-    #    else:
-    #        other = int(other)
-    #    out = dupe_pyg2(self.pyg2)
-    #    if self.pp == []:
-    #        self.initPP()
-    #    i = 0
-    #    #Hacky solution to my off by one error
-    #    other -= 1
-    #    while other > 0:
-    #        if other % 2 == 1:
-    #            out.add_assign(self.pp[i])
-    #        i+= 1
-    #        other = other >> 1
-    #    return G2(out)
 
     def __ipow__(self, other):
         if type(other) is int:
@@ -339,11 +291,13 @@ class G2:
     def projective(self):
         return self.pyg2.projective()
 
+    @staticmethod
     def one():
         out = PyG2()
         out.zero()
         return G2(out)
 
+    @staticmethod
     def rand(seed=None):
         out = PyG2()
         if seed is None:
@@ -537,7 +491,7 @@ class ZR:
             other = other % (bls12_381_r-1)
             out = dupe_pyfr(self.val)
             if self.pp == []:
-                self.initPP()
+                self.init_pp()
             i = 0
             # Hacky solution to my off by one error
             other -= 1
@@ -550,7 +504,7 @@ class ZR:
         elif type(other) is ZR:
             out = dupe_pyfr(self.val)
             if self.pp == []:
-                self.initPP()
+                self.init_pp()
             i = 0
             # Hacky solution to my off by one error
             other = int(other)
@@ -577,13 +531,14 @@ class ZR:
     def __setstate__(self, d):
         self.__init__(d)
 
-    def initPP(self):
+    def init_pp(self):
         self.pp.append(dupe_pyfr(self.val))
         for i in range(1, 255):
             power = dupe_pyfr(self.pp[i-1])
             power.square()
             self.pp.append(power)
 
+    @staticmethod
     def rand(seed=None):
         r = bls12_381_r
         if seed is None:
@@ -594,10 +549,12 @@ class ZR:
             r = random.Random(seed).randint(0, r-1)
             return ZR(str(r))
 
+    @staticmethod
     def zero():
         out = PyFr("0")
         return ZR(out)
 
+    @staticmethod
     def one():
         out = PyFr("1")
         return ZR(out)

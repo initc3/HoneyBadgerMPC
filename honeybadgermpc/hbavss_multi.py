@@ -126,19 +126,19 @@ def interpolate_at_x(coords, x, order=-1):
     sortedcoords = sorted(coords, key=lambda x: x[0])
     for coord in sortedcoords:
         xs.append(coord[0])
-    S = set(xs[0:order])
+    s = set(xs[0:order])
     # The following line makes it so this code works for both members of G and ZR
     out = coords[0][1] - coords[0][1]
     for i in range(order):
-        out += (lagrange_at_x(S, xs[i], x) * sortedcoords[i][1])
+        out += (lagrange_at_x(s, xs[i], x) * sortedcoords[i][1])
     return out
 
 
-def lagrange_at_x(S, j, x):
-    S = sorted(S)
-    assert j in S
-    l1 = [x - jj for jj in S if jj != j]
-    l2 = [j - jj for jj in S if jj != j]
+def lagrange_at_x(s, j, x):
+    s = sorted(s)
+    assert j in s
+    l1 = [x - jj for jj in s if jj != j]
+    l2 = [j - jj for jj in s if jj != j]
     (num, den) = (ZR(1), ZR(1))
     for item in l1:
         num *= item
@@ -278,7 +278,7 @@ class HbAvssDealer:
         self.benchmarkLogger.info("AVSS dealer time:  " + dealer_time)
 
         self._task = reliablebroadcast(
-            sid, pid=pid, N=n+1, f=t, leader=pid, input=message, receive=recv, send=send)
+            sid, pid=pid, n=n+1, f=t, leader=pid, input=message, receive=recv, send=send)
 
     async def run(self):
         return await self._task
@@ -313,7 +313,7 @@ class HbAvssRecipient:
         msgtypes = ["rb", "hbavss"]
         for msgtype in msgtypes:
             self.queues[msgtype] = Queue()
-            self.recvs[msgtype] = self.makeRecv(msgtype)
+            self.recvs[msgtype] = self.make_recv(msgtype)
         self.time2 = os.times()
         loop = asyncio.get_event_loop()
         loop.create_task(rbc_and_send(self.sid, self.pid, self.n+1,
@@ -464,7 +464,7 @@ class HbAvssRecipient:
         for j in self.participantids:
             self.send(j, msg)
 
-    def makeRecv(self, msgtype):
+    def make_recv(self, msgtype):
         async def _recv():
             (i, o) = await self.queues[msgtype].get()
             return (i, o)
@@ -484,12 +484,12 @@ async def rbc_and_send(sid, pid, n, t, k, ignoreme, receive, send):
 # Run as either node or dealer, depending on command line arguments
 # Uses the same configuration format as hbmpc
 
-async def runHBAVSSLightMulti(config, N, t, id, k):
-    programRunner = ProcessProgramRunner(config, N+1, t, id)
+async def run_hbavss_light_multi(config, n, t, id, k):
+    programRunner = ProcessProgramRunner(config, n+1, t, id)
     sender, listener = programRunner.senders, programRunner.listener
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
-    logging.info(f"{N} {t} {k}")
+    logging.info(f"{n} {t} {k}")
     # XXX HACK! Increase wait time. Must find better way if possible -- e.g:
     # try/except retry logic ...
     await asyncio.sleep(2)
@@ -501,7 +501,7 @@ async def runHBAVSSLightMulti(config, N, t, id, k):
 
     # Load private parameters / secret keys
     (participantpubkeys, participantprivkeys) = ({}, {})
-    participantids = list(range(N))
+    participantids = list(range(n))
     for i in participantids:
         # These can also be determined pseudorandomly
         sk = ZR.rand(seed=17+i)
@@ -509,25 +509,25 @@ async def runHBAVSSLightMulti(config, N, t, id, k):
         participantpubkeys[i] = crs[0] ** sk
 
     # Form public parameters
-    dealerid = N
+    dealerid = n
     tasks = []
     sends = []
     recvs = []
     for i in range(k):
-        send, recv = programRunner.getSendAndRecv(i)
+        send, recv = programRunner.get_send_and_recv(i)
         sends.append(send)
         recvs.append(recv)
     # Launch the protocol
     if id == dealerid:
         for i in range(k):
-            pubparams = (t, N, crs, participantids, participantpubkeys, dealerid, str(i))
+            pubparams = (t, n, crs, participantids, participantpubkeys, dealerid, str(i))
             # send, recv = programRunner.getSendAndRecv(i)
             thread = HbAvssDealer(pubparams, (42, id), sends[i], recvs[i])
             tasks.append(thread)
     else:
         myPrivateKey = participantprivkeys[id]
         for i in range(k):
-            pubparams = (t, N, crs, participantids, participantpubkeys, dealerid, str(i))
+            pubparams = (t, n, crs, participantids, participantpubkeys, dealerid, str(i))
             # send, recv = programRunner.getSendAndRecv(i)
             thread = HbAvssRecipient(pubparams, (id, myPrivateKey),
                                      sends[i], recvs[i], reconstruction=False)
@@ -590,7 +590,7 @@ def main():
                                  ' or a config file must be given as first argument.')
 
     config_dict = load_config(configfile)
-    N = config_dict['N']
+    n = config_dict['N']
     t = config_dict['t']
     k = config_dict['k']
     nodeid = int(nodeid)
@@ -603,7 +603,7 @@ def main():
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        (loop.run_until_complete(runHBAVSSLightMulti(network_info, N, t, nodeid, k)))
+        (loop.run_until_complete(run_hbavss_light_multi(network_info, n, t, nodeid, k)))
     finally:
         loop.close()
 

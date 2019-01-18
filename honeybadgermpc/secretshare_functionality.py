@@ -2,7 +2,7 @@ import asyncio
 import random
 import logging
 from .field import GF, GFElement
-from .polynomial import polynomialsOver
+from .polynomial import polynomials_over
 from .elliptic_curve import Subgroup
 
 """
@@ -25,18 +25,18 @@ from .polynomial import polynomialsOver
 
 # Fix the field for now
 Field = GF.get(Subgroup.BLS12_381)
-Poly = polynomialsOver(Field)
+Poly = polynomials_over(Field)
 
 
-class SecretShare_Functionality(object):
-    def __init__(self, sid, N, f, inputFromDealer=None):
+class SecretShareFunctionality(object):
+    def __init__(self, sid, n, f, input_from_dealer=None):
         self.sid = sid
-        self.N = N
+        self.N = n
         self.f = f
-        if inputFromDealer is None:
-            inputFromDealer = asyncio.Future()
-        self.inputFromDealer = inputFromDealer
-        self.outputs = [asyncio.Future() for _ in range(N)]
+        if input_from_dealer is None:
+            input_from_dealer = asyncio.Future()
+        self.inputFromDealer = input_from_dealer
+        self.outputs = [asyncio.Future() for _ in range(n)]
 
         # Create output promises, even though we don't have input yet
         self._task = asyncio.ensure_future(self._run())
@@ -55,38 +55,38 @@ class SecretShare_Functionality(object):
             self.outputs[i].set_result(share)
 
 
-def SecretShare_IdealProtocol(N, f):
-    class SecretShare_IdealProtocol(object):
+def secret_share_ideal_protocol(n, f):
+    class SecretShareIdealProtocol(object):
         _instances = {}     # mapping from (sid,myid) to functionality shared state
 
-        def __init__(self, sid, Dealer, myid):
+        def __init__(self, sid, dealer, myid):
             self.sid = sid
-            self.Dealer = Dealer
+            self.Dealer = dealer
             # Create the ideal functionality if not already present
-            if sid not in SecretShare_IdealProtocol._instances:
-                SecretShare_IdealProtocol._instances[sid] = \
-                    SecretShare_Functionality(
-                        sid, N, f, inputFromDealer=asyncio.Future())
-            F_SecretShare = SecretShare_IdealProtocol._instances[sid]
+            if sid not in SecretShareIdealProtocol._instances:
+                SecretShareIdealProtocol._instances[sid] = \
+                    SecretShareFunctionality(
+                        sid, n, f, input_from_dealer=asyncio.Future())
+            func_secret_share = SecretShareIdealProtocol._instances[sid]
 
             # If dealer, then provide input
-            if myid == Dealer:
-                self.inputFromDealer = F_SecretShare.inputFromDealer
+            if myid == dealer:
+                self.inputFromDealer = func_secret_share.inputFromDealer
             else:
                 self.inputFromDealer = None
 
             # A future representing the output is available
-            self.output = F_SecretShare.outputs[myid]
-    return SecretShare_IdealProtocol
+            self.output = func_secret_share.outputs[myid]
+    return SecretShareIdealProtocol
 
 
-async def test1(sid='sid', N=4, f=1, Dealer=0):
+async def test1(sid='sid', n=4, f=1, Dealer=0):
     # Create ideal protocol for all the parties
-    SecretShare = SecretShare_IdealProtocol(N, f)
-    parties = [SecretShare(sid, Dealer, i) for i in range(N)]
+    SecretShare = secret_share_ideal_protocol(n, f)
+    parties = [SecretShare(sid, Dealer, i) for i in range(n)]
 
     # Output (promises) are available, but not resolved yet
-    for i in range(N):
+    for i in range(n):
         logging.info(f"{i} {parties[i].output}")
 
     # Show the shared functionality
@@ -98,7 +98,7 @@ async def test1(sid='sid', N=4, f=1, Dealer=0):
     parties[Dealer].inputFromDealer.set_result(v)
 
     # Now can await output from each AVSS protocol
-    for i in range(N):
+    for i in range(n):
         await parties[i].output
         logging.info(f"{i} {parties[i].output}")
 
