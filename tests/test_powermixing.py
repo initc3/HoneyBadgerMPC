@@ -37,7 +37,7 @@ async def test_phase1(sharedatadir):
 
     async def verify_phase1(context, **kwargs):
         a_, b_, k_ = kwargs['a'], kwargs['b'], kwargs['k']
-        await pm.singleSecretPhase1(
+        await pm.single_secret_phase1(
             context,
             k=k,
             powers_prefix=f"{basedir}/test-phase1",
@@ -97,6 +97,6 @@ async def test_asynchronous_mixing(sharedatadir):
 
     N, t, k = 3, 1, 2
     a_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
-    result = await pm.asynchronusMixing(a_s, N, t, k)
+    result = await pm.async_mixing(a_s, N, t, k)
     for a in a_s:
         assert a in result

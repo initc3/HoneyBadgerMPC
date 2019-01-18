@@ -20,15 +20,15 @@ async def wait_for_preprocessing():
         await asyncio.sleep(1)
 
 
-def generate_test_powers(prefix, a, b, k, N, t):
+def generate_test_powers(prefix, a, b, k, n, t):
     # Generate k powers, store in files of form "prefix-%d.share"
     polys = [Poly.random(t, a)]
     for j in range(1, k+1):
         polys.append(Poly.random(t, pow(b, j)))
-    write_polys(prefix, Field.modulus, N, t, polys)
+    write_polys(prefix, Field.modulus, n, t, polys)
 
 
-async def singleSecretPhase1(context, **kwargs):
+async def single_secret_phase1(context, **kwargs):
     k, powers_prefix = kwargs['k'], kwargs['powers_prefix']
     cpp_prefix = kwargs['cpp_prefix']
     filename = f"{powers_prefix}-{context.myid}.share"
@@ -46,7 +46,7 @@ async def singleSecretPhase1(context, **kwargs):
             print(power.v.value, file=f)
 
 
-async def allSecretsPhase1(context, **kwargs):
+async def all_secrets_phase1(context, **kwargs):
     k, runid = kwargs['k'], kwargs['runid']
     aS, aMinusBShares, allPowers = [], [], []
 
@@ -87,10 +87,10 @@ async def phase2(nodeid, batchid, runid, cpp_prefix):
     # make -C apps/shuffle/cpp
     # and is stored under /usr/local/bin/
     runcmd = f"compute-power-sums {filename} {sumFileName}"
-    await runCommandSync(runcmd)
+    await run_command_sync(runcmd)
 
 
-async def runCommandSync(command):
+async def run_command_sync(command):
     proc = await asyncio.create_subprocess_shell(
         command,
         stdout=asyncio.subprocess.PIPE,
@@ -103,9 +103,9 @@ async def runCommandSync(command):
     logging.debug(f"Error: {stderr}")
 
 
-async def prepareOneInput(context, **kwargs):
+async def prepare_one_input(context, **kwargs):
     k, batchid, runid = kwargs['k'], kwargs['batchid'], kwargs['runid']
-    await singleSecretPhase1(
+    await single_secret_phase1(
         context,
         k=k,
         powers_prefix=f"{powersPrefix}_{batchid}",
@@ -137,18 +137,18 @@ async def phase3(context, **kwargs):
     return openedShares
 
 
-async def asynchronusMixing(a_s, N, t, k):
+async def async_mixing(a_s, n, t, k):
     from .solver.solver import solve
 
-    pr1 = TaskProgramRunner(N, t)
+    pr1 = TaskProgramRunner(n, t)
     runid = uuid.uuid4().hex
     for i, a in enumerate(a_s):
         b = Field(random.randint(0, Field.modulus-1))
         batchid = f"{runid}_{i}"
-        generate_test_powers(f"{powersPrefix}_{batchid}", a, b, k, N, t)
-        pr1.add(prepareOneInput, k=k, batchid=batchid, runid=runid)
+        generate_test_powers(f"{powersPrefix}_{batchid}", a, b, k, n, t)
+        pr1.add(prepare_one_input, k=k, batchid=batchid, runid=runid)
     await pr1.join()
-    pr2 = TaskProgramRunner(N, t)
+    pr2 = TaskProgramRunner(n, t)
     pr2.add(phase3, k=k, runid=runid)
     powerSums = (await pr2.join())[0]
     logging.info("Shares from C++ phase opened.")
@@ -157,38 +157,38 @@ async def asynchronusMixing(a_s, N, t, k):
     return result
 
 
-async def buildNewtonSolver():
-    await runCommandSync(f"python {shufflebasedir}/solver/solver_build.py")
+async def build_newton_solver():
+    await run_command_sync(f"python {shufflebasedir}/solver/solver_build.py")
 
 
-async def buildPowerMixingCppCode():
-    await runCommandSync(f"make -C {shufflebasedir}/cpp")
+async def build_powermixing_cpp_code():
+    await run_command_sync(f"make -C {shufflebasedir}/cpp")
 
 
-def asynchronusMixingInTasks():
+def async_mixing_in_tasks():
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
-    N, t, k = 3, 1, 2
+    n, t, k = 3, 1, 2
     a_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
     try:
-        loop.run_until_complete(buildNewtonSolver())
+        loop.run_until_complete(build_newton_solver())
         logging.info("Solver built.")
-        loop.run_until_complete(buildPowerMixingCppCode())
+        loop.run_until_complete(build_powermixing_cpp_code())
         logging.info("C++ code built.")
-        loop.run_until_complete(asynchronusMixing(a_s, N, t, k))
+        loop.run_until_complete(async_mixing(a_s, n, t, k))
     finally:
         loop.close()
 
 
-async def asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid):
+async def async_mixing_in_processes(network_info, n, t, k, runid, nodeid):
     from .solver.solver import solve
     from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.task_pool import TaskPool
 
-    programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
+    programRunner = ProcessProgramRunner(network_info, n, t, nodeid)
     await programRunner.start()
-    programRunner.add(0, allSecretsPhase1, k=k, runid=runid)
+    programRunner.add(0, all_secrets_phase1, k=k, runid=runid)
     await programRunner.join()
 
     pool = TaskPool(256)
@@ -294,7 +294,7 @@ if __name__ == "__main__":
                 loop.run_until_complete(wait_for_preprocessing())
 
         loop.run_until_complete(
-            asynchronusMixingInProcesses(network_info, N, t, k, runid, nodeid)
+            async_mixing_in_processes(network_info, N, t, k, runid, nodeid)
         )
     finally:
         loop.close()

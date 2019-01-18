@@ -1,7 +1,7 @@
 import sys
 
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
+from setuptools.command.test import test as test_command
 
 try:
     from setuptools_rust import RustExtension
@@ -16,7 +16,7 @@ except ImportError:
         from setuptools_rust import RustExtension
 
 
-class PyTest(TestCommand):
+class PyTest(test_command):
     user_options = []
 
     def run(self):
