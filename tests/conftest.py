@@ -33,81 +33,81 @@ def triples_files_prefix(sharedata_tmpdir):
 @fixture
 # TODO check whether there could be a better name for this fixture,
 # e.g.: bls12_381_field?
-def GaloisField():
+def galois_field():
     from honeybadgermpc.field import GF
     return GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
 
 
 @fixture
-def Polynomial(GaloisField):
-    from honeybadgermpc.polynomial import polynomialsOver
-    return polynomialsOver(GaloisField)
+def polynomial(galois_field):
+    from honeybadgermpc.polynomial import polynomials_over
+    return polynomials_over(galois_field)
 
 
 @fixture(params=({'k': 1000, 't': 1},))
-def zero_polys(request, Polynomial):
+def zero_polys(request, polynomial):
     k = request.param['k']
     t = request.param['t']
-    return [Polynomial.random(t, 0) for _ in range(k)]
+    return [polynomial.random(t, 0) for _ in range(k)]
 
 
 @fixture(params=({'k': 1000, 't': 1},))
-def random_polys(request, GaloisField, Polynomial):
+def random_polys(request, galois_field, polynomial):
     k = request.param['k']
     t = request.param['t']
-    return [Polynomial.random(t, random.randint(0, GaloisField.modulus-1))
+    return [polynomial.random(t, random.randint(0, galois_field.modulus-1))
             for _ in range(k)]
 
 
 @fixture(params=(1000,))
-def triples_fields(request, GaloisField, Polynomial):
+def triples_fields(request, galois_field, polynomial):
     k = request.param
     fields_batch = []
     for _ in range(k):
-        a = GaloisField(random.randint(0, GaloisField.modulus-1))
-        b = GaloisField(random.randint(0, GaloisField.modulus-1))
+        a = galois_field(random.randint(0, galois_field.modulus-1))
+        b = galois_field(random.randint(0, galois_field.modulus-1))
         c = a*b
         fields_batch.append((a, b, c))
     return fields_batch
 
 
 @fixture(params=(1,))
-def triples_polys(request, triples_fields, Polynomial):
+def triples_polys(request, triples_fields, polynomial):
     t = request.param
     return [
-        Polynomial.random(t, field) for triple in triples_fields for field in triple
+        polynomial.random(t, field) for triple in triples_fields for field in triple
     ]
 
 
 @fixture(params=({'N': 3, 't': 1},))
-def zeros_shares_files(request, GaloisField, zero_polys, zeros_files_prefix):
+def zeros_shares_files(request, galois_field, zero_polys, zeros_files_prefix):
     from honeybadgermpc.mpc import write_polys
-    N = request.param['N']
+    n = request.param['N']
     t = request.param['t']
-    write_polys(zeros_files_prefix, GaloisField.modulus, N, t, zero_polys)
+    write_polys(zeros_files_prefix, galois_field.modulus, n, t, zero_polys)
 
 
 @fixture(params=({'N': 3, 't': 1},))
-def random_shares_files(request, GaloisField, random_polys, random_files_prefix):
+def random_shares_files(request, galois_field, random_polys, random_files_prefix):
     from honeybadgermpc.mpc import write_polys
-    N = request.param['N']
+    n = request.param['N']
     t = request.param['t']
-    write_polys(random_files_prefix, GaloisField.modulus, N, t, random_polys)
+    write_polys(random_files_prefix, galois_field.modulus, n, t, random_polys)
 
 
 @fixture(params=({'N': 3, 't': 1},))
-def triples_shares_files(request, GaloisField, triples_polys, triples_files_prefix):
+def triples_shares_files(request, galois_field, triples_polys, triples_files_prefix):
     from honeybadgermpc.mpc import write_polys
-    N = request.param['N']
+    n = request.param['N']
     t = request.param['t']
     write_polys(
-        triples_files_prefix, GaloisField.modulus, N, t, triples_polys)
+        triples_files_prefix, galois_field.modulus, n, t, triples_polys)
 
 
 @fixture
 def simple_router():
 
-    def _simple_router(N):
+    def _simple_router(n):
         """
         Builds a set of connected channels
 
@@ -115,7 +115,7 @@ def simple_router():
         :rtype: tuple
         """
         # Create a mailbox for each party
-        mbox = [asyncio.Queue() for _ in range(N)]
+        mbox = [asyncio.Queue() for _ in range(n)]
 
         def make_send(i):
             def _send(j, o):
@@ -134,7 +134,7 @@ def simple_router():
 
         sends = {}
         receives = {}
-        for i in range(N):
+        for i in range(n):
             sends[i] = make_send(i)
             receives[i] = make_recv(i)
         return (sends, receives)
@@ -150,10 +150,10 @@ def random_element():
 
 
 class Runtime():
-    def __init__(self, id, N, t, send, recv):
+    def __init__(self, id, n, t, send, recv):
         assert type(n) in (int, long)   # noqa TODO n is undefined
         assert 3 <= k <= n  # noqa TODO fix: k is undefined
-        self.N = N
+        self.N = n
         self.t = t
         self.id = id
 

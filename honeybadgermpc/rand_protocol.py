@@ -2,8 +2,8 @@ import asyncio
 import random
 import logging
 # For testing, use the Ideal Protocol for AVSS and ACS
-from .secretshare_functionality import SecretShare_IdealProtocol
-from .commonsubset_functionality import CommonSubset_IdealProtocol
+from .secretshare_functionality import secret_share_ideal_protocol
+from .commonsubset_functionality import common_subset_ideal_protocol
 from .secretshare_functionality import Field
 
 
@@ -14,19 +14,19 @@ from .secretshare_functionality import Field
 # (this is a counter example for a bad design!)
 
 class NaiveShareRandomProtocol(object):
-    def __init__(self, N, f, sid, myid, AVSS, ACS):
-        self.N = N
+    def __init__(self, n, f, sid, myid, avss, acs):
+        self.N = n
         self.f = f
         self.sid = sid
         self.myid = myid
-        self.AVSS = AVSS
-        self.ACS = ACS
+        self.AVSS = avss
+        self.ACS = acs
         self.output = asyncio.Future()
 
         ssid = '(%s,%%d)' % (self.sid,)
         # Follow an AVSS for each party
-        self.avss = [AVSS(ssid % i, Dealer=i, myid=myid)
-                     for i in range(N)]
+        self.avss = [avss(ssid % i, dealer=i, myid=myid)
+                     for i in range(n)]
 
         async def _run():
             # Provide random input to my own AVSS
@@ -34,7 +34,7 @@ class NaiveShareRandomProtocol(object):
             self.avss[myid].inputFromDealer.set_result(v)
 
             # Wait for output from *every* AVSS (this is the problem)
-            results = await asyncio.gather(*(self.avss[i].output for i in range(N)))
+            results = await asyncio.gather(*(self.avss[i].output for i in range(n)))
             output = sum(results)
 
             # Return results
@@ -43,13 +43,13 @@ class NaiveShareRandomProtocol(object):
         self._task = asyncio.ensure_future(_run())
 
 
-async def _test_naive(sid='sid', N=4, f=1):
-    SecretShare = SecretShare_IdealProtocol(N, f)
+async def _test_naive(sid='sid', n=4, f=1):
+    SecretShare = secret_share_ideal_protocol(n, f)
     rands = []
     # for i in range(N): # If set to N-1 (simulate crashed party, it gets stuck)
-    for i in range(N):
+    for i in range(n):
         # Optionally fail to active the last one of them
-        rands.append(NaiveShareRandomProtocol(N, f, sid, i, SecretShare, None))
+        rands.append(NaiveShareRandomProtocol(n, f, sid, i, SecretShare, None))
 
     logging.info('_test_naive: awaiting results...')
     results = await asyncio.gather(*(rand.output for rand in rands))
@@ -69,23 +69,23 @@ def test_naive():
 #######################################
 # Correct ShareRandom with AVSS and ACS
 #######################################
-class ShareSingle_Protocol(object):
-    def __init__(self, N, f, sid, myid, AVSS, ACS):
-        self.N = N
+class ShareSingleProtocol(object):
+    def __init__(self, n, f, sid, myid, avss, acs):
+        self.N = n
         self.f = f
         self.sid = sid
         self.myid = myid
-        self.AVSS = AVSS
-        self.ACS = ACS
+        self.AVSS = avss
+        self.ACS = acs
         self.output = asyncio.Future()
 
         # Create an AVSS, one for each party
         ssid = '(%s,%%d)' % (self.sid,)
-        self._avss = [AVSS(ssid % i, Dealer=i, myid=myid)
-                      for i in range(N)]
+        self._avss = [avss(ssid % i, dealer=i, myid=myid)
+                      for i in range(n)]
 
         # Create one ACS
-        self._acs = ACS(sid, myid=myid)
+        self._acs = acs(sid, myid=myid)
 
         async def _run():
             # Provide random input to my own AVSS
@@ -95,7 +95,7 @@ class ShareSingle_Protocol(object):
             # Wait to observe N-t of the AVSS complete, then provide input to ACS
             pending = set([a.output for a in self._avss])
             ready = set()
-            while len(ready) < N - f:
+            while len(ready) < n - f:
                 done, pending = await asyncio.wait(
                     pending, return_when=asyncio.FIRST_COMPLETED)
                 ready.update(done)
@@ -109,18 +109,18 @@ class ShareSingle_Protocol(object):
             vecs = await self._acs.output
 
             # Which AVSS's are associated with f+1 values in the ACS?
-            score = [0]*N
-            for i in range(N):
+            score = [0]*n
+            for i in range(n):
                 if vecs[i] is None:
                     continue
-                for j in range(N):
+                for j in range(n):
                     if vecs[i][j]:
                         score[j] += 1
             logging.info(score)
 
             # Add up the committed shares
             output = 0
-            for i in range(N):
+            for i in range(n):
                 if score[i] >= f+1:
                     output += await self._avss[i].output
 
@@ -131,15 +131,15 @@ class ShareSingle_Protocol(object):
         self._task = asyncio.ensure_future(_run())
 
 
-async def _test_rand(sid='sid', N=4, f=1):
-    SecretShare = SecretShare_IdealProtocol(N, f)
-    CommonSubset = CommonSubset_IdealProtocol(N, f)
+async def _test_rand(sid='sid', n=4, f=1):
+    SecretShare = secret_share_ideal_protocol(n, f)
+    CommonSubset = common_subset_ideal_protocol(n, f)
 
     rands = []
     # for i in range(N): # If set to N-1 (simulate crashed party, it gets stuck)
-    for i in range(N-1):
+    for i in range(n-1):
         # Optionally fail to active the last one of them
-        rands.append(ShareSingle_Protocol(N, f, sid, i, SecretShare, CommonSubset))
+        rands.append(ShareSingleProtocol(n, f, sid, i, SecretShare, CommonSubset))
 
     logging.info('_test_rand: awaiting results...')
     results = await asyncio.gather(*(rand.output for rand in rands))

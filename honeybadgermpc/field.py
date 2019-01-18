@@ -336,7 +336,7 @@ class GFElement(FieldElement):
         return self.value != 0
 
 
-def FakeGF(modulus):
+def fake_gf(modulus):
     """Construct a fake field.
 
     These fields should only be used in benchmarking. They work like

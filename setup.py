@@ -21,6 +21,7 @@ REQUIRED = [
 
 TESTS_REQUIRES = [
     'flake8',
+    'pep8-naming',
     'pytest',
     'pytest-asyncio',
     'pytest-cov',

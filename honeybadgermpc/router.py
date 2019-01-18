@@ -2,15 +2,15 @@ import asyncio
 import logging
 
 
-def simple_router(N):
+def simple_router(n):
     """
     Builds a set of connected channels
     @return (receives, sends)
     """
     # Create a mailbox for each party
-    mbox = [asyncio.Queue() for _ in range(N)]
+    mbox = [asyncio.Queue() for _ in range(n)]
 
-    def makeSend(i):
+    def make_send(i):
         def _send(j, o):
             logging.debug('SEND %8s [%2d -> %2d]' % (o, i, j))
             # delay = random.random() * 1.0
@@ -18,7 +18,7 @@ def simple_router(N):
             mbox[j].put_nowait((i, o))
         return _send
 
-    def makeRecv(j):
+    def make_recv(j):
         async def _recv():
             (i, o) = await mbox[j].get()
             logging.debug('RECV %8s [%2d -> %2d]' % (o, i, j))
@@ -27,7 +27,7 @@ def simple_router(N):
 
     sends = {}
     receives = {}
-    for i in range(N):
-        sends[i] = makeSend(i)
-        receives[i] = makeRecv(i)
+    for i in range(n):
+        sends[i] = make_send(i)
+        receives[i] = make_recv(i)
     return (sends, receives)

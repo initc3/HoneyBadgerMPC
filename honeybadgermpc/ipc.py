@@ -123,15 +123,15 @@ class Listener(object):
     def __init__(self, port):
         self.queues = {}
         self.tasks = []
-        serverFuture = asyncio.start_server(self.handle_client, "", port)
-        self.serverTask = asyncio.ensure_future(serverFuture)
+        server_future = asyncio.start_server(self.handle_client, "", port)
+        self.serverTask = asyncio.ensure_future(server_future)
 
-    def getProgramQueue(self, sid):
+    def get_program_queue(self, sid):
         assert sid not in self.queues
         self.queues[sid] = asyncio.Queue()
         return self.queues[sid]
 
-    def clearAllProgramQueues(self):
+    def clear_all_program_queues(self):
         self.queues = {}
 
     async def handle_client(self, reader, writer):
@@ -214,38 +214,38 @@ class NodeDetails(object):
 
 
 class ProcessProgramRunner(ProgramRunner):
-    def __init__(self, config, N, t, nodeid):
+    def __init__(self, config, n, t, nodeid):
         self.config = config
-        self.N, self.t, self.nodeid = N, t, nodeid
-        self.senders = Senders([asyncio.Queue() for _ in range(N)], config, nodeid)
+        self.N, self.t, self.nodeid = n, t, nodeid
+        self.senders = Senders([asyncio.Queue() for _ in range(n)], config, nodeid)
         self.listener = Listener(config[nodeid].port)
         self.programs = []
 
-    def getSendAndRecv(self, sid):
-        listenerQueue = self.listener.getProgramQueue(sid)
+    def get_send_and_recv(self, sid):
+        listener_queue = self.listener.get_program_queue(sid)
 
-        def makeSend(i, sid):
+        def make_send(i, sid):
             def _send(j, o):
                 logging.debug('[%s] SEND %8s [%2d -> %2d]' % (sid, o[1], i, j))
                 if i == j:
                     # If attempting to send the message to yourself
                     # then skip the network stack.
-                    listenerQueue.put_nowait((i, o))
+                    listener_queue.put_nowait((i, o))
                 else:
                     self.senders.queues[j].put_nowait((sid, (i, o)))
             return _send
 
-        def makeRecv(j, sid):
+        def make_recv(j, sid):
             async def _recv():
                 (i, o) = await self.listener.getMessage(sid)
                 logging.debug('[%s] RECV %8s [%2d -> %2d]' % (sid, o[1], i, j))
                 return (i, o)
             return _recv
 
-        return makeSend(self.nodeid, sid), makeRecv(self.nodeid, sid)
+        return make_send(self.nodeid, sid), make_recv(self.nodeid, sid)
 
     def add(self, sid, program, **kwargs):
-        send, recv = self.getSendAndRecv(sid)
+        send, recv = self.get_send_and_recv(sid)
         context = Mpc(
             'sid', self.N, self.t, self.nodeid, sid, send, recv, program, **kwargs
         )
@@ -263,7 +263,7 @@ class ProcessProgramRunner(ProgramRunner):
         results = await asyncio.gather(*self.programs)
         # Clear out all programs and queues which were using old sids
         self.programs = []
-        self.listener.clearAllProgramQueues()
+        self.listener.clear_all_program_queues()
         return results
 
     async def close(self):
