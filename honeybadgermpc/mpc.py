@@ -1,7 +1,7 @@
 import asyncio
 from asyncio import Future
 from .field import GF, GFElement
-from .polynomial import polynomials_over
+from .polynomial import polynomials_over, EvalPoint
 from .router import simple_router
 from .program_runner import ProgramRunner
 import random
@@ -111,7 +111,7 @@ class Mpc(object):
         # Set up the buffer of received shares
         share_buffer = [self._share_buffers[i][shareid] for i in range(self.N)]
 
-        def point(i): return Field(i+1)
+        point = EvalPoint(Field, self.N, use_fft=False)
         opening = robust_reconstruct(
             share_buffer, Field, self.N, self.t, point)
         self._openings[shareid] = opening

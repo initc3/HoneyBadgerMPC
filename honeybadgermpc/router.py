@@ -16,6 +16,7 @@ def simple_router(n):
             # delay = random.random() * 1.0
             # asyncio.get_event_loop().call_later(delay, mbox[j].put_nowait,(i,o))
             mbox[j].put_nowait((i, o))
+
         return _send
 
     def make_recv(j):
@@ -23,6 +24,7 @@ def simple_router(n):
             (i, o) = await mbox[j].get()
             logging.debug('RECV %8s [%2d -> %2d]' % (o, i, j))
             return (i, o)
+
         return _recv
 
     sends = {}

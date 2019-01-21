@@ -56,24 +56,24 @@ def test_interp_extrap(galois_field, polynomial):
         assert a == b
 
 
-def test_fft_decode(GaloisField, Polynomial):
+def test_fft_decode(galois_field, polynomial):
     d = randint(210, 300)
-    coeffs = [randint(0, GaloisField.modulus-1) for i in range(d)]
-    P = Polynomial(coeffs)
+    coeffs = [randint(0, galois_field.modulus - 1) for i in range(d)]
+    poly = polynomial(coeffs)
     n = d
     n = n if n & n-1 == 0 else 2**n.bit_length()
-    omega2 = get_omega(GaloisField, 2*n)
+    omega2 = get_omega(galois_field, 2 * n)
     omega = omega2 ** 2
 
     # Create shares and erasures
     zs = list(range(n))
     shuffle(zs)
     zs = zs[:d]
-    ys = list(P.evaluate_fft(omega, n))
+    ys = list(poly.evaluate_fft(omega, n))
     ys = [ys[i] for i in zs]
 
-    As_, Ais_ = fnt_decode_step1(Polynomial, zs, omega2, n)
-    Prec_ = fnt_decode_step2(Polynomial, zs, ys, As_, Ais_, omega2, n)
-    print('Prec_(X):', Prec_)
-    print('P(X):', P)
-    assert Prec_.coeffs == P.coeffs
+    as_, ais_ = fnt_decode_step1(polynomial, zs, omega2, n)
+    prec_ = fnt_decode_step2(polynomial, zs, ys, as_, ais_, omega2, n)
+    print('Prec_(X):', prec_)
+    print('P(X):', poly)
+    assert prec_.coeffs == poly.coeffs
