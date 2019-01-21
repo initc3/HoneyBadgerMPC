@@ -277,7 +277,7 @@ def fft(poly, omega, n, seed=None):
     return fft_helper(padded_coeffs, omega, poly.field)
 
 
-def fnt_decode_step1(Poly, zs, omega2, n):
+def fnt_decode_step1(poly, zs, omega2, n):
     """
     This needs to be run once for decoding a batch of secret shares
     It depends only on the x values (the points the polynomial is
@@ -303,24 +303,23 @@ def fnt_decode_step1(Poly, zs, omega2, n):
     xs = [omega**z for z in zs]
 
     # Compute A(X)
-    A = Poly([1])
+    a_ = poly([1])
     for i in range(k):
-        print(i, Poly([-xs[i], 1]))
-        A *= Poly([-xs[i], 1])
-    As = [A(omega2**i) for i in range(2*n)]
+        a_ *= poly([-xs[i], 1])
+    as_ = [a_(omega2**i) for i in range(2*n)]
 
     # Compute all Ai(Xi)
-    Ais = []
+    ais_ = []
     for i in range(k):
-        Ai = A.field(1)
+        ai = a_.field(1)
         for j in range(k):
             if i != j:
-                Ai *= xs[i] - xs[j]
-        Ais.append(Ai)
-    return As, Ais
+                ai *= xs[i] - xs[j]
+        ais_.append(ai)
+    return as_, ais_
 
 
-def fnt_decode_step2(Poly, zs, ys, As, Ais, omega2, n):
+def fnt_decode_step2(poly, zs, ys, as_, ais_, omega2, n):
     """
     Returns a polynomial P such that P(omega**zi) = yi
 
@@ -335,28 +334,65 @@ def fnt_decode_step2(Poly, zs, ys, As, Ais, omega2, n):
         P  Poly
     """
     k = len(ys)
-    assert len(ys) == len(Ais)
-    assert len(As) == 2*n
+    assert len(ys) == len(ais_)
+    assert len(as_) == 2 * n
     omega = omega2 ** 2
 
     # Compute N'(x)
-    nis = [ys[i] / Ais[i] for i in range(k)]
-    Ncoeffs = [0 for _ in range(n)]
+    nis = [ys[i] / ais_[i] for i in range(k)]
+    ncoeffs = [0 for _ in range(n)]
     for i in range(k):
-        Ncoeffs[zs[i]] = nis[i]
-    N = Poly(Ncoeffs)
+        ncoeffs[zs[i]] = nis[i]
+    n_ = poly(ncoeffs)
 
     # Compute P/A(X)
-    # PoverA = -Poly([N(omega**(n-j-1)) for j in range(n)])
-    Nevals = N.evaluate_fft(omega, n)
-    PoverA = -Poly(Nevals[::-1])
-    pas = PoverA.evaluate_fft(omega2, 2*n)
+    nevals = n_.evaluate_fft(omega, n)
+    power_a = -poly(nevals[::-1])
+    pas = power_a.evaluate_fft(omega2, 2*n)
 
     # Recover P(X)
-    ps = [p*a for (p, a) in zip(pas, As)]
-    Prec = Poly.interpolate_fft(ps, omega2)
-    Prec.coeffs = Prec.coeffs[:k]
-    return Prec
+    ps = [p * a for (p, a) in zip(pas, as_)]
+    prec = poly.interpolate_fft(ps, omega2)
+    prec.coeffs = prec.coeffs[:k]
+    return prec
+
+
+class EvalPoint(object):
+    """Helper to generate evaluation points for polynomials between n parties
+
+    If FFT is being used:
+    omega is a root of unity s.t. order(omega) = (smallest power of 2 >= n)
+    i'th point (zero-indexed) = omega^(i)
+
+    Without FFT:
+    i'th point (zero-indexed) = i + 1
+    """
+    def __init__(self, field, n, use_fft=False):
+        self.use_fft = use_fft
+        self.field = field
+
+        # Need an additional point where we evaluate polynomial to get secret
+        order = n
+        if use_fft:
+            self.order = order if (order & (order - 1) == 0) else 2 ** order.bit_length()
+
+            # All parties must use the same omega for FFT to work with batch
+            # reconstruction. Fixing the seed to 0 is a simple way to do this.
+            self.omega2 = get_omega(field, 2 * self.order, seed=0)
+            self.omega = self.omega2 ** 2
+        else:
+            self.order = order
+            self.omega2 = None
+            self.omega = None
+
+    def __call__(self, i):
+        if self.use_fft:
+            return self.field(self.omega2.value ** (2 * i))
+        else:
+            return self.field(i + 1)
+
+    def zero(self):
+        return self.field(0)
 
 
 if __name__ == "__main__":
