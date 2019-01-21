@@ -3,101 +3,149 @@ import pytest
 import asyncio
 from honeybadgermpc.batch_reconstruction import batch_reconstruct
 from honeybadgermpc.router import simple_router
-from honeybadgermpc.field import GF, GFElement
+from honeybadgermpc.field import GFElement
+from honeybadgermpc.polynomial import EvalPoint
 
 
-def handle_async_exception(loop, ctx):
-    print('handle_async_exception:', ctx)
-    pytest.fail("Exception in async task: {0}".format(ctx['exception']))
+@pytest.fixture
+def reconstruction_input(galois_field):
+    n = 4
+    t = 1
+    fp = galois_field
+    p = fp.modulus
+    secret_shares = [(3, 7), (4, 10), (5, 13), (6, 16)]
+    expected = [2, 4]
+
+    return n, t, fp, p, secret_shares, expected
+
+
+@pytest.fixture
+def fft_reconstruction_input(galois_field):
+    n = 4
+    t = 1
+    fp = galois_field
+    p = fp.modulus
+    point = EvalPoint(fp, n, use_fft=True)
+    omega = point.omega.value
+    secret_shares = [(omega ** 0 + 2, 3 * omega ** 0 + 4),
+                     (omega ** 1 + 2, 3 * omega ** 1 + 4),
+                     (omega ** 2 + 2, 3 * omega ** 2 + 4),
+                     (omega ** 3 + 2, 3 * omega ** 3 + 4)]
+    secrets = [2, 4]
+    return n, t, fp, p, omega, secret_shares, secrets
+
+
+async def _get_reconstruction(secret_shares, n, t, fp, p, use_fft,
+                              skip_list=(), error_list=()):
+    """
+    :param skip_list: Nodes to skip in reconstruction (Dont send/receive shares)
+    :param error_list: Nodes to insert errors in
+    :return: reconstructed shares
+    """
+    sends, recvs = simple_router(n)
+    towait = []
+    for i in range(n):
+        if i in skip_list:
+            continue
+        if i in error_list:
+            ss = [fp(0) for _ in secret_shares[i]]
+        else:
+            ss = tuple(map(fp, secret_shares[i]))
+        towait.append(batch_reconstruct(ss, p, t, n, i, sends[i], recvs[i],
+                                        use_fft=use_fft))
+    results = await asyncio.gather(*towait)
+    return results
 
 
 @mark.asyncio
-async def test():
-    N = 4
-    p = 73
-    t = 1
-    Fp = GF.get(p)
+async def test_reconstruction(galois_field, reconstruction_input):
+    # Given
+    n, t, fp, p, shared_secrets, secrets = reconstruction_input
+    shared_secrets = [(3, 7), (4, 10), (5, 13), (6, 16)]
 
-    # loop = asyncio.get_event_loop()
-    # loop.set_exception_handler(handle_async_exception)
+    # When
+    results = await _get_reconstruction(shared_secrets, n, t, fp, p, False)
 
-    # Test with simple case: n = 4, t =1
-    # After AVSS, poly1 = x + 2, poly2 = 3x + 4, secret1 = 2, secret2 = 4
-    # Hard code the shared secret value as input into batch_reconstruction function
-    # The final constructed polynomial should be p = 4x + 2
-    shared_secrets = [(3,  7),
-                      (4, 10),
-                      (5, 13),
-                      (6, 16)]
-
-    # Test 1: Correct decoding with all four points
-    sends, recvs = simple_router(N)
-    towait = []
-    for i in range(N):
-        ss = tuple(map(Fp, shared_secrets[i]))
-        towait.append(batch_reconstruct(ss, p, t, N, i,
-                                        sends[i], recvs[i], True))
-    results = await asyncio.gather(*towait)
-    for r in results:
-        assert r == [2, 4]
-
-    # Test 2: Correct decoding with up to 1 error
-    sends, recvs = simple_router(N)
-    towait = []
-    for i in range(N):
-        ss = shared_secrets[i]
-        if i == 2:
-            ss = tuple(map(Fp, (0, 0)))  # add an error
-        towait.append(batch_reconstruct(ss, p, t, N, i,
-                                        sends[i], recvs[i], False))
-    results = await asyncio.gather(*towait)
+    # Then
     for r in results:
         for elem in r:
             assert type(elem) is GFElement
-        assert r == [2, 4]
+        assert r == secrets
 
-    # Test 3: If there is an error and one crashed node, it will time out
-    sends, recvs = simple_router(N)
-    towait = []
-    for i in range(N):
-        ss = tuple(map(Fp, shared_secrets[i]))
-        if i == 2:
-            continue  # skip this node
-        if i == 3:
-            ss = tuple(map(Fp, (0, 0)))  # add an error
-        towait.append(batch_reconstruct(ss, p, t, N, i,
-                                        sends[i], recvs[i], False))
+
+@mark.asyncio
+async def test_reconstruction_with_errors(galois_field, reconstruction_input):
+    # Given
+    n, t, fp, p, secret_shares, secrets = reconstruction_input
+
+    # When
+    results = await _get_reconstruction(secret_shares, n, t, fp, p, use_fft=False,
+                                        error_list=[1])
+
+    # Then
+    for r in results:
+        for elem in r:
+            assert type(elem) is GFElement
+        assert r == secrets
+
+
+@mark.asyncio
+async def test_reconstruction_timeout(galois_field, reconstruction_input):
+    """Test if reconstruction times out if one node is skipped in reconstruction"""
+    # Given
+    n, t, fp, p, secret_shares, secrets = reconstruction_input
+
+    # When
     with pytest.raises(asyncio.TimeoutError):
-        results = await asyncio.wait_for(asyncio.gather(*towait), timeout=1)
+        await asyncio.wait_for(
+            _get_reconstruction(secret_shares, n, t, fp, p, False,
+                                error_list=[1], skip_list=[2]),
+            timeout=1)
 
 
 @mark.asyncio
-async def test_opening_types():
-    # batch_reconstruct should always return GFElements, but doesn't
-    N = 4
-    p = 73
-    t = 1
-    Fp = GF.get(p)
+async def test_fft_reconstruction(galois_field, fft_reconstruction_input):
+    # Given
+    n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
 
-    shared_secrets = [(1, 1, 1, 1),
-                      (2, 2, 2, 2),
-                      (3, 3, 3, 3),
-                      None]
+    # When
+    results = await _get_reconstruction(secret_shares, n, t, fp, p, use_fft=True)
 
-    sends, recvs = simple_router(N)
-    towait = []
-    for i in range(N-1):  # one erasure
-        ss = tuple(map(Fp, shared_secrets[i]))
-        towait.append(batch_reconstruct(ss, p, t, N, i,
-                                        sends[i], recvs[i], True))
-    results = await asyncio.gather(*towait)
+    # Then
     for r in results:
-        print(r)
         for elem in r:
             assert type(elem) is GFElement
+        assert r == secrets
 
-if __name__ == '__main__':
-    try:
-        __IPYTHON__
-    except NameError:
-        test()
+
+@mark.asyncio
+async def test_fft_reconstruction_with_errors(galois_field, fft_reconstruction_input):
+    # Given
+    n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
+
+    # When
+    results = await _get_reconstruction(secret_shares, n, t, fp, p,
+                                        use_fft=True, error_list=[1])
+
+    # Then
+    for r in results:
+        for elem in r:
+            assert type(elem) is GFElement
+        assert r == secrets
+
+
+@mark.asyncio
+async def test_fft_reconstruction_timeout(galois_field, fft_reconstruction_input):
+    """Test if reconstruction times out if one node is skipped in reconstruction"""
+    # Given
+    n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
+
+    # When
+    with pytest.raises(asyncio.TimeoutError):
+        await asyncio.wait_for(
+            _get_reconstruction(secret_shares, n, t, fp, p, use_fft=True,
+                                error_list=[1], skip_list=[2]),
+            timeout=1)
+
+# TODO: No erasure tests present
+# TODO: Test graceful exit (throw some Error) when reconstruction fails
