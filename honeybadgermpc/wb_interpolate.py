@@ -41,10 +41,10 @@
 import logging
 from honeybadgermpc.linearsolver import some_solution
 from honeybadgermpc.field import GF
-from honeybadgermpc.polynomial import polynomials_over
+from honeybadgermpc.polynomial import polynomials_over, EvalPoint, fnt_decode_step2
 
 
-def make_encoder_decoder(n, k, p, omega=None):
+def make_encoder_decoder(n, k, p, point=None):
     """
     n: number of symbols to encode
     k: number of symbols in the message
@@ -61,10 +61,8 @@ def make_encoder_decoder(n, k, p, omega=None):
     # at either f(i) for convenience, or
     #    f( omega^i ) where omega. If omega is an n'th root of unity,
     # then we can do efficient FFT-based polynomial interpolations.
-    if omega is None:
-        def point(i): return fp(1+i)
-    else:
-        def point(i): return fp(omega)**i
+    if point is None or type(point) is not EvalPoint:
+        point = EvalPoint(fp, n, use_fft=False)
 
     # message is a list of integers at most p
     def encode(message):
@@ -126,7 +124,7 @@ def make_encoder_decoder(n, k, p, omega=None):
                 return q_, e_
         raise ValueError("found no divisors!")
 
-    def decode(encoded_msg, debug=False):
+    def decode(encoded_msg, debug=True, precomputed_data=None):
         assert(len(encoded_msg) == n)
         c = sum(m is None for m in encoded_msg)  # number of erasures
         assert(2*t + 1 + c <= n)
@@ -142,7 +140,14 @@ def make_encoder_decoder(n, k, p, omega=None):
 
         if e == 0:
             # decode with no errors
-            p_ = poly.interpolate(enc_m)
+            if point.use_fft:
+                zs, as_, ais_ = precomputed_data
+                ys = [m for m in encoded_msg if m is not None]
+                ys = ys[:t + 1]
+                p_ = fnt_decode_step2(poly, zs, ys, as_, ais_,
+                                      point.omega2, point.order)
+            else:
+                p_ = poly.interpolate(enc_m)
             return p_.coeffs
 
         q_, e_ = solve_system(enc_m, max_e=e, debug=debug)
