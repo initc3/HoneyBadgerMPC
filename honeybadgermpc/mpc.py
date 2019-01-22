@@ -102,7 +102,7 @@ class Mpc(object):
     async def open_share(self, share):
         # Choose the shareid based on the order this is called
         shareid = len(self._openings)
-
+        t = share.t if share.t is not None else self.t
         # Broadcast share
         for j in range(self.N):
             # 'S' is for single shares
@@ -113,9 +113,9 @@ class Mpc(object):
 
         point = EvalPoint(Field, self.N, use_fft=False)
         opening = robust_reconstruct(
-            share_buffer, Field, self.N, self.t, point)
+            share_buffer, Field, self.N, t, point)
         self._openings[shareid] = opening
-        P, failures = await opening
+        P, _ = await opening
         return P(Field(0))
 
     def open_share_array(self, sharearray):
@@ -240,12 +240,13 @@ def share_in_context(context):
             self, other, lambda a, b: a * b)
 
     class Share(object):
-        def __init__(self, v):
+        def __init__(self, v, t=None):
             # v is the local value of the share
             if type(v) is int:
                 v = Field(v)
             assert type(v) is GFElement
             self.v = v
+            self.t = t
 
         # Publicly reconstruct a shared value
         def open(self):
