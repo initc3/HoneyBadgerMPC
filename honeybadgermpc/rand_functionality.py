@@ -5,8 +5,6 @@ import logging
 Ideal functionality for Random Share
 This protocol returns a single random share
 """
-import asyncio
-import random
 
 
 class ShareSingleFunctionality(object):
