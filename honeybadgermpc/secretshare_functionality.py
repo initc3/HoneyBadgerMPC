@@ -17,11 +17,6 @@ of AVSS protocol construction, meaning that there is an instance created for eac
 party. However, the instances of Ideal Protocol (with the same `sid`) all share a
 singleton Functionality.
 """
-import asyncio
-import random
-from .field import GF, GFElement
-from .polynomial import polynomialsOver
-
 
 # Fix the field for now
 Field = GF.get(Subgroup.BLS12_381)
