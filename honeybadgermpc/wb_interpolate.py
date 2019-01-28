@@ -98,8 +98,8 @@ def make_encoder_decoder(n, k, p, point=None):
             )  # ensure coefficient of x^e in E(x) is 1
 
             if debug:
-                logging.debug("\ne is %r" % e)
-                logging.debug("\nsystem is:\n\n")
+                # logging.debug("\ne is %r" % e)
+                # logging.debug("\nsystem is:\n\n")
                 for row in system:
                     logging.debug("\t%r" % (row,))
 
@@ -130,10 +130,10 @@ def make_encoder_decoder(n, k, p, point=None):
         assert(2*t + 1 + c <= n)
         e = (n - c - (2 * t + 1))  # number of errors to correct
 
-        if debug:
-            logging.debug(f'n: {n} k: {k} t: {t} c: {c}')
-            logging.debug(f'decoding with e: {e}')
-            logging.debug(f'decoding with c: {c}')
+        # if debug:
+            # logging.debug(f'n: {n} k: {k} t: {t} c: {c}')
+            # logging.debug(f'decoding with e: {e}')
+            # logging.debug(f'decoding with c: {c}')
 
         enc_m = [(point(i), m)
                  for i, m in enumerate(encoded_msg) if m is not None]
