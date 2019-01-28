@@ -1,3 +1,13 @@
+from honeybadgermpc.mpc import *
+# from honeybadgermpc.mpc import Mpc, generate_test_zeros, generate_test_randoms, generate_test_triples, TaskProgramRunner
+import logging
+import asyncio
+
+# zeros_files_prefix = 'sharedata/test_zeros'
+# triples_files_prefix = 'sharedata/test_triples'
+# random_files_prefix = 'sharedata/test_random'
+# bits_files_prefix = 'sharedata/test_bits'
+
 async def equality(context, p_share, q_share):
 
     def legendre_mod_p(a):
@@ -14,7 +24,7 @@ async def equality(context, p_share, q_share):
         return 0
 
     diff_a = p_share - q_share
-    k = security_parameter
+    k = security_parameter = 32
 
     def mul(x, y):
         a, b, ab = context.get_triple()
@@ -63,3 +73,40 @@ async def equality(context, p_share, q_share):
         x.append(await mul(x.pop(0), x.pop(0)))
 
     return await x[0].open()
+
+async def test_equality(context):
+    p = context.get_zero() + context.Share(2233)
+    q = context.get_zero() + context.Share(2333)
+    
+    # result, count_comm = await equality(context, p, q)
+    result = await equality(context, p, q)
+
+    if result == 0:
+        print("The two numbers are different! (with high probability)")
+    else:
+        print("The two numbers are equal!")
+
+    # print("The number of communication count_complexity is: ", count_comm)
+
+if __name__ == '__main__':
+    logging.info('Generating random shares of zero in sharedata/')
+    generate_test_zeros('sharedata/test_zeros', 1000, 3, 1)
+    logging.info('Generating random shares in sharedata/')
+    generate_test_randoms('sharedata/test_random', 1000, 3, 1)
+    logging.info('Generating random shares of triples in sharedata/')
+    generate_test_triples('sharedata/test_triples', 1000, 3, 1)
+    logging.info('Generating random shares of bits in sharedata/')
+    generate_test_bits('sharedata/test_bits', 1000, 3, 1)
+
+
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    # loop.set_exception_handler(handle_async_exception)
+    # loop.set_debug(True)
+    try:
+        logging.info("Start")
+        programRunner = TaskProgramRunner(3, 1)
+        programRunner.add(test_equality)
+        loop.run_until_complete(programRunner.join())
+    finally:
+        loop.close()

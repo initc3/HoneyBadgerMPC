@@ -1,6 +1,10 @@
 from pytest import mark
+import asyncio
+from honeybadgermpc.field import GF
+from honeybadgermpc.elliptic_curve import Subgroup
 
 security_parameter = 32
+Field = GF.get(Subgroup.BLS12_381)
 
 @mark.asyncio
 @mark.usefixtures('zeros_shares_files')
@@ -115,7 +119,7 @@ async def test_beaver_mul(random_polys, random_files_prefix, triples_files_prefi
 async def test_equality(zeros_files_prefix, random_files_prefix, bits_files_prefix, triples_files_prefix):
     from honeybadgermpc.mpc import TaskProgramRunner
     N, t = 3, 1
-    p_secret, q_secret = 10, 10
+    p_secret, q_secret = 2333, 2333
 
     def legendre_mod_p(a):
         """Return the legendre symbol ``legendre(a, p)`` where *p* is the
@@ -130,7 +134,7 @@ async def test_equality(zeros_files_prefix, random_files_prefix, bits_files_pref
             return -1
         return 0
 
-    async def beaver_mul(x, y):
+    async def beaver_mul(context, x, y):
         filename = f'{triples_files_prefix}-{context.myid}.share'
         triples = context.read_shares(open(filename))
 
@@ -173,7 +177,7 @@ async def test_equality(zeros_files_prefix, random_files_prefix, bits_files_pref
             # zero and with probability 1/2 otherwise (except if rp == 0).
             # If b_i == -1 it will be non-square.
             # TODO
-            _c = await beaver_mul(diff_a, _r) + await beaver_mul(_b, await beaver_mul(_rp, _rp))
+            _c = await beaver_mul(context, diff_a, _r) + await beaver_mul(context, _b, await beaver_mul(context, _rp, _rp))
             c = await _c.open()
 
             return c, _b
@@ -201,7 +205,7 @@ async def test_equality(zeros_files_prefix, random_files_prefix, bits_files_pref
         # Take the product (this is here the same as the "and") of all
         # the x'es
         while len(x) > 1:
-            x.append(await beaver_mul(x.pop(0), x.pop(0)))
+            x.append(await beaver_mul(context, x.pop(0), x.pop(0)))
 
         return await x[0].open()
 
@@ -210,6 +214,7 @@ async def test_equality(zeros_files_prefix, random_files_prefix, bits_files_pref
     programRunner.add(_prog)
     results = await programRunner.join()
     assert len(results) == N
+    # print(results)
     for res in results:
         if res == 0:
             print("The two numbers are different! (with high probability)")
