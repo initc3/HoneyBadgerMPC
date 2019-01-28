@@ -99,8 +99,8 @@ def make_wb_encoder_decoder(n, k, p, point=None):
             )  # ensure coefficient of x^e in E(x) is 1
 
             if debug:
-                logging.debug("\ne is %r" % e)
-                logging.debug("\nsystem is:\n\n")
+                # logging.debug("\ne is %r" % e)
+                # logging.debug("\nsystem is:\n\n")
                 for row in system:
                     logging.debug("\t%r" % (row,))
 
