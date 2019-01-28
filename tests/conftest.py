@@ -10,6 +10,9 @@ def galois_field():
     from honeybadgermpc.elliptic_curve import Subgroup
     return GF.get(Subgroup.BLS12_381)
 
+@fixture
+def bits_files_prefix(sharedata_tmpdir):
+    return os.path.join(sharedata_tmpdir, 'test_bits')
 
 @fixture
 def galois_field_roots(galois_field):
