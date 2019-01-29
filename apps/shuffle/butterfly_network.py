@@ -1,25 +1,14 @@
-import random
-from math import log
 import os
 import asyncio
 import logging
-from itertools import islice
-from honeybadgermpc.mpc import (
-    Field, Poly, generate_test_triples, write_polys, TaskProgramRunner
-)
+from math import log
+from honeybadgermpc.mpc import Field, TaskProgramRunner
+from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
+from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_done
 from time import time
 
 
-sharedatadir = "sharedata"
-triplesprefix = f'{sharedatadir}/test_triples'
-oneminusoneprefix = f'{sharedatadir}/test_one_minusone'
 filecount = 0
-
-
-async def wait_for_preprocessing():
-    while not os.path.exists(f"{sharedatadir}/READY"):
-        logging.info(f"waiting for preprocessing {sharedatadir}/READY")
-        await asyncio.sleep(1)
 
 
 async def batch_beaver(ctx, xs, ys, as_, bs_, abs_):
@@ -48,28 +37,25 @@ async def batch_switch(ctx, xs, ys, sbits, as_, bs_, abs_, n):
 
 def write_to_file(shares, nodeid):
     global filecount
-    with open(f"{sharedatadir}/butterfly_online_{filecount}_{nodeid}.share", "w") as f:
+    file_name = f"butterfly_online_{filecount}_{nodeid}.share"
+    file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
+    with open(file_path, "w") as f:
         for share in shares:
             print(share.value, file=f)
     filecount += 1
 
 
-def get_triples_and_sbit(tripleshares, randshares):
-    a, b, ab = next(tripleshares).v, next(tripleshares).v, next(tripleshares).v
-    sbit = next(randshares).v
-    return a, b, ab, sbit
-
-
-def get_n_triple_and_sbits(tripleshares, randshares, n):
-    as_, bs_, abs_ = [], [], []
+def get_n_triple_and_sbits(ctx, n):
+    as_, bs_, abs_, sbits = [], [], [], []
+    pp_elements = PreProcessedElements()
     for _ in range(n):
-        a, b, ab = list(islice(tripleshares, 3))
+        a, b, ab = pp_elements.get_triple(ctx)
         as_.append(a.v), bs_.append(b.v), abs_.append(ab.v)
-    sbits = list(map(lambda x: x.v, list(islice(randshares, n))))
+        sbits.append(pp_elements.get_one_minus_one_rand(ctx).v)
     return as_, bs_, abs_, sbits
 
 
-async def iterated_butterfly_network(ctx, inputs, k, delta, randshares, tripleshares):
+async def iterated_butterfly_network(ctx, inputs, k, delta):
     # This runs O(log k) iterations of the butterfly permutation network,
     # each of which has log k elements. The total number of switches is
     # k (log k)^2
@@ -83,7 +69,7 @@ async def iterated_butterfly_network(ctx, inputs, k, delta, randshares, triplesh
         stride = 1
         while stride < k:
             stime = time()
-            As, Bs, ABs, sbits = get_n_triple_and_sbits(tripleshares, randshares, k//2)
+            As, Bs, ABs, sbits = get_n_triple_and_sbits(ctx, k//2)
             assert len(As) == len(Bs) == len(ABs) == len(sbits) == k//2
             Xs, Ys = [], []
             first = True
@@ -106,40 +92,27 @@ async def iterated_butterfly_network(ctx, inputs, k, delta, randshares, triplesh
 
 async def butterfly_network_helper(ctx, **kwargs):
     k, delta = kwargs['k'], kwargs['delta']
-    inputs = list(map(lambda x: x.v, list(ctx._rands)[:k]))
-    tripleshares = ctx.read_shares(open(f'{triplesprefix}-{ctx.myid}.share'))
-    randshares = ctx.read_shares(open(f'{oneminusoneprefix}-{ctx.myid}.share'))
+    pp_elements = PreProcessedElements()
+    inputs = [pp_elements.get_rand(ctx).v for _ in range(k)]
     logging.info(f"[{ctx.myid}] Running permutation network.")
-    shuffled = await iterated_butterfly_network(
-        ctx, inputs, k, delta, iter(randshares), iter(tripleshares)
-    )
+    shuffled = await iterated_butterfly_network(ctx, inputs, k, delta)
     if shuffled is not None:
-        shuffledShares = ctx.ShareArray(list(map(ctx.Share, shuffled)))
-        openedValues = await shuffledShares.open()
-        logging.info(f"[{ctx.myid}] {openedValues}")
-        return shuffledShares
+        shuffled_shares = ctx.ShareArray(list(map(ctx.Share, shuffled)))
+        opened_values = await shuffled_shares.open()
+        logging.info(f"[{ctx.myid}] {opened_values}")
+        return shuffled_shares
     return None
 
 
-def generate_random_shares(prefix, k, n, t):
-    polys = [Poly.random(t, random.randint(0, 1)*2 - 1) for _ in range(k)]
-    write_polys(prefix, Field.modulus, n, t, polys)
-
-
 def run_butterfly_network_in_tasks():
-    from honeybadgermpc.mpc import generate_test_randoms, random_files_prefix
-
     n, t, k, delta = 3, 1, 128, 6
 
     num_switches = k * int(log(k, 2)) ** 2
 
-    os.makedirs("sharedata/", exist_ok=True)
-    logging.info('Generating random shares of triples in sharedata/')
-    generate_test_triples(triplesprefix, 2*num_switches, n, t)
-    logging.info('Generating random shares of 1/-1 in sharedata/')
-    generate_random_shares(oneminusoneprefix, num_switches, n, t)
-    logging.info('Generating random inputs in sharedata/')
-    generate_test_randoms(random_files_prefix, k, n, t)
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_one_minus_one_rands(num_switches, n, t)
+    pp_elements.generate_triples(2 * num_switches, n, t)
+    pp_elements.generate_rands(k, n, t)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
@@ -157,7 +130,6 @@ if __name__ == "__main__":
     from honeybadgermpc.config import load_config
     from honeybadgermpc.ipc import NodeDetails, ProcessProgramRunner
     from honeybadgermpc.exceptions import ConfigurationError
-    from honeybadgermpc.mpc import generate_test_randoms, random_files_prefix
 
     configfile = os.environ.get('HBMPC_CONFIG')
     nodeid = os.environ.get('HBMPC_NODE_ID')
@@ -197,14 +169,11 @@ if __name__ == "__main__":
         if not config_dict['skipPreprocessing']:
             if nodeid == 0:
                 NUM_SWITCHES = k * int(log(k, 2)) ** 2
-                os.makedirs("sharedata/", exist_ok=True)
-                logging.info('Generating random shares of triples in sharedata/')
-                generate_test_triples(triplesprefix, 2 * NUM_SWITCHES, N, t)
-                logging.info('Generating random shares of 1/-1 in sharedata/')
-                generate_random_shares(oneminusoneprefix, NUM_SWITCHES, N, t)
-                logging.info('Generating random inputs in sharedata/')
-                generate_test_randoms(random_files_prefix, k, N, t)
-                os.mknod(f"{sharedatadir}/READY")
+                pp_elements = PreProcessedElements()
+                pp_elements.generate_one_minus_one_rands(NUM_SWITCHES, N, t)
+                pp_elements.generate_triples(2 * NUM_SWITCHES, N, t)
+                pp_elements.generate_rands(k, N, t)
+                preprocessing_done()
             else:
                 loop.run_until_complete(wait_for_preprocessing())
 

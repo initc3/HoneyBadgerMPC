@@ -10,7 +10,7 @@
 CMD="python -m apps.shuffle.butterfly_network"
 CONFIG_PATH=conf/ipc.network.local/hbmpc.ini
 set -x
-rm sharedata/READY # NOTE: see butterly_network.py wait_for_preprocessing
+rm sharedata/READY # NOTE: see preprocessing.py wait_for_preprocessing
 tmux new-session     "${CMD} 0 ${CONFIG_PATH}; sh" \; \
      splitw -h -p 50 "${CMD} 1 ${CONFIG_PATH}; sh" \; \
      splitw -v -p 50 "${CMD} 2 ${CONFIG_PATH}; sh" \; \

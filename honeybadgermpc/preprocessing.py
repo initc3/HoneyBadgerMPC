@@ -1,0 +1,157 @@
+import logging
+import asyncio
+import os
+from uuid import uuid4
+from random import randint
+from os import makedirs
+from .field import GF
+from .polynomial import polynomials_over
+from .elliptic_curve import Subgroup
+
+
+class PreProcessingConstants(object):
+    SHARED_DATA_DIR = "sharedata/"
+    TRIPLES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}triples"
+    ZEROS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}zeros"
+    RANDS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}rands"
+    POWERS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}powers"
+    SHARES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}specific_share"
+    ONE_MINUS_ONE_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}one_minus_one"
+    READY_FILE_NAME = f"{SHARED_DATA_DIR}READY"
+
+
+class PreProcessedElements(object):
+    def __init__(self):
+        self.field = GF.get(Subgroup.BLS12_381)
+        self.poly = polynomials_over(self.field)
+        self._triples = {}
+        self._zeros = {}
+        self._rands = {}
+        self._one_minus_one_rands = {}
+
+    def _read_share_values_from_file(self, file_name):
+        with open(file_name, "r") as f:
+            lines = iter(f)
+
+            # first line: field modulus
+            modulus = int(next(lines))
+            assert self.field.modulus == modulus
+
+            # skip 2nd and 3rd line - share degree and id
+            next(lines), next(lines)
+
+            # remaining lines: shared values
+            return [int(line) for line in lines]
+
+    def _write_shares_to_file(self, f, degree, myid, shares):
+        print(self.field.modulus, file=f)
+        print(degree, file=f)
+        print(myid, file=f)
+        for share in shares:
+            print(share.value, file=f)
+
+    def _write_polys(self, file_name_prefix, n, t, polys):
+        for i in range(n):
+            shares = [f(i+1) for f in polys]
+            with open('%s-%d.share' % (file_name_prefix, i), 'w') as f:
+                self._write_shares_to_file(f, t, i, shares)
+
+    def _create_sharedata_dir_if_not_exists(self):
+        makedirs(PreProcessingConstants.SHARED_DATA_DIR, exist_ok=True)
+
+    def generate_triples(self, k, n, t):
+        self._create_sharedata_dir_if_not_exists()
+        polys = []
+        for _ in range(k):
+            a = self.field(randint(0, self.field.modulus-1))
+            b = self.field(randint(0, self.field.modulus-1))
+            c = a*b
+            polys.append(self.poly.random(t, a))
+            polys.append(self.poly.random(t, b))
+            polys.append(self.poly.random(t, c))
+        self._write_polys(PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX, n, t, polys)
+
+    def generate_zeros(self, k, n, t):
+        self._create_sharedata_dir_if_not_exists()
+        polys = [self.poly.random(t, 0) for _ in range(k)]
+        self._write_polys(PreProcessingConstants.ZEROS_FILE_NAME_PREFIX, n, t, polys)
+
+    def generate_rands(self, k, n, t):
+        self._create_sharedata_dir_if_not_exists()
+        polys = [self.poly.random(t) for _ in range(k)]
+        self._write_polys(PreProcessingConstants.RANDS_FILE_NAME_PREFIX, n, t, polys)
+
+    def generate_one_minus_one_rands(self, k, n, t):
+        self._create_sharedata_dir_if_not_exists()
+        polys = [self.poly.random(t, randint(0, 1)*2 - 1) for _ in range(k)]
+        self._write_polys(
+            PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX, n, t, polys)
+
+    def generate_powers(self, k, n, t):
+        self._create_sharedata_dir_if_not_exists()
+        pid = uuid4().hex
+        b = randint(0, self.field.modulus-1)
+        polys = [self.poly.random(t, pow(b, j)) for j in range(1, k+1)]
+        self._write_polys(
+            f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{pid}", n, t, polys)
+        return pid
+
+    def generate_share(self, x, n, t):
+        self._create_sharedata_dir_if_not_exists()
+        sid = uuid4().hex
+        polys = [self.poly.random(t, x)]
+        self._write_polys(
+            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}_{sid}", n, t, polys)
+        return sid
+
+    def get_triple(self, ctx):
+        if ctx.myid not in self._triples:
+            file_suffix = f"-{ctx.myid}.share"
+            file_path = f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}{file_suffix}"
+            self._triples[ctx.myid] = iter(self._read_share_values_from_file(file_path))
+        a = ctx.Share(next(self._triples[ctx.myid]))
+        b = ctx.Share(next(self._triples[ctx.myid]))
+        ab = ctx.Share(next(self._triples[ctx.myid]))
+        return a, b, ab
+
+    def get_zero(self, ctx):
+        if ctx.myid not in self._zeros:
+            file_suffix = f"-{ctx.myid}.share"
+            file_path = f"{PreProcessingConstants.ZEROS_FILE_NAME_PREFIX}{file_suffix}"
+            self._zeros[ctx.myid] = iter(self._read_share_values_from_file(file_path))
+        return ctx.Share(next(self._zeros[ctx.myid]))
+
+    def get_rand(self, ctx):
+        if ctx.myid not in self._rands:
+            file_suffix = f"-{ctx.myid}.share"
+            file_path = f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}{file_suffix}"
+            self._rands[ctx.myid] = iter(self._read_share_values_from_file(file_path))
+        return ctx.Share(next(self._rands[ctx.myid]))
+
+    def get_one_minus_one_rand(self, ctx):
+        file_suffix = f"-{ctx.myid}.share"
+        fpath = f"{PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX}{file_suffix}"
+        if ctx.myid not in self._one_minus_one_rands:
+            self._one_minus_one_rands[ctx.myid] = iter(
+                self._read_share_values_from_file(fpath))
+        return ctx.Share(next(self._one_minus_one_rands[ctx.myid]))
+
+    def get_powers(self, ctx, pid):
+        return list(map(ctx.Share, self._read_share_values_from_file(
+            f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{pid}-{ctx.myid}.share")))
+
+    def get_share(self, ctx, sid):
+        share_values = self._read_share_values_from_file(
+            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}_{sid}-{ctx.myid}.share")
+        return ctx.Share(share_values[0])
+
+
+async def wait_for_preprocessing():
+    while not os.path.exists(f"{PreProcessingConstants.SHARED_DATA_DIR}READY"):
+        logging.info(
+            f"waiting for preprocessing {PreProcessingConstants.READY_FILE_NAME}")
+        await asyncio.sleep(1)
+
+
+def preprocessing_done():
+    os.mknod(PreProcessingConstants.READY_FILE_NAME)
