@@ -1,16 +1,15 @@
 import asyncio
-from asyncio import Future
+import logging
+from collections import defaultdict
+
 from .field import GF, GFElement
 from .polynomial import polynomials_over, EvalPoint
 from .router import simple_router
 from .program_runner import ProgramRunner
-import random
 from .robust_reconstruction import robust_reconstruct
 from .batch_reconstruction import batch_reconstruct
 from .elliptic_curve import Subgroup
-from collections import defaultdict
-import os
-import logging
+from .preprocessing import PreProcessedElements
 
 
 class NotEnoughShares(Exception):
@@ -19,11 +18,6 @@ class NotEnoughShares(Exception):
 
 class BatchReconstructionFailed(Exception):
     pass
-
-
-zeros_files_prefix = 'sharedata/test_zeros'
-triples_files_prefix = 'sharedata/test_triples'
-random_files_prefix = 'sharedata/test_random'
 
 
 class Mpc(object):
@@ -49,7 +43,7 @@ class Mpc(object):
         # assigned an ID based on the order that share is encountered.
         # So the protocol must encounter the shares in the same order.
         self.prog = prog
-        self.progArgs = prog_args
+        self.prog_args = prog_args
 
         # A task representing the opened values
         # { shareid => Future (field list(field)) }
@@ -66,38 +60,6 @@ class Mpc(object):
         self._sharearray_buffers = defaultdict(asyncio.Queue)
 
         self.Share, self.ShareArray = share_in_context(self)
-
-        # Preprocessing elements
-        filename = f'{zeros_files_prefix}-{self.myid}.share'
-        self._zeros = []
-        if os.path.exists(filename):
-            self._zeros = iter(self.read_shares(open(filename)))
-
-        self._rands = []
-        filename = f'{random_files_prefix}-{self.myid}.share'
-        if os.path.exists(filename):
-            self._rands = iter(self.read_shares(open(filename)))
-
-        self._triples = []
-        filename = f'{triples_files_prefix}-{self.myid}.share'
-        if os.path.exists(filename):
-            self._triples = iter(self.read_shares(open(filename)))
-
-    # Access to preprocessing data
-    def get_triple(self):
-        a = next(self._triples)
-        b = next(self._triples)
-        ab = next(self._triples)
-        return a, b, ab
-
-    def get_rand(self):
-        return next(self._rands)
-
-    def get_zero(self):
-        return next(self._zeros)
-
-    def get_bit(self):
-        return next(self._bits)
 
     async def open_share(self, share):
         # Choose the shareid based on the order this is called
@@ -136,7 +98,7 @@ class Mpc(object):
         # Run receive loop as background task, until self.prog finishes
         # Cancel the background task, even if there's an exception
         bgtask = asyncio.create_task(self._recvloop())
-        result = asyncio.create_task(self.prog(self, **self.progArgs))
+        result = asyncio.create_task(self.prog(self, **self.prog_args))
         await asyncio.wait((bgtask, result), return_when=asyncio.FIRST_COMPLETED)
 
         if result.done():
@@ -145,6 +107,7 @@ class Mpc(object):
         else:
             logging.info(f'bgtask exception: {bgtask.exception()}')
             raise bgtask.exception()
+            # FIXME: This code is unreachable and needs to be investigated
             bgtask.cancel()
             return await result
 
@@ -178,39 +141,10 @@ class Mpc(object):
 
         return True
 
-    # File I/O
-    def read_shares(self, f):
-        # Read shares from a file object
-        lines = iter(f)
-        # first line: field modulus
-        modulus = int(next(lines))
-        assert Field.modulus == modulus
-        # second line: share degree
-        degree = int(next(lines))   # noqa
-        # third line: id
-        myid = int(next(lines))     # noqa
-        shares = []
-        # remaining lines: shared values
-        for line in lines:
-            shares.append(self.Share(int(line)))
-        return shares
-
-    def write_shares(self, f, shares):
-        write_shares(f, Field.modulus, self.myid,
-                     [share.v for share in shares])
-
-
-def write_shares(f, modulus, degree, myid, shares):
-    print(modulus, file=f)
-    print(degree, file=f)
-    print(myid, file=f)
-    for share in shares:
-        print(share.value, file=f)
 
 ###############
 # Share class
 ###############
-
 
 def share_in_context(context):
 
@@ -221,7 +155,7 @@ def share_in_context(context):
         elif isinstance(other, GFElement) or isinstance(other, GFElementFuture):
             res = GFElementFuture()
 
-        if isinstance(other, Future):
+        if isinstance(other, asyncio.Future):
             def cb(_): return res.set_result(op(fut.result(), other.result()))
             asyncio.gather(fut, other).add_done_callback(cb)
         else:
@@ -229,7 +163,7 @@ def share_in_context(context):
             fut.add_done_callback(cb)
         return res
 
-    class GFElementFuture(Future):
+    class GFElementFuture(asyncio.Future):
         def __add__(self, other): return _binop_field(
             self, other, lambda a, b: a + b)
 
@@ -284,7 +218,7 @@ def share_in_context(context):
     def _binop_share(fut, other, op):
         assert type(other) in [ShareFuture, GFElementFuture, Share, GFElement]
         res = ShareFuture()
-        if isinstance(other, Future):
+        if isinstance(other, asyncio.Future):
             def cb(_): return res.set_result(op(fut.result(), other.result()))
             asyncio.gather(fut, other).add_done_callback(cb)
         else:
@@ -292,7 +226,7 @@ def share_in_context(context):
             fut.add_done_callback(cb)
         return res
 
-    class ShareFuture(Future):
+    class ShareFuture(asyncio.Future):
         def __add__(self, other): return _binop_share(
             self, other, lambda a, b: a + b)
 
@@ -321,7 +255,7 @@ def share_in_context(context):
         def open(self):
             # TODO: make a list of GFElementFutures?
             # res = GFElementFuture()
-            res = Future()
+            res = asyncio.Future()
 
             def cb(f): return res.set_result(f.result())
             opening = asyncio.create_task(context.open_share_array(self))
@@ -335,9 +269,6 @@ def share_in_context(context):
             return ShareArray([(a-b) for (a, b) in zip(self._shares, other._shares)])
 
     return Share, ShareArray
-
-
-# Share = shareInContext(None)
 
 
 class TaskProgramRunner(ProgramRunner):
@@ -359,47 +290,9 @@ class TaskProgramRunner(ProgramRunner):
         return await asyncio.gather(*self.tasks)
 
 
-#######################
-# Generating test files
-#######################
-
 # Fix the field for now
 Field = GF.get(Subgroup.BLS12_381)
 Poly = polynomials_over(Field)
-
-
-def write_polys(prefix, modulus, n, t, polys):
-    for i in range(n):
-        shares = [f(i+1) for f in polys]
-        with open('%s-%d.share' % (prefix, i), 'w') as f:
-            write_shares(f, modulus, t, i, shares)
-
-
-def generate_test_triples(prefix, k, n, t):
-    # Generate k triples, store in files of form "prefix-%d.share"
-    polys = []
-    for j in range(k):
-        a = Field(random.randint(0, Field.modulus-1))
-        b = Field(random.randint(0, Field.modulus-1))
-        c = a*b
-        polys.append(Poly.random(t, a))
-        polys.append(Poly.random(t, b))
-        polys.append(Poly.random(t, c))
-    write_polys(prefix, Field.modulus, n, t, polys)
-
-
-def generate_test_zeros(prefix, k, n, t):
-    polys = []
-    for j in range(k):
-        polys.append(Poly.random(t, 0))
-    write_polys(prefix, Field.modulus, n, t, polys)
-
-
-def generate_test_randoms(prefix, k, n, t):
-    polys = []
-    for j in range(k):
-        polys.append(Poly.random(t))
-    write_polys(prefix, Field.modulus, n, t, polys)
 
 
 ###############
@@ -407,9 +300,9 @@ def generate_test_randoms(prefix, k, n, t):
 ###############
 
 async def test_batchopening(context):
-
+    pp_elements = PreProcessedElements()
     # Demonstrates use of ShareArray batch interface
-    xs = [context.get_zero() + context.Share(i) for i in range(100)]
+    xs = [pp_elements.get_zero(context) + context.Share(i) for i in range(100)]
     xs = context.ShareArray(xs)
     Xs = await xs.open()
     for i, x in enumerate(Xs):
@@ -418,16 +311,16 @@ async def test_batchopening(context):
 
 
 async def test_batchbeaver(context):
-
+    pp_elements = PreProcessedElements()
     # Demonstrates use of ShareArray batch interface
-    xs = [context.get_zero() + context.Share(i) for i in range(100)]
-    ys = [context.get_zero() + context.Share(i+10) for i in range(100)]
+    xs = [pp_elements.get_zero(context) + context.Share(i) for i in range(100)]
+    ys = [pp_elements.get_zero(context) + context.Share(i+10) for i in range(100)]
     xs = context.ShareArray(xs)
     ys = context.ShareArray(ys)
 
     As, Bs, ABs = [], [], []
     for i in range(100):
-        A, B, AB = context.get_triple()
+        A, B, AB = pp_elements.get_triple(context)
         As.append(A)
         Bs.append(B)
         ABs.append(AB)
@@ -458,14 +351,14 @@ async def beaver_mult(context, x, y, a, b, ab):
 
 
 async def test_prog1(context):
-
+    pp_elements = PreProcessedElements()
     # Example of Beaver multiplication
-    x = context.get_zero() + context.Share(10)
+    x = pp_elements.get_zero(context) + context.Share(10)
     # x = context.Share(10)
-    y = context.get_zero() + context.Share(15)
+    y = pp_elements.get_zero(context) + context.Share(15)
     # y = context.Share(15)
 
-    a, b, ab = context.get_triple()
+    a, b, ab = pp_elements.get_triple(context)
     # assert await a.open() * await b.open() == await ab.open()
 
     D = (x - a).open()
@@ -488,8 +381,8 @@ async def test_prog1(context):
 
 
 async def test_prog2(context):
-
-    shares = [context.get_zero() for _ in range(1000)]
+    pp_elements = PreProcessedElements()
+    shares = [pp_elements.get_zero(context) for _ in range(1000)]
     for share in shares[:100]:
         s = await share.open()
         assert s == 0
@@ -508,12 +401,13 @@ def handle_async_exception(loop, ctx):
 
 # Run some test cases
 if __name__ == '__main__':
+    pp_elements = PreProcessedElements()
     logging.info('Generating random shares of zero in sharedata/')
-    generate_test_zeros('sharedata/test_zeros', 1000, 3, 1)
+    pp_elements.generate_zeros(1000, 3, 1)
     logging.info('Generating random shares in sharedata/')
-    generate_test_randoms('sharedata/test_random', 1000, 3, 1)
+    pp_elements.generate_rands(1000, 3, 1)
     logging.info('Generating random shares of triples in sharedata/')
-    generate_test_triples('sharedata/test_triples', 1000, 3, 1)
+    pp_elements.generate_triples(1000, 3, 1)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
@@ -521,11 +415,11 @@ if __name__ == '__main__':
     # loop.set_debug(True)
     try:
         logging.info("Start")
-        programRunner = TaskProgramRunner(3, 1)
-        programRunner.add(test_prog1)
-        programRunner.add(test_prog2)
-        programRunner.add(test_batchbeaver)
-        programRunner.add(test_batchopening)
-        loop.run_until_complete(programRunner.join())
+        program_runner = TaskProgramRunner(3, 1)
+        program_runner.add(test_prog1)
+        program_runner.add(test_prog2)
+        program_runner.add(test_batchbeaver)
+        program_runner.add(test_batchopening)
+        loop.run_until_complete(program_runner.join())
     finally:
         loop.close()

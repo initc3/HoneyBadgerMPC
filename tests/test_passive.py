@@ -2,21 +2,19 @@ from pytest import mark
 
 
 @mark.asyncio
-@mark.usefixtures('zeros_shares_files')
-async def test_open_shares(zeros_files_prefix):
+async def test_open_shares():
     from honeybadgermpc.mpc import TaskProgramRunner
+    from honeybadgermpc.preprocessing import PreProcessedElements
+
     N, t = 3, 1
     number_of_secrets = 100
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_zeros(100, N, t)
 
     async def _prog(context):
-        filename = f'{zeros_files_prefix}-{context.myid}.share'
-        shares = context.read_shares(open(filename))
-
-        print('[%d] read %d shares' % (context.myid, len(shares)))
-
         secrets = []
-        for share in shares[:number_of_secrets]:
-            s = await share.open()
+        for _ in range(number_of_secrets):
+            s = await pp_elements.get_zero(context).open()
             assert s == 0
             secrets.append(s)
         print('[%d] Finished' % (context.myid,))
@@ -31,23 +29,22 @@ async def test_open_shares(zeros_files_prefix):
 
 
 @mark.asyncio
-@mark.usefixtures('zeros_shares_files', 'triples_shares_files')
-async def test_beaver_mul_with_zeros(zeros_files_prefix, triples_files_prefix):
+async def test_beaver_mul_with_zeros():
     from honeybadgermpc.mpc import TaskProgramRunner
+    from honeybadgermpc.mpc import PreProcessedElements
+
     N, t = 3, 1
     x_secret, y_secret = 10, 15
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_zeros(2, N, t)
+    pp_elements.generate_triples(1, N, t)
 
     async def _prog(context):
-        filename = f'{zeros_files_prefix}-{context.myid}.share'
-        zeros = context.read_shares(open(filename))
-        filename = f'{triples_files_prefix}-{context.myid}.share'
-        triples = context.read_shares(open(filename))
-
         # Example of Beaver multiplication
-        x = zeros[0] + context.Share(x_secret)
-        y = zeros[1] + context.Share(y_secret)
+        x = pp_elements.get_zero(context) + context.Share(x_secret)
+        y = pp_elements.get_zero(context) + context.Share(y_secret)
 
-        a, b, ab = triples[:3]
+        a, b, ab = pp_elements.get_triple(context)
         assert await a.open() * await b.open() == await ab.open()
 
         D = (x - a).open()
@@ -70,23 +67,20 @@ async def test_beaver_mul_with_zeros(zeros_files_prefix, triples_files_prefix):
 
 
 @mark.asyncio
-@mark.usefixtures('random_shares_files', 'triples_shares_files')
-async def test_beaver_mul(random_polys, random_files_prefix, triples_files_prefix):
+async def test_beaver_mul():
     from honeybadgermpc.mpc import TaskProgramRunner
+    from honeybadgermpc.preprocessing import PreProcessedElements
+
     N, t = 3, 1
-    f, g = random_polys[:2]
-    x_secret, y_secret = f(0), g(0)
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_rands(2, N, t)
+    pp_elements.generate_triples(1, N, t)
 
     async def _prog(context):
-        filename = f'{random_files_prefix}-{context.myid}.share'
-        randoms = context.read_shares(open(filename))
-        filename = f'{triples_files_prefix}-{context.myid}.share'
-        triples = context.read_shares(open(filename))
-
         # Example of Beaver multiplication
-        x, y = randoms[:2]
+        x, y = pp_elements.get_rand(context), pp_elements.get_rand(context)
 
-        a, b, ab = triples[:3]
+        a, b, ab = pp_elements.get_triple(context)
         assert await a.open() * await b.open() == await ab.open()
 
         D = (x - a).open()
@@ -105,4 +99,3 @@ async def test_beaver_mul(random_polys, random_files_prefix, triples_files_prefi
     programRunner.add(_prog)
     results = await programRunner.join()
     assert len(results) == N
-    assert all(res == x_secret * y_secret for res in results)

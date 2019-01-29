@@ -10,7 +10,7 @@
 CMD="python -m honeybadgermpc.ipc"
 CONFIG_PATH=conf/ipc.network.local
 set -x
-rm sharedata/READY # NOTE: see ipc.py wait_for_preprocessing
+rm sharedata/READY # NOTE: see preprocessing.py wait_for_preprocessing
 tmux new-session     "${CMD} 0 ${CONFIG_PATH}/hbmpc.ini; sh" \; \
      splitw -h -p 50 "${CMD} 1 ${CONFIG_PATH}/hbmpc.ini; sh" \; \
      splitw -v -p 50 "${CMD} 2 ${CONFIG_PATH}/hbmpc.ini; sh" \; \

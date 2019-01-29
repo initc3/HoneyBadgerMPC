@@ -7,12 +7,7 @@ import socket
 import logging
 from .mpc import Mpc
 from .program_runner import ProgramRunner
-
-
-async def wait_for_preprocessing():
-    while not os.path.exists("sharedata/READY"):
-        logging.info(f"waiting for preprocessing sharedata/READY")
-        await asyncio.sleep(1)
+from .preprocessing import wait_for_preprocessing, preprocessing_done
 
 
 async def robust_open_connection(host, port):
@@ -107,11 +102,11 @@ class Senders(object):
                 await writer.drain()
                 writer._bytesSent += len(padded_msg)
         except ConnectionResetError:
-            logging.warn(f"Connection with peer [{recvid}] reset.")
+            logging.warning(f"Connection with peer [{recvid}] reset.")
         except ConnectionRefusedError:
-            logging.warn(f"Connection with peer [{recvid}] refused.")
+            logging.warning(f"Connection with peer [{recvid}] refused.")
         except BrokenPipeError:
-            logging.warn(f"Connection with peer [{recvid}] broken   .")
+            logging.warning(f"Connection with peer [{recvid}] broken   .")
 
     async def close(self):
         await asyncio.gather(*[q.put(None) for q in self.queues])
@@ -142,7 +137,7 @@ class Listener(object):
             try:
                 future.result()
             except asyncio.CancelledError:
-                logging.warn("handle_client was cancelled.")
+                logging.warning("handle_client was cancelled.")
                 return
         task.add_done_callback(cb)
 
@@ -272,8 +267,8 @@ class ProcessProgramRunner(ProgramRunner):
 
 
 if __name__ == "__main__":
-    from .mpc import generate_test_zeros, generate_test_triples
     from .mpc import test_prog1, test_prog2
+    from .preprocessing import PreProcessedElements
     from .exceptions import ConfigurationError
     from .config import load_config
 
@@ -311,12 +306,12 @@ if __name__ == "__main__":
         if not config_dict['skipPreprocessing']:
             # Only one party needs to generate the initial shares
             if nodeid == 0:
-                os.makedirs("sharedata", exist_ok=True)
+                pp_elements = PreProcessedElements()
                 logging.info('Generating random shares of zero in sharedata/')
-                generate_test_zeros('sharedata/test_zeros', 1000, N, t)
+                pp_elements.generate_zeros(1000, N, t)
                 logging.info('Generating random shares of triples in sharedata/')
-                generate_test_triples('sharedata/test_triples', 1000, N, t)
-                os.mknod(f"sharedata/READY")
+                pp_elements.generate_triples(1000, N, t)
+                preprocessing_done()
             else:
                 loop.run_until_complete(wait_for_preprocessing())
         programRunner = ProcessProgramRunner(network_info, N, t, nodeid)

@@ -2,47 +2,29 @@ import random
 from pytest import mark
 
 
-# TODO: Move to fixtures and don't build for each test.
-basedir = "sharedata"
-
-
 @mark.asyncio
-async def test_powers(sharedatadir):
+async def test_phase1():
     from honeybadgermpc.mpc import TaskProgramRunner, Field
+    from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
     import apps.shuffle.powermixing as pm
-
-    async def verify_powers(context, **kwargs):
-        a_, b_, k_ = kwargs['a'], kwargs['b'], kwargs['k']
-        filename = f'{basedir}/test-powers-{context.myid}.share'
-        shares = context.read_shares(open(filename))
-        a, powers = shares[0], shares[1:]
-        assert len(powers) == k_
-        assert a_ == await a.open()
-        for i, power in enumerate(powers):
-            assert pow(b_, i+1) == await power.open()
 
     a = Field(random.randint(0, Field.modulus-1))
-    b = Field(random.randint(0, Field.modulus-1))
     N, t, k = 5, 2, 32
-    pm.generate_test_powers(f"{basedir}/test-powers", a, b, k, N, t)
-    programRunner = TaskProgramRunner(N, t)
-    programRunner.add(verify_powers, a=a, b=b, k=k)
-    await programRunner.join()
-
-
-@mark.asyncio
-async def test_phase1(sharedatadir):
-    from honeybadgermpc.mpc import TaskProgramRunner, Field
-    import apps.shuffle.powermixing as pm
+    pp_elements = PreProcessedElements()
+    power_id = pp_elements.generate_powers(k, N, t)
+    share_id = pp_elements.generate_share(a, N, t)
 
     async def verify_phase1(context, **kwargs):
-        a_, b_, k_ = kwargs['a'], kwargs['b'], kwargs['k']
+        a_, k_ = kwargs['a'], kwargs['k']
+        b_ = await pp_elements.get_powers(context, power_id)[0].open()
         await pm.single_secret_phase1(
             context,
             k=k,
-            powers_prefix=f"{basedir}/test-phase1",
-            cpp_prefix=f"{basedir}/test-cpp")
-        with open(f"{basedir}/test-cpp-{context.myid}.input", "r") as f:
+            power_id=power_id,
+            share_id=share_id)
+        file_name = f"{share_id}-{context.myid}.input"
+        file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
+        with open(file_path, "r") as f:
             assert int(f.readline()) == Field.modulus
             assert await context.Share(int(f.readline())).open() == a_.value
             assert int(f.readline()) == (a_ - b_).value
@@ -50,40 +32,37 @@ async def test_phase1(sharedatadir):
             for i in range(1, k_+1):
                 assert (await context.Share(int(f.readline())).open()).value == b_**(i)
 
-    a = Field(random.randint(0, Field.modulus-1))
-    b = Field(random.randint(0, Field.modulus-1))
-    N, t, k = 5, 2, 32
-    pm.generate_test_powers(f"{basedir}/test-phase1", a, b, k, N, t)
     programRunner = TaskProgramRunner(N, t)
-    programRunner.add(verify_phase1, a=a, b=b, k=k)
+    programRunner.add(verify_phase1, a=a, k=k)
     await programRunner.join()
 
 
 @mark.asyncio
-async def test_phase2(sharedatadir):
+async def test_phase2():
     from honeybadgermpc.mpc import Field
+    from honeybadgermpc.preprocessing import PreProcessingConstants
     import apps.shuffle.powermixing as pm
     import uuid
 
     a = Field(random.randint(0, Field.modulus-1))
     b = Field(random.randint(0, Field.modulus-1))
     k = 8
-    runid, nodeid = uuid.uuid4().hex, "1"
-    batchid = f"{runid}_0"
-    cppPrefix = f"{basedir}/cpp-phase_{batchid}"
+    share_id, run_id, node_id = uuid.uuid4().hex, uuid.uuid4().hex, "1"
 
     for j in range(1, k):
-        with open(f"{cppPrefix}-{nodeid}.input", "w") as f:
+        file_name = f"{share_id}-{node_id}.input"
+        with open(f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}", "w") as f:
             print(Field.modulus, file=f)
             print(a.value, file=f)
             print((a-b).value, file=f)
             print(k, file=f)
             for i in range(1, k+1):
                 print(pow(b, i).value, file=f)
-        print("#" * 10)
-        await pm.phase2(nodeid, batchid, runid, cppPrefix)
 
-        with open(f"{basedir}/power-{runid}_{nodeid}.sums", "r") as f:
+        await pm.phase2(node_id, run_id, share_id)
+
+        file_name = f"power-{run_id}_{node_id}.sums"
+        with open(f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}", "r") as f:
             assert int(f.readline()) == Field.modulus
             assert int(f.readline()) == k
             for i, p in enumerate(f.read().splitlines()[:k]):
@@ -91,7 +70,7 @@ async def test_phase2(sharedatadir):
 
 
 @mark.asyncio
-async def test_asynchronous_mixing(sharedatadir):
+async def test_asynchronous_mixing():
     from honeybadgermpc.mpc import Field
     import apps.shuffle.powermixing as pm
 
