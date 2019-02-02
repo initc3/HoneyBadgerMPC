@@ -471,10 +471,10 @@ async def rbc_and_send(sid, pid, n, t, k, ignoreme, receive, send):
 # Run as either node or dealer, depending on command line arguments
 # Uses the same configuration format as hbmpc
 
-async def runHBAVSSLight(config, n, t, id):
-    programRunner = ProcessProgramRunner(config, n+1, t, id)
-    sender, listener = programRunner.senders, programRunner.listener
-    send, recv = programRunner.get_send_and_recv(0)
+async def run_hbavss_light(config, n, t, id):
+    program_runner = ProcessProgramRunner(config, n+1, t, id)
+    sender, listener = program_runner.senders, program_runner.listener
+    send, recv = program_runner.get_send_and_recv(0)
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
 
@@ -505,9 +505,9 @@ async def runHBAVSSLight(config, n, t, id):
     if id == dealerid:
         thread = HbAvssDealer(pubparams, (42, id), send, recv)
     else:
-        myPrivateKey = participantprivkeys[id]
+        my_private_key = participantprivkeys[id]
         thread = HbAvssRecipient(
-            pubparams, (id, myPrivateKey), send, recv, reconstruction=False)
+            pubparams, (id, my_private_key), send, recv, reconstruction=False)
 
     # Wait for results and clean up
     await thread.run()
@@ -579,6 +579,6 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        loop.run_until_complete(runHBAVSSLight(network_info, N, t, nodeid))
+        loop.run_until_complete(run_hbavss_light(network_info, N, t, nodeid))
     finally:
         loop.close()

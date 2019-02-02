@@ -187,7 +187,7 @@ class Listener(object):
             data += packet
         return data
 
-    async def getMessage(self, sid):
+    async def get_message(self, sid):
         return await self.queues[sid].get()
 
     async def close(self):
@@ -232,7 +232,7 @@ class ProcessProgramRunner(ProgramRunner):
 
         def make_recv(j, sid):
             async def _recv():
-                (i, o) = await self.listener.getMessage(sid)
+                (i, o) = await self.listener.get_message(sid)
                 logging.debug('[%s] RECV %8s [%2d -> %2d]' % (sid, o[1], i, j))
                 return (i, o)
             return _recv
@@ -314,11 +314,11 @@ if __name__ == "__main__":
                 preprocessing_done()
             else:
                 loop.run_until_complete(wait_for_preprocessing())
-        programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
-        loop.run_until_complete(programRunner.start())
-        programRunner.add(1, test_prog1)
-        programRunner.add(2, test_prog2)
-        loop.run_until_complete(programRunner.join())
-        loop.run_until_complete(programRunner.close())
+        program_runner = ProcessProgramRunner(network_info, N, t, nodeid)
+        loop.run_until_complete(program_runner.start())
+        program_runner.add(1, test_prog1)
+        program_runner.add(2, test_prog2)
+        loop.run_until_complete(program_runner.join())
+        loop.run_until_complete(program_runner.close())
     finally:
         loop.close()

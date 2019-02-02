@@ -49,8 +49,8 @@ def common_subset_ideal_protocol(n, f):
 
 
 async def _test_acs_ideal(sid='sid', n=4, f=1):
-    ACS = common_subset_ideal_protocol(n, f)
-    parties = [ACS(sid, i) for i in range(n)]
+    acs = common_subset_ideal_protocol(n, f)
+    parties = [acs(sid, i) for i in range(n)]
 
     # Provide input
     # for i in range(N-1): # if set to N-1, will still succeed, but N-2 fails

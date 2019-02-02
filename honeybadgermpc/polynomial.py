@@ -80,7 +80,7 @@ def polynomials_over(field):
                 vector.append(reduce(operator.mul, factors))
             return sum(map(operator.mul, ys, vector))
 
-        _lagrangeCache = {}  # Cache lagrange polynomials
+        _lagrange_cache = {}  # Cache lagrange polynomials
 
         @classmethod
         def interpolate(cls, shares):
@@ -90,15 +90,15 @@ def polynomials_over(field):
 
             def lagrange(xi):
                 # Let's cache lagrange values
-                if (xs, xi) in cls._lagrangeCache:
-                    return cls._lagrangeCache[(xs, xi)]
+                if (xs, xi) in cls._lagrange_cache:
+                    return cls._lagrange_cache[(xs, xi)]
 
                 def mul(a, b): return a*b
                 num = reduce(mul, [x - cls([xj])
                                    for xj in xs if xj != xi], one)
                 den = reduce(mul, [xi - xj for xj in xs if xj != xi], field(1))
                 p = num * cls([1 / den])
-                cls._lagrangeCache[(xs, xi)] = p
+                cls._lagrange_cache[(xs, xi)] = p
                 return p
             f = cls([0])
             for xi, yi in zip(xs, ys):

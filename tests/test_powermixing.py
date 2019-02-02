@@ -9,10 +9,10 @@ async def test_phase1():
     import apps.shuffle.powermixing as pm
 
     a = Field(random.randint(0, Field.modulus-1))
-    N, t, k = 5, 2, 32
+    n, t, k = 5, 2, 32
     pp_elements = PreProcessedElements()
-    power_id = pp_elements.generate_powers(k, N, t)
-    share_id = pp_elements.generate_share(a, N, t)
+    power_id = pp_elements.generate_powers(k, n, t)
+    share_id = pp_elements.generate_share(a, n, t)
 
     async def verify_phase1(context, **kwargs):
         a_, k_ = kwargs['a'], kwargs['k']
@@ -32,9 +32,9 @@ async def test_phase1():
             for i in range(1, k_+1):
                 assert (await context.Share(int(f.readline())).open()).value == b_**(i)
 
-    programRunner = TaskProgramRunner(N, t)
-    programRunner.add(verify_phase1, a=a, k=k)
-    await programRunner.join()
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(verify_phase1, a=a, k=k)
+    await program_runner.join()
 
 
 @mark.asyncio
@@ -74,8 +74,8 @@ async def test_asynchronous_mixing():
     from honeybadgermpc.mpc import Field
     import apps.shuffle.powermixing as pm
 
-    N, t, k = 3, 1, 2
+    n, t, k = 3, 1, 2
     a_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
-    result = await pm.async_mixing(a_s, N, t, k)
+    result = await pm.async_mixing(a_s, n, t, k)
     for a in a_s:
         assert a in result

@@ -95,13 +95,13 @@ def get_ipc_commands(s3manager, instance_ids):
         "sharedata/test_triples-%d.share" % (i)) for i in range(n)]
     zero_urls = [s3manager.uploadFile(
         "sharedata/test_zeros-%d.share" % (i)) for i in range(n)]
-    setup_commands = [[instanceId, [
+    setup_commands = [[instance_id, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
             "mkdir -p sharedata",
             "cd sharedata; curl -sSO %s" % (triple_urls[i]),
             "cd sharedata; curl -sSO %s" % (zero_urls[i]),
             "mkdir -p benchmark",
-        ]] for i, instanceId in enumerate(instance_ids)]
+        ]] for i, instance_id in enumerate(instance_ids)]
 
     return setup_commands
 
@@ -125,14 +125,14 @@ def get_butterfly_network_commands(max_k, s3manager, instance_ids):
         f"{random_files_prefix}-%d.share" % (i)) for i in range(n)]
     rand_share_urls = [s3manager.uploadFile(
         f"{oneminusoneprefix}-{i}.share") for i in range(n)]
-    setup_commands = [[instanceId, [
+    setup_commands = [[instance_id, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
             "mkdir -p sharedata",
             "cd sharedata; curl -sSO %s" % (triple_urls[i]),
             "cd sharedata; curl -sSO %s" % (rand_share_urls[i]),
             "cd sharedata; curl -sSO %s" % (input_urls[i]),
             "mkdir -p benchmark",
-        ]] for i, instanceId in enumerate(instance_ids)]
+        ]] for i, instance_id in enumerate(instance_ids)]
 
     return setup_commands
 
@@ -157,7 +157,7 @@ def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
         generate_test_powers(f"{powersPrefix}_{batchid}", a, b_s[i], k, n, t)
 
     setup_commands = []
-    for i, instanceId in enumerate(instance_ids):
+    for i, instance_id in enumerate(instance_ids):
         url = s3manager.uploadFile(f"scripts/aws/download_input.sh")
         commands = [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
@@ -180,7 +180,7 @@ def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
         fname = f"{runid}-{i}-links"
         url = s3manager.uploadFile(fname)
         commands.append(f"cd sharedata; curl -sSO {url}; bash download_input.sh {fname}")
-        setup_commands.append([instanceId, commands])
+        setup_commands.append([instance_id, commands])
 
     return setup_commands
 
@@ -209,10 +209,10 @@ def trigger_run(run_id, skip_setup, max_k, only_setup):
     print(">>> Config file upload complete. <<<")
 
     print(">>> Triggering config update on instances.")
-    config_update_commands = [[instanceId, [
+    config_update_commands = [[instance_id, [
             "mkdir -p config",
             "cd config; curl -sSO %s" % (instance_config_url),
-        ]] for i, instanceId in enumerate(instance_ids)]
+        ]] for i, instance_id in enumerate(instance_ids)]
     run_commands_on_instances(ec2manager, config_update_commands, False)
     print(">>> Config update completed successfully")
 

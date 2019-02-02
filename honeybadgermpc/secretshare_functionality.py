@@ -75,10 +75,10 @@ def secret_share_ideal_protocol(n, f):
     return SecretShareIdealProtocol
 
 
-async def test1(sid='sid', n=4, f=1, Dealer=0):
+async def test1(sid='sid', n=4, f=1, dealer=0):
     # Create ideal protocol for all the parties
-    SecretShare = secret_share_ideal_protocol(n, f)
-    parties = [SecretShare(sid, Dealer, i) for i in range(n)]
+    secret_share = secret_share_ideal_protocol(n, f)
+    parties = [secret_share(sid, dealer, i) for i in range(n)]
 
     # Output (promises) are available, but not resolved yet
     for i in range(n):
@@ -90,7 +90,7 @@ async def test1(sid='sid', n=4, f=1, Dealer=0):
     # Provide input
     v = Field(random.randint(0, Field.modulus-1))
     logging.info(f"Dealer's input: {v}")
-    parties[Dealer].inputFromDealer.set_result(v)
+    parties[dealer].inputFromDealer.set_result(v)
 
     # Now can await output from each AVSS protocol
     for i in range(n):

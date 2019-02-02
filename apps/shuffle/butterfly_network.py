@@ -61,31 +61,31 @@ async def iterated_butterfly_network(ctx, inputs, k, delta):
     # k (log k)^2
     assert k == len(inputs)
     assert k & (k-1) == 0, "Size of input must be a power of 2"
-    benchLogger = logging.LoggerAdapter(
+    bench_logger = logging.LoggerAdapter(
         logging.getLogger("benchmark_logger"), {"node_id": ctx.myid})
     iteration = 0
     num_iterations = int(log(k, 2))
-    for cur_iter in range(num_iterations):
+    for _ in range(num_iterations):
         stride = 1
         while stride < k:
             stime = time()
-            As, Bs, ABs, sbits = get_n_triple_and_sbits(ctx, k//2)
-            assert len(As) == len(Bs) == len(ABs) == len(sbits) == k//2
-            Xs, Ys = [], []
+            as_, bs_, abs_, sbits = get_n_triple_and_sbits(ctx, k//2)
+            assert len(as_) == len(bs_) == len(abs_) == len(sbits) == k//2
+            xs_, ys_ = [], []
             first = True
             i = 0
             while i < k:
                 for _ in range(stride):
-                    arr = Xs if first else Ys
+                    arr = xs_ if first else ys_
                     arr.append(inputs[i])
                     i += 1
                 first = not first
-            assert len(Xs) == len(Ys)
-            assert len(Xs) != 0
-            result = await batch_switch(ctx, Xs, Ys, sbits, As, Bs, ABs, k)
+            assert len(xs_) == len(ys_)
+            assert len(xs_) != 0
+            result = await batch_switch(ctx, xs_, ys_, sbits, as_, bs_, abs_, k)
             inputs = [*sum(zip(result[0], result[1]), ())]
             stride *= 2
-            benchLogger.info(f"[ButterflyNetwork-{iteration}]: {time()-stime}")
+            bench_logger.info(f"[ButterflyNetwork-{iteration}]: {time()-stime}")
             iteration += 1
     return inputs
 
@@ -177,11 +177,11 @@ if __name__ == "__main__":
             else:
                 loop.run_until_complete(wait_for_preprocessing())
 
-        programRunner = ProcessProgramRunner(network_info, N, t, nodeid)
-        loop.run_until_complete(programRunner.start())
-        programRunner.add(0, butterfly_network_helper, k=k, delta=delta)
-        loop.run_until_complete(programRunner.join())
-        loop.run_until_complete(programRunner.close())
+        program_runner = ProcessProgramRunner(network_info, N, t, nodeid)
+        loop.run_until_complete(program_runner.start())
+        program_runner.add(0, butterfly_network_helper, k=k, delta=delta)
+        loop.run_until_complete(program_runner.join())
+        loop.run_until_complete(program_runner.close())
     finally:
         loop.close()
     # runButterlyNetworkInTasks()

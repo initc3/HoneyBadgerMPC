@@ -485,8 +485,8 @@ async def rbc_and_send(sid, pid, n, t, k, ignoreme, receive, send):
 # Uses the same configuration format as hbmpc
 
 async def run_hbavss_light_multi(config, n, t, id, k):
-    programRunner = ProcessProgramRunner(config, n+1, t, id)
-    sender, listener = programRunner.senders, programRunner.listener
+    program_runner = ProcessProgramRunner(config, n+1, t, id)
+    sender, listener = program_runner.senders, program_runner.listener
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
     logging.info(f"{n} {t} {k}")
@@ -514,7 +514,7 @@ async def run_hbavss_light_multi(config, n, t, id, k):
     sends = []
     recvs = []
     for i in range(k):
-        send, recv = programRunner.get_send_and_recv(i)
+        send, recv = program_runner.get_send_and_recv(i)
         sends.append(send)
         recvs.append(recv)
     # Launch the protocol
@@ -525,11 +525,11 @@ async def run_hbavss_light_multi(config, n, t, id, k):
             thread = HbAvssDealer(pubparams, (42, id), sends[i], recvs[i])
             tasks.append(thread)
     else:
-        myPrivateKey = participantprivkeys[id]
+        my_private_key = participantprivkeys[id]
         for i in range(k):
             pubparams = (t, n, crs, participantids, participantpubkeys, dealerid, str(i))
             # send, recv = programRunner.getSendAndRecv(i)
-            thread = HbAvssRecipient(pubparams, (id, myPrivateKey),
+            thread = HbAvssRecipient(pubparams, (id, my_private_key),
                                      sends[i], recvs[i], reconstruction=False)
             tasks.append(thread)
     # Wait for results and clean up
@@ -540,9 +540,9 @@ async def run_hbavss_light_multi(config, n, t, id, k):
     await asyncio.sleep(1)
     logging.info('Total decrypt time ' + str(total_time))
     nodeid = os.environ.get('HBMPC_NODE_ID')
-    benchmarkLogger = logging.LoggerAdapter(
+    bench_logger = logging.LoggerAdapter(
         logging.getLogger("benchmark_logger"), {"node_id": nodeid})
-    benchmarkLogger.info('Total decrypt time ' + str(total_time))
+    bench_logger.info('Total decrypt time ' + str(total_time))
 
 ############################
 #  Configuration for hbavss

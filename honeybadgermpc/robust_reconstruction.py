@@ -48,12 +48,12 @@ async def robust_reconstruct(field_futures, field, n, t, point):
     # Wait for between 2t+1 values and N values,
     # trying to reconstruct each time
     assert 2*t < n, "Robust reconstruct waits for at least n=2t+1 values"
-    for nAvailable in range(2*t + 1, n+1):
+    for n_available in range(2*t + 1, n+1):
         try:
-            await wait_for(field_futures, nAvailable)
+            await wait_for(field_futures, n_available)
             elems = [f.result() if f.done() else None for f in field_futures]
-            P, failures = attempt_reconstruct(elems, field, n, t, point)
-            return P, failures
+            p, failures = attempt_reconstruct(elems, field, n, t, point)
+            return p, failures
         except ValueError as e:
             logging.debug(f'ValueError: {e}')
             if str(e) in ("Wrong degree", "no divisors found"):

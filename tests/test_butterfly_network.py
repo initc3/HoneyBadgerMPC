@@ -8,12 +8,12 @@ async def test_butterfly_network(sharedatadir):
     from honeybadgermpc.mpc import TaskProgramRunner
     from honeybadgermpc.preprocessing import PreProcessedElements
 
-    N, t, k, delta = 3, 1, 32, -9999
+    n, t, k, delta = 3, 1, 32, -9999
     num_switches = k*int(log(k, 2))**2
     pp_elements = PreProcessedElements()
-    pp_elements.generate_rands(1000, N, t)
-    pp_elements.generate_one_minus_one_rands(num_switches, N, t)
-    pp_elements.generate_triples(2*num_switches, N, t)
+    pp_elements.generate_rands(1000, n, t)
+    pp_elements.generate_one_minus_one_rands(num_switches, n, t)
+    pp_elements.generate_triples(2*num_switches, n, t)
 
     async def verify_output(ctx, **kwargs):
         k, delta = kwargs['k'], kwargs['delta']
@@ -28,6 +28,6 @@ async def test_butterfly_network(sharedatadir):
         for i, j in zip(sorted_input, sorted_output):
             assert i == j
 
-    program_runner = TaskProgramRunner(N, t)
+    program_runner = TaskProgramRunner(n, t)
     program_runner.add(verify_output,  k=k, delta=delta)
     await program_runner.join()

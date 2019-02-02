@@ -114,15 +114,15 @@ from .commonsubset_functionality import common_subset_ideal_protocol  # noqa E40
 
 
 async def _test_rand(sid='sid', n=4, f=1):
-    SecretShare = secret_share_ideal_protocol(n, f)
-    CommonSubset = common_subset_ideal_protocol(n, f)
+    secret_share = secret_share_ideal_protocol(n, f)
+    common_subset = common_subset_ideal_protocol(n, f)
 
-    B = 11
+    b = 11
     rands = []
     # for i in range(N): # If set to N-1 (simulate crashed party, it gets stuck)
     for i in range(n):
         # Optionally fail to active the last one of them
-        rands.append(ShareRandomProtocol(B, n, f, sid, i, SecretShare, CommonSubset))
+        rands.append(ShareRandomProtocol(b, n, f, sid, i, secret_share, common_subset))
 
     logging.info('_test_rand: awaiting results...')
     results = await asyncio.gather(*(rand.output for rand in rands))
@@ -135,7 +135,7 @@ async def _test_rand(sid='sid', n=4, f=1):
         assert t1 == t2
 
     logging.info('Done!')
-    for a in SecretShare._instances.values():
+    for a in secret_share._instances.values():
         a._task.cancel()
 
 

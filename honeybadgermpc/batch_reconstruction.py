@@ -152,12 +152,12 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
 
     point = EvalPoint(fp, n, use_fft=use_fft)
 
-    _taskSub, subscribe = subscribe_recv(recv)
+    _task_sub, subscribe = subscribe_recv(recv)
     del recv  # ILC enforces this in type system, no duplication of reads
-    _taskR1, qR1 = recv_each_party(subscribe('R1'), n)
-    _taskR2, qR2 = recv_each_party(subscribe('R2'), n)
-    dataR1 = [asyncio.create_task(recv()) for recv in qR1]
-    dataR2 = [asyncio.create_task(recv()) for recv in qR2]
+    _task_r1, q_r1 = recv_each_party(subscribe('R1'), n)
+    _task_r2, q_r2 = recv_each_party(subscribe('R2'), n)
+    data_r1 = [asyncio.create_task(recv()) for recv in q_r1]
+    data_r2 = [asyncio.create_task(recv()) for recv in q_r2]
     del subscribe  # ILC should determine we can garbage collect after this
 
     def send_batch(data, send, point):
@@ -178,52 +178,52 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     # Step 2: Attempt to reconstruct P1
     # Wait for between 2t+1 values and N values
     # trying to reconstruct each time
-    for nAvailable in range(2 * t + 1, n + 1):
-        data = await wait_for(dataR1, nAvailable)
-        data = tuple(with_at_most_non_none(data, nAvailable))
-        logging.debug(f'data R1: {data} nAvailable: {nAvailable}')
+    for n_available in range(2 * t + 1, n + 1):
+        data = await wait_for(data_r1, n_available)
+        data = tuple(with_at_most_non_none(data, n_available))
+        logging.debug(f'data R1: {data} nAvailable: {n_available}')
         data = tuple([None if d is None else tuple(map(fp, d)) for d in data])
         stime = time()
-        reconsR2 = attempt_reconstruct_batch(data, field, n, t, point)
-        if reconsR2 is None:
+        recons_r2 = attempt_reconstruct_batch(data, field, n, t, point)
+        if recons_r2 is None:
             # TODO: return partial success, so we can skip these next turn
             continue
         bench_logger.info(f"[BatchReconstruct] P1: {time() - stime}")
         break
-    assert nAvailable <= n, "reconstruction failed"
-    logging.debug(f'reconsR2: {reconsR2}')
-    assert len(reconsR2) >= len(elem_batches)
-    reconsR2 = reconsR2[:len(elem_batches)]
+    assert n_available <= n, "reconstruction failed"
+    logging.debug(f'reconsR2: {recons_r2}')
+    assert len(recons_r2) >= len(elem_batches)
+    recons_r2 = recons_r2[:len(elem_batches)]
 
     # Step 3: Send R2 points
-    send_batch(reconsR2, wrap_send('R2', send), lambda _: point.zero())
+    send_batch(recons_r2, wrap_send('R2', send), lambda _: point.zero())
 
     # Step 4: Attempt to reconstruct R2
-    for nAvailable in range(nAvailable, n + 1):
-        data = await wait_for(dataR2, nAvailable)
-        data = tuple(with_at_most_non_none(data, nAvailable))
+    for n_available in range(n_available, n + 1):
+        data = await wait_for(data_r2, n_available)
+        data = tuple(with_at_most_non_none(data, n_available))
         data = tuple([None if d is None else tuple(map(fp, d)) for d in data])
-        logging.debug(f'data R2: {data} nAvailable: {nAvailable}')
+        logging.debug(f'data R2: {data} nAvailable: {n_available}')
         stime = time()
-        reconsP = attempt_reconstruct_batch(data, field, n, t, point)
-        if reconsP is None:
+        recons_p = attempt_reconstruct_batch(data, field, n, t, point)
+        if recons_p is None:
             # TODO: return partial success, so we can skip these next turn
             continue
         bench_logger.info(f"[BatchReconstruct] P2: {time() - stime}")
         break
-    assert nAvailable <= n, "reconstruction failed"
-    assert len(reconsP) >= len(elem_batches)
-    reconsP = reconsP[:len(elem_batches)]
+    assert n_available <= n, "reconstruction failed"
+    assert len(recons_p) >= len(elem_batches)
+    recons_p = recons_p[:len(elem_batches)]
 
-    _taskR1.cancel()
-    _taskR2.cancel()
-    _taskSub.cancel()
-    for q in dataR1:
+    _task_r1.cancel()
+    _task_r2.cancel()
+    _task_sub.cancel()
+    for q in data_r1:
         q.cancel()
-    for q in dataR2:
+    for q in data_r2:
         q.cancel()
 
-    return reconsP
+    return recons_p
 
 
 async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug):
@@ -247,10 +247,10 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
         logging.info("my id %d" % myid)
         logging.info(shared_secrets)
 
-    Fp = GF.get(p)
-    Poly = polynomials_over(Fp)
+    fp = GF.get(p)
+    poly = polynomials_over(fp)
 
-    point = EvalPoint(Fp, n, use_fft=False)
+    point = EvalPoint(fp, n, use_fft=False)
 
     # Reconstruct a batch of exactly t+1 secrets
     assert len(shared_secrets) == t+1
@@ -278,27 +278,27 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
     try:
         # Round 1:
         # construct the first polynomial f(x,i) = [S1]ti + [S2]ti x + … [St+1]ti xt
-        f_poly = Poly(shared_secrets)
+        f_poly = poly(shared_secrets)
 
         #  Evaluate and send f(j,i) for each other participating party Pj
         for j in range(n):
             send(j, ('R1', f_poly(point(j))))
 
         # Robustly reconstruct f(i,X)
-        P1, failures_detected = await robust_reconstruct(round1_shares, Fp, n, t, point)
+        p1, failures_detected = await robust_reconstruct(round1_shares, fp, n, t, point)
         if debug:
             logging.info(f"I am {myid} and evil nodes are {failures_detected}")
 
         # Round 2:
         # Evaluate and send f(i,0) to each other party
         for j in range(n):
-            send(j, ('R2', P1(point.zero())))
+            send(j, ('R2', p1(point.zero())))
 
         # Robustly reconstruct f(X,0)
-        P2, failures_detected = await robust_reconstruct(round2_shares, Fp, n, t, point)
+        p2, failures_detected = await robust_reconstruct(round2_shares, fp, n, t, point)
 
-        logging.debug(f"I am {myid} and the secret polynomial is {P2}")
-        return P2.coeffs
+        logging.debug(f"I am {myid} and the secret polynomial is {p2}")
+        return p2.coeffs
 
     finally:
         bgtask.cancel()

@@ -77,8 +77,8 @@ class Mpc(object):
         opening = robust_reconstruct(
             share_buffer, Field, self.N, t, point)
         self._openings[shareid] = opening
-        P, _ = await opening
-        return P(Field(0))
+        p, _ = await opening
+        return p(Field(0))
 
     def open_share_array(self, sharearray):
         # Choose the shareid based on the order this is called
@@ -156,10 +156,10 @@ def share_in_context(context):
             res = GFElementFuture()
 
         if isinstance(other, asyncio.Future):
-            def cb(_): return res.set_result(op(fut.result(), other.result()))
+            def cb(f): return res.set_result(op(fut.result(), other.result()))
             asyncio.gather(fut, other).add_done_callback(cb)
         else:
-            def cb(_): return res.set_result(op(fut.result(), other))
+            def cb(f): return res.set_result(op(fut.result(), other))
             fut.add_done_callback(cb)
         return res
 
@@ -219,10 +219,10 @@ def share_in_context(context):
         assert type(other) in [ShareFuture, GFElementFuture, Share, GFElement]
         res = ShareFuture()
         if isinstance(other, asyncio.Future):
-            def cb(_): return res.set_result(op(fut.result(), other.result()))
+            def cb(f): return res.set_result(op(fut.result(), other.result()))
             asyncio.gather(fut, other).add_done_callback(cb)
         else:
-            def cb(_): return res.set_result(op(fut.result(), other))
+            def cb(f): return res.set_result(op(fut.result(), other))
             fut.add_done_callback(cb)
         return res
 
@@ -241,7 +241,7 @@ def share_in_context(context):
 
             def cb2(sh): return res.set_result(sh.result())
 
-            def cb1(_): return self.result().open().add_done_callback(cb2)
+            def cb1(f): return self.result().open().add_done_callback(cb2)
             self.add_done_callback(cb1)
             return res
 
@@ -304,8 +304,8 @@ async def test_batchopening(context):
     # Demonstrates use of ShareArray batch interface
     xs = [pp_elements.get_zero(context) + context.Share(i) for i in range(100)]
     xs = context.ShareArray(xs)
-    Xs = await xs.open()
-    for i, x in enumerate(Xs):
+    xs_ = await xs.open()
+    for i, x in enumerate(xs_):
         assert x.value == i
     logging.info("[%d] Finished batch opening" % (context.myid,))
 
@@ -318,34 +318,33 @@ async def test_batchbeaver(context):
     xs = context.ShareArray(xs)
     ys = context.ShareArray(ys)
 
-    As, Bs, ABs = [], [], []
+    as_, bs_, abs_ = [], [], []
     for i in range(100):
-        A, B, AB = pp_elements.get_triple(context)
-        As.append(A)
-        Bs.append(B)
-        ABs.append(AB)
-    As = context.ShareArray(As)
-    Bs = context.ShareArray(Bs)
-    ABs = context.ShareArray(ABs)
+        a, b, ab_ = pp_elements.get_triple(context)
+        as_.append(a)
+        bs_.append(b)
+        abs_.append(ab_)
+    as_ = context.ShareArray(as_)
+    bs_ = context.ShareArray(bs_)
+    abs_ = context.ShareArray(abs_)
 
-    Ds = await (xs - As).open()  # noqa: W606
-    Es = await (ys - Bs).open()  # noqa: W606
+    ds_ = await (xs - as_).open()  # noqa: W606
+    es_ = await (ys - bs_).open()  # noqa: W606
 
-    for i, (x, y, a, b, ab, D, E) in enumerate(
-            zip(xs._shares, ys._shares,
-                As._shares, Bs._shares, ABs._shares, Ds, Es)):
-        xy = context.Share(D*E) + D*b + E*a + ab
+    for i, (a, b, ab, d, e) in enumerate(
+            zip(as_._shares, bs_._shares, abs_._shares, ds_, es_)):
+        xy = context.Share(d*e) + d*b + e*a + ab
         assert (await xy.open()) == i * (i + 10)
 
     logging.info("[%d] Finished batch beaver" % (context.myid,))
 
 
 async def beaver_mult(context, x, y, a, b, ab):
-    D = await (x - a).open()  # noqa: W606
-    E = await (y - b).open()  # noqa: W606
+    d = await (x - a).open()  # noqa: W606
+    e = await (y - b).open()  # noqa: W606
 
     # This is a random share of x*y
-    xy = context.Share(D*E) + D*b + E*a + ab
+    xy = context.Share(d*e) + d*b + e*a + ab
 
     return context.Share(await xy.open())
 
@@ -361,23 +360,23 @@ async def test_prog1(context):
     a, b, ab = pp_elements.get_triple(context)
     # assert await a.open() * await b.open() == await ab.open()
 
-    D = (x - a).open()
-    E = (y - b).open()
-    await D
-    await E
+    d = (x - a).open()
+    e = (y - b).open()
+    await d
+    await e
 
     # This is a random share of x*y
-    logging.info(f'type(D): {type(D)}')
+    logging.info(f'type(d): {type(d)}')
     logging.info(f'type(b): {type(b)}')
-    xy = D*E + D*b + E*a + ab
+    xy = d*e + d*b + e*a + ab
 
     logging.info(f'type(x): {type(x)}')
     logging.info(f'type(y): {type(y)}')
     logging.info(f'type(xy): {type(xy)}')
-    X, Y, XY = await x.open(), await y.open(), await xy.open()
-    assert X * Y == XY
+    x_, y_, xy_ = await x.open(), await y.open(), await xy.open()
+    assert x_ * y_ == xy_
 
-    logging.info(f"[%d] Finished {context.myid}, {X}, {Y}, {XY}")
+    logging.info(f"[%d] Finished {context.myid}, {x_}, {y_}, {xy_}")
 
 
 async def test_prog2(context):

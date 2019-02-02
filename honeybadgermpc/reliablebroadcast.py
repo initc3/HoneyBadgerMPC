@@ -162,10 +162,10 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
     assert 0 <= leader < n
     assert 0 <= pid < n
 
-    K               = n - 2 * f  # Wait to reconstruct. (# noqa: E221)
-    EchoThreshold   = n - f      # Wait for ECHO to send READY. (# noqa: E221)
-    ReadyThreshold  = f + 1      # Wait for READY to amplify. (# noqa: E221)
-    OutputThreshold = 2 * f + 1  # Wait for this many READY to output
+    k               = n - 2 * f  # Wait to reconstruct. (# noqa: E221)
+    echo_threshold   = n - f      # Wait for ECHO to send READY. (# noqa: E221)
+    ready_threshold  = f + 1      # Wait for READY to amplify. (# noqa: E221)
+    output_threshold = 2 * f + 1  # Wait for this many READY to output
     # NOTE: The above thresholds  are chosen to minimize the size
     # of the erasure coding stripes, i.e. to maximize K.
     # The following alternative thresholds are more canonical
@@ -187,7 +187,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
         assert isinstance(m, (str, bytes))
         logging.debug('Input received: %d bytes' % (len(m),))
 
-        stripes = encode(K, n, m)
+        stripes = encode(k, n, m)
         mt = merkle_tree(stripes)  # full binary tree
         roothash = mt[1]
 
@@ -197,18 +197,18 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
 
     # TODO: filter policy: if leader, discard all messages until sending VAL
 
-    fromLeader = None
+    from_leader = None
     stripes = defaultdict(lambda: [None for _ in range(n)])
-    echoCounter = defaultdict(lambda: 0)
-    echoSenders = set()  # Peers that have sent us ECHO messages
+    echo_counter = defaultdict(lambda: 0)
+    echo_senders = set()  # Peers that have sent us ECHO messages
     ready = defaultdict(set)
-    readySent = False
-    readySenders = set()  # Peers that have sent us READY messages
+    ready_sent = False
+    ready_senders = set()  # Peers that have sent us READY messages
 
     def decode_output(roothash):
         # Rebuild the merkle tree to guarantee decoding is correct
-        m = decode(K, n, stripes[roothash])
-        _stripes = encode(K, n, m)
+        m = decode(k, n, stripes[roothash])
+        _stripes = encode(k, n, m)
         _mt = merkle_tree(_stripes)
         _roothash = _mt[1]
         # TODO: Accountability: If this fails, incriminate leader
@@ -217,9 +217,9 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
 
     while True:  # main receive loop
         sender, msg = await receive()
-        if msg[1] == 'VAL' and fromLeader is None:
+        if msg[1] == 'VAL' and from_leader is None:
             # Validation
-            (_, __, roothash, branch, stripe) = msg
+            (_, _, roothash, branch, stripe) = msg
             if sender != leader:
                 logging.info(f"VAL message from other than leader: {sender}")
                 continue
@@ -230,14 +230,14 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
                 continue
 
             # Update
-            fromLeader = roothash
+            from_leader = roothash
             broadcast((sid, 'ECHO', roothash, branch, stripe))
 
         elif msg[1] == 'ECHO':
-            (_, __, roothash, branch, stripe) = msg
+            (_, _, roothash, branch, stripe) = msg
             # Validation
             if roothash in stripes and stripes[roothash][sender] is not None \
-               or sender in echoSenders:
+               or sender in echo_senders:
                 logging.info("Redundant ECHO")
                 continue
 
@@ -252,31 +252,31 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
 
             # Update
             stripes[roothash][sender] = stripe
-            echoSenders.add(sender)
-            echoCounter[roothash] += 1
+            echo_senders.add(sender)
+            echo_counter[roothash] += 1
 
-            if echoCounter[roothash] >= EchoThreshold and not readySent:
-                readySent = True
+            if echo_counter[roothash] >= echo_threshold and not ready_sent:
+                ready_sent = True
                 broadcast((sid, 'READY', roothash))
 
-            if len(ready[roothash]) >= OutputThreshold and echoCounter[roothash] >= K:
+            if len(ready[roothash]) >= output_threshold and echo_counter[roothash] >= k:
                 return decode_output(roothash)
 
         elif msg[1] == 'READY':
-            (_, __, roothash) = msg
+            (_, _, roothash) = msg
             # Validation
-            if sender in ready[roothash] or sender in readySenders:
+            if sender in ready[roothash] or sender in ready_senders:
                 logging.info("Redundant READY")
                 continue
 
             # Update
             ready[roothash].add(sender)
-            readySenders.add(sender)
+            ready_senders.add(sender)
 
             # Amplify ready messages
-            if len(ready[roothash]) >= ReadyThreshold and not readySent:
-                readySent = True
+            if len(ready[roothash]) >= ready_threshold and not ready_sent:
+                ready_sent = True
                 broadcast((sid, 'READY', roothash))
 
-            if len(ready[roothash]) >= OutputThreshold and echoCounter[roothash] >= K:
+            if len(ready[roothash]) >= output_threshold and echo_counter[roothash] >= k:
                 return decode_output(roothash)
