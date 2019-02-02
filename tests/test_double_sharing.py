@@ -26,9 +26,9 @@ async def test_degree_reduction():
         x_actual = await (sh_r_t + context.Share(diff_2t)).open()  # noqa: W606
         assert x_expected == x_actual
 
-    programRunner = TaskProgramRunner(n, t)
-    programRunner.add(_prog)
-    await programRunner.join()
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    await program_runner.join()
 
 
 @mark.asyncio
@@ -61,6 +61,6 @@ async def test_multiplication_using_double_sharing():
         ab_actual = await (sh_r_t + context.Share(diff_2t)).open()  # noqa: W606
         assert ab_expected == ab_actual
 
-    programRunner = TaskProgramRunner(n, t)
-    programRunner.add(_prog)
-    await programRunner.join()
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    await program_runner.join()

@@ -44,12 +44,12 @@ class NaiveShareRandomProtocol(object):
 
 
 async def _test_naive(sid='sid', n=4, f=1):
-    SecretShare = secret_share_ideal_protocol(n, f)
+    secret_share = secret_share_ideal_protocol(n, f)
     rands = []
     # for i in range(N): # If set to N-1 (simulate crashed party, it gets stuck)
     for i in range(n):
         # Optionally fail to active the last one of them
-        rands.append(NaiveShareRandomProtocol(n, f, sid, i, SecretShare, None))
+        rands.append(NaiveShareRandomProtocol(n, f, sid, i, secret_share, None))
 
     logging.info('_test_naive: awaiting results...')
     results = await asyncio.gather(*(rand.output for rand in rands))
@@ -132,19 +132,19 @@ class ShareSingleProtocol(object):
 
 
 async def _test_rand(sid='sid', n=4, f=1):
-    SecretShare = secret_share_ideal_protocol(n, f)
-    CommonSubset = common_subset_ideal_protocol(n, f)
+    secret_share = secret_share_ideal_protocol(n, f)
+    common_subset = common_subset_ideal_protocol(n, f)
 
     rands = []
     # for i in range(N): # If set to N-1 (simulate crashed party, it gets stuck)
     for i in range(n-1):
         # Optionally fail to active the last one of them
-        rands.append(ShareSingleProtocol(n, f, sid, i, SecretShare, CommonSubset))
+        rands.append(ShareSingleProtocol(n, f, sid, i, secret_share, common_subset))
 
     logging.info('_test_rand: awaiting results...')
     results = await asyncio.gather(*(rand.output for rand in rands))
     logging.info(f"_test_rand: {results}")
-    for a in SecretShare._instances.values():
+    for a in secret_share._instances.values():
         a._task.cancel()
 
 

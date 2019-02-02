@@ -84,8 +84,8 @@ async def main_loop(w3):
     logging.info(f'players(6) {contract_instance.players(6)}')
     # logging.info(f'players(7) {contract_instance.players(7)}')
 
-    CommonSubset = common_subset_protocol(w3, contract_instance, 7, 2)
-    prots = [CommonSubset('sid', i) for i in range(5)]
+    common_subset = common_subset_protocol(w3, contract_instance, 7, 2)
+    prots = [common_subset('sid', i) for i in range(5)]
     outputs = [prot.output for prot in prots]
     for i, prot in enumerate(prots):
         prot.input.set_result(i+17)

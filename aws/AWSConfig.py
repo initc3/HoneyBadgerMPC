@@ -35,15 +35,15 @@ def read_environment_variable(key):
 class AwsConfig:
     config = json.load(open('./aws/aws-config.json'))
 
-    mpcConfig = config["mpc"]
+    mpc_config = config["mpc"]
     MPC_CONFIG = MPCConfig(
-        mpcConfig["command"],
-        mpcConfig["t"],
-        mpcConfig["k"],
-        mpcConfig["delta"],
-        mpcConfig["port"],
-        mpcConfig["num_triples"],
-        mpcConfig["n"]
+        mpc_config["command"],
+        mpc_config["t"],
+        mpc_config["k"],
+        mpc_config["delta"],
+        mpc_config["port"],
+        mpc_config["num_triples"],
+        mpc_config["n"]
     )
 
     awsconfig = config["aws"]

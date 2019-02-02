@@ -6,7 +6,7 @@ from aws.AWSConfig import AwsConfig
 
 
 class EC2Manager:
-    currentVMsFileName = "current.vms"
+    current_vms_file_name = "current.vms"
 
     def __init__(self):
         self.ec2Resources = {
@@ -30,27 +30,27 @@ class EC2Manager:
             return setup_file.read()
 
     def get_current_vm_instance_ids(self):
-        with open(EC2Manager.currentVMsFileName, "r") as file_handle:
+        with open(EC2Manager.current_vms_file_name, "r") as file_handle:
             data = file_handle.readlines()
         instance_ids = data[0].strip().split(",")
         return instance_ids
 
     def create_instances(self):
-        if os.path.isfile(EC2Manager.currentVMsFileName):
+        if os.path.isfile(EC2Manager.current_vms_file_name):
             print(">>> Picking up VMs from current.vms file. <<<")
             all_instance_ids = self.get_current_vm_instance_ids()
         else:
             print(">>> VM creation started. <<<")
             all_instance_ids = []
             region_instance_id_map = {}
-            for region, regionConfig in AwsConfig.REGION.items():
+            for region, region_config in AwsConfig.REGION.items():
                 ec2_resource = self.ec2Resources[region]
                 instances = ec2_resource.create_instances(
-                    ImageId=regionConfig.IMAGE_ID,
-                    MinCount=regionConfig.VM_COUNT,
-                    MaxCount=regionConfig.VM_COUNT,
-                    SecurityGroupIds=regionConfig.SECURITY_GROUP_IDS,
-                    KeyName=regionConfig.KEY_NAME,
+                    ImageId=region_config.IMAGE_ID,
+                    MinCount=region_config.VM_COUNT,
+                    MaxCount=region_config.VM_COUNT,
+                    SecurityGroupIds=region_config.SECURITY_GROUP_IDS,
+                    KeyName=region_config.KEY_NAME,
                     InstanceType=AwsConfig.INSTANCE_TYPE,
                     TagSpecifications=[
                         {
@@ -76,8 +76,8 @@ class EC2Manager:
 
             for region, ids in region_instance_id_map.items():
                 ec2_resource = self.ec2Resources[region]
-                for instanceId in ids:
-                    ec2_resource.Instance(id=instanceId).wait_until_running()
+                for instance_id in ids:
+                    ec2_resource.Instance(id=instance_id).wait_until_running()
 
                 ec2_client = boto3.client(
                     'ec2',
@@ -89,7 +89,7 @@ class EC2Manager:
                     InstanceIds=ids
                 )
 
-            with open(EC2Manager.currentVMsFileName, "w") as file_handle:
+            with open(EC2Manager.current_vms_file_name, "w") as file_handle:
                 file_handle.write(",".join(all_instance_ids))
             print(">>> VMs successfully booted up. <<<")
         all_instance_ips = [self.get_instance_public_ip(id) for id in all_instance_ids]
@@ -98,11 +98,11 @@ class EC2Manager:
 
     def terminate_instances_by_id(self):
         instance_ids = self.get_current_vm_instance_ids()
-        for instanceId in instance_ids:
-            ec2_resource = self.ec2Resources[self.instanceIdRegion[instanceId]]
-            ec2_resource.Instance(id=instanceId).terminate()
-        if os.path.isfile(EC2Manager.currentVMsFileName):
-            os.remove(EC2Manager.currentVMsFileName)
+        for instance_id in instance_ids:
+            ec2_resource = self.ec2Resources[self.instanceIdRegion[instance_id]]
+            ec2_resource.Instance(id=instance_id).terminate()
+        if os.path.isfile(EC2Manager.current_vms_file_name):
+            os.remove(EC2Manager.current_vms_file_name)
 
     def get_instance_public_ip(self, instance_id):
         ec2_resource = self.ec2Resources[self.instanceIdRegion[instance_id]]

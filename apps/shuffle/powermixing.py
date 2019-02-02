@@ -152,9 +152,9 @@ async def async_mixing(a_s, n, t, k):
     await pr1.join()
     pr2 = TaskProgramRunner(n, t)
     pr2.add(phase3, k=k, run_id=run_id)
-    powerSums = (await pr2.join())[0]
+    power_sums = (await pr2.join())[0]
     logging.info("Shares from C++ phase opened.")
-    result = solve([s.value for s in powerSums])
+    result = solve([s.value for s in power_sums])
     logging.info("Equation solver completed.")
     return result
 
@@ -190,16 +190,16 @@ async def async_mixing_in_processes(
     from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.task_pool import TaskPool
 
-    programRunner = ProcessProgramRunner(network_info, n, t, node_id)
-    await programRunner.start()
-    programRunner.add(
+    program_runner = ProcessProgramRunner(network_info, n, t, node_id)
+    await program_runner.start()
+    program_runner.add(
         0,
         all_secrets_phase1,
         k=k,
         power_ids=power_ids,
         share_ids=share_ids
     )
-    await programRunner.join()
+    await program_runner.join()
 
     pool = TaskPool(256)
     stime = time()
@@ -208,13 +208,13 @@ async def async_mixing_in_processes(
     await pool.close()
     bench_logger.info(f"[Phase2] Execute CPP code for all secrets: {time() - stime}")
 
-    programRunner.add(1, phase3, k=k, run_id=run_id)
-    powerSums = (await programRunner.join())[0]
-    await programRunner.close()
+    program_runner.add(1, phase3, k=k, run_id=run_id)
+    power_sums = (await program_runner.join())[0]
+    await program_runner.close()
 
     logging.info("Shares from C++ phase opened.")
     stime = time()
-    result = solve([s.value for s in powerSums])
+    result = solve([s.value for s in power_sums])
     bench_logger.info(f"[SolverPhase] Run Newton Solver: {time() - stime}")
     logging.info("Equation solver completed.")
     logging.debug(result)

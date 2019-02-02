@@ -18,12 +18,12 @@ async def progtest(n, myid, send, recv):
 
 @mark.asyncio
 async def test_simple_router(simple_router):
-    N = 10
-    sends, recvs = simple_router(N)
+    n = 10
+    sends, recvs = simple_router(n)
     towait = []
-    for i in range(N):
-        towait.append(progtest(N, i, sends[i], recvs[i]))
+    for i in range(n):
+        towait.append(progtest(n, i, sends[i], recvs[i]))
     done, pending = await asyncio.wait(towait)
     assert not pending
-    assert len(done) == N
+    assert len(done) == n
     assert all([(i, f'hi from {i}') in task.result() for task in done])

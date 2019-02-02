@@ -6,10 +6,10 @@ async def test_open_shares():
     from honeybadgermpc.mpc import TaskProgramRunner
     from honeybadgermpc.preprocessing import PreProcessedElements
 
-    N, t = 3, 1
+    n, t = 3, 1
     number_of_secrets = 100
     pp_elements = PreProcessedElements()
-    pp_elements.generate_zeros(100, N, t)
+    pp_elements.generate_zeros(100, n, t)
 
     async def _prog(context):
         secrets = []
@@ -20,10 +20,10 @@ async def test_open_shares():
         print('[%d] Finished' % (context.myid,))
         return secrets
 
-    programRunner = TaskProgramRunner(N, t)
-    programRunner.add(_prog)
-    results = await programRunner.join()
-    assert len(results) == N
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    results = await program_runner.join()
+    assert len(results) == n
     assert all(len(secrets) == number_of_secrets for secrets in results)
     assert all(secret == 0 for secrets in results for secret in secrets)
 
@@ -33,11 +33,11 @@ async def test_beaver_mul_with_zeros():
     from honeybadgermpc.mpc import TaskProgramRunner
     from honeybadgermpc.mpc import PreProcessedElements
 
-    N, t = 3, 1
+    n, t = 3, 1
     x_secret, y_secret = 10, 15
     pp_elements = PreProcessedElements()
-    pp_elements.generate_zeros(2, N, t)
-    pp_elements.generate_triples(1, N, t)
+    pp_elements.generate_zeros(2, n, t)
+    pp_elements.generate_triples(1, n, t)
 
     async def _prog(context):
         # Example of Beaver multiplication
@@ -47,22 +47,22 @@ async def test_beaver_mul_with_zeros():
         a, b, ab = pp_elements.get_triple(context)
         assert await a.open() * await b.open() == await ab.open()
 
-        D = (x - a).open()
-        E = (y - b).open()
+        d = (x - a).open()
+        e = (y - b).open()
 
         # This is a random share of x*y
-        xy = D*E + D*b + E*a + ab
+        xy = d*e + d*b + e*a + ab
 
-        X, Y, XY = await x.open(), await y.open(), await xy.open()
-        assert X * Y == XY
+        x_, y_, xy_ = await x.open(), await y.open(), await xy.open()
+        assert x_ * y_ == xy_
 
-        print("[%d] Finished" % (context.myid,), X, Y, XY)
-        return XY
+        print("[%d] Finished" % (context.myid,), x_, y_, xy_)
+        return xy_
 
-    programRunner = TaskProgramRunner(N, t)
-    programRunner.add(_prog)
-    results = await programRunner.join()
-    assert len(results) == N
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    results = await program_runner.join()
+    assert len(results) == n
     assert all(res == x_secret * y_secret for res in results)
 
 
@@ -71,10 +71,10 @@ async def test_beaver_mul():
     from honeybadgermpc.mpc import TaskProgramRunner
     from honeybadgermpc.preprocessing import PreProcessedElements
 
-    N, t = 3, 1
+    n, t = 3, 1
     pp_elements = PreProcessedElements()
-    pp_elements.generate_rands(2, N, t)
-    pp_elements.generate_triples(1, N, t)
+    pp_elements.generate_rands(2, n, t)
+    pp_elements.generate_triples(1, n, t)
 
     async def _prog(context):
         # Example of Beaver multiplication
@@ -83,19 +83,19 @@ async def test_beaver_mul():
         a, b, ab = pp_elements.get_triple(context)
         assert await a.open() * await b.open() == await ab.open()
 
-        D = (x - a).open()
-        E = (y - b).open()
+        d = (x - a).open()
+        e = (y - b).open()
 
         # This is a random share of x*y
-        xy = D*E + D*b + E*a + ab
+        xy = d*e + d*b + e*a + ab
 
-        X, Y, XY = await x.open(), await y.open(), await xy.open()
-        assert X * Y == XY
+        x_, y_, xy_ = await x.open(), await y.open(), await xy.open()
+        assert x_ * y_ == xy_
 
-        print("[%d] Finished" % (context.myid,), X, Y, XY)
-        return XY
+        print("[%d] Finished" % (context.myid,), x_, y_, xy_)
+        return xy_
 
-    programRunner = TaskProgramRunner(N, t)
-    programRunner.add(_prog)
-    results = await programRunner.join()
-    assert len(results) == N
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    results = await program_runner.join()
+    assert len(results) == n
