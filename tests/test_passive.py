@@ -2,19 +2,18 @@ from pytest import mark
 
 
 @mark.asyncio
-async def test_open_shares():
+@mark.usefixtures('test_preprocessing')
+async def test_open_shares(test_preprocessing):
     from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.preprocessing import PreProcessedElements
 
     n, t = 3, 1
     number_of_secrets = 100
-    pp_elements = PreProcessedElements()
-    pp_elements.generate_zeros(100, n, t)
+    test_preprocessing.generate("zeros", n, t)
 
     async def _prog(context):
         secrets = []
         for _ in range(number_of_secrets):
-            s = await pp_elements.get_zero(context).open()
+            s = await test_preprocessing.elements.get_zero(context).open()
             assert s == 0
             secrets.append(s)
         print('[%d] Finished' % (context.myid,))
@@ -29,22 +28,21 @@ async def test_open_shares():
 
 
 @mark.asyncio
-async def test_beaver_mul_with_zeros():
+@mark.usefixtures('test_preprocessing')
+async def test_beaver_mul_with_zeros(test_preprocessing):
     from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.mpc import PreProcessedElements
 
     n, t = 3, 1
     x_secret, y_secret = 10, 15
-    pp_elements = PreProcessedElements()
-    pp_elements.generate_zeros(2, n, t)
-    pp_elements.generate_triples(1, n, t)
+    test_preprocessing.generate("zeros", n, t)
+    test_preprocessing.generate("triples", n, t)
 
     async def _prog(context):
         # Example of Beaver multiplication
-        x = pp_elements.get_zero(context) + context.Share(x_secret)
-        y = pp_elements.get_zero(context) + context.Share(y_secret)
+        x = test_preprocessing.elements.get_zero(context) + context.Share(x_secret)
+        y = test_preprocessing.elements.get_zero(context) + context.Share(y_secret)
 
-        a, b, ab = pp_elements.get_triple(context)
+        a, b, ab = test_preprocessing.elements.get_triple(context)
         assert await a.open() * await b.open() == await ab.open()
 
         d = (x - a).open()
@@ -67,20 +65,20 @@ async def test_beaver_mul_with_zeros():
 
 
 @mark.asyncio
-async def test_beaver_mul():
+@mark.usefixtures('test_preprocessing')
+async def test_beaver_mul(test_preprocessing):
     from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.preprocessing import PreProcessedElements
 
     n, t = 3, 1
-    pp_elements = PreProcessedElements()
-    pp_elements.generate_rands(2, n, t)
-    pp_elements.generate_triples(1, n, t)
+    test_preprocessing.generate("triples", n, t)
+    test_preprocessing.generate("rands", n, t)
 
     async def _prog(context):
         # Example of Beaver multiplication
-        x, y = pp_elements.get_rand(context), pp_elements.get_rand(context)
+        x = test_preprocessing.elements.get_rand(context)
+        y = test_preprocessing.elements.get_rand(context)
 
-        a, b, ab = pp_elements.get_triple(context)
+        a, b, ab = test_preprocessing.elements.get_triple(context)
         assert await a.open() * await b.open() == await ab.open()
 
         d = (x - a).open()

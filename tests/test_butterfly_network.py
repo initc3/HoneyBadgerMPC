@@ -1,23 +1,20 @@
 from pytest import mark
-from math import log
 
 
 @mark.asyncio
-async def test_butterfly_network(sharedatadir):
+@mark.usefixtures('test_preprocessing')
+async def test_butterfly_network(test_preprocessing):
     import apps.shuffle.butterfly_network as butterfly
     from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.preprocessing import PreProcessedElements
 
     n, t, k, delta = 3, 1, 32, -9999
-    num_switches = k*int(log(k, 2))**2
-    pp_elements = PreProcessedElements()
-    pp_elements.generate_rands(1000, n, t)
-    pp_elements.generate_one_minus_one_rands(num_switches, n, t)
-    pp_elements.generate_triples(2*num_switches, n, t)
+    test_preprocessing.generate("rands", n, t)
+    test_preprocessing.generate("oneminusone", n, t)
+    test_preprocessing.generate("triples", n, t)
 
     async def verify_output(ctx, **kwargs):
         k, delta = kwargs['k'], kwargs['delta']
-        inputs = [pp_elements.get_rand(ctx) for _ in range(k)]
+        inputs = [test_preprocessing.elements.get_rand(ctx) for _ in range(k)]
         sorted_input = sorted(await ctx.ShareArray(inputs).open(), key=lambda x: x.value)
 
         share_arr = await butterfly.butterfly_network_helper(ctx, k=k, delta=delta)

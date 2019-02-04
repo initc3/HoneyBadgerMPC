@@ -3,20 +3,20 @@ import asyncio
 
 
 @mark.asyncio
-async def test_triple_refinement(triples_files_prefix):
+@mark.usefixtures('test_preprocessing')
+async def test_triple_refinement(test_preprocessing):
     from honeybadgermpc.mpc import TaskProgramRunner
     from honeybadgermpc.triple_refinement import refine_triples
-    from honeybadgermpc.preprocessing import PreProcessedElements
 
     n, t = 7, 2
-    pp_elements = PreProcessedElements()
-    pp_elements.generate_triples(n, n, t)
+
+    test_preprocessing.generate("triples", n, t)
 
     async def _prog(context):
         _a, _b, _c = [], [], []
         # Every party needs its share of all the `N` triples' shares
-        for _ in range(0, 3 * context.N, 3):
-            p, q, pq = pp_elements.get_triple(context)
+        for _ in range(context.N):
+            p, q, pq = test_preprocessing.elements.get_triple(context)
             _a.append(p.v), _b.append(q.v), _c.append(pq.v)
         a, b, ab = await refine_triples(context, _a, _b, _c)
         p = await asyncio.gather(*map(lambda x: x.open(), a))
