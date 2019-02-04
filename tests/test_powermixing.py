@@ -3,20 +3,20 @@ from pytest import mark
 
 
 @mark.asyncio
-async def test_phase1():
+@mark.usefixtures('test_preprocessing')
+async def test_phase1(test_preprocessing):
     from honeybadgermpc.mpc import TaskProgramRunner, Field
-    from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
+    from honeybadgermpc.preprocessing import PreProcessingConstants
     import apps.shuffle.powermixing as pm
 
     a = Field(random.randint(0, Field.modulus-1))
     n, t, k = 5, 2, 32
-    pp_elements = PreProcessedElements()
-    power_id = pp_elements.generate_powers(k, n, t)
-    share_id = pp_elements.generate_share(a, n, t)
+    power_id = test_preprocessing.generate("powers", n, t, k)
+    share_id = test_preprocessing.generate("share", n, t, a)
 
     async def verify_phase1(context, **kwargs):
         a_, k_ = kwargs['a'], kwargs['k']
-        b_ = await pp_elements.get_powers(context, power_id)[0].open()
+        b_ = await test_preprocessing.elements.get_powers(context, power_id)[0].open()
         await pm.single_secret_phase1(
             context,
             k=k,

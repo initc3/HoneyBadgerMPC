@@ -1,74 +1,20 @@
 import asyncio
-import os
 import random
 
 from pytest import fixture
 
 
 @fixture
-def sharedatadir():
-    os.makedirs('sharedata', exist_ok=True)
-
-
-@fixture
-def sharedata_tmpdir(tmpdir):
-    return tmpdir.mkdir('sharedata')
-
-
-@fixture
-def zeros_files_prefix(sharedata_tmpdir):
-    return os.path.join(sharedata_tmpdir, 'test_zeros')
-
-
-@fixture
-def random_files_prefix(sharedata_tmpdir):
-    return os.path.join(sharedata_tmpdir, 'test_random')
-
-
-@fixture
-def triples_files_prefix(sharedata_tmpdir):
-    return os.path.join(sharedata_tmpdir, 'test_triples')
-
-
-@fixture
-# TODO check whether there could be a better name for this fixture,
-# e.g.: bls12_381_field?
 def galois_field():
     from honeybadgermpc.field import GF
-    return GF.get(0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001)
+    from honeybadgermpc.elliptic_curve import Subgroup
+    return GF.get(Subgroup.BLS12_381)
 
 
 @fixture
 def polynomial(galois_field):
     from honeybadgermpc.polynomial import polynomials_over
     return polynomials_over(galois_field)
-
-
-@fixture(params=({'k': 1000, 't': 1},))
-def zero_polys(request, polynomial):
-    k = request.param['k']
-    t = request.param['t']
-    return [polynomial.random(t, 0) for _ in range(k)]
-
-
-@fixture(params=({'k': 1000, 't': 1},))
-def random_polys(request, galois_field, polynomial):
-    k = request.param['k']
-    t = request.param['t']
-    return [polynomial.random(t, random.randint(0, galois_field.modulus-1))
-            for _ in range(k)]
-
-
-@fixture(params=(1000,))
-def triples_fields(request, galois_field, polynomial):
-    k = request.param
-    fields_batch = []
-    for _ in range(k):
-        a = galois_field(random.randint(0, galois_field.modulus-1))
-        b = galois_field(random.randint(0, galois_field.modulus-1))
-        c = a*b
-        fields_batch.append((a, b, c))
-    return fields_batch
 
 
 @fixture(params=(1,))
@@ -79,29 +25,37 @@ def triples_polys(request, triples_fields, polynomial):
     ]
 
 
-@fixture(params=({'N': 3, 't': 1},))
-def zeros_shares_files(request, galois_field, zero_polys, zeros_files_prefix):
-    from honeybadgermpc.mpc import write_polys
-    n = request.param['N']
-    t = request.param['t']
-    write_polys(zeros_files_prefix, galois_field.modulus, n, t, zero_polys)
+class TestPreProcessing():
+    def __init__(self):
+        from honeybadgermpc.preprocessing import PreProcessedElements
+        self.cache = {}
+        self.elements = PreProcessedElements()
+
+    def generate(self, kind, n, t, arg=None):
+        if kind in ["zeros", "triples", "rands", "oneminusone"]:
+            if (kind, n, t) in self.cache:
+                return
+            self.cache[(kind, n, t)] = True
+            if kind == "zeros":
+                self.elements.generate_zeros(1000, n, t)
+            elif kind == "triples":
+                self.elements.generate_triples(1000, n, t)
+            elif kind == "rands":
+                self.elements.generate_rands(1000, n, t)
+            elif kind == "oneminusone":
+                self.elements.generate_one_minus_one_rands(1000, n, t)
+        elif kind == "powers":
+            if (kind, n, t) not in self.cache:
+                power_id = self.elements.generate_powers(arg, n, t)
+                self.cache[(kind, n, t)] = power_id
+            return self.cache[(kind, n, t)]
+        elif kind == "share":
+            return self.elements.generate_share(arg, n, t)
 
 
-@fixture(params=({'N': 3, 't': 1},))
-def random_shares_files(request, galois_field, random_polys, random_files_prefix):
-    from honeybadgermpc.mpc import write_polys
-    n = request.param['N']
-    t = request.param['t']
-    write_polys(random_files_prefix, galois_field.modulus, n, t, random_polys)
-
-
-@fixture(params=({'N': 3, 't': 1},))
-def triples_shares_files(request, galois_field, triples_polys, triples_files_prefix):
-    from honeybadgermpc.mpc import write_polys
-    n = request.param['N']
-    t = request.param['t']
-    write_polys(
-        triples_files_prefix, galois_field.modulus, n, t, triples_polys)
+@fixture(scope="session")
+def test_preprocessing():
+    return TestPreProcessing()
 
 
 @fixture
