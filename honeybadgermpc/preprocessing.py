@@ -53,7 +53,7 @@ class PreProcessedElements(object):
     def _write_polys(self, file_name_prefix, n, t, polys):
         for i in range(n):
             shares = [f(i+1) for f in polys]
-            with open('%s-%d.share' % (file_name_prefix, i), 'w') as f:
+            with open('%s_%d_%d-%d.share' % (file_name_prefix, n, t, i), 'w') as f:
                 self._write_shares_to_file(f, t, i, shares)
 
     def _create_sharedata_dir_if_not_exists(self):
@@ -105,44 +105,50 @@ class PreProcessedElements(object):
         return sid
 
     def get_triple(self, ctx):
-        if ctx.myid not in self._triples:
-            file_suffix = f"-{ctx.myid}.share"
+        key = (ctx.myid, ctx.N, ctx.t)
+        if key not in self._triples:
+            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
             file_path = f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}{file_suffix}"
-            self._triples[ctx.myid] = iter(self._read_share_values_from_file(file_path))
-        a = ctx.Share(next(self._triples[ctx.myid]))
-        b = ctx.Share(next(self._triples[ctx.myid]))
-        ab = ctx.Share(next(self._triples[ctx.myid]))
+            self._triples[key] = iter(self._read_share_values_from_file(file_path))
+        a = ctx.Share(next(self._triples[key]))
+        b = ctx.Share(next(self._triples[key]))
+        ab = ctx.Share(next(self._triples[key]))
         return a, b, ab
 
     def get_zero(self, ctx):
-        if ctx.myid not in self._zeros:
-            file_suffix = f"-{ctx.myid}.share"
+        key = (ctx.myid, ctx.N, ctx.t)
+        if key not in self._zeros:
+            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
             file_path = f"{PreProcessingConstants.ZEROS_FILE_NAME_PREFIX}{file_suffix}"
-            self._zeros[ctx.myid] = iter(self._read_share_values_from_file(file_path))
-        return ctx.Share(next(self._zeros[ctx.myid]))
+            self._zeros[key] = iter(self._read_share_values_from_file(file_path))
+        return ctx.Share(next(self._zeros[key]))
 
     def get_rand(self, ctx):
-        if ctx.myid not in self._rands:
-            file_suffix = f"-{ctx.myid}.share"
+        key = (ctx.myid, ctx.N, ctx.t)
+        if key not in self._rands:
+            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
             file_path = f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}{file_suffix}"
-            self._rands[ctx.myid] = iter(self._read_share_values_from_file(file_path))
-        return ctx.Share(next(self._rands[ctx.myid]))
+            self._rands[key] = iter(self._read_share_values_from_file(file_path))
+        return ctx.Share(next(self._rands[key]))
 
     def get_one_minus_one_rand(self, ctx):
-        file_suffix = f"-{ctx.myid}.share"
+        file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
         fpath = f"{PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX}{file_suffix}"
-        if ctx.myid not in self._one_minus_one_rands:
-            self._one_minus_one_rands[ctx.myid] = iter(
+        key = (ctx.myid, ctx.N, ctx.t)
+        if key not in self._one_minus_one_rands:
+            self._one_minus_one_rands[key] = iter(
                 self._read_share_values_from_file(fpath))
-        return ctx.Share(next(self._one_minus_one_rands[ctx.myid]))
+        return ctx.Share(next(self._one_minus_one_rands[key]))
 
     def get_powers(self, ctx, pid):
+        file_suffix = f"_{pid}_{ctx.N}_{ctx.t}-{ctx.myid}.share"
         return list(map(ctx.Share, self._read_share_values_from_file(
-            f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{pid}-{ctx.myid}.share")))
+            f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}{file_suffix}")))
 
     def get_share(self, ctx, sid):
+        file_suffix = f"_{sid}_{ctx.N}_{ctx.t}-{ctx.myid}.share"
         share_values = self._read_share_values_from_file(
-            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}_{sid}-{ctx.myid}.share")
+            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}{file_suffix}")
         return ctx.Share(share_values[0])
 
 
