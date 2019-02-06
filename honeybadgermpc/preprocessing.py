@@ -17,6 +17,7 @@ class PreProcessingConstants(object):
     POWERS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}powers"
     SHARES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}specific_share"
     ONE_MINUS_ONE_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}one_minus_one"
+    DOUBLE_SHARES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}double_shares"
     READY_FILE_NAME = f"{SHARED_DATA_DIR}READY"
 
 
@@ -28,6 +29,7 @@ class PreProcessedElements(object):
         self._zeros = {}
         self._rands = {}
         self._one_minus_one_rands = {}
+        self._double_shares = {}
 
     def _read_share_values_from_file(self, file_name):
         with open(file_name, "r") as f:
@@ -96,6 +98,16 @@ class PreProcessedElements(object):
             f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{pid}", n, t, polys)
         return pid
 
+    def generate_double_shares(self, k, n, t):
+        self._create_sharedata_dir_if_not_exists()
+        polys = []
+        for _ in range(k):
+            r = self.field(randint(0, self.field.modulus-1))
+            polys.append(self.poly.random(t, r))
+            polys.append(self.poly.random(2*t, r))
+        self._write_polys(
+            PreProcessingConstants.DOUBLE_SHARES_FILE_NAME_PREFIX, n, t, polys)
+
     def generate_share(self, x, n, t):
         self._create_sharedata_dir_if_not_exists()
         sid = uuid4().hex
@@ -152,6 +164,16 @@ class PreProcessedElements(object):
         share_values = self._read_share_values_from_file(
             f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}{file_suffix}")
         return ctx.Share(share_values[0], t)
+
+    def get_double_share(self, ctx):
+        key = (ctx.myid, ctx.N, ctx.t)
+        if key not in self._double_shares:
+            suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
+            path = f"{PreProcessingConstants.DOUBLE_SHARES_FILE_NAME_PREFIX}{suffix}"
+            self._double_shares[key] = iter(self._read_share_values_from_file(path))
+        r_t = ctx.Share(next(self._double_shares[key]))
+        r_2t = ctx.Share(next(self._double_shares[key]), 2*ctx.t)
+        return r_t, r_2t
 
 
 async def wait_for_preprocessing():

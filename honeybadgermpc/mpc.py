@@ -1,15 +1,16 @@
 import asyncio
 import logging
 from collections import defaultdict
-
+from .polynomial import polynomials_over
 from .field import GF, GFElement
-from .polynomial import polynomials_over, EvalPoint
+from .polynomial import EvalPoint
 from .router import simple_router
 from .program_runner import ProgramRunner
 from .robust_reconstruction import robust_reconstruct
 from .batch_reconstruction import batch_reconstruct
 from .elliptic_curve import Subgroup
 from .preprocessing import PreProcessedElements
+from .mixins import MixinOpName
 
 
 class NotEnoughShares(Exception):
@@ -22,7 +23,7 @@ class BatchReconstructionFailed(Exception):
 
 class Mpc(object):
 
-    def __init__(self, sid, n, t, myid, pid, send, recv, prog, **prog_args):
+    def __init__(self, sid, n, t, myid, pid, send, recv, prog, mixin_ops, **prog_args):
         # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(n) is int and type(t) is int
@@ -32,6 +33,9 @@ class Mpc(object):
         self.t = t
         self.myid = myid
         self.pid = pid
+        self.field = GF.get(Subgroup.BLS12_381)
+        self.poly = polynomials_over(self.field)
+        self.mixin_ops = mixin_ops
 
         # send(j, o): sends object o to party j with (current sid)
         # recv(): returns (j, o) from party j
@@ -73,12 +77,12 @@ class Mpc(object):
         # Set up the buffer of received shares
         share_buffer = [self._share_buffers[i][shareid] for i in range(self.N)]
 
-        point = EvalPoint(Field, self.N, use_fft=False)
+        point = EvalPoint(self.field, self.N, use_fft=False)
         opening = robust_reconstruct(
-            share_buffer, Field, self.N, t, point)
+            share_buffer, self.field, self.N, t, point)
         self._openings[shareid] = opening
         p, _ = await opening
-        return p(Field(0))
+        return p(self.field(0))
 
     def open_share_array(self, sharearray):
         # Choose the shareid based on the order this is called
@@ -89,7 +93,7 @@ class Mpc(object):
             self.send(j, (tag, shareid, share))
         _recv = self._sharearray_buffers[shareid].get
         opening = batch_reconstruct([s.v for s in sharearray._shares],
-                                    Field.modulus, self.t, self.N,
+                                    self.field.modulus, self.t, self.N,
                                     self.myid, _send, _recv, debug=True)
         self._openings[shareid] = opening
         return opening
@@ -177,10 +181,10 @@ def share_in_context(context):
         def __init__(self, v, t=None):
             # v is the local value of the share
             if type(v) is int:
-                v = Field(v)
+                v = context.field(v)
             assert type(v) is GFElement
             self.v = v
-            self.t = t
+            self.t = context.t if t is None else t
 
         # Publicly reconstruct a shared value
         def open(self):
@@ -197,21 +201,31 @@ def share_in_context(context):
         # @typecheck(Share)
         def __add__(self, other):
             if isinstance(other, GFElement):
-                return Share(self.v + other)
+                return Share(self.v + other, self.t)
             elif isinstance(other, Share):
-                return Share(self.v + other.v)
+                assert self.t == other.t
+                return Share(self.v + other.v, self.t)
 
-        def __sub__(self, other): return Share(self.v - other.v)
+        def __sub__(self, other):
+            assert self.t == other.t
+            return Share(self.v - other.v, self.t)
         __radd__ = __add__
 
-        def __rsub__(self, other): return Share(-self.v + other.v)
+        def __rsub__(self, other):
+            assert self.t == other.t
+            return Share(-self.v + other.v, self.t)
 
         # @typecheck(int,field)
-        def __rmul__(self, other): return Share(self.v * other)
+        def __rmul__(self, other): return Share(self.v * other, self.t)
 
-        # @typecheck(Share)
         # TODO
-        def __mul__(self, other): raise NotImplementedError
+        def __mul__(self, other):
+            assert type(other) is Share
+            assert self.t == other.t
+            if MixinOpName.Mul in context.mixin_ops:
+                return context.mixin_ops[MixinOpName.Mul](context, self, other)
+            else:
+                raise NotImplementedError
 
         def __str__(self): return '{%d}' % (self.v)
 
@@ -272,8 +286,9 @@ def share_in_context(context):
 
 
 class TaskProgramRunner(ProgramRunner):
-    def __init__(self, n, t):
+    def __init__(self, n, t, mixin_ops={}):
         self.N, self.t, self.pid = n, t, 0
+        self.mixin_ops = mixin_ops
         self.tasks = []
         self.loop = asyncio.get_event_loop()
 
@@ -281,18 +296,22 @@ class TaskProgramRunner(ProgramRunner):
         sends, recvs = simple_router(self.N)
         for i in range(self.N):
             context = Mpc(
-                'sid', self.N, self.t, i, self.pid, sends[i], recvs[i], program, **kwargs
+                'sid',
+                self.N,
+                self.t,
+                i,
+                self.pid,
+                sends[i],
+                recvs[i],
+                program,
+                self.mixin_ops,
+                **kwargs,
             )
             self.tasks.append(self.loop.create_task(context._run()))
         self.pid += 1
 
     async def join(self):
         return await asyncio.gather(*self.tasks)
-
-
-# Fix the field for now
-Field = GF.get(Subgroup.BLS12_381)
-Poly = polynomials_over(Field)
 
 
 ###############

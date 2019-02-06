@@ -3,7 +3,6 @@ from honeybadgermpc.mpc import TaskProgramRunner
 
 
 @mark.asyncio
-@mark.usefixtures('test_preprocessing')
 async def test_get_triple(test_preprocessing):
     n, t = 4, 1
     num_triples = 2
@@ -21,7 +20,6 @@ async def test_get_triple(test_preprocessing):
 
 
 @mark.asyncio
-@mark.usefixtures('test_preprocessing')
 async def test_get_zero(test_preprocessing):
     n, t = 4, 1
     num_zeros = 2
@@ -38,7 +36,6 @@ async def test_get_zero(test_preprocessing):
 
 
 @mark.asyncio
-@mark.usefixtures('test_preprocessing')
 async def test_get_rand(test_preprocessing):
     n, t = 4, 1
     num_rands = 2
@@ -56,7 +53,6 @@ async def test_get_rand(test_preprocessing):
 
 
 @mark.asyncio
-@mark.usefixtures('test_preprocessing')
 async def test_get_powers(test_preprocessing):
     n, t = 4, 1
     num_powers = 3
@@ -76,7 +72,6 @@ async def test_get_powers(test_preprocessing):
 
 
 @mark.asyncio
-@mark.usefixtures('test_preprocessing')
 async def test_get_share(test_preprocessing):
     n, t = 4, 1
     x = 41
@@ -85,6 +80,24 @@ async def test_get_share(test_preprocessing):
     async def _prog(ctx):
         x_sh = test_preprocessing.elements.get_share(ctx, sid)
         assert await x_sh.open() == x
+
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    await program_runner.join()
+
+
+@mark.asyncio
+async def test_get_double_share(test_preprocessing):
+    n, t = 9, 2
+    test_preprocessing.generate("double_shares", n, t)
+
+    async def _prog(ctx):
+        r_t_sh, r_2t_sh = test_preprocessing.elements.get_double_share(ctx)
+        assert r_t_sh.t == ctx.t
+        assert r_2t_sh.t == ctx.t*2
+        await r_t_sh.open()
+        await r_2t_sh.open()
+        assert await r_t_sh.open() == await r_2t_sh.open()
 
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(_prog)

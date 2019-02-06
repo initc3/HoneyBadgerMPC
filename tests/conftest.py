@@ -32,7 +32,7 @@ class TestPreProcessing():
         self.elements = PreProcessedElements()
 
     def generate(self, kind, n, t, arg=None):
-        if kind in ["zeros", "triples", "rands", "oneminusone"]:
+        if kind in ["zeros", "triples", "rands", "oneminusone", "double_shares"]:
             if (kind, n, t) in self.cache:
                 return
             self.cache[(kind, n, t)] = True
@@ -44,6 +44,8 @@ class TestPreProcessing():
                 self.elements.generate_rands(1000, n, t)
             elif kind == "oneminusone":
                 self.elements.generate_one_minus_one_rands(1000, n, t)
+            elif kind == "double_shares":
+                self.elements.generate_double_shares(1000, n, t)
         elif kind == "powers":
             if (kind, n, t) not in self.cache:
                 power_id = self.elements.generate_powers(arg, n, t)

@@ -4,7 +4,9 @@ import uuid
 import os
 import glob
 from time import time
-from honeybadgermpc.mpc import TaskProgramRunner, Field
+from honeybadgermpc.mpc import TaskProgramRunner
+from honeybadgermpc.field import GF
+from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
 from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_done
 import logging
@@ -23,7 +25,7 @@ async def single_secret_phase1(context, **kwargs):
     file_name = f"{share_id}-{context.myid}.input"
     file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
     with open(file_path, "w") as f:
-        print(Field.modulus, file=f)
+        print(context.field.modulus, file=f)
         print(a.v.value, file=f)
         print(a_minus_b.value, file=f)
         print(k, file=f)
@@ -57,7 +59,7 @@ async def all_secrets_phase1(context, **kwargs):
         file_name = f"{share_ids[i]}-{context.myid}.input"
         file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
         with open(file_path, "w") as f:
-            print(Field.modulus, file=f)
+            print(context.field.modulus, file=f)
             print(as_[i].v.value, file=f)
             print(opened_shares[i].value, file=f)
             print(k, file=f)
@@ -120,7 +122,7 @@ async def phase3(context, **kwargs):
 
     stime = time()
     with open(sum_file_path, "r") as f:
-        assert Field.modulus == int(f.readline())
+        assert context.field.modulus == int(f.readline())
         assert k == int(f.readline())
         sum_shares = [context.Share(int(s)) for s in f.read().splitlines()[:k]]
         assert len(sum_shares) == k
@@ -171,8 +173,10 @@ def async_mixing_in_tasks():
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
+    field = GF.get(Subgroup.BLS12_381)
     n, t, k = 3, 1, 2
-    a_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
+
+    a_s = [field(random.randint(0, field.modulus-1)) for _ in range(k)]
     try:
         loop.run_until_complete(build_newton_solver())
         logging.info("Solver built.")
@@ -289,7 +293,8 @@ if __name__ == "__main__":
             # Need to keep these fixed when running on processes.
             k = config_dict['k']
             assert k < 1000
-            a_s = [Field(i) for i in range(1000+k, 1000, -1)]
+            field = GF.get(Subgroup.BLS12_381)
+            a_s = [field(i) for i in range(1000+k, 1000, -1)]
 
             file_name = f"{PreProcessingConstants.SHARED_DATA_DIR}shared.state"
 

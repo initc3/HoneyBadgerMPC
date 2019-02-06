@@ -2,7 +2,7 @@ import os
 import asyncio
 import logging
 from math import log
-from honeybadgermpc.mpc import Field, TaskProgramRunner
+from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
 from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_done
 from time import time
@@ -22,7 +22,7 @@ async def batch_beaver(ctx, xs, ys, as_, bs_, abs_):
 
 
 async def batch_switch(ctx, xs, ys, sbits, as_, bs_, abs_, n):
-    ns = [1 / Field(2) for _ in range(n)]
+    ns = [1 / ctx.field(2) for _ in range(n)]
 
     def to_share_array(arr):
         return ctx.ShareArray(list(map(ctx.Share, arr)))
