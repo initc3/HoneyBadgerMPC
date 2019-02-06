@@ -2,7 +2,6 @@ from pytest import mark
 
 
 @mark.asyncio
-@mark.usefixtures('test_preprocessing')
 async def test_butterfly_network(test_preprocessing):
     import apps.shuffle.butterfly_network as butterfly
     from honeybadgermpc.mpc import TaskProgramRunner

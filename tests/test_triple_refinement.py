@@ -3,7 +3,6 @@ import asyncio
 
 
 @mark.asyncio
-@mark.usefixtures('test_preprocessing')
 async def test_triple_refinement(test_preprocessing):
     from honeybadgermpc.mpc import TaskProgramRunner
     from honeybadgermpc.triple_refinement import refine_triples
