@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from honeybadgermpc.mpc import PreProcessedElements, Subgroup, TaskProgramRunner
 import logging
 import asyncio
@@ -6,17 +5,6 @@ from honeybadgermpc.field import GF
 from honeybadgermpc.mixins import BeaverTriple, MixinOpName
 SECURITY_PARAMETER = 32
 
-=======
-from honeybadgermpc.mpc import *
-# from honeybadgermpc.mpc import Mpc, generate_test_zeros, generate_test_randoms, generate_test_triples, TaskProgramRunner
-import logging
-import asyncio
-
-# zeros_files_prefix = 'sharedata/test_zeros'
-# triples_files_prefix = 'sharedata/test_triples'
-# random_files_prefix = 'sharedata/test_random'
-# bits_files_prefix = 'sharedata/test_bits'
->>>>>>> 57aa07f... seperate equality from mpc.py
 
 async def equality(context, p_share, q_share):
 
@@ -35,16 +23,8 @@ async def equality(context, p_share, q_share):
         return 0
 
     diff_a = p_share - q_share
-<<<<<<< HEAD
     k = SECURITY_PARAMETER
     field = GF(Subgroup.BLS12_381)
-=======
-    k = security_parameter = 32
-
-    def mul(x, y):
-        a, b, ab = context.get_triple()
-        return beaver_mult(context, x, y, a, b, ab)
->>>>>>> 57aa07f... seperate equality from mpc.py
 
     async def _gen_test_bit():
 
@@ -96,7 +76,6 @@ async def test_equality(context):
     pp_elements = PreProcessedElements()
     p = pp_elements.get_zero(context) + context.Share(2333)
     q = pp_elements.get_zero(context) + context.Share(2333)
-
     # result, count_comm = await equality(context, p, q)
     result = await equality(context, p, q)
 
