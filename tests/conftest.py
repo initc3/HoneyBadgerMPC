@@ -31,6 +31,12 @@ class TestPreProcessing():
         self.cache = {}
         self.elements = PreProcessedElements()
 
+        # Uncomment to disable logging for tests.
+
+        # import logging
+        # import sys
+        # logging.disable(sys.maxsize)
+
     def generate(self, kind, n, t, arg=None):
         if kind in ["zeros", "triples", "rands", "oneminusone", "double_shares"]:
             if (kind, n, t) in self.cache:

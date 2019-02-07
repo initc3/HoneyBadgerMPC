@@ -3,7 +3,7 @@ from pytest import mark
 
 
 @mark.asyncio
-async def test_degree_reduction(test_preprocessing):
+async def test_degree_reduction_share(test_preprocessing):
     from honeybadgermpc.mpc import TaskProgramRunner
     from honeybadgermpc.elliptic_curve import Subgroup
     from honeybadgermpc.mixins import DoubleSharing
@@ -16,8 +16,33 @@ async def test_degree_reduction(test_preprocessing):
 
     async def _prog(context):
         sh_x_2t = test_preprocessing.elements.get_share(context, sid_x_2t, 2*t)
-        x_actual = await (await DoubleSharing.reduce_degree(context, sh_x_2t)).open()
+        x_actual = await (
+            await DoubleSharing.reduce_degree_share(context, sh_x_2t)).open()
         assert x_expected == x_actual
+
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    await program_runner.join()
+
+
+@mark.asyncio
+async def test_degree_reduction_share_array(test_preprocessing):
+    from honeybadgermpc.mpc import TaskProgramRunner
+    from honeybadgermpc.mixins import DoubleSharing
+
+    n, t = 9, 2
+
+    test_preprocessing.generate("double_shares", n, t)
+    test_preprocessing.generate("rands", n, 2*t)
+
+    async def _prog(context):
+        shares = [test_preprocessing.elements.get_rand(context, 2*t) for _ in range(10)]
+        sh_x_2t = context.ShareArray(shares, 2*t)
+        x_actual = await (
+            await DoubleSharing.reduce_degree_share_array(context, sh_x_2t)).open()
+        x_expected = await sh_x_2t.open()
+        for a, b in zip(x_actual, x_expected):
+            assert a == b
 
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(_prog)
@@ -43,9 +68,36 @@ async def test_multiplication_using_double_sharing(galois_field, test_preprocess
         assert ab_expected == ab_actual
 
     program_runner = TaskProgramRunner(
-        n, t, {MixinOpName.Mul: DoubleSharing.multiply_shares})
+        n, t, {MixinOpName.MultiplyShare: DoubleSharing.multiply_shares})
     program_runner.add(_prog)
     await program_runner.join()
+
+
+@mark.asyncio
+async def test_batch_double_sharing_multiply(galois_field, test_preprocessing):
+    from honeybadgermpc.mpc import TaskProgramRunner
+    from honeybadgermpc.mixins import DoubleSharing, MixinOpName
+
+    n, t = 9, 2
+
+    test_preprocessing.generate("double_shares", n, t)
+    test_preprocessing.generate("rands", n, t)
+
+    async def _prog(context):
+        shares = [test_preprocessing.elements.get_rand(context) for _ in range(20)]
+        p = context.ShareArray(shares[:10])
+        q = context.ShareArray(shares[10:])
+
+        p_f, q_f = await p.open(), await q.open()
+        pq_acutal = await (await (p*q)).open()
+        for xy, x, y in zip(pq_acutal, p_f, q_f):
+            assert xy == x*y
+
+    program_runner = TaskProgramRunner(
+        n, t, {MixinOpName.MultiplyShareArray: DoubleSharing.multiply_share_arrays})
+    program_runner.add(_prog)
+    results = await program_runner.join()
+    assert len(results) == n
 
 
 @mark.asyncio
@@ -72,7 +124,7 @@ async def test_beaver_mul_with_zeros(test_preprocessing):
         return xy_
 
     program_runner = TaskProgramRunner(
-        n, t, {MixinOpName.Mul: BeaverTriple.multiply_shares})
+        n, t, {MixinOpName.MultiplyShare: BeaverTriple.multiply_shares})
     program_runner.add(_prog)
     results = await program_runner.join()
     assert len(results) == n
@@ -102,7 +154,33 @@ async def test_beaver_mul(test_preprocessing):
         return xy_
 
     program_runner = TaskProgramRunner(
-        n, t, {MixinOpName.Mul: BeaverTriple.multiply_shares})
+        n, t, {MixinOpName.MultiplyShare: BeaverTriple.multiply_shares})
+    program_runner.add(_prog)
+    results = await program_runner.join()
+    assert len(results) == n
+
+
+@mark.asyncio
+async def test_batch_beaver_multiply(test_preprocessing):
+    from honeybadgermpc.mpc import TaskProgramRunner
+    from honeybadgermpc.mixins import BeaverTriple, MixinOpName
+
+    n, t = 3, 1
+    test_preprocessing.generate("triples", n, t)
+    test_preprocessing.generate("rands", n, t)
+
+    async def _prog(context):
+        shares = [test_preprocessing.elements.get_rand(context) for _ in range(20)]
+        p = context.ShareArray(shares[:10])
+        q = context.ShareArray(shares[10:])
+
+        p_f, q_f = await p.open(), await q.open()
+        pq_acutal = await (await (p*q)).open()
+        for xy, x, y in zip(pq_acutal, p_f, q_f):
+            assert xy == x*y
+
+    program_runner = TaskProgramRunner(
+        n, t, {MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays})
     program_runner.add(_prog)
     results = await program_runner.join()
     assert len(results) == n
