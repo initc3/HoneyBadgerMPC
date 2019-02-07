@@ -33,9 +33,9 @@ class TestPreProcessing():
 
         # Uncomment to disable logging for tests.
 
-        # import logging
-        # import sys
-        # logging.disable(sys.maxsize)
+        import logging
+        import sys
+        logging.disable(sys.maxsize)
 
     def generate(self, kind, n, t, arg=None):
         if kind in ["zeros", "triples", "rands", "oneminusone", "double_shares"]:

@@ -355,16 +355,6 @@ async def test_batchopening(context):
     logging.info("[%d] Finished batch opening" % (context.myid,))
 
 
-async def beaver_mult(context, x, y, a, b, ab):
-    d = await (x - a).open()  # noqa: W606
-    e = await (y - b).open()  # noqa: W606
-
-    # This is a random share of x*y
-    xy = context.Share(d*e) + d*b + e*a + ab
-
-    return context.Share(await xy.open())
-
-
 async def test_prog1(context):
     pp_elements = PreProcessedElements()
     # Example of Beaver multiplication

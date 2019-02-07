@@ -1,4 +1,3 @@
-import random
 import asyncio
 import uuid
 import os
@@ -169,24 +168,6 @@ async def build_powermixing_cpp_code():
     await run_command_sync(f"make -C apps/shuffle/cpp")
 
 
-def async_mixing_in_tasks():
-    asyncio.set_event_loop(asyncio.new_event_loop())
-    loop = asyncio.get_event_loop()
-    loop.set_debug(True)
-    field = GF.get(Subgroup.BLS12_381)
-    n, t, k = 3, 1, 2
-
-    a_s = [field(random.randint(0, field.modulus-1)) for _ in range(k)]
-    try:
-        loop.run_until_complete(build_newton_solver())
-        logging.info("Solver built.")
-        loop.run_until_complete(build_powermixing_cpp_code())
-        logging.info("C++ code built.")
-        loop.run_until_complete(async_mixing(a_s, n, t, k))
-    finally:
-        loop.close()
-
-
 async def async_mixing_in_processes(
             network_info, n, t, k, run_id, node_id, power_ids, share_ids
         ):
@@ -330,5 +311,3 @@ if __name__ == "__main__":
         )
     finally:
         loop.close()
-
-    # asynchronusMixingInTasks()

@@ -5,6 +5,7 @@ from pytest import mark
 async def test_butterfly_network(test_preprocessing):
     import apps.shuffle.butterfly_network as butterfly
     from honeybadgermpc.mpc import TaskProgramRunner
+    from honeybadgermpc.mixins import MixinOpName, BeaverTriple
 
     n, t, k, delta = 3, 1, 32, -9999
     test_preprocessing.generate("rands", n, t)
@@ -24,6 +25,7 @@ async def test_butterfly_network(test_preprocessing):
         for i, j in zip(sorted_input, sorted_output):
             assert i == j
 
-    program_runner = TaskProgramRunner(n, t)
+    program_runner = TaskProgramRunner(
+        n, t, {MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays})
     program_runner.add(verify_output,  k=k, delta=delta)
     await program_runner.join()

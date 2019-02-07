@@ -19,14 +19,13 @@ def get_extrapolated_values(poly, a, b, d, omega):
     return a_[2::4], b_[2::4], a_[1::2], b_[1::2]
 
 
-async def batch_beaver(context, a, b, x, y, z):
-    # TODO: Replace this with a batch implementation instead of having a loop
-    c = []
-    assert len(a) == len(b) == len(x) == len(y) == len(z)
-    for _a, _b, _x, _y, _z in zip(a, b, x, y, z):
-        d, e = context.Share(_a - _x).open(), context.Share(_b - _y).open()
-        c.append(d*e + d*_y + e*_x + _z)
-    return await asyncio.gather(*c)
+async def batch_beaver(context, a_, b_, x_, y_, z_):
+    assert len(a_) == len(b_) == len(x_) == len(y_) == len(z_)
+    a, b, x, y = list(map(context.ShareArray, [a_, b_, x_, y_]))
+
+    f, g = await asyncio.gather(*[(a - x).open(), (b - y).open()])
+    c = [(d*e + d*q + e*p + pq).v for (p, q, pq, d, e) in zip(x_, y_, z_, f, g)]
+    return c
 
 
 async def refine_triples(context, a_dirty, b_dirty, c_dirty):

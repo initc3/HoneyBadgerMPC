@@ -1,3 +1,4 @@
+import asyncio
 from .preprocessing import PreProcessedElements
 
 
@@ -18,8 +19,7 @@ class BeaverTriple(MixinBase):
 
         a, b, ab = MixinBase.pp_elements.get_triple(context)
 
-        d = await (x - a).open()
-        e = await (y - b).open()
+        d, e = await asyncio.gather(*[(x - a).open(), (y - b).open()])
         xy = d*e + d*b + e*a + ab
         return xy
 
@@ -37,9 +37,7 @@ class BeaverTriple(MixinBase):
             ab.append(pq)
 
         u, v = context.ShareArray(a), context.ShareArray(b)
-
-        f = await (j - u).open()
-        g = await (k - v).open()
+        f, g = await asyncio.gather(*[(j - u).open(), (k - v).open()])
         xy = [d*e + d*q + e*p + pq for (p, q, pq, d, e) in zip(a, b, ab, f, g)]
 
         return context.ShareArray(xy)
