@@ -72,6 +72,7 @@ if __name__ == "__main__":
     from honeybadgermpc.config import load_config
     from honeybadgermpc.ipc import NodeDetails, ProcessProgramRunner
     from honeybadgermpc.exceptions import ConfigurationError
+    from honeybadgermpc.mixins import MixinOpName, BeaverTriple
 
     configfile = os.environ.get('HBMPC_CONFIG')
     nodeid = os.environ.get('HBMPC_NODE_ID')
@@ -119,7 +120,9 @@ if __name__ == "__main__":
             else:
                 loop.run_until_complete(wait_for_preprocessing())
 
-        program_runner = ProcessProgramRunner(network_info, N, t, nodeid)
+        program_runner = ProcessProgramRunner(
+            network_info, N, t, nodeid, {
+                MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays})
         loop.run_until_complete(program_runner.start())
         program_runner.add(0, butterfly_network_helper, k=k, delta=delta)
         loop.run_until_complete(program_runner.join())

@@ -209,12 +209,13 @@ class NodeDetails(object):
 
 
 class ProcessProgramRunner(ProgramRunner):
-    def __init__(self, config, n, t, nodeid):
+    def __init__(self, config, n, t, nodeid, mixin_ops={}):
         self.config = config
         self.N, self.t, self.nodeid = n, t, nodeid
         self.senders = Senders([asyncio.Queue() for _ in range(n)], config, nodeid)
         self.listener = Listener(config[nodeid].port)
         self.programs = []
+        self.mixin_ops = mixin_ops
 
     def get_send_and_recv(self, sid):
         listener_queue = self.listener.get_program_queue(sid)
@@ -242,8 +243,17 @@ class ProcessProgramRunner(ProgramRunner):
     def add(self, sid, program, **kwargs):
         send, recv = self.get_send_and_recv(sid)
         context = Mpc(
-            'sid', self.N, self.t, self.nodeid, sid, send, recv, program, **kwargs
-        )
+                'sid',
+                self.N,
+                self.t,
+                self.nodeid,
+                sid,
+                send,
+                recv,
+                program,
+                self.mixin_ops,
+                **kwargs,
+            )
         self.programs.append(asyncio.ensure_future(context._run()))
         return send, recv
 
