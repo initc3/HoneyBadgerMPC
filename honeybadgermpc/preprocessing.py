@@ -14,6 +14,7 @@ class PreProcessingConstants(object):
     TRIPLES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}triples"
     ZEROS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}zeros"
     RANDS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}rands"
+    BITS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}bits"
     POWERS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}powers"
     SHARES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}specific_share"
     ONE_MINUS_ONE_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}one_minus_one"
@@ -28,6 +29,7 @@ class PreProcessedElements(object):
         self._triples = {}
         self._zeros = {}
         self._rands = {}
+        self._bits = {}
         self._one_minus_one_rands = {}
         self._double_shares = {}
 
@@ -81,6 +83,11 @@ class PreProcessedElements(object):
     def generate_rands(self, k, n, t):
         self._create_sharedata_dir_if_not_exists()
         polys = [self.poly.random(t) for _ in range(k)]
+        self._write_polys(PreProcessingConstants.RANDS_FILE_NAME_PREFIX, n, t, polys)
+
+    def generate_bits(self, k, n, t):
+        self._create_sharedata_dir_if_not_exists
+        polys = [self.poly.random(t, randint(0, 1)) for _ in range(k)]
         self._write_polys(PreProcessingConstants.RANDS_FILE_NAME_PREFIX, n, t, polys)
 
     def generate_one_minus_one_rands(self, k, n, t):
@@ -142,6 +149,14 @@ class PreProcessedElements(object):
             file_path = f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}{file_suffix}"
             self._rands[key] = iter(self._read_share_values_from_file(file_path))
         return ctx.Share(next(self._rands[key]), t)
+    
+    def get_bit(self, ctx):
+        key = (ctx.myid, ctx.N, ctx.t)
+        if key not in self._bits:
+            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
+            file_path = f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}{file_suffix}"
+            self._bits[key] = iter(self._read_share_values_from_file(file_path))
+        return ctx.Share(next(self._bits[key]))
 
     def get_one_minus_one_rand(self, ctx):
         file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"

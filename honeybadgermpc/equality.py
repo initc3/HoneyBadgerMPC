@@ -2,13 +2,11 @@ from honeybadgermpc.mpc import *
 # from honeybadgermpc.mpc import Mpc, generate_test_zeros, generate_test_randoms, generate_test_triples, TaskProgramRunner
 import logging
 import asyncio
-
-# zeros_files_prefix = 'sharedata/test_zeros'
-# triples_files_prefix = 'sharedata/test_triples'
-# random_files_prefix = 'sharedata/test_random'
-# bits_files_prefix = 'sharedata/test_bits'
+from honeybadgermpc.field import GF
 
 async def equality(context, p_share, q_share):
+
+    pp_elements = PreProcessedElements()
 
     def legendre_mod_p(a):
         """Return the legendre symbol ``legendre(a, p)`` where *p* is the
@@ -25,9 +23,10 @@ async def equality(context, p_share, q_share):
 
     diff_a = p_share - q_share
     k = security_parameter = 32
+    Field = GF.get(Subgroup.BLS12_381)
 
     def mul(x, y):
-        a, b, ab = context.get_triple()
+        a, b, ab = pp_elements.get_triple(context)
         return beaver_mult(context, x, y, a, b, ab)
 
     async def _gen_test_bit():
@@ -35,9 +34,9 @@ async def equality(context, p_share, q_share):
         # b \in {0, 1}
         # _b \in {5, 1}, for p = 1 mod 8, s.t. (5/p) = -1
         # so _b = -4 * b + 5
-        _b = (-4) * context.get_bit() + context.Share(5)
-        _r = context.get_rand()
-        _rp = context.get_rand()
+        _b = (-4) * pp_elements.get_bit(context) + context.Share(5)
+        _r = pp_elements.get_rand(context)
+        _rp = pp_elements.get_rand(context)
 
         # c = a * r + b * rp * rp
         # If b_i == 1 c_i will always be a square modulo p if a is
@@ -75,8 +74,9 @@ async def equality(context, p_share, q_share):
     return await x[0].open()
 
 async def test_equality(context):
-    p = context.get_zero() + context.Share(2233)
-    q = context.get_zero() + context.Share(2333)
+    pp_elements = PreProcessedElements()
+    p = pp_elements.get_zero(context) + context.Share(2333)
+    q = pp_elements.get_zero(context) + context.Share(2333)
     
     # result, count_comm = await equality(context, p, q)
     result = await equality(context, p, q)
@@ -89,15 +89,15 @@ async def test_equality(context):
     # print("The number of communication count_complexity is: ", count_comm)
 
 if __name__ == '__main__':
+    pp_elements = PreProcessedElements()
     logging.info('Generating random shares of zero in sharedata/')
-    generate_test_zeros('sharedata/test_zeros', 1000, 3, 1)
+    pp_elements.generate_zeros(1000, 3, 1)
     logging.info('Generating random shares in sharedata/')
-    generate_test_randoms('sharedata/test_random', 1000, 3, 1)
+    pp_elements.generate_rands(1000, 3, 1)    
     logging.info('Generating random shares of triples in sharedata/')
-    generate_test_triples('sharedata/test_triples', 1000, 3, 1)
+    pp_elements.generate_triples(1000, 3, 1)
     logging.info('Generating random shares of bits in sharedata/')
-    generate_test_bits('sharedata/test_bits', 1000, 3, 1)
-
+    pp_elements.generate_bits(1000, 3, 1)
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
