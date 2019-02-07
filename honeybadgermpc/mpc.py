@@ -93,7 +93,7 @@ class Mpc(object):
             self.send(j, (tag, shareid, share))
         _recv = self._sharearray_buffers[shareid].get
         opening = batch_reconstruct([s.v for s in sharearray._shares],
-                                    self.field.modulus, self.t, self.N,
+                                    self.field.modulus, sharearray.t, self.N,
                                     self.myid, _send, _recv, debug=True)
         self._openings[shareid] = opening
         return opening
@@ -207,7 +207,7 @@ def share_in_context(context):
                 return Share(self.v + other.v, self.t)
 
         def __sub__(self, other):
-            assert self.t == other.t
+            assert self.t == other.t, f"{self.t} {other.t}"
             return Share(self.v - other.v, self.t)
         __radd__ = __add__
 
@@ -222,8 +222,8 @@ def share_in_context(context):
         def __mul__(self, other):
             assert type(other) is Share
             assert self.t == other.t
-            if MixinOpName.Mul in context.mixin_ops:
-                return context.mixin_ops[MixinOpName.Mul](context, self, other)
+            if MixinOpName.MultiplyShare in context.mixin_ops:
+                return context.mixin_ops[MixinOpName.MultiplyShare](context, self, other)
             else:
                 raise NotImplementedError
 
@@ -260,11 +260,14 @@ def share_in_context(context):
             return res
 
     class ShareArray(object):
-        def __init__(self, shares):
+        def __init__(self, values, t=None):
             # Initialized with a list of share objects
-            for share in shares:
-                assert type(share) is Share
-            self._shares = shares
+            self.t = context.t if t is None else t
+            for i, value in enumerate(values):
+                if isinstance(value, int) or isinstance(value, GFElement):
+                    values[i] = context.Share(value, self.t)
+                assert type(values[i]) is Share
+            self._shares = values
 
         def open(self):
             # TODO: make a list of GFElementFutures?
@@ -276,11 +279,34 @@ def share_in_context(context):
             opening.add_done_callback(cb)
             return res
 
-        def __add__(self, other): raise NotImplementedError
+        def __add__(self, other):
+            if isinstance(other, list):
+                result = []
+                for (a, b) in zip(self._shares, other):
+                    assert type(b) is GFElement, type(b)
+                    result.append(a+b)
+                return ShareArray(result, self.t)
+            if isinstance(other, ShareArray):
+                assert self.t == other.t
+                assert len(self._shares) == len(other._shares)
+                return ShareArray(
+                    [(a+b) for (a, b) in zip(self._shares, other._shares)], self.t)
+            raise NotImplementedError
 
         def __sub__(self, other):
-            assert len(self._shares) == len(other._shares)
-            return ShareArray([(a-b) for (a, b) in zip(self._shares, other._shares)])
+            if isinstance(other, ShareArray):
+                assert self.t == other.t
+                assert len(self._shares) == len(other._shares)
+                return ShareArray(
+                    [(a-b) for (a, b) in zip(self._shares, other._shares)], self.t)
+
+        def __mul__(self, other):
+            if MixinOpName.MultiplyShareArray in context.mixin_ops:
+                assert type(other) is ShareArray
+                return context.mixin_ops[MixinOpName.MultiplyShareArray](
+                    context, self, other)
+            else:
+                raise NotImplementedError
 
     return Share, ShareArray
 
@@ -327,35 +353,6 @@ async def test_batchopening(context):
     for i, x in enumerate(xs_):
         assert x.value == i
     logging.info("[%d] Finished batch opening" % (context.myid,))
-
-
-async def test_batchbeaver(context):
-    pp_elements = PreProcessedElements()
-    # Demonstrates use of ShareArray batch interface
-    xs = [pp_elements.get_zero(context) + context.Share(i) for i in range(100)]
-    ys = [pp_elements.get_zero(context) + context.Share(i+10) for i in range(100)]
-    xs = context.ShareArray(xs)
-    ys = context.ShareArray(ys)
-
-    as_, bs_, abs_ = [], [], []
-    for i in range(100):
-        a, b, ab_ = pp_elements.get_triple(context)
-        as_.append(a)
-        bs_.append(b)
-        abs_.append(ab_)
-    as_ = context.ShareArray(as_)
-    bs_ = context.ShareArray(bs_)
-    abs_ = context.ShareArray(abs_)
-
-    ds_ = await (xs - as_).open()  # noqa: W606
-    es_ = await (ys - bs_).open()  # noqa: W606
-
-    for i, (a, b, ab, d, e) in enumerate(
-            zip(as_._shares, bs_._shares, abs_._shares, ds_, es_)):
-        xy = context.Share(d*e) + d*b + e*a + ab
-        assert (await xy.open()) == i * (i + 10)
-
-    logging.info("[%d] Finished batch beaver" % (context.myid,))
 
 
 async def beaver_mult(context, x, y, a, b, ab):
@@ -436,7 +433,6 @@ if __name__ == '__main__':
         program_runner = TaskProgramRunner(3, 1)
         program_runner.add(test_prog1)
         program_runner.add(test_prog2)
-        program_runner.add(test_batchbeaver)
         program_runner.add(test_batchopening)
         loop.run_until_complete(program_runner.join())
     finally:

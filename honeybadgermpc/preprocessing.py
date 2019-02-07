@@ -135,13 +135,14 @@ class PreProcessedElements(object):
             self._zeros[key] = iter(self._read_share_values_from_file(file_path))
         return ctx.Share(next(self._zeros[key]))
 
-    def get_rand(self, ctx):
-        key = (ctx.myid, ctx.N, ctx.t)
+    def get_rand(self, ctx, t=None):
+        t = t if t is not None else ctx.t
+        key = (ctx.myid, ctx.N, t)
         if key not in self._rands:
-            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
+            file_suffix = f"_{ctx.N}_{t}-{ctx.myid}.share"
             file_path = f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}{file_suffix}"
             self._rands[key] = iter(self._read_share_values_from_file(file_path))
-        return ctx.Share(next(self._rands[key]))
+        return ctx.Share(next(self._rands[key]), t)
 
     def get_one_minus_one_rand(self, ctx):
         file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
