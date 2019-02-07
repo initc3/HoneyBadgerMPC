@@ -5,6 +5,8 @@ import io
 import os
 
 from setuptools import setup, find_packages
+from setuptools.extension import Extension
+from Cython.Build import cythonize
 
 NAME = 'honeybadgermpc'
 DESCRIPTION = 'honeybadgermpc'
@@ -16,7 +18,7 @@ REQUIRED = [
     'zfec',
     'pycrypto',
     'cffi',
-    'psutil',
+    'psutil'
 ]
 
 TESTS_REQUIRES = [
@@ -70,6 +72,20 @@ if not VERSION:
 else:
     about['__version__'] = VERSION
 
+extra_compile_args = ['-std=c++11', '-O3', '-pthread', '-fopenmp', '-march=native']
+extra_link_args = ['-std=c++11', '-O3', '-pthread', '-fopenmp', '-lntl', '-lgmp', '-lm',
+                   '-march=native']
+
+extensions = [
+    Extension(
+        name="honeybadgermpc.ntl.helpers",
+        sources=["honeybadgermpc/ntl/helpers.pyx"],
+        language="c++",
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args
+    )
+]
+
 setup(
     name=NAME,
     version=about['__version__'],
@@ -77,10 +93,11 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     python_requires=REQUIRES_PYTHON,
-    setup_requires=['cffi>=1.0.0'],
+    setup_requires=['cffi>=1.0.0', 'Cython'],
     install_requires=REQUIRED,
     cffi_modules=['apps/shuffle/solver/solver_build.py:ffibuilder'],
     extras_require=EXTRAS,
+    ext_modules=cythonize(extensions),
     classifiers=[
         'Development Status :: 1 - Planning',
         'Programming Language :: Python',

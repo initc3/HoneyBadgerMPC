@@ -23,7 +23,10 @@ def attempt_reconstruct(encoded, field, n, t, point, precomputed_data=None):
     # interpolate with error correction to get f(j,y)
     _, decode, _ = make_encoder_decoder(n, t+1, field.modulus, point)
 
-    p = polynomials_over(field)(decode(encoded, precomputed_data=precomputed_data))
+    try:
+        p = polynomials_over(field)(decode(encoded, precomputed_data=precomputed_data))
+    except Exception:
+        raise ValueError("Did not coincide")
     if p.degree() > t:
         raise ValueError("Wrong degree")
 
