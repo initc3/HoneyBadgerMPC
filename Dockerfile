@@ -26,6 +26,7 @@ RUN pip install pairing/
 RUN sed -i '30c #include "flint/flint.h"' /usr/include/flint/flintxx/flint_classes.h
 
 ARG BUILD
+RUN pip install Cython
 RUN pip install --no-cache-dir -e .[$BUILD]
 
 RUN make -C apps/shuffle/cpp

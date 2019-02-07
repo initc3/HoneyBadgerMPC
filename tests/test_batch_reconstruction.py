@@ -13,6 +13,7 @@ def reconstruction_input(galois_field):
     t = 1
     fp = galois_field
     p = fp.modulus
+    # x + 2, 3x + 4
     secret_shares = [(3, 7), (4, 10), (5, 13), (6, 16)]
     expected = [2, 4]
 
@@ -27,6 +28,7 @@ def fft_reconstruction_input(galois_field):
     p = fp.modulus
     point = EvalPoint(fp, n, use_fft=True)
     omega = point.omega.value
+    # x + 2, 3x + 4
     secret_shares = [(omega ** 0 + 2, 3 * omega ** 0 + 4),
                      (omega ** 1 + 2, 3 * omega ** 1 + 4),
                      (omega ** 2 + 2, 3 * omega ** 2 + 4),
@@ -58,9 +60,10 @@ async def _get_reconstruction(secret_shares, n, t, fp, p, use_fft,
 
 
 @mark.asyncio
-async def test_reconstruction(galois_field, reconstruction_input):
+async def test_reconstruction_no_errors(galois_field, reconstruction_input):
     # Given
     n, t, fp, p, shared_secrets, secrets = reconstruction_input
+    # x + 2, 3x + 4
     shared_secrets = [(3, 7), (4, 10), (5, 13), (6, 16)]
 
     # When
@@ -104,7 +107,7 @@ async def test_reconstruction_timeout(galois_field, reconstruction_input):
 
 
 @mark.asyncio
-async def test_fft_reconstruction(galois_field, fft_reconstruction_input):
+async def test_fft_reconstruction_no_errors(galois_field, fft_reconstruction_input):
     # Given
     n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
 

@@ -6,7 +6,9 @@ import logging
 from collections import defaultdict
 from asyncio import Queue
 from math import ceil
-from time import time
+from .ntl.helpers import batch_vandermonde_interpolate, batch_vandermonde_evaluate, \
+    fft, fft_batch_interpolate
+import time
 
 
 async def wait_for(aws, to_wait):
@@ -58,6 +60,7 @@ def recv_each_party(recv, n):
 def wrap_send(tag, send):
     def _send(j, o):
         send(j, (tag, o))
+
     return _send
 
 
@@ -75,7 +78,7 @@ def to_chunks(data, chunk_size):
 def attempt_reconstruct_batch(data, field, n, t, point):
     assert len(data) == n
     assert sum(f is not None for f in data) >= 2 * t + 1
-    assert 2*t < n, "Robust reconstruct waits for at least n=2t+1 values"
+    assert 2 * t < n, "Robust reconstruct waits for at least n=2t+1 values"
 
     bs = [len(f) for f in data if f is not None]
     n_chunks = bs[0]
@@ -126,6 +129,106 @@ def with_at_most_non_none(data, k):
             yield x
 
 
+def optimistic_reconstruct(data, field, point, n, t):
+    """Reconstruct polynomial from t+1 values
+
+    optimistic_reconstruct interpolates a polynomial from t+1 values i.e. it assumes
+    that no malicious / erroneous data is present in the first t+1 values for each chunk.
+    It is the caller's responsibility to verify if the polynomial is correct
+
+    :param data: Data received from parties
+        data[i] = data received from party i
+    :type field: honeybadgermpc.field.Field
+    :param point: Evaluation point information
+    :type point: honeybadgermpc.polynomial.EvalPoint
+    :param n: Number of parties
+    :param t: Threshold / Maximum number of malicious parties
+    :return: polynomials, evaluations
+    """
+    n_chunks = max(len(d) for d in data if d is not None)
+    x = []
+    z = []
+    chunks = [[] for _ in range(n_chunks)]
+    for i, d in enumerate(data):
+        if d is None:
+            continue
+
+        assert len(d) == n_chunks
+        x.append(point(i).value)
+        z.append(i)
+        for j in range(n_chunks):
+            chunks[j].append(d[j])
+        if len(x) == t + 1:
+            break
+
+    assert len(x) == t + 1
+
+    if point.use_fft:
+        # FFT
+        p = field.modulus
+        polynomial_solutions = fft_batch_interpolate(z, chunks, point.omega.value,
+                                                     p, point.order)
+        evaluations = [fft(coeffs, point.omega.value, p, point.order)[:n]
+                       for coeffs in polynomial_solutions]
+    else:
+        # Non-FFT
+        polynomial_solutions = batch_vandermonde_interpolate(x, chunks, field.modulus)
+        evaluations = batch_vandermonde_evaluate([point(i).value for i in range(n)],
+                                                 polynomial_solutions, field.modulus)
+
+    return polynomial_solutions, evaluations
+
+
+def merge_lists(lists):
+    result = []
+    for l in lists:
+        result += l
+    return result
+
+
+async def batch_interpolate(data_receivers, field, point, n, t):
+    # First, try to get an optimistic guess from the first t+1 shares
+    data = await wait_for(data_receivers, t + 1)
+    guess, chunk_evaluations = optimistic_reconstruct(data, field, point, n, t)
+
+    # Then wait for 2t+1 shares and verify that we have the right polynomial
+    data = await wait_for(data_receivers, 2 * t + 1)
+
+    if guess is not None:
+        coincide_counts = []
+        for i, evaluations in enumerate(chunk_evaluations):
+            # Look at the i'th chunk and j'th party
+            coincide_count = sum(evaluations[j] == d[i]
+                                 for j, d in enumerate(data) if d is not None)
+            coincide_counts.append(coincide_count)
+
+        if min(coincide_counts) >= 2 * t + 1:
+            logging.debug(f"Guess: {guess}")
+            result = merge_lists(guess)
+            return list(map(field, result))
+
+        logging.debug(f"Optimistic guess failed with only "
+                      f"{len(coincide_counts)} out of a required minimum of {2 * t + 1} "
+                      f"points passing the evaluation check.\n"
+                      f"Moving on to using robust interpolation")
+
+    # Polynomial for some chunk did not fit at least 2t+1 points. Evil party present :(
+    # Go down the slow path and use error correction to robustly generate
+    # the polynomial now
+    for n_available in range(2 * t + 1, n + 1):
+        data = await wait_for(data_receivers, n_available)
+        data = tuple(with_at_most_non_none(data, n_available))
+        logging.debug(f'data R1: {data} nAvailable: {n_available}')
+        data = tuple([None if d is None else tuple(map(field, d)) for d in data])
+        reconstructed_poly = attempt_reconstruct_batch(data, field, n, t, point)
+        if reconstructed_poly is None:
+            # TODO: return partial success, so we can skip these next turn
+            continue
+
+        return reconstructed_poly
+    return None
+
+
 async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False,
                             use_fft=False):
     """
@@ -145,17 +248,15 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
 
     Reconstruction takes places in chunks of t+1 values
     """
-    fp = field = GF.get(p)
+    fp = GF.get(p)
     poly = polynomials_over(fp)
-    bench_logger = logging.LoggerAdapter(
-        logging.getLogger("benchmark_logger"), {"node_id": myid})
-
     point = EvalPoint(fp, n, use_fft=use_fft)
-
-    _task_sub, subscribe = subscribe_recv(recv)
+    bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),
+                                         {"node_id": myid})
+    subscribe_task, subscribe = subscribe_recv(recv)
     del recv  # ILC enforces this in type system, no duplication of reads
-    _task_r1, q_r1 = recv_each_party(subscribe('R1'), n)
-    _task_r2, q_r2 = recv_each_party(subscribe('R2'), n)
+    task_r1, q_r1 = recv_each_party(subscribe('R1'), n)
+    task_r2, q_r2 = recv_each_party(subscribe('R2'), n)
     data_r1 = [asyncio.create_task(recv()) for recv in q_r1]
     data_r2 = [asyncio.create_task(recv()) for recv in q_r2]
     del subscribe  # ILC should determine we can garbage collect after this
@@ -176,48 +277,29 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
     send_batch(elem_batches, wrap_send('R1', send), point)
 
     # Step 2: Attempt to reconstruct P1
-    # Wait for between 2t+1 values and N values
-    # trying to reconstruct each time
-    for n_available in range(2 * t + 1, n + 1):
-        data = await wait_for(data_r1, n_available)
-        data = tuple(with_at_most_non_none(data, n_available))
-        logging.debug(f'data R1: {data} nAvailable: {n_available}')
-        data = tuple([None if d is None else tuple(map(fp, d)) for d in data])
-        stime = time()
-        recons_r2 = attempt_reconstruct_batch(data, field, n, t, point)
-        if recons_r2 is None:
-            # TODO: return partial success, so we can skip these next turn
-            continue
-        bench_logger.info(f"[BatchReconstruct] P1: {time() - stime}")
-        break
-    assert n_available <= n, "reconstruction failed"
-    logging.debug(f'reconsR2: {recons_r2}')
+    start_time = time.time()
+    recons_r2 = await batch_interpolate(data_r1, fp, point, n, t)
     assert len(recons_r2) >= len(elem_batches)
+    end_time = time.time()
     recons_r2 = recons_r2[:len(elem_batches)]
+
+    bench_logger.info(f"[BatchReconstruct] P1: {end_time - start_time}")
 
     # Step 3: Send R2 points
     send_batch(recons_r2, wrap_send('R2', send), lambda _: point.zero())
 
     # Step 4: Attempt to reconstruct R2
-    for n_available in range(n_available, n + 1):
-        data = await wait_for(data_r2, n_available)
-        data = tuple(with_at_most_non_none(data, n_available))
-        data = tuple([None if d is None else tuple(map(fp, d)) for d in data])
-        logging.debug(f'data R2: {data} nAvailable: {n_available}')
-        stime = time()
-        recons_p = attempt_reconstruct_batch(data, field, n, t, point)
-        if recons_p is None:
-            # TODO: return partial success, so we can skip these next turn
-            continue
-        bench_logger.info(f"[BatchReconstruct] P2: {time() - stime}")
-        break
-    assert n_available <= n, "reconstruction failed"
+    start_time = time.time()
+    recons_p = await batch_interpolate(data_r2, fp, point, n, t)
+    end_time = time.time()
     assert len(recons_p) >= len(elem_batches)
     recons_p = recons_p[:len(elem_batches)]
 
-    _task_r1.cancel()
-    _task_r2.cancel()
-    _task_sub.cancel()
+    bench_logger.info(f"[BatchReconstruct] P2: {end_time - start_time}")
+
+    task_r1.cancel()
+    task_r2.cancel()
+    subscribe_task.cancel()
     for q in data_r1:
         q.cancel()
     for q in data_r2:
@@ -253,7 +335,7 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
     point = EvalPoint(fp, n, use_fft=False)
 
     # Reconstruct a batch of exactly t+1 secrets
-    assert len(shared_secrets) == t+1
+    assert len(shared_secrets) == t + 1
 
     # We'll wait to receive between 2t+1 shares
     round1_shares = [asyncio.Future() for _ in range(n)]
@@ -263,10 +345,10 @@ async def batch_reconstruct_one(shared_secrets, p, t, n, myid, send, recv, debug
         while True:
             (j, (r, o)) = await recv()
             if r == 'R1':
-                assert(not round1_shares[j].done())
+                assert (not round1_shares[j].done())
                 round1_shares[j].set_result(o)
             elif r == 'R2':
-                assert(not round2_shares[j].done())
+                assert (not round2_shares[j].done())
                 round2_shares[j].set_result(o)
             else:
                 assert False, f"invalid round tag: {r}"
