@@ -38,7 +38,7 @@ There is a `BenchmarkLogger` which must be used when logging any benchmak data. 
 Use the following commands to push the image to dockerhub. Avoid building the image using `docker-compose` since it doesn't the ignore files specified in `.dockerignore`.
 ```
 cd /path/to/HoneyBadgerMPC
-docker build -t honeybadger .
+docker build -t honeybadger . --build-arg BUILD=dev
 docker tag honeybadger:latest smkuls/honeybadgermpc:latest # Replace with appropriate DockerHub location
 docker push smkuls/honeybadgermpc:latest # Replace with appropriate DockerHub location
 

@@ -7,33 +7,31 @@ async def test_phase1(test_preprocessing, galois_field):
     from honeybadgermpc.mpc import TaskProgramRunner
     from honeybadgermpc.preprocessing import PreProcessingConstants
     import apps.shuffle.powermixing as pm
+    from uuid import uuid4
 
     field = galois_field
-    a = field(random.randint(0, field.modulus-1))
-    n, t, k = 5, 2, 32
-    power_id = test_preprocessing.generate("powers", n, t, k)
-    share_id = test_preprocessing.generate("share", n, t, a)
+    n, t, k = 5, 2, 1
+    test_preprocessing.generate("powers", n, t, k, 1)
+    test_preprocessing.generate("rands", n, t)
 
     async def verify_phase1(context, **kwargs):
-        a_, k_ = kwargs['a'], kwargs['k']
-        b_ = await test_preprocessing.elements.get_powers(context, power_id)[0].open()
-        await pm.single_secret_phase1(
-            context,
-            k=k,
-            power_id=power_id,
-            share_id=share_id)
-        file_name = f"{share_id}-{context.myid}.input"
+        k_ = kwargs['k']
+        b_ = await test_preprocessing.elements.get_powers(context, 0)[0].open()
+        file_prefixes = [uuid4().hex]
+        await pm.all_secrets_phase1(context, k=k, file_prefixes=file_prefixes)
+        file_name = f"{file_prefixes[0]}-{context.myid}.input"
         file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
         with open(file_path, "r") as f:
             assert int(f.readline()) == field.modulus
-            assert await context.Share(int(f.readline())).open() == a_.value
+            # next line is a random share, which should open successfully
+            a_ = await context.Share(int(f.readline())).open()
             assert int(f.readline()) == (a_ - b_).value
             assert int(f.readline()) == k_
             for i in range(1, k_+1):
                 assert (await context.Share(int(f.readline())).open()).value == b_**(i)
 
     program_runner = TaskProgramRunner(n, t)
-    program_runner.add(verify_phase1, a=a, k=k)
+    program_runner.add(verify_phase1, k=k)
     await program_runner.join()
 
 
@@ -70,12 +68,25 @@ async def test_phase2(galois_field):
 
 
 @mark.asyncio
-async def test_asynchronous_mixing(galois_field):
+async def test_asynchronous_mixing(test_preprocessing):
+    import asyncio
     import apps.shuffle.powermixing as pm
+    from honeybadgermpc.mpc import TaskProgramRunner
 
-    field = galois_field
-    n, t, k = 3, 1, 2
-    a_s = [field(random.randint(0, field.modulus-1)) for _ in range(k)]
-    result = await pm.async_mixing(a_s, n, t, k)
-    for a in a_s:
-        assert a in result
+    n, t, k = 3, 1, 4
+    test_preprocessing.generate("powers", n, t, k, k)
+    test_preprocessing.generate("rands", n, t)
+
+    async def verify_output(context, **kwargs):
+        result, input_shares = kwargs['result'], kwargs['input_shares']
+        my_shares = input_shares[context.myid]
+        assert len(result) == len(my_shares)
+
+        inputs = await asyncio.gather(*[
+            context.Share(sh.v, t).open() for sh in my_shares])
+        assert sorted(map(lambda x: x.value, inputs)) == sorted(result)
+
+    result, input_shares = await pm.async_mixing(n, t, k)
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(verify_output, result=result, input_shares=input_shares)
+    await program_runner.join()

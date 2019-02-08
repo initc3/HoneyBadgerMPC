@@ -124,5 +124,8 @@ lib_solver.cpp
 # Lock file
 lock.file
 
+# AWS config file
+aws/aws-config.json
+
 *~
 sharedata/
