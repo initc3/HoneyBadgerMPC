@@ -71,8 +71,15 @@ class TestPreProcessing():
         self.cache = {}
         self.elements = PreProcessedElements()
 
-    def generate(self, kind, n, t, arg=None):
-        if kind in ["zeros", "triples", "rands", "oneminusone", "double_shares"]:
+    def generate(self, kind, n, t, arg1=None, arg2=None):
+        if kind in [
+                    "zeros",
+                    "triples",
+                    "rands",
+                    "oneminusone",
+                    "double_shares",
+                    "powers"
+                ]:
             if (kind, n, t) in self.cache:
                 return
             self.cache[(kind, n, t)] = True
@@ -86,13 +93,10 @@ class TestPreProcessing():
                 self.elements.generate_one_minus_one_rands(1000, n, t)
             elif kind == "double_shares":
                 self.elements.generate_double_shares(1000, n, t)
-        elif kind == "powers":
-            if (kind, n, t) not in self.cache:
-                power_id = self.elements.generate_powers(arg, n, t)
-                self.cache[(kind, n, t)] = power_id
-            return self.cache[(kind, n, t)]
+            elif kind == "powers":
+                self.elements.generate_powers(arg1, n, t, arg2)
         elif kind == "share":
-            return self.elements.generate_share(arg, n, t)
+            return self.elements.generate_share(arg1, n, t)
 
 
 @fixture(scope="session")

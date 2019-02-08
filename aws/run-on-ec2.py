@@ -2,7 +2,6 @@ import threading
 import uuid
 import os
 import argparse
-import random
 from queue import Queue
 from aws.ec2Manager import EC2Manager
 from aws.AWSConfig import AwsConfig
@@ -31,7 +30,7 @@ def run_commands_on_instances(
         ):
 
     node_threads = [threading.Thread(
-            target=ec2_manager.executeCommandOnInstance,
+            target=ec2_manager.execute_command_on_instance,
             args=[id, commands, verbose, output_file_prefix]
         ) for id, commands in commands_per_instance_list]
 
@@ -84,17 +83,20 @@ def get_butterfly_network_instance_config(max_k, instance_ips):
 
 
 def get_ipc_commands(s3manager, instance_ids):
-    from honeybadgermpc.mpc import generate_test_zeros, generate_test_triples
+    from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
 
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
 
     num_triples = AwsConfig.MPC_CONFIG.NUM_TRIPLES
-    generate_test_zeros('sharedata/test_zeros', num_triples, n, t)
-    generate_test_triples('sharedata/test_triples', num_triples, n, t)
-    triple_urls = [s3manager.uploadFile(
-        "sharedata/test_triples-%d.share" % (i)) for i in range(n)]
-    zero_urls = [s3manager.uploadFile(
-        "sharedata/test_zeros-%d.share" % (i)) for i in range(n)]
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_zeros(num_triples, n, t)
+    pp_elements.generate_triples(num_triples, n, t)
+    triple_urls = [s3manager.upload_file(
+        f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}_{n}_{t}-{i}.share")
+        for i in range(n)]
+    zero_urls = [s3manager.upload_file(
+        f"{PreProcessingConstants.ZEROS_FILE_NAME_PREFIX}_{n}_{t}-{i}.share")
+        for i in range(n)]
     setup_commands = [[instance_id, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
             "mkdir -p sharedata",
@@ -107,24 +109,27 @@ def get_ipc_commands(s3manager, instance_ids):
 
 
 def get_butterfly_network_commands(max_k, s3manager, instance_ids):
-    from honeybadgermpc.mpc import (
-        generate_test_triples, generate_test_randoms, random_files_prefix)
-    from apps.shuffle.butterfly_network import generate_random_shares, oneminusoneprefix
+    from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
     from math import log
 
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     k = max_k if max_k else AwsConfig.MPC_CONFIG.K
 
     num_switches = k * int(log(k, 2)) ** 2
-    generate_test_triples('sharedata/test_triples', 2 * num_switches, n, t)
-    generate_random_shares(oneminusoneprefix, num_switches, n, t)
-    generate_test_randoms(random_files_prefix, k, n, t)
-    triple_urls = [s3manager.uploadFile(
-        "sharedata/test_triples-%d.share" % (i)) for i in range(n)]
-    input_urls = [s3manager.uploadFile(
-        f"{random_files_prefix}-%d.share" % (i)) for i in range(n)]
-    rand_share_urls = [s3manager.uploadFile(
-        f"{oneminusoneprefix}-{i}.share") for i in range(n)]
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_triples(2 * num_switches, n, t)
+    pp_elements.generate_one_minus_one_rands(num_switches, n, t)
+    pp_elements.generate_rands(k, n, t)
+
+    triple_urls = [s3manager.upload_file(
+        f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}_{n}_{t}-{i}.share")
+        for i in range(n)]
+    input_urls = [s3manager.upload_file(
+        f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}_{n}_{t}-{i}.share")
+        for i in range(n)]
+    rand_share_urls = [s3manager.upload_file(
+        f"{PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX}_{n}_{t}-{i}.share")
+        for i in range(n)]
     setup_commands = [[instance_id, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
             "mkdir -p sharedata",
@@ -138,27 +143,23 @@ def get_butterfly_network_commands(max_k, s3manager, instance_ids):
 
 
 def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
-    from apps.shuffle.powermixing import powersPrefix, generate_test_powers
-    from honeybadgermpc.mpc import Field
+    from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
 
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     k = max_k if max_k else AwsConfig.MPC_CONFIG.K
     q = Queue()
 
     def upload_file(fname):
-        url = s3manager.uploadFile(fname)
+        url = s3manager.upload_file(fname)
         q.put(url)
 
-    a_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
-    b_s = [Field(random.randint(0, Field.modulus-1)) for _ in range(k)]
-
-    for i, a in enumerate(a_s):
-        batchid = f"{runid}_{i}"
-        generate_test_powers(f"{powersPrefix}_{batchid}", a, b_s[i], k, n, t)
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_powers(k, n, t, k)
+    pp_elements.generate_rands(k, n, t)
 
     setup_commands = []
     for i, instance_id in enumerate(instance_ids):
-        url = s3manager.uploadFile(f"scripts/aws/download_input.sh")
+        url = s3manager.upload_file(f"scripts/aws/download_input.sh")
         commands = [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
             f"curl -sSO {url}",
@@ -170,15 +171,16 @@ def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
         executor = ThreadPoolExecutor(max_workers=200)
         threads = []
         for j in range(k):
-            threads.append(executor.submit(
-                upload_file,
-                f"{powersPrefix}_{runid}_{j}-{i}.share"))
+            prefix1 = f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{j}_{n}_{t}"
+            threads.append(executor.submit(upload_file, f"{prefix1}-{i}.share"))
+            prefix2 = f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}_{n}_{t}"
+            threads.append(executor.submit(upload_file, f"{prefix2}-{i}.share"))
         wait(threads, return_when=ALL_COMPLETED)
         with open('%s-%d-links' % (runid, i), 'w') as f:
             while not q.empty():
                 print(q.get(), file=f)
         fname = f"{runid}-{i}-links"
-        url = s3manager.uploadFile(fname)
+        url = s3manager.upload_file(fname)
         commands.append(f"cd sharedata; curl -sSO {url}; bash download_input.sh {fname}")
         setup_commands.append([instance_id, commands])
 

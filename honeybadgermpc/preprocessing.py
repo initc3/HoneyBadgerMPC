@@ -89,14 +89,13 @@ class PreProcessedElements(object):
         self._write_polys(
             PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX, n, t, polys)
 
-    def generate_powers(self, k, n, t):
+    def generate_powers(self, k, n, t, z):
         self._create_sharedata_dir_if_not_exists()
-        pid = uuid4().hex
         b = randint(0, self.field.modulus-1)
-        polys = [self.poly.random(t, pow(b, j)) for j in range(1, k+1)]
-        self._write_polys(
-            f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{pid}", n, t, polys)
-        return pid
+        for i in range(z):
+            polys = [self.poly.random(t, pow(b, j)) for j in range(1, k+1)]
+            self._write_polys(
+                f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{i}", n, t, polys)
 
     def generate_double_shares(self, k, n, t):
         self._create_sharedata_dir_if_not_exists()

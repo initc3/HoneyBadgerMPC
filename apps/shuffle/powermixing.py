@@ -11,41 +11,21 @@ from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_d
 import logging
 
 
-async def single_secret_phase1(context, **kwargs):
-    k = kwargs['k']
-    share_id, power_id = kwargs['share_id'], kwargs['power_id']
-
-    pp_elements = PreProcessedElements()
-    powers = pp_elements.get_powers(context, power_id)
-    a = pp_elements.get_share(context, share_id)
-    b = powers[0]
-    assert k == len(powers)
-    a_minus_b = await (a - b).open()  # noqa: W606
-    file_name = f"{share_id}-{context.myid}.input"
-    file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
-    with open(file_path, "w") as f:
-        print(context.field.modulus, file=f)
-        print(a.v.value, file=f)
-        print(a_minus_b.value, file=f)
-        print(k, file=f)
-        for power in powers:
-            print(power.v.value, file=f)
-
-
 async def all_secrets_phase1(context, **kwargs):
-    k, share_ids = kwargs['k'], kwargs['share_ids']
-    power_ids = kwargs['power_ids']
+    k, file_prefixes = kwargs['k'], kwargs['file_prefixes']
     as_, a_minus_b_shares, all_powers = [], [], []
 
     pp_elements = PreProcessedElements()
 
     stime = time()
     for i in range(k):
-        a = pp_elements.get_share(context, share_ids[i])
-        powers = pp_elements.get_powers(context, power_ids[i])
+        a = pp_elements.get_rand(context)
+        powers = pp_elements.get_powers(context, i)
         a_minus_b_shares.append(a - powers[0])
         as_.append(a)
         all_powers.append(powers)
+    bench_logger = logging.LoggerAdapter(
+        logging.getLogger("benchmark_logger"), {"node_id": context.myid})
     bench_logger.info(f"[Phase1] Read shares from file: {time() - stime}")
 
     stime = time()
@@ -55,7 +35,7 @@ async def all_secrets_phase1(context, **kwargs):
 
     stime = time()
     for i in range(k):
-        file_name = f"{share_ids[i]}-{context.myid}.input"
+        file_name = f"{file_prefixes[i]}-{context.myid}.input"
         file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
         with open(file_path, "w") as f:
             print(context.field.modulus, file=f)
@@ -65,10 +45,11 @@ async def all_secrets_phase1(context, **kwargs):
             for power in all_powers[i]:
                 print(power.v.value, file=f)
     bench_logger.info(f"[Phase1] Write shares to file: {time() - stime}")
+    return as_
 
 
-async def phase2(node_id, run_id, share_id):
-    input_file_name = f"{share_id}-{node_id}.input"
+async def phase2(node_id, run_id, file_prefix):
+    input_file_name = f"{file_prefix}-{node_id}.input"
     input_file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{input_file_name}"
     sum_file_name = f"power-{run_id}_{node_id}.sums"
     sum_file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{sum_file_name}"
@@ -94,22 +75,6 @@ async def run_command_sync(command):
         logging.info(f"Error: {stderr}")
 
 
-async def prepare_one_input(context, **kwargs):
-    k = kwargs['k']
-    power_id, share_id = kwargs['power_id'], kwargs['share_id']
-    run_id = kwargs['run_id']
-
-    await single_secret_phase1(
-        context,
-        k=k,
-        share_id=share_id,
-        power_id=power_id,
-        )
-    logging.info(f"[{context.myid}] Input prepared for C++ phase.")
-    await phase2(context.myid, run_id, share_id)
-    logging.info(f"[{context.myid}] C++ phase completed.")
-
-
 async def phase3(context, **kwargs):
     k, run_id = kwargs['k'], kwargs['run_id']
     sum_file_name = f"power-{run_id}_{context.myid}.sums"
@@ -133,31 +98,30 @@ async def phase3(context, **kwargs):
     return opened_shares
 
 
-async def async_mixing(a_s, n, t, k):
+async def async_mixing(n, t, k):
     from .solver.solver import solve
+    from honeybadgermpc.task_pool import TaskPool
 
     pr1 = TaskProgramRunner(n, t)
-
-    pp_elements = PreProcessedElements()
+    file_prefixes = [uuid.uuid4().hex for _ in range(k)]
     run_id = uuid.uuid4().hex
-    for a in a_s:
-        power_id = pp_elements.generate_powers(k, n, t)
-        share_id = pp_elements.generate_share(a, n, t)
-        pr1.add(
-            prepare_one_input,
-            k=k,
-            run_id=run_id,
-            power_id=power_id,
-            share_id=share_id
-        )
-    await pr1.join()
+
+    pr1.add(all_secrets_phase1, k=k, file_prefixes=file_prefixes)
+    rands = await pr1.join()
+
+    pool = TaskPool(256)
+    for node_id in range(n):
+        for i in range(k):
+            pool.submit(phase2(node_id, run_id, file_prefixes[i]))
+    await pool.close()
+
     pr2 = TaskProgramRunner(n, t)
     pr2.add(phase3, k=k, run_id=run_id)
     power_sums = (await pr2.join())[0]
     logging.info("Shares from C++ phase opened.")
     result = solve([s.value for s in power_sums])
     logging.info("Equation solver completed.")
-    return result
+    return result, rands
 
 
 async def build_newton_solver():
@@ -168,28 +132,21 @@ async def build_powermixing_cpp_code():
     await run_command_sync(f"make -C apps/shuffle/cpp")
 
 
-async def async_mixing_in_processes(
-            network_info, n, t, k, run_id, node_id, power_ids, share_ids
-        ):
+async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
     from .solver.solver import solve
     from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.task_pool import TaskPool
 
+    file_prefixes = [uuid.uuid4().hex for _ in range(k)]
     program_runner = ProcessProgramRunner(network_info, n, t, node_id)
     await program_runner.start()
-    program_runner.add(
-        0,
-        all_secrets_phase1,
-        k=k,
-        power_ids=power_ids,
-        share_ids=share_ids
-    )
+    program_runner.add(0, all_secrets_phase1, k=k, file_prefixes=file_prefixes)
     await program_runner.join()
 
     pool = TaskPool(256)
     stime = time()
     for i in range(k):
-        pool.submit(phase2(node_id, run_id, share_ids[i]))
+        pool.submit(phase2(node_id, run_id, file_prefixes[i]))
     await pool.close()
     bench_logger.info(f"[Phase2] Execute CPP code for all secrets: {time() - stime}")
 
@@ -277,25 +234,13 @@ if __name__ == "__main__":
             field = GF.get(Subgroup.BLS12_381)
             a_s = [field(i) for i in range(1000+k, 1000, -1)]
 
-            file_name = f"{PreProcessingConstants.SHARED_DATA_DIR}shared.state"
-
-            power_ids = []
-            share_ids = []
             pp_elements = PreProcessedElements()
             if node_id == 0:
-                for i in range(k):
-                    power_ids.append(pp_elements.generate_powers(k, N, t))
-                    share_ids.append(pp_elements.generate_share(a_s[i], N, t))
-                with open(file_name, "w") as f:
-                    f.write(",".join(power_ids))
-                    f.write("\n")
-                    f.write(",".join(share_ids))
+                pp_elements.generate_rands(k, N, t)
+                pp_elements.generate_powers(k, N, t, k)
                 preprocessing_done()
             else:
                 loop.run_until_complete(wait_for_preprocessing())
-                with open(file_name, "r") as f:
-                    power_ids = f.readline().strip().split(",")
-                    share_ids = f.readline().strip().split(",")
 
         loop.run_until_complete(
             async_mixing_in_processes(
@@ -305,8 +250,6 @@ if __name__ == "__main__":
                 k,
                 runid,
                 node_id,
-                power_ids,
-                share_ids
             )
         )
     finally:

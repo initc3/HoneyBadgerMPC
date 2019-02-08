@@ -55,16 +55,16 @@ async def test_get_rand(test_preprocessing):
 @mark.asyncio
 async def test_get_powers(test_preprocessing):
     n, t = 4, 1
-    num_powers = 3
-    pid = test_preprocessing.generate("powers", n, t, num_powers)
+    nums, num_powers = 2, 3
 
-    test_preprocessing.generate("powers", n, t)
+    test_preprocessing.generate("powers", n, t, num_powers, nums)
 
     async def _prog(ctx):
-        powers = test_preprocessing.elements.get_powers(ctx, pid)
-        x = await powers[0].open()
-        for i, power in enumerate(powers[1:]):
-            assert await power.open() == pow(x, i+2)
+        for i in range(nums):
+            powers = test_preprocessing.elements.get_powers(ctx, i)
+            x = await powers[0].open()
+            for i, power in enumerate(powers[1:]):
+                assert await power.open() == pow(x, i+2)
 
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(_prog)

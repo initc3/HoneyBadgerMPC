@@ -1,30 +1,29 @@
 {
     "mpc" : {
-        "command": "python -m honeybadgermpc.hbavss_multi",
+        "command": "python -m honeybadgermpc.ipc",
         "t": 1,
         "n": 4,
-        "k": 1000,
+        "k": 8,
         "port": 7000,
         "delta": -999,
         "num_triples": 1000,
         "skipPreProcessing" : true
     },
-    
+
     "aws":{
-        "credentials_file_path": "./aws/credentials.secret.json",
         "setup_file_path": "./aws/setup.sh",
 
         "region":{
-            "us-east-2": {
-                "vm_count": 5,
-                "security_group_ids": ["sg-f211d79b"],
-                "image_id": "ami-0f65671a86f061fcd",
-                "key_file_path": "./aws/rahul-us-east.pem",
-                "key_name": "rahul-us-east"
+            "us-east-1": {
+                "vm_count": 4,
+                "security_group_ids": ["sg-0faaf975"],
+                "image_id": "ami-0ac019f4fcb7cb7e6",
+                "key_file_path": "./aws/us-east1.pem",
+                "key_name": "us-east1"
             }
         },
 
-        "vm_name": "rahul-vms",
+        "vm_name": "honeybadgermpc-vms",
 
         "instance_type": "t2.micro",
         "instance_user_name": "ubuntu",
@@ -33,6 +32,6 @@
     },
 
     "docker": {
-        "image_path": "rahulsm2/honeybadgermpc:latest"
+        "image_path": "dsluiuc/honeybadgermpc:latest"
     }
 }
