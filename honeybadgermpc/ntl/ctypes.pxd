@@ -12,12 +12,14 @@ cdef extern from "ntlwrapper.h":
         pass
 
     cdef cppclass ZZ_pX_c "ZZ_pX":
+        void SetMaxLength(size_t)
         pass
 
     cdef cppclass vec_ZZ_p:
         ZZ_p_c& operator[](size_t)
         void SetLength(int n)
         void kill()
+        size_t length()
     cdef cppclass mat_ZZ_p:
         void SetDims(int m, int n)
         vec_ZZ_p& operator[](size_t)
@@ -33,4 +35,6 @@ cdef extern from "ntlwrapper.h":
     void mat_ZZ_p_mul "mul"(mat_ZZ_p x, mat_ZZ_p a, mat_ZZ_p b)
     void mat_ZZ_p_mul_vec "mul"(vec_ZZ_p x, mat_ZZ_p a, vec_ZZ_p b) nogil
     void ZZ_pX_get_coeff "GetCoeff"(ZZ_p_c r, ZZ_pX_c x, int i)
+    void ZZ_pX_set_coeff "SetCoeff"(ZZ_pX_c x, int i, ZZ_p_c a)
+    void ZZ_pX_eval "eval" (ZZ_p_c b, ZZ_pX_c f, ZZ_p_c a)
     int AvailableThreads()

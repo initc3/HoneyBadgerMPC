@@ -6,7 +6,8 @@
 from .ctypes cimport ZZ_c, ZZ_p_c, mat_ZZ_p, vec_ZZ_p, ZZ_pX_c
 from .ctypes cimport ZZ_p_conv_from_int, mat_ZZ_p_mul, ZZ_conv_from_int
 from .objectwrapper cimport ccrepr, ccreadstr
-from .ctypes cimport SetNumThreads, AvailableThreads, ZZ_p_init, ZZ_pX_get_coeff
+from .ctypes cimport SetNumThreads, AvailableThreads, ZZ_p_init, ZZ_pX_get_coeff, \
+    ZZ_pX_set_coeff, ZZ_pX_eval
 from cpython.int cimport PyInt_AS_LONG
 
 cdef ZZ_c py_obj_to_ZZ(object v):
@@ -79,6 +80,20 @@ cpdef interpolate(x, y, modulus):
     for i in range(r_vec.size()):
         result.append(int(ZZ_to_str(r_vec[i])))
     return result
+
+cpdef evaluate(polynomial, x, modulus):
+    """Evaluate polynomial at x"""
+    cdef ZZ_pX_c poly
+    cdef ZZ_p_c y
+    cdef int i
+
+    ZZ_p_init(py_obj_to_ZZ(modulus))
+    poly.SetMaxLength(len(polynomial))
+    for i in range(len(polynomial)):
+        ZZ_pX_set_coeff(poly, i, py_obj_to_ZZ_p(polynomial[i]))
+
+    ZZ_pX_eval(y, poly, py_obj_to_ZZ_p(x))
+    return int(ccrepr(y))
 
 cpdef vandermonde_inverse(x, modulus):
     """Generate inverse of vandermonde matrix
@@ -318,3 +333,37 @@ cpdef SetNTLNumThreads(x):
 
 cpdef int AvailableNTLThreads():
     return AvailableThreads()
+
+cpdef gao_interpolate(x, y, int k, modulus):
+    cdef vec_ZZ_p x_vec, y_vec, res_vec, err_vec
+    cdef int i, n
+    cdef int success
+
+    assert len(x) == len(y)
+    ZZ_p_init(py_obj_to_ZZ(modulus))
+
+    is_null = [yi is None for yi in y]
+    x = [x[i] for i in range(len(x)) if not is_null[i]]
+    y = [y[i] for i in range(len(y)) if not is_null[i]]
+
+    n = len(x)
+    x_vec.SetLength(n)
+    y_vec.SetLength(n)
+
+    for i in range(n):
+        x_vec[i] = py_obj_to_ZZ_p(x[i])
+        y_vec[i] = py_obj_to_ZZ_p(y[i])
+
+    success = gao_interpolate_c(res_vec, err_vec, x_vec, y_vec, k, n)
+
+    if success:
+        result = [None] * res_vec.length()
+        error_poly = [None] * err_vec.length()
+
+        for i in range(res_vec.length()):
+            result[i] = int(ccrepr(res_vec[i]))
+        for i in range(err_vec.length()):
+            error_poly[i] = int(ccrepr(err_vec[i]))
+        return result, error_poly
+
+    return None, None

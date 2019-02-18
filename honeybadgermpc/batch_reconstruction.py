@@ -7,7 +7,7 @@ from collections import defaultdict
 from asyncio import Queue
 from math import ceil
 from .ntl.helpers import batch_vandermonde_interpolate, batch_vandermonde_evaluate, \
-    fft, fft_batch_interpolate
+    fft, fft_batch_interpolate, gao_interpolate
 import time
 
 
@@ -186,7 +186,7 @@ def merge_lists(lists):
     return result
 
 
-async def batch_interpolate(data_receivers, field, point, n, t):
+async def batch_interpolate(data_receivers, field, point, n, t, config=None):
     # First, try to get an optimistic guess from the first t+1 shares
     data = await wait_for(data_receivers, t + 1)
     guess, chunk_evaluations = optimistic_reconstruct(data, field, point, n, t)
@@ -219,14 +219,65 @@ async def batch_interpolate(data_receivers, field, point, n, t):
         data = await wait_for(data_receivers, n_available)
         data = tuple(with_at_most_non_none(data, n_available))
         logging.debug(f'data R1: {data} nAvailable: {n_available}')
-        data = tuple([None if d is None else tuple(map(field, d)) for d in data])
-        reconstructed_poly = attempt_reconstruct_batch(data, field, n, t, point)
+        if config is not None and config.decoding_algorithm == "welch-berlekamp":
+            logging.info("[BatchReconstruction] Using welch-berlekamp decoding")
+            data = tuple([None if d is None else tuple(map(field, d)) for d in data])
+            reconstructed_poly = attempt_reconstruct_batch(data, field, n, t, point)
+        else:
+            logging.info("[BatchReconstruction] Using gao's algorithm for decoding")
+            reconstructed_poly = robust_batch_interpolate(data, field, point, n, t,
+                                                          n_available)
+
         if reconstructed_poly is None:
             # TODO: return partial success, so we can skip these next turn
             continue
 
-        return reconstructed_poly
+        return merge_lists(reconstructed_poly)
     return None
+
+
+def robust_batch_interpolate(data, field, point, n, t, n_available):
+    logging.debug(f"Attempting robust interpolation with {n_available} points")
+    n_chunks = max(len(d) for d in data if d is not None)
+    x = []  # Evaluation points
+    z = []  # Index of parties we are considering here
+    chunks = [[] for _ in range(n_chunks)]
+    for i, d in enumerate(data):
+        if d is None:
+            continue
+
+        assert len(d) == n_chunks
+        x.append(point(i).value)
+        z.append(i)
+        for j in range(n_chunks):
+            chunks[j].append(d[j])
+
+        if len(x) == n_available:
+            break
+
+    assert len(x) == n_available
+
+    p = field.modulus
+
+    polynomial_solutions = []
+    for chunk in chunks:
+        polynomial_solution, err_polynomial = gao_interpolate(x, chunk, t + 1, p)
+
+        if polynomial_solution is None:
+            logging.debug("Robust interpolation failed")
+            return None
+
+        errors_detected = len(err_polynomial) - 1  # Num errors = deg of error polynomial
+        num_not_erroneous = n_available - errors_detected
+        if num_not_erroneous < 2 * t + 1:
+            # Need 2t + 1 parties to agree on same polynomial
+            logging.debug(f"Robust interpolation partially failed."
+                          f"({errors_detected} errors detected)."
+                          f"Recovered polynomial but need fewer errors")
+            return None
+
+        polynomial_solutions.append(polynomial_solution)
+    return polynomial_solutions
 
 
 async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, config=None,
@@ -252,8 +303,8 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, config=None
     fp = GF.get(p)
 
     if config is not None and config.induce_faults:
-        logging.debug("[FAULT][BatchReconsutrction] Sending random shares.")
-        elem_batches = [fp.random() for _ in range(len(elem_batches))]
+        logging.debug("[FAULT][BatchReconstruction] Sending random shares.")
+        elem_batches = [fp(randint(0, fp.modulus - 1)) for _ in range(len(elem_batches))]
 
     poly = polynomials_over(fp)
     point = EvalPoint(fp, n, use_fft=use_fft)
@@ -284,7 +335,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, config=None
 
     # Step 2: Attempt to reconstruct P1
     start_time = time.time()
-    recons_r2 = await batch_interpolate(data_r1, fp, point, n, t)
+    recons_r2 = await batch_interpolate(data_r1, fp, point, n, t, config=config)
     assert len(recons_r2) >= len(elem_batches)
     end_time = time.time()
     recons_r2 = recons_r2[:len(elem_batches)]
@@ -296,7 +347,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, config=None
 
     # Step 4: Attempt to reconstruct R2
     start_time = time.time()
-    recons_p = await batch_interpolate(data_r2, fp, point, n, t)
+    recons_p = await batch_interpolate(data_r2, fp, point, n, t, config=config)
     end_time = time.time()
     assert len(recons_p) >= len(elem_batches)
     recons_p = recons_p[:len(elem_batches)]
