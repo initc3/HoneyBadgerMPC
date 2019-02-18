@@ -1,5 +1,7 @@
 from honeybadgermpc.ntl.helpers import interpolate, batch_vandermonde_interpolate, \
-    batch_vandermonde_evaluate, fft, fft_interpolate, fft_batch_interpolate
+    batch_vandermonde_evaluate, fft, fft_interpolate, fft_batch_interpolate, \
+    gao_interpolate, evaluate
+import random
 
 
 def test_interpolate(galois_field):
@@ -116,3 +118,67 @@ def test_fft_batch_interpolate(galois_field, galois_field_roots):
 
     # Then
     assert interp_polys == polys
+
+
+def test_evaluate(galois_field, polynomial):
+    # Given
+    p = galois_field.modulus
+    coeffs = [1, 2, 3, 4]
+    poly = polynomial(coeffs)
+    xs = [random.randint(0, p - 1) for _ in range(100)]
+
+    # When
+    ys = [evaluate(coeffs, x, p) for x in xs]
+
+    # Then
+    assert ys == [poly(x).value for x in xs]
+
+
+def test_gao_interpolate():
+    int_msg = [2, 3, 2, 8, 7, 5, 9, 5]
+    k = len(int_msg)  # length of message
+    n = 22  # size of encoded message
+    p = 53  # prime
+    t = k - 1  # degree of polynomial
+
+    x = list(range(n))
+    encoded = [sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p
+               for i in range(n)]
+
+    # Check decoding with no errors
+    decoded, _ = gao_interpolate(x, encoded, k, p)
+    assert (decoded == int_msg)
+
+    # Corrupt with maximum number of erasures:
+    cmax = n - 2 * t - 1
+    corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
+    coeffs, _ = gao_interpolate(x, corrupted, k, p)
+    assert coeffs == int_msg
+
+    # Corrupt with maximum number of errors:
+    emax = (n - 2 * t - 1) // 2
+    corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
+    coeffs, _ = gao_interpolate(x, corrupted, k, p)
+    assert coeffs == int_msg
+
+    # Corrupt with a mixture of errors and erasures
+    e = emax // 2
+    c = cmax // 4
+    corrupted = corrupt(encoded, num_errors=e, num_nones=c)
+    coeffs, _ = gao_interpolate(x, corrupted, k, p)
+    assert coeffs == int_msg
+
+
+def corrupt(message, num_errors, num_nones, min_val=0, max_val=131):
+    """
+    Inserts random corrupted values
+    """
+    message = list.copy(message)
+    assert (len(message) >= num_errors +
+            num_nones), "too much errors and none elements!"
+    indices = random.sample(list(range(len(message))), num_errors + num_nones)
+    for i in range(0, num_errors):
+        message[indices[i]] = random.randint(min_val, max_val)
+    for i in range(0, num_nones):
+        message[indices[i + num_errors]] = None
+    return message
