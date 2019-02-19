@@ -71,12 +71,6 @@ class TestPreProcessing():
         self.cache = {}
         self.elements = PreProcessedElements()
 
-        # Uncomment to disable logging for tests.
-
-        import logging
-        import sys
-        logging.disable(sys.maxsize)
-
     def generate(self, kind, n, t, arg=None):
         if kind in ["zeros", "triples", "rands", "oneminusone", "double_shares"]:
             if (kind, n, t) in self.cache:
@@ -143,3 +137,37 @@ def simple_router():
         return (sends, receives)
 
     return _simple_router
+
+
+@fixture
+def simple_broadcast_router():
+    def _simple_broadcast_router(n, maxdelay=0.005, seed=None):
+        """Builds a set of connected channels, with random delay
+        @return (receives, sends)
+        """
+        rnd = random.Random(seed)
+
+        queues = [asyncio.Queue() for _ in range(n)]
+
+        def make_broadcast(i):
+            def _send(j, o):
+                delay = rnd.random() * maxdelay
+                # print('SEND  %8s [%2d -> %2d] %2.1f' % (o[0], i, j, delay*1000), o[1:])
+                asyncio.get_event_loop().call_later(delay, queues[j].put_nowait, (i, o))
+                # queues[j].put_nowait((i, o))
+
+            def _bc(o):
+                # print('BCAST  %8s [%2d ->  *]' % (o[0], i), o[1])
+                for j in range(n):
+                    _send(j, o)
+            return _bc
+
+        def make_recv(j):
+            async def _recv():
+                # print('RECV %8s [%2d -> %2d]' % (o[0], i, j))
+                (i, o) = await queues[j].get()
+                return (i, o)
+            return _recv
+
+        return ([make_broadcast(i) for i in range(n)], [make_recv(j) for j in range(n)])
+    return _simple_broadcast_router

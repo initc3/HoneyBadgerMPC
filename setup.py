@@ -26,6 +26,7 @@ TESTS_REQUIRES = [
     'pep8-naming',
     'pytest',
     'pytest-asyncio',
+    'pytest-mock',
     'pytest-cov',
     'pytest-env',
     'pyyaml',
