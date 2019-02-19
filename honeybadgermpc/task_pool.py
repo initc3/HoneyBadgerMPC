@@ -3,8 +3,6 @@
 import asyncio
 from asyncio.queues import Queue
 
-TERMINATOR = object()
-
 
 class TaskPool(object):
     def __init__(self, num_workers):
@@ -18,7 +16,7 @@ class TaskPool(object):
     async def worker(self):
         while True:
             future, task = await self.tasks.get()
-            if task is TERMINATOR:
+            if task == "TERMINATOR":
                 break
             result = await asyncio.wait_for(task, None, loop=self.loop)
             future.set_result(result)
@@ -30,5 +28,5 @@ class TaskPool(object):
 
     async def close(self):
         for _ in self.workers:
-            self.tasks.put_nowait((None, TERMINATOR))
+            self.tasks.put_nowait((None, "TERMINATOR"))
         await asyncio.gather(*self.workers, loop=self.loop)

@@ -1,2 +1,5 @@
 [flake8]
 max_line_length=89
+exclude = 
+	charm/,
+	.eggs/

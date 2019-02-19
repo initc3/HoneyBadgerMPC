@@ -14,7 +14,7 @@ from .config import load_config
 from .ipc import NodeDetails, ProcessProgramRunner
 
 # secretshare uses reliable broadcast as a sub protocol
-from honeybadgermpc.reliablebroadcast import reliablebroadcast
+from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
 
 # This is necessary to specialize the library to BLS12-381
 # TODO: the `betterpairing` interface is a work in progress.
