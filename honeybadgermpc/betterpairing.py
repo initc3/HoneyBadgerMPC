@@ -183,7 +183,7 @@ class G1:
                 seed.append(random.SystemRandom().randint(0, 4294967295))
             out.rand(seed[0], seed[1], seed[2], seed[3])
         else:
-            assert seed is list
+            assert type(seed) is list
             assert len(seed) == 4
             out.rand(seed[0], seed[1], seed[2], seed[3])
         return G1(out)
@@ -340,7 +340,7 @@ class G2:
                 seed.append(random.SystemRandom().randint(0, 4294967295))
             out.rand(seed[0], seed[1], seed[2], seed[3])
         else:
-            assert seed is list
+            assert type(seed) is list
             assert len(seed) == 4
             out.rand(seed[0], seed[1], seed[2], seed[3])
         return G2(out)
@@ -453,7 +453,7 @@ class GT:
                 seed.append(random.SystemRandom().randint(0, 4294967295))
             out.rand(seed[0], seed[1], seed[2], seed[3])
         else:
-            assert seed is list
+            assert type(seed) is list
             assert len(seed) == 4
             out.rand(seed[0], seed[1], seed[2], seed[3])
         return GT(out)
