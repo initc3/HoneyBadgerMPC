@@ -514,7 +514,7 @@ async def run_hbavss_light_multi(config, n, t, id, k):
     sends = []
     recvs = []
     for i in range(k):
-        send, recv = program_runner.get_send_and_recv(i)
+        send, recv, _ = program_runner.get_send_and_recv(i)
         sends.append(send)
         recvs.append(recv)
     # Launch the protocol

@@ -239,10 +239,11 @@ class ProcessProgramRunner(ProgramRunner):
                 return (i, o)
             return _recv
 
-        return make_send(self.nodeid, sid), make_recv(self.nodeid, sid)
+        send, broadcast = make_send(self.nodeid, sid)
+        return send, make_recv(self.nodeid, sid), broadcast
 
     def add(self, sid, program, **kwargs):
-        send, recv = self.get_send_and_recv(sid)
+        send, recv, _ = self.get_send_and_recv(sid)
         context = Mpc(
                 'sid',
                 self.N,

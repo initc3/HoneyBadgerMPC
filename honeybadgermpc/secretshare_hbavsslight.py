@@ -474,7 +474,7 @@ async def rbc_and_send(sid, pid, n, t, k, ignoreme, receive, send):
 async def run_hbavss_light(config, n, t, id):
     program_runner = ProcessProgramRunner(config, n+1, t, id)
     sender, listener = program_runner.senders, program_runner.listener
-    send, recv = program_runner.get_send_and_recv(0)
+    send, recv, _ = program_runner.get_send_and_recv(0)
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
 
