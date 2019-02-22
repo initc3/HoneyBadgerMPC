@@ -1,6 +1,6 @@
 import logging
-
-from honeybadgermpc.protocols.crypto.boldyreva import serialize
+import base64
+from honeybadgermpc.protocols.crypto.boldyreva import serialize, deserialize1
 import asyncio
 from collections import defaultdict
 import hashlib
@@ -37,7 +37,8 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
         while True:     # main receive loop
             logging.debug(f'entering loop', extra={'nodeid': pid, 'epoch': '?'})
             # New shares for some round r, from sender i
-            (i, (_, r, sig)) = await receive()
+            (i, (_, r, sig_bytes)) = await receive()
+            sig = deserialize1(sig_bytes)
             logging.debug(
                           f'received i, _, r, sig: {i, _, r, sig}',
                           extra={'nodeid': pid, 'epoch': r})
@@ -92,7 +93,89 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
         logging.debug(
                       f"broadcast {('COIN', round, sk.sign(h))}",
                       extra={'nodeid': pid, 'epoch': round})
-        broadcast(('COIN', round, sk.sign(h)))
+        broadcast(('COIN', round, serialize(sk.sign(h))))
         return await output_queue[round].get()
 
     return get_coin, recv_task
+
+
+async def run_common_coin(config, pbk, pvk, n, f, nodeid):
+    program_runner = ProcessProgramRunner(config, n, t, nodeid)
+    sender, listener = program_runner.senders, program_runner.listener
+
+    await sender.connect()
+
+    send, recv = program_runner.get_send_and_recv("coin")
+
+    def broadcast(o):
+        for i in range(n):
+            send(i, o)
+
+    coin, crecv_task = await shared_coin('sidA', nodeid, n, f, pbk, pvk, broadcast, recv)
+    for i in range(10):
+        logging.info("%d COIN VALUE: %s", i, await coin(i))
+    crecv_task.cancel()
+
+    await sender.close()
+    await listener.close()
+
+
+if __name__ == "__main__":
+    import os
+    import sys
+    import pickle
+    from honeybadgermpc.exceptions import ConfigurationError
+    from honeybadgermpc.config import load_config
+    from honeybadgermpc.ipc import NodeDetails, ProcessProgramRunner
+    from honeybadgermpc.protocols.crypto.boldyreva import TBLSPublicKey  # noqa:F401
+    from honeybadgermpc.protocols.crypto.boldyreva import TBLSPrivateKey  # noqa:F401
+
+    configfile = os.environ.get('HBMPC_CONFIG')
+    nodeid = os.environ.get('HBMPC_NODE_ID')
+    pvk_string = os.environ.get('HBMPC_PV_KEY')
+    pbk_string = os.environ.get('HBMPC_PB_KEY')
+
+    # override configfile if passed to command
+    try:
+        nodeid = sys.argv[1]
+        configfile = sys.argv[2]
+        pbk_string = sys.argv[3]
+        pvk_string = sys.argv[4]
+    except IndexError:
+        pass
+
+    if not nodeid:
+        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
+                                 ' or a node id must be given as first argument.')
+
+    if not configfile:
+        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
+                                 ' or a config file must be given as first argument.')
+
+    if not pvk_string:
+        raise ConfigurationError('Environment variable `HBMPC_PV_KEY` must be set'
+                                 ' or a config file must be given as first argument.')
+
+    if not pbk_string:
+        raise ConfigurationError('Environment variable `HBMPC_PB_KEY` must be set'
+                                 ' or a config file must be given as first argument.')
+
+    config_dict = load_config(configfile)
+    n = config_dict['N']
+    t = config_dict['t']
+    k = config_dict['k']
+    pbk = pickle.loads(base64.b64decode(pbk_string))
+    pvk = pickle.loads(base64.b64decode(pvk_string))
+    nodeid = int(nodeid)
+    network_info = {
+        int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
+        for peerid, addrinfo in config_dict['peers'].items()
+    }
+
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    loop.set_debug(True)
+    try:
+        loop.run_until_complete(run_common_coin(network_info, pbk, pvk, n, t, nodeid))
+    finally:
+        loop.close()

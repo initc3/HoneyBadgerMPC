@@ -9,3 +9,4 @@ with open('honeybadgermpc/logging.yaml', 'r') as f:
     os.makedirs("benchmark", exist_ok=True)
     config = yaml.safe_load(f.read())
     logging.config.dictConfig(config)
+    logging.getLogger('asyncio').setLevel(logging.WARNING)

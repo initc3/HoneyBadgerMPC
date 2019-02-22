@@ -156,11 +156,6 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
                     bv_signal=bv_signal,
                 )
 
-    # Translate mmr14 broadcast into coin.broadcast
-    # _coin_broadcast = lambda (r, sig): broadcast(('COIN', r, sig))
-    # _coin_recv = Queue()
-    # coin = shared_coin(sid+'COIN', pid, N, f, _coin_broadcast, _coin_recv.get)
-
     # Run the receive loop in the background
     _thread_recv = asyncio.create_task(_recv())
 
@@ -281,3 +276,107 @@ def set_new_estimate(*, values, s, already_decided, decide):
     else:
         est = s
     return est, already_decided
+
+
+async def run_binary_agreement(config, pbk, pvk, n, f, nodeid):
+    from honeybadgermpc.protocols.commoncoin import shared_coin
+    import random
+
+    sid_c = "sid_coin"
+    sid_ba = "sid_ba"
+
+    program_runner = ProcessProgramRunner(config, n, t, nodeid)
+    sender, listener = program_runner.senders, program_runner.listener
+    await sender.connect()
+
+    send_c, recv_c = program_runner.get_send_and_recv(sid_c)
+
+    def bcast_c(o):
+        for i in range(n):
+            send_c(i, o)
+    coin, crecv_task = await shared_coin(sid_c, nodeid, n, f, pbk, pvk, bcast_c, recv_c)
+
+    inputq = asyncio.Queue()
+    outputq = asyncio.Queue()
+
+    send_ba, recv_ba = program_runner.get_send_and_recv(sid_ba)
+
+    def bcast_ba(o):
+        for i in range(n):
+            send_ba(i, o)
+    ba_task = binaryagreement(
+        sid_ba, nodeid, n, f, coin, inputq.get, outputq.put_nowait, bcast_ba, recv_ba)
+
+    inputq.put_nowait(random.randint(0, 1))
+
+    await ba_task
+
+    logging.info("[%d] BA VALUE: %s", nodeid, await outputq.get())
+    # logging.info("[%d] COIN VALUE: %s", nodeid, await coin(0))
+    crecv_task.cancel()
+
+    await sender.close()
+    await listener.close()
+
+
+if __name__ == "__main__":
+    import os
+    import sys
+    import pickle
+    import base64
+    from honeybadgermpc.exceptions import ConfigurationError
+    from honeybadgermpc.config import load_config
+    from honeybadgermpc.ipc import NodeDetails, ProcessProgramRunner
+    from honeybadgermpc.protocols.crypto.boldyreva import TBLSPublicKey  # noqa:F401
+    from honeybadgermpc.protocols.crypto.boldyreva import TBLSPrivateKey  # noqa:F401
+
+    configfile = os.environ.get('HBMPC_CONFIG')
+    nodeid = os.environ.get('HBMPC_NODE_ID')
+    pvk_string = os.environ.get('HBMPC_PV_KEY')
+    pbk_string = os.environ.get('HBMPC_PB_KEY')
+
+    # override configfile if passed to command
+    try:
+        nodeid = sys.argv[1]
+        configfile = sys.argv[2]
+        pbk_string = sys.argv[3]
+        pvk_string = sys.argv[4]
+    except IndexError:
+        pass
+
+    if not nodeid:
+        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
+                                 ' or a node id must be given as first argument.')
+
+    if not configfile:
+        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
+                                 ' or a config file must be given as first argument.')
+
+    if not pvk_string:
+        raise ConfigurationError('Environment variable `HBMPC_PV_KEY` must be set'
+                                 ' or a config file must be given as first argument.')
+
+    if not pbk_string:
+        raise ConfigurationError('Environment variable `HBMPC_PB_KEY` must be set'
+                                 ' or a config file must be given as first argument.')
+
+    config_dict = load_config(configfile)
+    n = config_dict['N']
+    t = config_dict['t']
+    k = config_dict['k']
+    pbk = pickle.loads(base64.b64decode(pbk_string))
+    pvk = pickle.loads(base64.b64decode(pvk_string))
+    nodeid = int(nodeid)
+    network_info = {
+        int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
+        for peerid, addrinfo in config_dict['peers'].items()
+    }
+
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    loop.set_debug(True)
+    try:
+        loop.run_until_complete(
+            run_binary_agreement(network_info, pbk, pvk, n, t, nodeid))
+    finally:
+        loop.close()
