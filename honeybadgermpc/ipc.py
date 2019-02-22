@@ -77,8 +77,8 @@ class Senders(object):
                     msg = await asyncio.wait_for(q.get(), timeout=1)
                 except asyncio.TimeoutError:
                     # FIXME: debug diagnostic below
-                    logging.debug(f'timeout sending to: {recvid} \
-                    sent: {writer._bytesSent}')
+                    # logging.debug(f'timeout sending to: {recvid} \
+                    # sent: {writer._bytesSent}')
                     # Option 1: heartbeat
                     msg = "heartbeat"
                     # Option 2: no heartbeat
@@ -89,13 +89,15 @@ class Senders(object):
                     writer.close()
                     await writer.wait_closed()
                     break
+
                 # logging.debug('[%2d] SEND %8s [%2d -> %s]' % (
                 #      msg[0], msg[1][1][0], msg[1][0], recvid
                 # ))
-                start_time = os.times()
+
+                # start_time = os.times()
                 data = pickle.dumps(msg)
-                pickle_time = str(os.times()[4] - start_time[4])
-                logging.debug(f'pickle time {pickle_time}')
+                # pickle_time = str(os.times()[4] - start_time[4])
+                # logging.debug(f'pickle time {pickle_time}')
                 padded_msg = struct.pack('>I', len(data)) + data
                 self.totalBytesSent += len(padded_msg)
                 writer.write(padded_msg)
@@ -154,7 +156,7 @@ class Listener(object):
                 break
             unpickled = pickle.loads(received_raw_msg)
             if unpickled == "heartbeat":
-                logging.debug(f"received heartbeat {reader._whoFrom}")
+                # logging.debug(f"received heartbeat {reader._whoFrom}")
                 continue
             sid, received_msg = unpickled
             if reader._whoFrom is None:
@@ -162,9 +164,7 @@ class Listener(object):
                 logging.debug(f"{reader._whoFrom} {reader}")
             assert reader._whoFrom == received_msg[0]
 
-            logging.debug(
-                '[%d] RECV %8s [from %2d]' % (sid, received_msg[1][0], received_msg[0])
-            )
+            logging.debug('[%s] RECV %s' % (sid, received_msg))
             while sid not in self.queues:
                 # Wait for queue to get set up
                 await asyncio.sleep(1)
@@ -222,19 +222,20 @@ class ProcessProgramRunner(ProgramRunner):
 
         def make_send(i, sid):
             def _send(j, o):
-                logging.debug('[%s] SEND %8s [%2d -> %2d]' % (sid, o[1], i, j))
+                logging.debug('[%s] SEND %8s [%2d -> %2d]' % (sid, o, i, j))
                 if i == j:
                     # If attempting to send the message to yourself
                     # then skip the network stack.
                     listener_queue.put_nowait((i, o))
                 else:
                     self.senders.queues[j].put_nowait((sid, (i, o)))
+
             return _send
 
         def make_recv(j, sid):
             async def _recv():
                 (i, o) = await self.listener.get_message(sid)
-                logging.debug('[%s] RECV %8s [%2d -> %2d]' % (sid, o[1], i, j))
+                logging.debug('[%s] RECV %8s [%2d -> %2d]' % (sid, o, i, j))
                 return (i, o)
             return _recv
 

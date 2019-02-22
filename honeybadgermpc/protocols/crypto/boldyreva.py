@@ -80,7 +80,14 @@ class TBLSPublicKey(object):
         self.__dict__ = d
         self.VK = deserialize2(self.VK)
         self.VKs = list(map(deserialize2, self.VKs))
-        print("I'm being depickled")
+
+    def __eq__(self, other):
+        return (
+            self.l == other.l and  # noqa: E741
+            self.k == other.k and
+            self.VK == other.VK and
+            self.VKs == other.VKs
+        )
 
     def lagrange(self, s, j):
         """ """
@@ -135,9 +142,32 @@ class TBLSPrivateKey(TBLSPublicKey):
         self.i = i
         self.SK = sk
 
+    def __eq__(self, other):
+        return (
+            super(TBLSPrivateKey, self).__eq__(other) and
+            self.i == other.i and
+            self.SK == other.SK
+        )
+
     def sign(self, h):
         """ """
         return h ** self.SK
+
+    def __getstate__(self):
+        """ """
+        d = dict(self.__dict__)
+        d['VK'] = serialize(self.VK)
+        d['VKs'] = list(map(serialize, self.VKs))
+        d['i'] = self.i
+        d['SK'] = serialize(self.SK)
+        return d
+
+    def __setstate__(self, d):
+        """ """
+        self.__dict__ = d
+        self.VK = deserialize2(self.VK)
+        self.VKs = list(map(deserialize2, self.VKs))
+        self.SK = deserialize0(self.SK)
 
 
 def dealer(players=10, k=5, seed=None):
@@ -167,3 +197,19 @@ def dealer(players=10, k=5, seed=None):
     # print i, 'ok'
 
     return public_key, private_keys
+
+
+def generate_serialized_keys(n=4, f=1):
+    import base64
+    from pickle import dumps
+
+    pbk, pvks = dealer(n, f+1)
+    print(base64.b64encode(dumps(pbk)))
+    print()
+    for pvk in pvks:
+        print(base64.b64encode(dumps(pvk)))
+        print()
+
+
+if __name__ == "__main__":
+    generate_serialized_keys()
