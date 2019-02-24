@@ -37,8 +37,26 @@ def simple_router(n, latency=1.0):
 
 from honeybadgermpc.mpc import ProgramRunner, Mpc
 class TaskProgramRunnerWithLatency(ProgramRunner):
-    def __init__(self, n, t):
+#     def __init__(self, n, t):
+#         self.N, self.t, self.pid = n, t, 0
+#         self.tasks = []
+#         self.loop = asyncio.get_event_loop()
+
+#     def add(self, program, **kwargs):
+#         sends, recvs = simple_router(self.N)
+#         for i in range(self.N):
+#             context = Mpc(
+#                 'sid', self.N, self.t, i, self.pid, sends[i], recvs[i], program, **kwargs
+#             )
+#             self.tasks.append(self.loop.create_task(context._run()))
+#         self.pid += 1
+
+#     async def join(self):
+#         return await asyncio.gather(*self.tasks)
+# class TaskProgramRunner(ProgramRunner):
+    def __init__(self, n, t, mixin_ops={}):
         self.N, self.t, self.pid = n, t, 0
+        self.mixin_ops = mixin_ops
         self.tasks = []
         self.loop = asyncio.get_event_loop()
 
@@ -46,7 +64,16 @@ class TaskProgramRunnerWithLatency(ProgramRunner):
         sends, recvs = simple_router(self.N)
         for i in range(self.N):
             context = Mpc(
-                'sid', self.N, self.t, i, self.pid, sends[i], recvs[i], program, **kwargs
+                'sid',
+                self.N,
+                self.t,
+                i,
+                self.pid,
+                sends[i],
+                recvs[i],
+                program,
+                self.mixin_ops,
+                **kwargs,
             )
             self.tasks.append(self.loop.create_task(context._run()))
         self.pid += 1
@@ -54,24 +81,21 @@ class TaskProgramRunnerWithLatency(ProgramRunner):
     async def join(self):
         return await asyncio.gather(*self.tasks)
 
-
 @mark.asyncio
-@mark.usefixtures('zeros_shares_files', 'triples_shares_files')
-async def test_operation_with_latency(zeros_files_prefix, triples_files_prefix):
+async def test_operation_with_latency(test_preprocessing):
     N, t = 3, 1
     x_secret, y_secret = 10, 15
 
+    test_preprocessing.generate("zeros", N, t)
+    test_preprocessing.generate("triples", N, t)
+
     async def _prog(context):
-        filename = f'{zeros_files_prefix}-{context.myid}.share'
-        zeros = context.read_shares(open(filename))
-        filename = f'{triples_files_prefix}-{context.myid}.share'
-        triples = context.read_shares(open(filename))
 
         # Example of Beaver multiplication
-        x = zeros[0] + context.Share(x_secret)
-        y = zeros[1] + context.Share(y_secret)
+        x = test_preprocessing.elements.get_zero(context) + context.Share(x_secret)
+        y = test_preprocessing.elements.get_zero(context) + context.Share(y_secret)
 
-        a, b, ab = triples[:3]
+        a, b, ab = test_preprocessing.elements.get_triple(context)
         # assert await a.open() * await b.open() == await ab.open()
 
         # Round 1
