@@ -215,6 +215,13 @@ def share_in_context(context):
             assert self.t == other.t
             return Share(-self.v + other.v, self.t)
 
+        def __xor__(self, other):
+            if isinstance(other, GFElement):
+                return Share(self.v ^ other, self.t)
+            elif isinstance(other, Share):
+                assert self.t == other.t
+                return Share(self.v ^ other.v, self.t)
+
         # @typecheck(int,field)
         def __rmul__(self, other): return Share(self.v * other, self.t)
 
