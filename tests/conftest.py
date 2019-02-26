@@ -105,47 +105,8 @@ def test_preprocessing():
 
 
 @fixture
-def simple_router():
-    def _simple_router(n):
-        """
-        Builds a set of connected channels
-
-        :return: broadcasting and receiving functions: ``(sends, receives)``
-        :rtype: tuple
-        """
-        # Create a mailbox for each party
-        mbox = [asyncio.Queue() for _ in range(n)]
-
-        def make_send(i):
-            def _send(j, o):
-                # print('SEND %8s [%2d -> %2d]' % (o[0], i, j))
-                # random delay
-                asyncio.get_event_loop().call_later(
-                    random.random() * 1, mbox[j].put_nowait, (i, o))
-
-            return _send
-
-        def make_recv(j):
-            async def _recv():
-                i, o = await mbox[j].get()
-                # print('RECV %8s [%2d -> %2d]' % (o[0], i, j))
-                return i, o
-
-            return _recv
-
-        sends = {}
-        receives = {}
-        for i in range(n):
-            sends[i] = make_send(i)
-            receives[i] = make_recv(i)
-        return (sends, receives)
-
-    return _simple_router
-
-
-@fixture
-def simple_broadcast_router():
-    def _simple_broadcast_router(n, maxdelay=0.005, seed=None):
+def test_router():
+    def _test_router(n, maxdelay=0.005, seed=None):
         """Builds a set of connected channels, with random delay
         @return (receives, sends)
         """
@@ -153,7 +114,7 @@ def simple_broadcast_router():
 
         queues = [asyncio.Queue() for _ in range(n)]
 
-        def make_broadcast(i):
+        def make_send(i):
             def _send(j, o):
                 delay = rnd.random() * maxdelay
                 # print('SEND  %8s [%2d -> %2d] %2.1f' % (o[0], i, j, delay*1000), o[1:])
@@ -164,7 +125,7 @@ def simple_broadcast_router():
                 # print('BCAST  %8s [%2d ->  *]' % (o[0], i), o[1])
                 for j in range(n):
                     _send(j, o)
-            return _bc
+            return _send, _bc
 
         def make_recv(j):
             async def _recv():
@@ -173,5 +134,6 @@ def simple_broadcast_router():
                 return (i, o)
             return _recv
 
-        return ([make_broadcast(i) for i in range(n)], [make_recv(j) for j in range(n)])
-    return _simple_broadcast_router
+        sends, bcasts = zip(*[make_send(i) for i in range(n)])
+        return (sends, [make_recv(j) for j in range(n)], bcasts)
+    return _test_router

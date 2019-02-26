@@ -2,7 +2,6 @@ from pytest import mark
 import pytest
 import asyncio
 from honeybadgermpc.batch_reconstruction import batch_reconstruct
-from honeybadgermpc.router import simple_router
 from honeybadgermpc.field import GFElement
 from honeybadgermpc.polynomial import EvalPoint
 
@@ -37,14 +36,14 @@ def fft_reconstruction_input(galois_field):
     return n, t, fp, p, omega, secret_shares, secrets
 
 
-async def _get_reconstruction(secret_shares, n, t, fp, p, use_fft,
+async def _get_reconstruction(test_router, secret_shares, n, t, fp, p, use_fft,
                               skip_list=(), error_list=()):
     """
     :param skip_list: Nodes to skip in reconstruction (Dont send/receive shares)
     :param error_list: Nodes to insert errors in
     :return: reconstructed shares
     """
-    sends, recvs = simple_router(n)
+    sends, recvs, _ = test_router(n)
     towait = []
     for i in range(n):
         if i in skip_list:
@@ -60,14 +59,15 @@ async def _get_reconstruction(secret_shares, n, t, fp, p, use_fft,
 
 
 @mark.asyncio
-async def test_reconstruction_no_errors(galois_field, reconstruction_input):
+async def test_reconstruction_no_errors(test_router, galois_field, reconstruction_input):
     # Given
     n, t, fp, p, shared_secrets, secrets = reconstruction_input
     # x + 2, 3x + 4
     shared_secrets = [(3, 7), (4, 10), (5, 13), (6, 16)]
 
     # When
-    results = await _get_reconstruction(shared_secrets, n, t, fp, p, False)
+    results = await _get_reconstruction(
+        test_router, shared_secrets, n, t, fp, p, False)
 
     # Then
     for r in results:
@@ -77,13 +77,14 @@ async def test_reconstruction_no_errors(galois_field, reconstruction_input):
 
 
 @mark.asyncio
-async def test_reconstruction_with_errors(galois_field, reconstruction_input):
+async def test_reconstruction_with_errors(test_router,
+                                          galois_field, reconstruction_input):
     # Given
     n, t, fp, p, secret_shares, secrets = reconstruction_input
 
     # When
-    results = await _get_reconstruction(secret_shares, n, t, fp, p, use_fft=False,
-                                        error_list=[1])
+    results = await _get_reconstruction(
+        test_router, secret_shares, n, t, fp, p, use_fft=False, error_list=[1])
 
     # Then
     for r in results:
@@ -93,26 +94,28 @@ async def test_reconstruction_with_errors(galois_field, reconstruction_input):
 
 
 @mark.asyncio
-async def test_reconstruction_timeout(galois_field, reconstruction_input):
+async def test_reconstruction_timeout(test_router, galois_field, reconstruction_input):
     """Test if reconstruction times out if one node is skipped in reconstruction"""
     # Given
     n, t, fp, p, secret_shares, secrets = reconstruction_input
 
     # When
     with pytest.raises(asyncio.TimeoutError):
-        await asyncio.wait_for(
-            _get_reconstruction(secret_shares, n, t, fp, p, False,
-                                error_list=[1], skip_list=[2]),
-            timeout=1)
+        task = _get_reconstruction(
+                                   test_router, secret_shares, n, t, fp, p,
+                                   False, error_list=[1], skip_list=[2])
+        await asyncio.wait_for(task, timeout=1)
 
 
 @mark.asyncio
-async def test_fft_reconstruction_no_errors(galois_field, fft_reconstruction_input):
+async def test_fft_reconstruction_no_errors(test_router, galois_field,
+                                            fft_reconstruction_input):
     # Given
     n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
 
     # When
-    results = await _get_reconstruction(secret_shares, n, t, fp, p, use_fft=True)
+    results = await _get_reconstruction(
+        test_router, secret_shares, n, t, fp, p, use_fft=True)
 
     # Then
     for r in results:
@@ -122,12 +125,13 @@ async def test_fft_reconstruction_no_errors(galois_field, fft_reconstruction_inp
 
 
 @mark.asyncio
-async def test_fft_reconstruction_with_errors(galois_field, fft_reconstruction_input):
+async def test_fft_reconstruction_with_errors(test_router, galois_field,
+                                              fft_reconstruction_input):
     # Given
     n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
 
     # When
-    results = await _get_reconstruction(secret_shares, n, t, fp, p,
+    results = await _get_reconstruction(test_router, secret_shares, n, t, fp, p,
                                         use_fft=True, error_list=[1])
 
     # Then
@@ -138,17 +142,17 @@ async def test_fft_reconstruction_with_errors(galois_field, fft_reconstruction_i
 
 
 @mark.asyncio
-async def test_fft_reconstruction_timeout(galois_field, fft_reconstruction_input):
+async def test_fft_reconstruction_timeout(test_router, galois_field,
+                                          fft_reconstruction_input):
     """Test if reconstruction times out if one node is skipped in reconstruction"""
     # Given
     n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
 
     # When
     with pytest.raises(asyncio.TimeoutError):
-        await asyncio.wait_for(
-            _get_reconstruction(secret_shares, n, t, fp, p, use_fft=True,
-                                error_list=[1], skip_list=[2]),
-            timeout=1)
+        task = _get_reconstruction(test_router, secret_shares, n, t, fp, p,
+                                   use_fft=True, error_list=[1], skip_list=[2])
+        await asyncio.wait_for(task, timeout=1)
 
 # TODO: No erasure tests present
 # TODO: Test graceful exit (throw some Error) when reconstruction fails

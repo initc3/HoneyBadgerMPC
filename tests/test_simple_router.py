@@ -17,9 +17,9 @@ async def progtest(n, myid, send, recv):
 
 
 @mark.asyncio
-async def test_simple_router(simple_router):
+async def test_simple_router(test_router):
     n = 10
-    sends, recvs = simple_router(n)
+    sends, recvs, _ = test_router(n)
     towait = []
     for i in range(n):
         towait.append(progtest(n, i, sends[i], recvs[i]))
