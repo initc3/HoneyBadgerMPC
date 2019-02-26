@@ -72,13 +72,13 @@ def dummy_coin(sid, n, f):
 
 # Test binary agreement with a dummy coin
 @mark.asyncio
-async def test_binaryagreement_dummy(simple_broadcast_router):
+async def test_binaryagreement_dummy(test_router):
     n, f, seed = 4, 1, None
     # Generate keys
     sid = 'sidA'
     # Test everything when runs are OK
     # if seed is not None: print 'SEED:', seed
-    sends, recvs = simple_broadcast_router(n, seed=seed)
+    _, recvs, sends = test_router(n, seed=seed)
 
     threads = []
     inputs = []
@@ -168,10 +168,10 @@ async def test_binaryagreement_dummy_with_byz_message_type(byznode):
 
 
 # Test binary agreement with boldyreva coin
-async def _make_coins(simple_broadcast_router, sid, n, f, seed):
+async def _make_coins(test_router, sid, n, f, seed):
     # Generate keys
     pk, sks = dealer(n, f+1)
-    sends, recvs = simple_broadcast_router(n, seed=seed)
+    _, recvs, sends = test_router(n, seed=seed)
     result = await gather(*[
         shared_coin(sid, i, n, f, pk, sks[i], sends[i], recvs[i]) for i in range(n)])
     return zip(*result)
@@ -179,7 +179,7 @@ async def _make_coins(simple_broadcast_router, sid, n, f, seed):
 
 @mark.parametrize('seed', (1, 2, 3, 4, 5))
 @mark.asyncio
-async def test_binaryagreement(seed, simple_broadcast_router):
+async def test_binaryagreement(seed, test_router):
     n, f = 4, 1
     # Generate keys
     sid = 'sidA'
@@ -190,10 +190,10 @@ async def test_binaryagreement(seed, simple_broadcast_router):
     # Instantiate the common coin
     coins_seed = rnd.random()
     coins, recv_tasks = await _make_coins(
-        simple_broadcast_router, sid+'COIN', n, f, coins_seed)
+        test_router, sid+'COIN', n, f, coins_seed)
 
     # Router
-    sends, recvs = simple_broadcast_router(n, seed=seed)
+    _, recvs, sends = test_router(n, seed=seed)
 
     threads = []
     inputs = []
