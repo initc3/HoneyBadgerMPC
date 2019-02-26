@@ -54,13 +54,13 @@ def byzantine_router(n, maxdelay=0.01, seed=None, **byzargs):
 
 
 @mark.asyncio
-async def test_commoncoin(simple_broadcast_router):
+async def test_commoncoin(test_router):
     n, f, seed = 4, 1, None
     # Generate keys
     pk, sks = dealer(n, f+1)
     sid = 'sidA'
     # Test everything when runs are OK
-    sends, recvs = simple_broadcast_router(n, seed=seed)
+    _, recvs, sends = test_router(n, seed=seed)
     result = await asyncio.gather(*[
         shared_coin(sid, i, n, f, pk, sks[i], sends[i], recvs[i]) for i in range(n)])
     coins, recv_tasks = zip(*result)
