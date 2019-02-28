@@ -99,7 +99,7 @@ Run the test:
 
 .. code-block:: shell-session
 
-    $ pytest -v tests/test_passive.py -s
+    $ pytest -v tests/test_mpc.py -s
 
 or
 
@@ -163,7 +163,7 @@ Managing your development environment with Pipenv
 
    .. code-block:: shell-session
 
-       $ pytest -v --cov
+       $ pytest -v tests/ --cov
 
 The tests should pass, and you should also see a small code coverage report
 output to the terminal.
@@ -187,22 +187,22 @@ Running in verbose mode:
 
 .. code-block:: shell-session
 
-    $ pytest -v
+    $ pytest -v tests/
 
 Running a specific test:
 
 .. code-block:: shell-session
 
-    $ pytest -v tests/test_passive.py::test_open_share
+    $ pytest -v tests/test_mpc.py::test_open_shares
 
 When debugging, i.e. if one has put breakpoints in the code, use the ``-s``
 option (or its equivalent ``--capture=no``):
 
 .. code-block:: shell-session
 
-    $ pytest -v -s
+    $ pytest -v tests/ -s
     # or
-    $ pytest -v --capture=no
+    $ pytest -v tests/ --capture=no
 
 To exit instantly on first error or failed test:
 

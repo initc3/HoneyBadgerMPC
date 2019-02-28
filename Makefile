@@ -52,13 +52,13 @@ lint: ## check style with flake8
 	flake8 honeybadgermpc tests
 
 test: ## run tests quickly with the default Python
-	pytest -v
+	pytest -v tests/
 
 test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	pytest -v -n auto --cov=honeybadgermpc --cov-report term --cov-report html
+	pytest -v tests/ -n auto --cov=honeybadgermpc --cov-report term --cov-report html
 	$(BROWSER) htmlcov/index.html
 
 docs: ## generate Sphinx HTML documentation, including API docs

@@ -114,7 +114,7 @@ the end of the ``script`` step, with the ``--cov-report=xml`` option:
 .. code-block:: bash
 
     # .ci/travis-install.sh
-    $BASE_CMD pytest -v --cov --cov-report=term-missing --cov-report=xml
+    $BASE_CMD pytest -v tests/ --cov --cov-report=term-missing --cov-report=xml
 
 If the test run was successful the report is uploaded to `codecov`_ in the
 ``after_success`` step:

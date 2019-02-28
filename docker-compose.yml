@@ -26,7 +26,7 @@ services:
       - ./pairing/Cargo.toml:/usr/src/HoneyBadgerMPC/pairing/Cargo.toml
       - ./pairing/setup.py:/usr/src/HoneyBadgerMPC/pairing/setup.py
       - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
-    command: pytest -v --cov=honeybadgermpc
+    command: pytest -v tests/ --cov=honeybadgermpc
     extra_hosts:
       - "hbmpc_0:127.0.0.1"
       - "hbmpc_1:127.0.0.1"
