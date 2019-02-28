@@ -159,7 +159,7 @@ def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
 
     setup_commands = []
     for i, instance_id in enumerate(instance_ids):
-        url = s3manager.upload_file(f"scripts/aws/download_input.sh")
+        url = s3manager.upload_file(f"aws/download_input.sh")
         commands = [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
             f"curl -sSO {url}",

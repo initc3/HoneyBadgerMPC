@@ -8,10 +8,8 @@ from asyncio import Queue
 import logging
 import concurrent.futures
 import psutil
-import sys
-from .exceptions import ConfigurationError
-from .config import load_config
-from .ipc import NodeDetails, ProcessProgramRunner
+from .config import HbmpcConfig
+from .ipc import ProcessProgramRunner
 
 # secretshare uses reliable broadcast as a sub protocol
 from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
@@ -381,11 +379,11 @@ class HbAvssRecipient:
                 self.sharevalid = True
                 self.output = self.share
 
-                logging.info('[{}] Output available'.format(self.sid), self.output)
+                logging.info(f'[{self.sid}] Output available: {self.output}')
                 recipient_time = str(os.times()[4] - self.time2[4])
-                logging.info("[{}] Recipient Time: ".format(self.sid) + recipient_time)
+                logging.info(f"[{self.sid}] Recipient Time: {recipient_time}")
                 service_time = str(os.times()[4] - start_time[4])
-                logging.info("[{}] Total service Time: ".format(self.sid) + service_time)
+                logging.info(f"[{self.sid}] Total service Time: {service_time}")
 
                 # benchmarking: time taken by dealer
                 self.benchmarkLogger.info(
@@ -571,39 +569,13 @@ def make_localhost_config(n, t, base_port):
 
 
 def main():
-    configfile = os.environ.get('HBMPC_CONFIG')
-    nodeid = os.environ.get('HBMPC_NODE_ID')
-
-    # override configfile if passed to command
-    try:
-        nodeid = sys.argv[1]
-        configfile = sys.argv[2]
-    except IndexError:
-        pass
-
-    if not nodeid:
-        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
-                                 ' or a node id must be given as first argument.')
-
-    if not configfile:
-        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
-                                 ' or a config file must be given as first argument.')
-
-    config_dict = load_config(configfile)
-    n = config_dict['N']
-    t = config_dict['t']
-    k = config_dict['k']
-    nodeid = int(nodeid)
-    network_info = {
-        int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
-        for peerid, addrinfo in config_dict['peers'].items()
-    }
-
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
+    k = int(HbmpcConfig.extras["k"])
     try:
-        (loop.run_until_complete(run_hbavss_light_multi(network_info, n, t, nodeid, k)))
+        (loop.run_until_complete(run_hbavss_light_multi(
+            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id, k)))
     finally:
         loop.close()
 

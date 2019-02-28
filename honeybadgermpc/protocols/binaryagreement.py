@@ -285,7 +285,7 @@ async def run_binary_agreement(config, pbk, pvk, n, f, nodeid):
     sid_c = "sid_coin"
     sid_ba = "sid_ba"
 
-    program_runner = ProcessProgramRunner(config, n, t, nodeid)
+    program_runner = ProcessProgramRunner(config, n, f, nodeid)
     sender, listener = program_runner.senders, program_runner.listener
     await sender.connect()
 
@@ -320,63 +320,27 @@ async def run_binary_agreement(config, pbk, pvk, n, f, nodeid):
 
 
 if __name__ == "__main__":
-    import os
-    import sys
     import pickle
     import base64
-    from honeybadgermpc.exceptions import ConfigurationError
-    from honeybadgermpc.config import load_config
-    from honeybadgermpc.ipc import NodeDetails, ProcessProgramRunner
+    from honeybadgermpc.config import HbmpcConfig
+    from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.protocols.crypto.boldyreva import TBLSPublicKey  # noqa:F401
     from honeybadgermpc.protocols.crypto.boldyreva import TBLSPrivateKey  # noqa:F401
 
-    configfile = os.environ.get('HBMPC_CONFIG')
-    nodeid = os.environ.get('HBMPC_NODE_ID')
-    pvk_string = os.environ.get('HBMPC_PV_KEY')
-    pbk_string = os.environ.get('HBMPC_PB_KEY')
-
-    # override configfile if passed to command
-    try:
-        nodeid = sys.argv[1]
-        configfile = sys.argv[2]
-        pbk_string = sys.argv[3]
-        pvk_string = sys.argv[4]
-    except IndexError:
-        pass
-
-    if not nodeid:
-        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
-                                 ' or a node id must be given as first argument.')
-
-    if not configfile:
-        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
-                                 ' or a config file must be given as first argument.')
-
-    if not pvk_string:
-        raise ConfigurationError('Environment variable `HBMPC_PV_KEY` must be set'
-                                 ' or a config file must be given as first argument.')
-
-    if not pbk_string:
-        raise ConfigurationError('Environment variable `HBMPC_PB_KEY` must be set'
-                                 ' or a config file must be given as first argument.')
-
-    config_dict = load_config(configfile)
-    n = config_dict['N']
-    t = config_dict['t']
-    k = config_dict['k']
-    pbk = pickle.loads(base64.b64decode(pbk_string))
-    pvk = pickle.loads(base64.b64decode(pvk_string))
-    nodeid = int(nodeid)
-    network_info = {
-        int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
-        for peerid, addrinfo in config_dict['peers'].items()
-    }
+    pbk = pickle.loads(base64.b64decode(HbmpcConfig.extras["public_key"]))
+    pvk = pickle.loads(base64.b64decode(HbmpcConfig.extras["private_key"]))
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
         loop.run_until_complete(
-            run_binary_agreement(network_info, pbk, pvk, n, t, nodeid))
+            run_binary_agreement(
+                HbmpcConfig.peers,
+                pbk,
+                pvk,
+                HbmpcConfig.N,
+                HbmpcConfig.t,
+                HbmpcConfig.my_id))
     finally:
         loop.close()
