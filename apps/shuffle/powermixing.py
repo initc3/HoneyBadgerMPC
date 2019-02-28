@@ -148,6 +148,10 @@ async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
     for i in range(k):
         pool.submit(phase2(node_id, run_id, file_prefixes[i]))
     await pool.close()
+
+    bench_logger = logging.LoggerAdapter(
+        logging.getLogger("benchmark_logger"), {"node_id": HbmpcConfig.my_id})
+
     bench_logger.info(f"[Phase2] Execute CPP code for all secrets: {time() - stime}")
 
     program_runner.add(1, phase3, k=k, run_id=run_id)
@@ -164,48 +168,10 @@ async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
 
 
 if __name__ == "__main__":
-    import sys
-    from honeybadgermpc.config import load_config
-    from honeybadgermpc.ipc import NodeDetails
-    from honeybadgermpc.exceptions import ConfigurationError
+    from honeybadgermpc.config import HbmpcConfig
 
-    configfile = os.environ.get('HBMPC_CONFIG')
-    node_id = os.environ.get('HBMPC_NODE_ID')
-    runid = os.environ.get('HBMPC_RUN_ID')
-
-    # override configfile if passed to command
-    try:
-        node_id = sys.argv[1]
-        configfile = sys.argv[2]
-        runid = sys.argv[3]
-    except IndexError:
-        pass
-
-    if not node_id:
-        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
-                                 ' or a node id must be given as first argument.')
-
-    if not configfile:
-        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
-                                 ' or a config file must be given as second argument.')
-
-    if not runid:
-        raise ConfigurationError('Environment variable `HBMPC_RUN_ID` must be set'
-                                 ' or a config file must be given as third argument.')
-
-    config_dict = load_config(configfile)
-    node_id = int(node_id)
-    N = config_dict['N']
-    t = config_dict['t']
-    k = config_dict['k']
-
-    bench_logger = logging.LoggerAdapter(
-        logging.getLogger("benchmark_logger"), {"node_id": node_id})
-
-    network_info = {
-        int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
-        for peerid, addrinfo in config_dict['peers'].items()
-    }
+    run_id = HbmpcConfig.extras["run_id"]
+    k = int(HbmpcConfig.extras["k"])
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
@@ -227,29 +193,27 @@ if __name__ == "__main__":
         os.remove(f)
 
     try:
-        if not config_dict['skipPreprocessing']:
+        if not HbmpcConfig.skip_preprocessing:
             # Need to keep these fixed when running on processes.
-            k = config_dict['k']
-            assert k < 1000
             field = GF.get(Subgroup.BLS12_381)
             a_s = [field(i) for i in range(1000+k, 1000, -1)]
 
             pp_elements = PreProcessedElements()
-            if node_id == 0:
-                pp_elements.generate_rands(k, N, t)
-                pp_elements.generate_powers(k, N, t, k)
+            if HbmpcConfig.my_id == 0:
+                pp_elements.generate_rands(k, HbmpcConfig.N, HbmpcConfig.t)
+                pp_elements.generate_powers(k, HbmpcConfig.N, HbmpcConfig.t, k)
                 preprocessing_done()
             else:
                 loop.run_until_complete(wait_for_preprocessing())
 
         loop.run_until_complete(
             async_mixing_in_processes(
-                network_info,
-                N,
-                t,
+                HbmpcConfig.peers,
+                HbmpcConfig.N,
+                HbmpcConfig.t,
                 k,
-                runid,
-                node_id,
+                run_id,
+                HbmpcConfig.my_id,
             )
         )
     finally:

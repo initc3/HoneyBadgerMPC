@@ -25,6 +25,11 @@ RUN cd pbc-0.5.14 && ./configure && make && make install
 ENV LIBRARY_PATH /usr/local/lib
 ENV LD_LIBRARY_PATH /usr/local/lib
 
+# Make sh point to bash
+# This is being changed since it will avoid any errors in the `launch_mpc.sh` script
+# which relies on certain code that doesn't work in container's default shell.
+RUN ln -sf bash /bin/sh
+
 RUN git clone https://github.com/JHUISI/charm.git
 RUN cd charm && ./configure.sh && make install
 

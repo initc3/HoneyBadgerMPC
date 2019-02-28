@@ -1,4 +1,3 @@
-import os
 import asyncio
 import logging
 from math import log
@@ -20,7 +19,7 @@ async def batch_switch(ctx, xs, ys, n):
     return t1s, t2s
 
 
-async def iterated_butterfly_network(ctx, inputs, k, delta):
+async def iterated_butterfly_network(ctx, inputs, k):
     # This runs O(log k) iterations of the butterfly permutation network,
     # each of which has log k elements. The total number of switches is
     # k (log k)^2
@@ -54,11 +53,11 @@ async def iterated_butterfly_network(ctx, inputs, k, delta):
 
 
 async def butterfly_network_helper(ctx, **kwargs):
-    k, delta = kwargs['k'], kwargs['delta']
+    k = kwargs['k']
     pp_elements = PreProcessedElements()
     inputs = [pp_elements.get_rand(ctx).v for _ in range(k)]
     logging.info(f"[{ctx.myid}] Running permutation network.")
-    shuffled = await iterated_butterfly_network(ctx, inputs, k, delta)
+    shuffled = await iterated_butterfly_network(ctx, inputs, k)
     if shuffled is not None:
         shuffled_shares = ctx.ShareArray(list(map(ctx.Share, shuffled)))
         opened_values = await shuffled_shares.open()
@@ -68,63 +67,34 @@ async def butterfly_network_helper(ctx, **kwargs):
 
 
 if __name__ == "__main__":
-    import sys
-    from honeybadgermpc.config import load_config
-    from honeybadgermpc.ipc import NodeDetails, ProcessProgramRunner
-    from honeybadgermpc.exceptions import ConfigurationError
+    from honeybadgermpc.config import HbmpcConfig
+    from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.mixins import MixinOpName, BeaverTriple
 
-    configfile = os.environ.get('HBMPC_CONFIG')
-    nodeid = os.environ.get('HBMPC_NODE_ID')
-    runid = os.environ.get('HBMPC_RUN_ID')
-
-    # override configfile if passed to command
-    try:
-        nodeid = sys.argv[1]
-        configfile = sys.argv[2]
-    except IndexError:
-        pass
-
-    if not nodeid:
-        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
-                                 ' or a node id must be given as first argument.')
-
-    if not configfile:
-        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
-                                 ' or a config file must be given as second argument.')
-
-    config_dict = load_config(configfile)
-    nodeid = int(nodeid)
-    N = config_dict['N']
-    t = config_dict['t']
-    k = config_dict['k']
-    delta = int(config_dict['delta'])
-
-    network_info = {
-        int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
-        for peerid, addrinfo in config_dict['peers'].items()
-    }
+    k = int(HbmpcConfig.extras["k"])
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        if not config_dict['skipPreprocessing']:
-            if nodeid == 0:
+        if not HbmpcConfig.skip_preprocessing:
+            if HbmpcConfig.my_id == 0:
                 NUM_SWITCHES = k * int(log(k, 2)) ** 2
                 pp_elements = PreProcessedElements()
-                pp_elements.generate_one_minus_one_rands(NUM_SWITCHES, N, t)
-                pp_elements.generate_triples(2 * NUM_SWITCHES, N, t)
-                pp_elements.generate_rands(k, N, t)
+                pp_elements.generate_one_minus_one_rands(
+                    NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t)
+                pp_elements.generate_triples(
+                    2 * NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t)
+                pp_elements.generate_rands(k, HbmpcConfig.N, HbmpcConfig.t)
                 preprocessing_done()
             else:
                 loop.run_until_complete(wait_for_preprocessing())
 
         program_runner = ProcessProgramRunner(
-            network_info, N, t, nodeid, {
+            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id, {
                 MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays})
         loop.run_until_complete(program_runner.start())
-        program_runner.add(0, butterfly_network_helper, k=k, delta=delta)
+        program_runner.add(0, butterfly_network_helper, k=k)
         loop.run_until_complete(program_runner.join())
         loop.run_until_complete(program_runner.close())
     finally:

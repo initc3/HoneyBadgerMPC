@@ -543,42 +543,15 @@ def make_localhost_config(n, t, base_port):
 
 
 if __name__ == "__main__":
-    import sys
-    from .exceptions import ConfigurationError
-    from .config import load_config
-    from .ipc import NodeDetails, ProcessProgramRunner
-
-    configfile = os.environ.get('HBMPC_CONFIG')
-    nodeid = os.environ.get('HBMPC_NODE_ID')
-
-    # override configfile if passed to command
-    try:
-        nodeid = sys.argv[1]
-        configfile = sys.argv[2]
-    except IndexError:
-        pass
-
-    if not nodeid:
-        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
-                                 ' or a node id must be given as first argument.')
-
-    if not configfile:
-        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
-                                 ' or a config file must be given as first argument.')
-
-    config_dict = load_config(configfile)
-    N = config_dict['N']
-    t = config_dict['t']
-    nodeid = int(nodeid)
-    network_info = {
-        int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
-        for peerid, addrinfo in config_dict['peers'].items()
-    }
+    from .config import HbmpcConfig
+    from .ipc import ProcessProgramRunner
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        loop.run_until_complete(run_hbavss_light(network_info, N, t, nodeid))
+        loop.run_until_complete(
+            run_hbavss_light(
+                HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))
     finally:
         loop.close()

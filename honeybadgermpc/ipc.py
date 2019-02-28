@@ -1,7 +1,5 @@
-import os
 import pickle
 import asyncio
-import sys
 import struct
 import socket
 import logging
@@ -202,12 +200,6 @@ class Listener(object):
                 pass
 
 
-class NodeDetails(object):
-    def __init__(self, ip, port):
-        self.ip = ip
-        self.port = port
-
-
 class ProcessProgramRunner(ProgramRunner):
     def __init__(self, config, n, t, nodeid, mixin_ops={}):
         self.config = config
@@ -280,52 +272,25 @@ class ProcessProgramRunner(ProgramRunner):
 if __name__ == "__main__":
     from .mpc import test_prog1, test_prog2
     from .preprocessing import PreProcessedElements
-    from .exceptions import ConfigurationError
-    from .config import load_config
-
-    configfile = os.environ.get('HBMPC_CONFIG')
-    nodeid = os.environ.get('HBMPC_NODE_ID')
-
-    # override configfile if passed to command
-    try:
-        nodeid = sys.argv[1]
-        configfile = sys.argv[2]
-    except IndexError:
-        pass
-
-    if not nodeid:
-        raise ConfigurationError('Environment variable `HBMPC_NODE_ID` must be set'
-                                 ' or a node id must be given as first argument.')
-
-    if not configfile:
-        raise ConfigurationError('Environment variable `HBMPC_CONFIG` must be set'
-                                 ' or a config file must be given as second argument.')
-
-    nodeid = int(nodeid)
-    config_dict = load_config(configfile)
-    N = config_dict['N']
-    t = config_dict['t']
-    network_info = {
-        int(peerid): NodeDetails(addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
-        for peerid, addrinfo in config_dict['peers'].items()
-    }
+    from .config import HbmpcConfig
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        if not config_dict['skipPreprocessing']:
+        if not HbmpcConfig.skip_preprocessing:
             # Only one party needs to generate the initial shares
-            if nodeid == 0:
+            if HbmpcConfig.my_id == 0:
                 pp_elements = PreProcessedElements()
                 logging.info('Generating random shares of zero in sharedata/')
-                pp_elements.generate_zeros(1000, N, t)
+                pp_elements.generate_zeros(1000, HbmpcConfig.N, HbmpcConfig.t)
                 logging.info('Generating random shares of triples in sharedata/')
-                pp_elements.generate_triples(1000, N, t)
+                pp_elements.generate_triples(1000, HbmpcConfig.N, HbmpcConfig.t)
                 preprocessing_done()
             else:
                 loop.run_until_complete(wait_for_preprocessing())
-        program_runner = ProcessProgramRunner(network_info, N, t, nodeid)
+        program_runner = ProcessProgramRunner(
+            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id)
         loop.run_until_complete(program_runner.start())
         program_runner.add(1, test_prog1)
         program_runner.add(2, test_prog2)
