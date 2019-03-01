@@ -1,0 +1,18 @@
+// Look at config.py to understand how this config is used within HBMPC.
+{
+    "N": 4, // Total number of parties
+    "t": 1, // Value of the threshold for corrupt parties
+    "my_id": 3,  // Id of the current node
+    "skip_preprocessing": true,  // To indicate if the preprocessing needs to be skipped, by default it is NOT skipped
+    // Network details of all participating parties
+    "peers": [
+            "localhost:7000",
+            "localhost:7001",
+            "localhost:7002",
+            "localhost:7003"
+        ],
+    // Any other parameter needed by the MPC appliction
+    "extra": {
+        "k": 8
+    }
+}
