@@ -94,7 +94,7 @@ def make_encoder_decoder(n, k, p, point=None):
 
             system = (
                 [row(i, a, b) for (i, (a, b)) in enumerate(encoded_message)] +
-                [[0] * (e_num_vars - 1) + [1] + [0] * (q_num_vars) + [1]]
+                [[fp(0)] * (e_num_vars - 1) + [fp(1)] + [fp(0)] * (q_num_vars) + [fp(1)]]
             )  # ensure coefficient of x^e in E(x) is 1
 
             if debug:
