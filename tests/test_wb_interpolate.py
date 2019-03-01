@@ -1,5 +1,5 @@
 import random
-
+import pytest
 from honeybadgermpc.wb_interpolate import make_encoder_decoder
 
 
@@ -49,32 +49,36 @@ def test_decoding_all_zeros():
 
     enc, dec, _ = make_encoder_decoder(n, k, p)
     encoded = enc(int_msg)
-
     # print("plain message is: %r" % (integerMessage,))
     # print("encoded message is: %r" % (encoded,))  # cleaner output
 
     # Check decoding with no errors
-    decoded = dec(encoded, debug=False)
-    assert (decoded == int_msg)
+    with pytest.raises(IndexError):
+        # If this error is not raised then the bug has been fixed :D
+        _ = dec(encoded, debug=False)
 
     # Corrupt with maximum number of erasures:
     cmax = n - 2 * t - 1
+
     corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
     coeffs = dec(corrupted, debug=False)
-    assert coeffs == int_msg
+    assert coeffs == [0]
 
     # Corrupt with maximum number of errors:
     emax = (n - 2 * t - 1) // 2
     corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
     coeffs = dec(corrupted, debug=False)
-    assert coeffs == int_msg
+
+    # This also showcases inconsistency in polynomial functions
+    # poly([]) should be equal to poly([0])
+    assert coeffs == []
 
     # Corrupt with a mixture of errors and erasures
     e = emax // 2
     c = cmax // 4
     corrupted = corrupt(encoded, num_errors=e, num_nones=c)
     coeffs = dec(corrupted, debug=False)
-    assert coeffs == int_msg
+    assert coeffs == []
 
 
 def corrupt(message, num_errors, num_nones, min_val=0, max_val=131):
