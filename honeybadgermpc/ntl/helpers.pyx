@@ -334,17 +334,21 @@ cpdef SetNTLNumThreads(x):
 cpdef int AvailableNTLThreads():
     return AvailableThreads()
 
-cpdef gao_interpolate(x, y, int k, modulus):
+cpdef gao_interpolate(x, y, int k, modulus, z=None, omega=None, order=None,
+                      use_fft=False):
     cdef vec_ZZ_p x_vec, y_vec, res_vec, err_vec
-    cdef int i, n
+    cdef ZZ_p_c zz_omega
+    cdef vector[int] z_vec;
+    cdef int i, n, int_order
     cdef int success
-
     assert len(x) == len(y)
     ZZ_p_init(py_obj_to_ZZ(modulus))
 
     is_null = [yi is None for yi in y]
     x = [x[i] for i in range(len(x)) if not is_null[i]]
     y = [y[i] for i in range(len(y)) if not is_null[i]]
+    if z is not None:
+        z = [z[i] for i in range(len(z)) if not is_null[i]]
 
     n = len(x)
     x_vec.SetLength(n)
@@ -354,7 +358,21 @@ cpdef gao_interpolate(x, y, int k, modulus):
         x_vec[i] = py_obj_to_ZZ_p(x[i])
         y_vec[i] = py_obj_to_ZZ_p(y[i])
 
-    success = gao_interpolate_c(res_vec, err_vec, x_vec, y_vec, k, n)
+    if use_fft is True:
+        assert z is not None
+        assert len(z) is n
+        assert omega is not None
+
+        zz_omega = py_obj_to_ZZ_p(omega)
+        int_order = int(order)
+        z_vec.resize(n)
+        for i in range(n):
+            z_vec[i] = int(z[i])
+
+        success = gao_interpolate_fft_c(res_vec, err_vec, x_vec, z_vec, y_vec,
+                                        zz_omega, k, n, order)
+    else:
+        success = gao_interpolate_c(res_vec, err_vec, x_vec, y_vec, k, n)
 
     if success:
         result = [None] * res_vec.length()

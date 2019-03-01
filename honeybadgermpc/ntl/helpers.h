@@ -210,6 +210,20 @@ void fnt_decode_step2(vec_ZZ_p &P_coeffs, ZZ_pX &A, vec_ZZ_p &Ad_evals,
     }
 }
 
+// This combines fnt_decode steps 1 and step 2
+// Ideally this doesn't need to be used since while working with batches
+// step 1 only needs to be called once while step 2 is called multiple times
+void fnt_decode(ZZ_pX &P, vector<int> zs, vec_ZZ_p &ys, ZZ_p &omega, int n) {
+    ZZ_pX A;
+    vec_ZZ_p Ad_evals, P_coeffs;
+    fnt_decode_step1(A, Ad_evals, zs, omega, n);
+    fnt_decode_step2(P_coeffs, A, Ad_evals, zs, ys, omega, n);
+    P.SetMaxLength(P_coeffs.length());
+    for (int i=0; i < P_coeffs.length(); i++) {
+        SetCoeff(P, i, P_coeffs[i]);
+    }
+}
+
 void partial_gcd(ZZ_pX &r, ZZ_pX &u, ZZ_pX &v, ZZ_pX &p0, ZZ_pX &p1, int threshold)
 {
     ZZ_pX r0, r1, r2, s0, s1, s2, t0, t1, t2;
@@ -264,6 +278,48 @@ bool gao_interpolate(vec_ZZ_p &res_vec, vec_ZZ_p &err_vec,
     // Step 1: Interpolate g1(x) s.t g1(xi) = yi
     ZZ_pX g1;
     interpolate(g1, x_vec, y_vec);
+
+    // Step 2: Partial GCD
+    ZZ_pX g, u, v;
+    partial_gcd(g, u, v, g0, g1, (n + k) / 2);
+
+    // Step 3: Long division of g(x) / s(x)
+    ZZ_pX r, f1;
+
+    DivRem(f1, r, g, v);
+
+    // If r(x) = 0 and degree of f1 is less than k, then decoding is successful
+    // Else decoding failed
+    if (!IsZero(r) || deg(f1) >= k) {
+        return false;
+    }
+
+    res_vec.SetLength(k);
+    for (int i=0; i < k; i++) {
+        res_vec[i] = coeff(f1, i);
+    }
+
+    int num_errors = deg(v);
+    err_vec.SetLength(num_errors + 1);
+    for (int i=0; i < num_errors + 1; i++) {
+        err_vec[i] = coeff(v, i);
+    }
+
+    return true;
+}
+
+bool gao_interpolate_fft(vec_ZZ_p &res_vec, vec_ZZ_p &err_vec,
+                         vec_ZZ_p &x_vec, vector<int> &z_vec,
+                         vec_ZZ_p &y_vec, ZZ_p omega, int k, int n,
+                         int order)
+{
+    // Step 0: Compute g0(x) = (x - x0) * (x - x1) ... (x - x_{n-1})
+    ZZ_pX g0;
+    BuildFromRoots(g0, x_vec);
+
+    // Step 1: Interpolate g1(x) s.t g1(xi) = yi
+    ZZ_pX g1;
+    fnt_decode(g1, z_vec, y_vec, omega, order);
 
     // Step 2: Partial GCD
     ZZ_pX g, u, v;

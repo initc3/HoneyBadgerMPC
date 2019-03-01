@@ -26,5 +26,5 @@ services:
       - ./pairing/benches:/usr/src/HoneyBadgerMPC/pairing/benches
       - ./pairing/Cargo.toml:/usr/src/HoneyBadgerMPC/pairing/Cargo.toml
       - ./pairing/setup.py:/usr/src/HoneyBadgerMPC/pairing/setup.py
-      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+      #- /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
     command: pytest -v --cov=honeybadgermpc

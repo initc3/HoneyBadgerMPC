@@ -169,6 +169,85 @@ def test_gao_interpolate():
     assert coeffs == int_msg
 
 
+def test_gao_interpolate_all_zeros():
+    int_msg = [0, 0, 0, 0, 0, 0, 0, 0]
+    k = len(int_msg)  # length of message
+    n = 22  # size of encoded message
+    p = 53  # prime
+    t = k - 1  # degree of polynomial
+
+    x = list(range(n))
+    encoded = [sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p
+               for i in range(n)]
+
+    # Check decoding with no errors
+    decoded, _ = gao_interpolate(x, encoded, k, p)
+    assert (decoded == int_msg)
+
+    # Corrupt with maximum number of erasures:
+    cmax = n - 2 * t - 1
+    corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
+    coeffs, _ = gao_interpolate(x, corrupted, k, p)
+    assert coeffs == int_msg
+
+    # Corrupt with maximum number of errors:
+    emax = (n - 2 * t - 1) // 2
+    corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
+    coeffs, _ = gao_interpolate(x, corrupted, k, p)
+    assert coeffs == int_msg
+
+    # Corrupt with a mixture of errors and erasures
+    e = emax // 2
+    c = cmax // 4
+    corrupted = corrupt(encoded, num_errors=e, num_nones=c)
+    coeffs, _ = gao_interpolate(x, corrupted, k, p)
+    assert coeffs == int_msg
+
+
+def test_gao_interpolate_fft(galois_field, galois_field_roots):
+    int_msg = [2, 3, 2, 8, 7, 5, 9, 5]
+    k = len(int_msg)  # length of message
+    n = 22  # size of encoded message
+    p = galois_field.modulus  # prime
+    r = 5  # 2 ** 5 = 32 > 22
+    omega = galois_field_roots[r]
+    order = 2 ** 5  # = 32
+    t = k - 1  # degree of polynomial
+
+    z = list(range(n))
+    x = [pow(omega, zi, p) for zi in z]
+    encoded = [sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p
+               for i in range(n)]
+
+    # Check decoding with no errors
+    decoded, _ = gao_interpolate(x, encoded, k, p, z=z, omega=omega, order=order,
+                                 use_fft=True)
+    # decoded, _ = gao_interpolate(x, encoded, k, p)
+    assert (decoded == int_msg)
+
+    # Corrupt with maximum number of erasures:
+    cmax = n - 2 * t - 1
+    corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
+    coeffs, _ = gao_interpolate(x, corrupted, k, p, z=z, omega=omega, order=order,
+                                use_fft=True)
+    assert coeffs == int_msg
+
+    # Corrupt with maximum number of errors:
+    emax = (n - 2 * t - 1) // 2
+    corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
+    coeffs, _ = gao_interpolate(x, corrupted, k, p, z=z, omega=omega, order=order,
+                                use_fft=True)
+    assert coeffs == int_msg
+
+    # Corrupt with a mixture of errors and erasures
+    e = emax // 2
+    c = cmax // 4
+    corrupted = corrupt(encoded, num_errors=e, num_nones=c)
+    coeffs, _ = gao_interpolate(x, corrupted, k, p, z=z, omega=omega, order=order,
+                                use_fft=True)
+    assert coeffs == int_msg
+
+
 def corrupt(message, num_errors, num_nones, min_val=0, max_val=131):
     """
     Inserts random corrupted values
