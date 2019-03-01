@@ -1,4 +1,5 @@
 import asyncio
+from random import randint
 from .field import GF
 from .polynomial import polynomials_over, EvalPoint, fnt_decode_step1
 from .robust_reconstruction import attempt_reconstruct, robust_reconstruct
@@ -229,8 +230,8 @@ async def batch_interpolate(data_receivers, field, point, n, t):
     return None
 
 
-async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False,
-                            use_fft=False):
+async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, config=None,
+                            debug=False, use_fft=False):
     """
     args:
       shared_secrets: an array of points representing shared secrets S1 - SB
@@ -248,7 +249,13 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, debug=False
 
     Reconstruction takes places in chunks of t+1 values
     """
+
     fp = GF.get(p)
+
+    if config is not None and config.induce_faults:
+        logging.debug("[FAULT][BatchReconsutrction] Sending random shares.")
+        elem_batches = [fp(randint(0, fp.modulus-1)) for _ in range(len(elem_batches))]
+
     poly = polynomials_over(fp)
     point = EvalPoint(fp, n, use_fft=use_fft)
     bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),

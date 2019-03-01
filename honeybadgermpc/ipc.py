@@ -4,6 +4,7 @@ import struct
 import socket
 import logging
 from .mpc import Mpc
+from .config import HbmpcConfig, ConfigVars
 from .program_runner import ProgramRunner
 from .preprocessing import wait_for_preprocessing, preprocessing_done
 
@@ -201,13 +202,15 @@ class Listener(object):
 
 
 class ProcessProgramRunner(ProgramRunner):
-    def __init__(self, config, n, t, nodeid, mixin_ops={}):
-        self.config = config
+    def __init__(self, network_config, n, t, nodeid, config={}):
+        self.network_config = network_config
         self.N, self.t, self.nodeid = n, t, nodeid
-        self.senders = Senders([asyncio.Queue() for _ in range(n)], config, nodeid)
-        self.listener = Listener(config[nodeid].port)
+        self.senders = Senders(
+            [asyncio.Queue() for _ in range(n)], network_config, nodeid)
+        self.listener = Listener(network_config[nodeid].port)
         self.programs = []
-        self.mixin_ops = mixin_ops
+        self.config = config
+        self.config[ConfigVars.Reconstruction] = HbmpcConfig.reconstruction
 
     def get_send_and_recv(self, sid):
         listener_queue = self.listener.get_program_queue(sid)
@@ -244,7 +247,7 @@ class ProcessProgramRunner(ProgramRunner):
                 send,
                 recv,
                 program,
-                self.mixin_ops,
+                self.config,
                 **kwargs,
             )
         self.programs.append(asyncio.ensure_future(context._run()))
@@ -270,9 +273,8 @@ class ProcessProgramRunner(ProgramRunner):
 
 
 if __name__ == "__main__":
-    from .mpc import test_prog1, test_prog2
+    from .mpc import test_prog1, test_prog2, test_batchopening
     from .preprocessing import PreProcessedElements
-    from .config import HbmpcConfig
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
@@ -294,6 +296,7 @@ if __name__ == "__main__":
         loop.run_until_complete(program_runner.start())
         program_runner.add(1, test_prog1)
         program_runner.add(2, test_prog2)
+        program_runner.add(3, test_batchopening)
         loop.run_until_complete(program_runner.join())
         loop.run_until_complete(program_runner.close())
     finally:

@@ -21,6 +21,15 @@ class NodeDetails(object):
         self.port = port
 
 
+class ConfigVars(object):
+    Reconstruction = "reconstruction"
+
+
+class ReconstructionConfig(object):
+    def __init__(self, induce_faults):
+        self.induce_faults = induce_faults
+
+
 class HbmpcConfig(object):
     N = None
     t = None
@@ -28,6 +37,7 @@ class HbmpcConfig(object):
     peers = None
     skip_preprocessing = False
     extras = None
+    reconstruction = None
 
     @staticmethod
     def load_config():
@@ -66,6 +76,13 @@ class HbmpcConfig(object):
                 HbmpcConfig.skip_preprocessing = config["skip_preprocessing"]
             if "extra" in config:
                 HbmpcConfig.extras = config["extra"]
+
+            induce_faults = False
+            if "reconstruction" in config:
+                if "induce_faults" in config["reconstruction"]:
+                    induce_faults = config["reconstruction"]["induce_faults"]
+
+            HbmpcConfig.reconstruction = ReconstructionConfig(induce_faults)
 
             # Ensure the required values are set before this method terminates
             assert HbmpcConfig.my_id is not None, "Node Id: missing"
