@@ -17,6 +17,13 @@ cdef extern from "helpers.h":
                                                     vec_ZZ_p Ad_evals, vector[int] z,
                                                     vec_ZZ_p ys, ZZ_p_c omega,
                                                     int n) nogil
-    cdef bool gao_interpolate_c "gao_interpolate" (vec_ZZ_p res_vec, vec_ZZ_p err_vec,
-                                                   vec_ZZ_p x_vec,
-                                                   vec_ZZ_p y_vec, int k, int n)
+    cdef bool gao_interpolate_c "gao_interpolate"(vec_ZZ_p res_vec, vec_ZZ_p err_vec,
+                                                  vec_ZZ_p x_vec,
+                                                  vec_ZZ_p y_vec, int k, int n)
+    cdef bool gao_interpolate_fft_c "gao_interpolate_fft"(vec_ZZ_p res_vec,
+                                                          vec_ZZ_p err_vec,
+                                                          vec_ZZ_p x_vec,
+                                                          vector[int] z,
+                                                          vec_ZZ_p y_vec,
+                                                          ZZ_p_c omega,
+                                                          int k, int n, int order)
