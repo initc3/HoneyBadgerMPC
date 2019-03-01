@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script runs AVSS in 5 processes.
-# Usage: sh scripts/launch_avss.sh honeybadgermpc/hbavss_multi.py conf/avss/local.ini
+# Usage: sh scripts/launch_avss.sh honeybadgermpc/hbavss_multi.py conf/avss/local
 
 if [ $# -eq 3 ] ; then
     echo '>> Invalid number of args passed.'
@@ -31,9 +31,9 @@ echo ">>> Command to be executed: '${CMD}'"
 
 # Generate config file locally
 set -x
-tmux new-session     "${CMD} -d -f ${CONFIG_PATH}.0; sh" \; \
-     splitw -h -p 50 "${CMD} -d -f ${CONFIG_PATH}.1; sh" \; \
-     splitw -v -p 50 "${CMD} -d -f ${CONFIG_PATH}.2; sh" \; \
+tmux new-session     "${CMD} -d -f ${CONFIG_PATH}.0.json; sh" \; \
+     splitw -h -p 50 "${CMD} -d -f ${CONFIG_PATH}.1.json; sh" \; \
+     splitw -v -p 50 "${CMD} -d -f ${CONFIG_PATH}.2.json; sh" \; \
      selectp -t 0 \; \
-     splitw -v -p 50 "${CMD} -d -f ${CONFIG_PATH}.3; sh" \; \
-     splitw -v -p 50 "${CMD} -d -f ${CONFIG_PATH}.4; sh"
+     splitw -v -p 50 "${CMD} -d -f ${CONFIG_PATH}.3.json; sh" \; \
+     splitw -v -p 50 "${CMD} -d -f ${CONFIG_PATH}.4.json; sh"

@@ -11,8 +11,8 @@ Sample config can be found at: conf/sample.ini
 """
 
 
-from configparser import ConfigParser
 from argparse import ArgumentParser
+import json
 
 
 class NodeDetails(object):
@@ -51,24 +51,21 @@ class HbmpcConfig(object):
         args = parser.parse_args()
 
         if args.is_dist:
-            cfgparser = ConfigParser()
+            config = json.load(open(args.config_file_path))
 
-            with open(args.config_file_path) as file_object:
-                cfgparser.read_file(file_object)
-
-            HbmpcConfig.N = cfgparser.getint('general', 'N')
-            HbmpcConfig.t = cfgparser.getint('general', 't')
-            HbmpcConfig.my_id = cfgparser.getint('general', 'my_id')
+            HbmpcConfig.N = config["N"]
+            HbmpcConfig.t = config["t"]
+            HbmpcConfig.my_id = config["my_id"]
             HbmpcConfig.peers = {
-                int(peerid): NodeDetails(
+                peerid: NodeDetails(
                     addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
-                for peerid, addrinfo in dict(cfgparser.items('peers')).items()
+                for peerid, addrinfo in enumerate(config["peers"])
             }
 
-            HbmpcConfig.skip_preprocessing = cfgparser.getboolean(
-                'general', 'skip_preprocessing', fallback=False)
-            if cfgparser.has_section("extra"):
-                HbmpcConfig.extras = dict(cfgparser.items('extra'))
+            if "skip_preprocessing" in config:
+                HbmpcConfig.skip_preprocessing = config["skip_preprocessing"]
+            if "extra" in config:
+                HbmpcConfig.extras = config["extra"]
 
             # Ensure the required values are set before this method terminates
             assert HbmpcConfig.my_id is not None, "Node Id: missing"
