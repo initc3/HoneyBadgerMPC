@@ -27,7 +27,7 @@ extern crate rand;
 pub mod tests;
 
 pub mod bls12_381;
-use bls12_381::{G1, G2, Fr, Fq, Fq2, Fq6, Fq12, FqRepr};
+use bls12_381::{G1, G2, Fr, Fq, Fq2, Fq12, FqRepr};
 mod wnaf;
 pub use self::wnaf::Wnaf;
 
@@ -397,11 +397,6 @@ impl PyFr {
         self.fr.square();
         Ok(())
     }
-    
-    fn pow(&mut self, s1: u64, s2: u64, s3: u64, s4: u64, s5: u64, s6:u64) -> PyResult<()> {
-        self.fr.pow([s1,s2,s3,s4,s5,s6]);
-        Ok(())
-    }
 
     fn add_assign(&mut self, other: &Self) -> PyResult<()> {
         self.fr.add_assign(&other.fr);
@@ -442,11 +437,9 @@ struct PyFq {
  #[pymethods]
 impl PyFq {
     #[new]
-    //fn __new__(obj: &PyRawObject, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()>{
-    fn __new__(obj: &PyRawObject) -> PyResult<()>{
-        //let mut rng = XorShiftRng::from_seed([s1,s2,s3,s4]);
-        //let f =  Fq::rand(&mut rng);
-        let f =  Fq::zero();
+    fn __new__(obj: &PyRawObject, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()>{
+        let mut rng = XorShiftRng::from_seed([s1,s2,s3,s4]);
+        let f =  Fq::rand(&mut rng);
         obj.init(|t| PyFq{
             fq: f,
         })
@@ -465,11 +458,9 @@ struct PyFq2 {
  #[pymethods]
 impl PyFq2 {
     #[new]
-    //fn __new__(obj: &PyRawObject, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()>{
-    fn __new__(obj: &PyRawObject) -> PyResult<()>{
-        //let mut rng = XorShiftRng::from_seed([s1,s2,s3,s4]);
-        //let f =  Fq2::rand(&mut rng);
-        let f =  Fq2::zero();
+    fn __new__(obj: &PyRawObject, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()>{
+        let mut rng = XorShiftRng::from_seed([s1,s2,s3,s4]);
+        let f =  Fq2::rand(&mut rng);
         obj.init(|t| PyFq2{
             fq2: f,
         })
@@ -480,24 +471,6 @@ impl PyFq2 {
         self.fq2.c0 = c0;
         self.fq2.c1 = c1;
         Ok(())
-    }
-}
-
-#[pyclass]
-struct PyFq6 {
-    fq6 : Fq6
-}
- #[pymethods]
-impl PyFq6 {
-    #[new]
-    //fn __new__(obj: &PyRawObject, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()>{
-    fn __new__(obj: &PyRawObject) -> PyResult<()>{
-        //let mut rng = XorShiftRng::from_seed([s1,s2,s3,s4]);
-        //let f =  Fq2::rand(&mut rng);
-        let f =  Fq6::zero();
-        obj.init(|t| PyFq6{
-            fq6: f,
-        })
     }
 }
 
@@ -525,52 +498,15 @@ struct PyFq12 {
 impl PyFq12 {
     #[new]
     fn __new__(obj: &PyRawObject) -> PyResult<()>{
-        let q =  Fq12::zero();
-        obj.init(|t| PyFq12{
-            fq12: q,
-        })
-        //Ok(())
-    }
-    fn from_strs(&mut self, s1: &str, s2: &str, s3: &str, s4: &str, s5: &str, s6: &str, s7: &str, s8: &str, s9: &str, s10: &str, s11: &str, s12: &str) -> PyResult<()> {
-        let c0 = Fq6 {
-            c0: Fq2 {
-                c0: Fq::from_str(s1).unwrap(),
-                c1: Fq::from_str(s2).unwrap()
-            },
-            c1: Fq2 {
-                c0: Fq::from_str(s3).unwrap(),
-                c1: Fq::from_str(s4).unwrap()
-            },
-            c2: Fq2 {
-                c0: Fq::from_str(s5).unwrap(),
-                c1: Fq::from_str(s6).unwrap()
-            }
-        };
-        let c1 = Fq6 {
-            c0: Fq2 {
-                c0: Fq::from_str(s7).unwrap(),
-                c1: Fq::from_str(s8).unwrap()
-            },
-            c1: Fq2 {
-                c0: Fq::from_str(s9).unwrap(),
-                c1: Fq::from_str(s10).unwrap()
-            },
-            c2: Fq2 {
-                c0: Fq::from_str(s11).unwrap(),
-                c1: Fq::from_str(s12).unwrap()
-            }
-        };
-        self.fq12.c0 = c0;
-        self.fq12.c1 = c1;
         Ok(())
     }
-    
+
     pub fn __str__(&self) -> PyResult<String> {
-        Ok(format!("({} + {} * w)",self.fq12.c0, self.fq12.c1 ))
+        Ok(format!("Fq12({} + {} * w)",self.fq12.c0, self.fq12.c1 ))
     }
 
     pub fn __repr__(&self) -> PyResult<String> {
-        Ok(format!("({} + {} * w)",self.fq12.c0, self.fq12.c1 ))
+        Ok(format!("Fq12({} + {} * w)",self.fq12.c0, self.fq12.c1 ))
     }
 
     fn rand(&mut self, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()> {
@@ -594,16 +530,6 @@ impl PyFq12 {
         self.fq12.mul_assign(&other.fq12);
         Ok(())
     }
-    
-    fn one(&mut self) -> PyResult<()> {
-        self.fq12 = Fq12::one();
-        Ok(())
-    }
-   
-    fn zero(&mut self) -> PyResult<()> {
-        self.fq12 = Fq12::zero();
-        Ok(())
-    }
 
     fn equals(&self, other: &Self) -> bool {
         self.fq12 == other.fq12
@@ -614,17 +540,10 @@ impl PyFq12 {
         self.fq12 = other.fq12;
         Ok(())
     }
+
+
 }
 
-#[pyfunction]
-fn vec_sum(a: &PyList) -> PyResult<String>{
-    let mut sum =  Fr::from_str("0").unwrap();
-    for item in a.iter(){
-        let myfr: &PyFr = item.try_into().unwrap();
-        sum.add_assign(&myfr.fr);
-    }
-    Ok(format!("{}",sum))
-}
 
 #[pymodinit]
 fn pypairing(py: Python, m: &PyModule) -> PyResult<()> {
@@ -633,12 +552,9 @@ fn pypairing(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyFq>()?;
     m.add_class::<PyFqRepr>()?;
     m.add_class::<PyFq2>()?;
-    m.add_class::<PyFq6>()?;
     m.add_class::<PyFq12>()?;
     m.add_class::<PyFr>()?;
     m.add_function(wrap_function!(py_pairing)).unwrap();
-    //m.add_function(wrap_function!(vec_sum))?;
-    m.add_function(wrap_function!(vec_sum)).unwrap();
     Ok(())
 }
 
