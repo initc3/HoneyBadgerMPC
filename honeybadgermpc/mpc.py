@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from random import randint
 from collections import defaultdict
 from .polynomial import polynomials_over
 from .field import GF, GFElement
@@ -11,6 +12,7 @@ from .batch_reconstruction import batch_reconstruct
 from .elliptic_curve import Subgroup
 from .preprocessing import PreProcessedElements
 from .mixins import MixinOpName
+from .config import ConfigVars
 
 
 class NotEnoughShares(Exception):
@@ -23,7 +25,7 @@ class BatchReconstructionFailed(Exception):
 
 class Mpc(object):
 
-    def __init__(self, sid, n, t, myid, pid, send, recv, prog, mixin_ops, **prog_args):
+    def __init__(self, sid, n, t, myid, pid, send, recv, prog, config, **prog_args):
         # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(n) is int and type(t) is int
@@ -35,7 +37,7 @@ class Mpc(object):
         self.pid = pid
         self.field = GF.get(Subgroup.BLS12_381)
         self.poly = polynomials_over(self.field)
-        self.mixin_ops = mixin_ops
+        self.config = config
 
         # send(j, o): sends object o to party j with (current sid)
         # recv(): returns (j, o) from party j
@@ -71,8 +73,14 @@ class Mpc(object):
         t = share.t if share.t is not None else self.t
         # Broadcast share
         for j in range(self.N):
+            value_to_share = share.v
+            if (ConfigVars.Reconstruction in self.config
+                    and self.config[ConfigVars.Reconstruction].induce_faults):
+                logging.debug("[FAULT][RobustReconstruct] Sending random share.")
+                value_to_share = self.field(randint(0, self.field.modulus - 1))
+
             # 'S' is for single shares
-            self.send(j, ('S', shareid, share.v))
+            self.send(j, ('S', shareid, value_to_share))
 
         # Set up the buffer of received shares
         share_buffer = [self._share_buffers[i][shareid] for i in range(self.N)]
@@ -92,9 +100,12 @@ class Mpc(object):
             (tag, share) = o
             self.send(j, (tag, shareid, share))
         _recv = self._sharearray_buffers[shareid].get
+
         opening = batch_reconstruct([s.v for s in sharearray._shares],
-                                    self.field.modulus, sharearray.t, self.N,
-                                    self.myid, _send, _recv, debug=True)
+                                    self.field.modulus, sharearray.t, self.N, self.myid,
+                                    _send, _recv,
+                                    config=self.config.get(ConfigVars.Reconstruction),
+                                    debug=True)
         self._openings[shareid] = opening
         return opening
 
@@ -222,8 +233,8 @@ def share_in_context(context):
         def __mul__(self, other):
             assert type(other) is Share
             assert self.t == other.t
-            if MixinOpName.MultiplyShare in context.mixin_ops:
-                return context.mixin_ops[MixinOpName.MultiplyShare](context, self, other)
+            if MixinOpName.MultiplyShare in context.config:
+                return context.config[MixinOpName.MultiplyShare](context, self, other)
             else:
                 raise NotImplementedError
 
@@ -301,9 +312,9 @@ def share_in_context(context):
                     [(a-b) for (a, b) in zip(self._shares, other._shares)], self.t)
 
         def __mul__(self, other):
-            if MixinOpName.MultiplyShareArray in context.mixin_ops:
+            if MixinOpName.MultiplyShareArray in context.config:
                 assert type(other) is ShareArray
-                return context.mixin_ops[MixinOpName.MultiplyShareArray](
+                return context.config[MixinOpName.MultiplyShareArray](
                     context, self, other)
             else:
                 raise NotImplementedError
@@ -312,9 +323,9 @@ def share_in_context(context):
 
 
 class TaskProgramRunner(ProgramRunner):
-    def __init__(self, n, t, mixin_ops={}):
+    def __init__(self, n, t, config={}):
         self.N, self.t, self.pid = n, t, 0
-        self.mixin_ops = mixin_ops
+        self.config = config
         self.tasks = []
         self.loop = asyncio.get_event_loop()
 
@@ -330,7 +341,7 @@ class TaskProgramRunner(ProgramRunner):
                 sends[i],
                 recvs[i],
                 program,
-                self.mixin_ops,
+                self.config,
                 **kwargs,
             )
             self.tasks.append(self.loop.create_task(context._run()))
