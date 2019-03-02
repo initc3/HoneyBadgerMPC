@@ -72,6 +72,9 @@ class G1:
         if type(other) is G1:
             self.pyg1.add_assign(other.pyg1)
             return self
+        raise TypeError(
+            'Invalid multiplication param. Expected G1. Got '
+            + str(type(other)))
 
     def __truediv__(self, other):
         if type(other) is G1:
@@ -87,6 +90,9 @@ class G1:
         if type(other) is G1:
             self.pyg1.sub_assign(other.pyg1)
             return self
+        raise TypeError(
+            'Invalid division param. Expected G1. Got '
+            + str(type(other)))
 
     def __pow__(self, other):
         if type(other) is int:
@@ -115,7 +121,7 @@ class G1:
                 return self
             if other < 0:
                 self.invert()
-                other = other * -1
+                other *= -1
             self.pyg1.mul_assign(ZR(other).val)
             return self
         elif type(other) is ZR:
@@ -172,7 +178,9 @@ class G1:
 
     @staticmethod
     def one():
-        return G1(PyG1().zero())
+        one = G1()
+        one.pyg1.zero()
+        return one
 
     @staticmethod
     def rand(seed=None):
@@ -277,7 +285,7 @@ class G2:
                 return self
             if other < 0:
                 self.invert()
-                other = other * -1
+                other *= -1
             self.pyg2.mul_assign(ZR(other).val)
             return self
         elif type(other) is ZR:
@@ -329,7 +337,9 @@ class G2:
 
     @staticmethod
     def one():
-        return G2(PyG2().zero())
+        one = G2()
+        one.pyg2.zero()
+        return one
 
     @staticmethod
     def rand(seed=None):
@@ -377,7 +387,7 @@ class GT:
                 return out
             if other < 0:
                 out.pyfq12.negate()
-                other = -1 * other
+                other *= -1
             prodend = GT(other)
             out.pyfq12.mul_assign(prodend.pyfq12)
             return out

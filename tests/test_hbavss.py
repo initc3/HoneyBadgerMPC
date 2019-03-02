@@ -30,4 +30,4 @@ async def test_hbavss(test_router):
     for r in recipients:
         threads.append(r.run())
     threads.append(dealer.run())
-    await asyncio.wait(threads)
+    await asyncio.gather(*threads)
