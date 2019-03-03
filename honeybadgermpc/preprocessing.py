@@ -6,6 +6,7 @@ from random import randint
 from os import makedirs
 from .field import GF
 from .polynomial import polynomials_over
+from .ntl.helpers import batch_vandermonde_evaluate
 from .elliptic_curve import Subgroup
 
 
@@ -52,8 +53,11 @@ class PreProcessedElements(object):
         f.write(content)
 
     def _write_polys(self, file_name_prefix, n, t, polys):
+        polys = [[coeff.value for coeff in poly.coeffs] for poly in polys]
+        all_shares = batch_vandermonde_evaluate(
+            list(range(1, n+1)), polys, self.field.modulus)
         for i in range(n):
-            shares = [f(i+1) for f in polys]
+            shares = [self.field(s[i]) for s in all_shares]
             with open('%s_%d_%d-%d.share' % (file_name_prefix, n, t, i), 'w') as f:
                 self._write_shares_to_file(f, t, i, shares)
 
