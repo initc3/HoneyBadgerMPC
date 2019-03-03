@@ -3,6 +3,7 @@ import uuid
 import os
 import argparse
 import json
+import logging
 from time import time
 from math import log
 
@@ -92,16 +93,16 @@ def get_butterfly_network_setup_commands(max_k, s3manager, instance_ids):
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     k = max_k if max_k else AwsConfig.MPC_CONFIG.K
 
-    print(">>> Starting to create preprocessing files.")
+    logging.info("Starting to create preprocessing files.")
     stime = time()
     num_switches = k * int(log(k, 2)) ** 2
     pp_elements = PreProcessedElements()
     pp_elements.generate_triples(2 * num_switches, n, t)
     pp_elements.generate_one_minus_one_rands(num_switches, n, t)
     pp_elements.generate_rands(k, n, t)
-    print(f">>> Preprocessing files created in {time()-stime}")
+    logging.info(f"Preprocessing files created in {time()-stime}")
 
-    print(">>> Uploading inputs to AWS S3.")
+    logging.info("Uploading inputs to AWS S3.")
     stime = time()
     triple_urls = s3manager.upload_files([
         f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}_{n}_{t}-{i}.share"
@@ -112,7 +113,7 @@ def get_butterfly_network_setup_commands(max_k, s3manager, instance_ids):
     rand_share_urls = s3manager.upload_files([
         f"{PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX}_{n}_{t}-{i}.share"
         for i in range(n)])
-    print(f">>> Inputs successfully uploaded in {time()-stime} seconds.")
+    logging.info(f"Inputs successfully uploaded in {time()-stime} seconds.")
 
     setup_commands = [[instance_id, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
@@ -131,16 +132,16 @@ def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     k = max_k if max_k else AwsConfig.MPC_CONFIG.K
 
-    print(">>> Starting to create preprocessing files.")
+    logging.info("Starting to create preprocessing files.")
     stime = time()
     pp_elements = PreProcessedElements()
     pp_elements.generate_powers(k, n, t, k)
     pp_elements.generate_rands(k, n, t)
-    print(f">>> Preprocessing files created in {time()-stime}")
+    logging.info(f"Preprocessing files created in {time()-stime}")
 
     setup_commands = []
     total_time = 0
-    print(f">>> Uploading input files to AWS S3.")
+    logging.info(f"Uploading input files to AWS S3.")
 
     for i, instance_id in enumerate(instance_ids):
         url = s3manager.upload_file(f"aws/download_input.sh")
@@ -170,14 +171,14 @@ def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
         commands.append(f"cd sharedata; curl -sSO {url}; bash download_input.sh {fname}")
         setup_commands.append([instance_id, commands])
 
-    print(f">>> Upload completed in {total_time} seconds.")
+    logging.info(f"Upload completed in {total_time} seconds.")
 
     return setup_commands
 
 
 def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
     os.makedirs("sharedata/", exist_ok=True)
-    print(f">>> Run Id: {run_id} <<<")
+    logging.info(f"Run Id: {run_id}")
     ec2manager, s3manager = EC2Manager(), S3Manager(run_id)
     instance_ids, instance_ips = ec2manager.create_instances()
 
@@ -202,21 +203,21 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
         instance_configs = get_instance_configs(
             instance_ips, {"k": AwsConfig.MPC_CONFIG.K})
     else:
-        print("Application not supported to run on AWS.")
+        logging.error("Application not supported to run on AWS.")
         raise SystemError
 
-    print(f">>> Uploading config file to S3 in '{AwsConfig.BUCKET_NAME}' bucket. <<<")
+    logging.info(f"Uploading config file to S3 in '{AwsConfig.BUCKET_NAME}' bucket.")
 
     config_urls = s3manager.upload_configs(instance_configs)
-    print(">>> Config file upload complete. <<<")
+    logging.info("Config file upload complete.")
 
-    print(">>> Triggering config update on instances.")
+    logging.info("Triggering config update on instances.")
     config_update_commands = [[instance_id, [
             "mkdir -p config",
             "cd config; curl -sSO %s" % (config_url),
         ]] for config_url, instance_id in zip(config_urls, instance_ids)]
     run_commands_on_instances(ec2manager, config_update_commands, False)
-    print(">>> Config update completed successfully")
+    logging.info("Config update completed successfully.")
 
     if not skip_setup:
         if AwsConfig.MPC_CONFIG.COMMAND.endswith("ipc"):
@@ -233,11 +234,11 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
         elif AwsConfig.MPC_CONFIG.COMMAND.endswith("hbavss_multi"):
             setup_commands = get_hbavss_setup_commands(s3manager, instance_ids)
 
-        print(">>> Triggering setup commands. <<<")
+        logging.info("Triggering setup commands.")
         run_commands_on_instances(ec2manager, setup_commands, False)
 
     if not only_setup:
-        print(">>> Setup commands executed successfully. <<<")
+        logging.info("Setup commands executed successfully.")
         instance_commands = [[instance_id, [
                 f"sudo docker run\
                 -p {port}:{port} \
@@ -247,9 +248,9 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
                 {AwsConfig.DOCKER_IMAGE_PATH} \
                 {AwsConfig.MPC_CONFIG.COMMAND} -d -f config/config-{i}.json"
             ]] for i, instance_id in enumerate(instance_ids)]
-        print(">>> Triggering MPC commands. <<<")
+        logging.info("Triggering MPC commands.")
         run_commands_on_instances(ec2manager, instance_commands)
-        print(">>> Collecting logs. <<<")
+        logging.info("Collecting logs.")
         log_collection_cmds = [[id, ["cat benchmark/*.log"]] for id in instance_ids]
         os.makedirs(run_id, exist_ok=True)
         run_commands_on_instances(
