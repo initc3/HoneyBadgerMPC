@@ -261,7 +261,15 @@ def robust_batch_interpolate(data, field, point, n, t, n_available):
 
     polynomial_solutions = []
     for chunk in chunks:
-        polynomial_solution, err_polynomial = gao_interpolate(x, chunk, t + 1, p)
+        if point.use_fft:
+            logging.debug("Using Gao's algorithm with FFT")
+            polynomial_solution, err_polynomial = gao_interpolate(x, chunk, t + 1, p,
+                                                                  z, point.omega.value,
+                                                                  point.order,
+                                                                  use_fft=True)
+        else:
+            logging.debug("Using Gao's algorithm without FFT")
+            polynomial_solution, err_polynomial = gao_interpolate(x, chunk, t + 1, p)
 
         if polynomial_solution is None:
             logging.debug("Robust interpolation failed")

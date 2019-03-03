@@ -10,7 +10,6 @@ This module can be used to:
 Sample config can be found at: conf/sample.ini
 """
 
-
 from argparse import ArgumentParser
 import json
 
@@ -26,8 +25,27 @@ class ConfigVars(object):
 
 
 class ReconstructionConfig(object):
-    def __init__(self, induce_faults):
+    def __init__(self, induce_faults, decoding_algorithm):
         self.induce_faults = induce_faults
+        self.decoding_algorithm = decoding_algorithm
+
+    @classmethod
+    def default(cls):
+        return cls(induce_faults=False, decoding_algorithm="gao")
+
+    @classmethod
+    def from_json(cls, json_config):
+        res = cls.default()
+        if 'induce_faults' in json_config:
+            res.induce_faults = json_config['induce_faults']
+
+        if 'decoding_algorithm' in json_config:
+            decoding_algorithm = json_config['decoding_algorithm']
+            assert decoding_algorithm in ["gao", "welch-berlekamp"], \
+                "decoding_algorithm must be gao or welch-berlekamp"
+            res.decoding_algorithm = json_config['decoding_algorithm']
+
+        return res
 
 
 class HbmpcConfig(object):
@@ -77,12 +95,12 @@ class HbmpcConfig(object):
             if "extra" in config:
                 HbmpcConfig.extras = config["extra"]
 
-            induce_faults = False
+            reconstruction_data = {}
             if "reconstruction" in config:
-                if "induce_faults" in config["reconstruction"]:
-                    induce_faults = config["reconstruction"]["induce_faults"]
+                reconstruction_data = config["reconstruction"]
 
-            HbmpcConfig.reconstruction = ReconstructionConfig(induce_faults)
+            HbmpcConfig.reconstruction = ReconstructionConfig.from_json(
+                reconstruction_data)
 
             # Ensure the required values are set before this method terminates
             assert HbmpcConfig.my_id is not None, "Node Id: missing"
