@@ -46,11 +46,10 @@ class PreProcessedElements(object):
             return [int(line) for line in lines]
 
     def _write_shares_to_file(self, f, degree, myid, shares):
-        print(self.field.modulus, file=f)
-        print(degree, file=f)
-        print(myid, file=f)
+        content = f"{self.field.modulus}\n{degree}\n{myid}\n"
         for share in shares:
-            print(share.value, file=f)
+            content += f"{share.value}\n"
+        f.write(content)
 
     def _write_polys(self, file_name_prefix, n, t, polys):
         for i in range(n):
@@ -92,8 +91,15 @@ class PreProcessedElements(object):
     def generate_powers(self, k, n, t, z):
         self._create_sharedata_dir_if_not_exists()
         b = randint(0, self.field.modulus-1)
+
+        # Since we need all powers, multiplication
+        # is faster than using the pow() function.
+        powers = [None] * k
+        powers[0] = b
+        for i in range(1, k):
+            powers[i] = powers[i-1] * b
         for i in range(z):
-            polys = [self.poly.random(t, pow(b, j)) for j in range(1, k+1)]
+            polys = [self.poly.random(t, power) for power in powers]
             self._write_polys(
                 f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{i}", n, t, polys)
 

@@ -393,7 +393,7 @@ async def test_prog1(context):
     x_, y_, xy_ = await x.open(), await y.open(), await xy.open()
     assert x_ * y_ == xy_
 
-    logging.info(f"[%d] Finished {context.myid}, {x_}, {y_}, {xy_}")
+    logging.info(f"[{context.myid}] Finished {x_}, {y_}, {xy_}")
 
 
 async def test_prog2(context):
