@@ -1,6 +1,7 @@
 import boto3
 import paramiko
 import os.path
+import logging
 from threading import Semaphore
 from aws.AWSConfig import AwsConfig
 
@@ -37,10 +38,10 @@ class EC2Manager:
 
     def create_instances(self):
         if os.path.isfile(EC2Manager.current_vms_file_name):
-            print(">>> Picking up VMs from current.vms file. <<<")
+            logging.info("Picking up VMs from current.vms file.")
             all_instance_ids = self.get_current_vm_instance_ids()
         else:
-            print(">>> VM creation started. <<<")
+            logging.info("VM creation started.")
             all_instance_ids = []
             region_instance_id_map = {}
             for region, region_config in AwsConfig.REGION.items():
@@ -91,7 +92,7 @@ class EC2Manager:
 
             with open(EC2Manager.current_vms_file_name, "w") as file_handle:
                 file_handle.write(",".join(all_instance_ids))
-            print(">>> VMs successfully booted up. <<<")
+            logging.info("VMs successfully booted up.")
         all_instance_ips = [self.get_instance_public_ip(id) for id in all_instance_ids]
         self.instanceIdToNodeIdMap = {id: i for i, id in enumerate(all_instance_ids)}
         return all_instance_ids, all_instance_ips
@@ -138,7 +139,7 @@ class EC2Manager:
                         print(
                             f"{'#'*10} OUTPUT FROM {ip} | Command: {command} {'#'*10}"
                         )
-                        print(output)
+                        logging.info(output)
                         print("#" * 30)
                     if output_file_prefix:
                         with open(
