@@ -1,4 +1,5 @@
 import boto3
+from concurrent.futures import ThreadPoolExecutor
 from aws.AWSConfig import AwsConfig
 
 
@@ -15,8 +16,8 @@ class S3Manager(object):
         self.prefix = run_id
         self.s3Client.create_bucket(Bucket=self.bucket)
 
-    def upload_config(self, instance_config):
-        key = "%s/config.ini" % (self.prefix)
+    def upload_config(self, instance_id, instance_config):
+        key = "%s/config-%d.json" % (self.prefix, instance_id)
         self.s3Client.put_object(
             Body=instance_config.encode(),
             Bucket=self.bucket,
@@ -34,6 +35,16 @@ class S3Manager(object):
             ExtraArgs={'ACL': 'public-read'}
         )
         return "https://s3.amazonaws.com/{0}/{1}".format(self.bucket, key)
+
+    def upload_configs(self, instance_configs):
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            urls = executor.map(self.upload_config, *zip(*instance_configs))
+            return list(urls)
+
+    def upload_files(self, file_names):
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            urls = executor.map(self.upload_file, file_names)
+            return list(urls)
 
     def cleanup(self):
         response = self.s3Client.list_objects_v2(

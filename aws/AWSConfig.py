@@ -13,14 +13,14 @@ class RegionConfig(object):
 
 
 class MPCConfig(object):
-    def __init__(self, command, t, k, delta, port, num_triples, n):
+    def __init__(self, command, t, k, port, num_triples, n, num_faulty_nodes):
         self.COMMAND = command
         self.T = t
         self.PORT = port
         self.NUM_TRIPLES = num_triples
         self.K = k
-        self.DELTA = delta
-        self.n = n
+        self.N = n
+        self.NUM_FAULTY_NODES = num_faulty_nodes
 
 
 def read_environment_variable(key):
@@ -36,14 +36,18 @@ class AwsConfig:
     config = json.load(open('./aws/aws-config.json'))
 
     mpc_config = config["mpc"]
+
+    assert mpc_config["num_faulty_nodes"] <= mpc_config["t"], ("`num_faulty_nodes` \
+        cannot be greater than `t`")
+
     MPC_CONFIG = MPCConfig(
         mpc_config["command"],
         mpc_config["t"],
         mpc_config["k"],
-        mpc_config["delta"],
         mpc_config["port"],
         mpc_config["num_triples"],
-        mpc_config["n"]
+        mpc_config["n"],
+        mpc_config["num_faulty_nodes"],
     )
 
     awsconfig = config["aws"]
