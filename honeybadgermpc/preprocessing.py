@@ -5,8 +5,9 @@ from uuid import uuid4
 from random import randint
 from os import makedirs
 from .field import GF
-from .polynomial import polynomials_over
-from .ntl.helpers import batch_vandermonde_evaluate
+from .polynomial import polynomials_over, EvalPoint
+from .ntl.helpers import batch_vandermonde_evaluate, fft
+
 from .elliptic_curve import Subgroup
 
 
@@ -23,7 +24,7 @@ class PreProcessingConstants(object):
 
 
 class PreProcessedElements(object):
-    def __init__(self):
+    def __init__(self, use_fft=True):
         self.field = GF.get(Subgroup.BLS12_381)
         self.poly = polynomials_over(self.field)
         self._triples = {}
@@ -31,6 +32,7 @@ class PreProcessedElements(object):
         self._rands = {}
         self._one_minus_one_rands = {}
         self._double_shares = {}
+        self.use_fft = use_fft
 
     def _read_share_values_from_file(self, file_name):
         with open(file_name, "r") as f:
@@ -53,9 +55,19 @@ class PreProcessedElements(object):
         f.write(content)
 
     def _write_polys(self, file_name_prefix, n, t, polys):
-        polys = [[coeff.value for coeff in poly.coeffs] for poly in polys]
-        all_shares = batch_vandermonde_evaluate(
-            list(range(1, n+1)), polys, self.field.modulus)
+        if not self.use_fft:
+            all_polys = [[coeff.value for coeff in poly.coeffs] for poly in polys]
+            all_shares = batch_vandermonde_evaluate(
+                list(range(1, n+1)), all_polys, self.field.modulus)
+        else:
+            point = EvalPoint(self.field, n, use_fft=True)
+            all_shares = [None]*len(polys)
+            for i, poly in enumerate(polys):
+                coeffs = [coeff.value for coeff in poly.coeffs]
+                evals = fft(
+                    coeffs, point.omega.value, self.field.modulus, point.order)[:n]
+                all_shares[i] = evals
+
         for i in range(n):
             shares = [self.field(s[i]) for s in all_shares]
             with open('%s_%d_%d-%d.share' % (file_name_prefix, n, t, i), 'w') as f:
