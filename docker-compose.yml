@@ -9,6 +9,7 @@ services:
         BUILD: dev,aws
     volumes:
       - ./apps:/usr/src/HoneyBadgerMPC/apps
+      - ./benchmark:/usr/src/HoneyBadgerMPC/benchmark
       - ./aws:/usr/src/HoneyBadgerMPC/aws
       - ./conf:/usr/src/HoneyBadgerMPC/conf
       - ./docs:/usr/src/HoneyBadgerMPC/docs
