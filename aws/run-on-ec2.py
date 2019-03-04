@@ -57,7 +57,7 @@ def run_commands_on_instances(
 def get_hbavss_setup_commands(s3manager, instance_ids):
     setup_commands = [[id, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
-            "mkdir -p benchmark",
+            "mkdir -p benchmark-logs",
         ]] for i, id in enumerate(instance_ids)]
     return setup_commands
 
@@ -82,7 +82,7 @@ def get_ipc_setup_commands(s3manager, instance_ids):
             "mkdir -p sharedata",
             "cd sharedata; curl -sSO %s" % (triple_urls[i]),
             "cd sharedata; curl -sSO %s" % (zero_urls[i]),
-            "mkdir -p benchmark",
+            "mkdir -p benchmark-logs",
         ]] for i, instance_id in enumerate(instance_ids)]
 
     return setup_commands
@@ -121,7 +121,7 @@ def get_butterfly_network_setup_commands(max_k, s3manager, instance_ids):
             "cd sharedata; curl -sSO %s" % (triple_urls[i]),
             "cd sharedata; curl -sSO %s" % (rand_share_urls[i]),
             "cd sharedata; curl -sSO %s" % (input_urls[i]),
-            "mkdir -p benchmark",
+            "mkdir -p benchmark-logs",
         ]] for i, instance_id in enumerate(instance_ids)]
 
     return setup_commands
@@ -150,7 +150,7 @@ def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
             f"curl -sSO {url}",
             "mkdir -p sharedata",
             "cp download_input.sh sharedata/download_input.sh ",
-            "mkdir -p benchmark",
+            "mkdir -p benchmark-logs",
             "ulimit -n 10000",
         ]
         file_names = []
@@ -244,17 +244,17 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
                 -p {port}:{port} \
                 -v /home/ubuntu/config:/usr/src/HoneyBadgerMPC/config/ \
                 -v /home/ubuntu/sharedata:/usr/src/HoneyBadgerMPC/sharedata/ \
-                -v /home/ubuntu/benchmark:/usr/src/HoneyBadgerMPC/benchmark/ \
+                -v /home/ubuntu/benchmark-logs:/usr/src/HoneyBadgerMPC/benchmark-logs/ \
                 {AwsConfig.DOCKER_IMAGE_PATH} \
                 {AwsConfig.MPC_CONFIG.COMMAND} -d -f config/config-{i}.json"
             ]] for i, instance_id in enumerate(instance_ids)]
         logging.info("Triggering MPC commands.")
         run_commands_on_instances(ec2manager, instance_commands)
         logging.info("Collecting logs.")
-        log_collection_cmds = [[id, ["cat benchmark/*.log"]] for id in instance_ids]
+        log_collection_cmds = [[id, ["cat benchmark-logs/*.log"]] for id in instance_ids]
         os.makedirs(run_id, exist_ok=True)
         run_commands_on_instances(
-            ec2manager, log_collection_cmds, True, f"{run_id}/benchmark")
+            ec2manager, log_collection_cmds, True, f"{run_id}/benchmark-logs")
 
     s3manager.cleanup()
 
