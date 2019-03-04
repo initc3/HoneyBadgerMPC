@@ -11,7 +11,7 @@ handlers:
     stream: ext://sys.stdout
   logfile:
     class: logging.FileHandler
-    filename: benchmark/benchmark.log
+    filename: benchmark-logs/benchmark.log
     formatter: with_node_id
 loggers:
   benchmark_logger:
