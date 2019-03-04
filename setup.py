@@ -29,6 +29,8 @@ TESTS_REQUIRES = [
     'pytest-mock',
     'pytest-cov',
     'pytest-env',
+    'pytest-benchmark',
+    'pytest-benchmark[histogram]',
     'pyyaml',
 ]
 
