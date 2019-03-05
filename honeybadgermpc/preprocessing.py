@@ -94,7 +94,7 @@ class PreProcessedElements(object):
 
     def generate_powers(self, k, n, t, z):
         self._create_sharedata_dir_if_not_exists()
-        b = randint(0, self.field.modulus-1)
+        b = self.field.random().value
 
         # Since we need all powers, multiplication
         # is faster than using the pow() function.
