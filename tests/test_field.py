@@ -1,5 +1,6 @@
 import pytest
 import operator
+from pytest import raises
 
 
 def test_multiple_fields():
@@ -27,6 +28,13 @@ def test_invalid_operations_on_fields():
             op(field1(2), field2(3))
 
 
-def test_random(galois_field):
-    from honeybadgermpc.field import GFElement
-    assert type(galois_field.random()) is GFElement
+def test_sqrt(galois_field):
+    field = galois_field
+    for i in range(100):
+        num = galois_field.random()
+        if pow(num, (field.modulus-1)//2) == 1:
+            root = num.sqrt()
+            assert root * root == num
+        else:
+            with raises(AssertionError):
+                root = num.sqrt()

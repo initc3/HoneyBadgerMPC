@@ -243,20 +243,43 @@ class GFElement(FieldElement):
 
     def sqrt(self):
         """Square root.
-
         No attempt is made the to return the positive square root.
-
-        Computing square roots is only possible when the modulus
-        is a Blum prime (congruent to 3 mod 4).
         """
-        assert self.modulus % 4 == 3, "Cannot compute square " \
-            "root of %s with modulus %s" % (self, self.modulus)
+        assert self.modulus % 2 == 1, "Modulus must be odd"
+        assert pow(self, (self.modulus-1)//2) == 1
 
-        # Because we assert that the modulus is a Blum prime
-        # (congruent to 3 mod 4), there will be no reminder in the
-        # division below.
-        root = pow(self.value, (self.modulus+1)//4, self.modulus)
-        return GFElement(root, self.field)
+        if self.modulus % 4 == 3:
+            # The case that the modulus is a Blum prime
+            # (congruent to 3 mod 4), there will be no remainder in the
+            # division below.
+            root = pow(self.value, (self.modulus+1)//4)
+            return GFElement(root, self.field)
+        else:
+            # The case that self.modulus % 4 == 1
+            # Cipolla’s Algorithm
+            # http://people.math.gatech.edu/~mbaker/pdf/cipolla2011.pdf
+            t = u = 0
+            for i in range(1, self.modulus):
+                u = i*i - self
+                if pow(u, (self.modulus-1)//2) == self.modulus - 1:
+                    t = i
+                    break
+
+            def cipolla_mult(a, b, w):
+                return ((a[0]*b[0] + a[1]*b[1]*w), (a[0]*b[1] + a[1]*b[0]))
+
+            exp = (self.modulus+1)//2
+            exp_bin = bin(exp)[2:]
+            x1 = (t, 1)
+            x2 = cipolla_mult(x1, x1, u)
+            for i in range(1, len(exp_bin)):
+                if(exp_bin[i] == "0"):
+                    x2 = cipolla_mult(x2, x1, u)
+                    x1 = cipolla_mult(x1, x1, u)
+                else:
+                    x1 = cipolla_mult(x1, x2, u)
+                    x2 = cipolla_mult(x2, x2, u)
+            return x1[0]
 
     def bit(self, index):
         """Extract a bit (index is counted from zero)."""
