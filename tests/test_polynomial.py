@@ -12,16 +12,16 @@ def test_poly_eval_at_k(galois_field, polynomial):
         assert poly2(i) == pow(i, 2) + 10
 
     d = randint(1, 50)
-    coeffs = [randint(0, galois_field.modulus-1) for i in range(d)]
+    coeffs = [galois_field.random().value for i in range(d)]
     poly3 = polynomial(coeffs)  # random polynomial of degree d
-    x = galois_field(randint(0, galois_field.modulus-1))
+    x = galois_field(galois_field.random().value)
     y = sum([pow(x, i) * a for i, a in enumerate(coeffs)])
     assert y == poly3(x)
 
 
 def test_evaluate_fft(galois_field, polynomial):
     d = randint(210, 300)
-    coeffs = [randint(0, galois_field.modulus-1) for i in range(d)]
+    coeffs = [galois_field.random().value for i in range(d)]
     poly = polynomial(coeffs)  # random polynomial of degree d
     n = len(poly.coeffs)
     n = n if n & n-1 == 0 else 2**n.bit_length()
@@ -34,7 +34,7 @@ def test_evaluate_fft(galois_field, polynomial):
 
 def test_interpolate_fft(galois_field, polynomial):
     d = randint(210, 300)
-    y = [randint(0, galois_field.modulus-1) for i in range(d)]
+    y = [galois_field.random().value for i in range(d)]
     n = len(y)
     n = n if n & n-1 == 0 else 2**n.bit_length()
     ys = y + [galois_field(0)] * (n - len(y))
@@ -46,7 +46,7 @@ def test_interpolate_fft(galois_field, polynomial):
 
 def test_interp_extrap(galois_field, polynomial):
     d = randint(210, 300)
-    y = [randint(0, galois_field.modulus-1) for i in range(d)]
+    y = [galois_field.random().value for i in range(d)]
     n = len(y)
     n = n if n & n-1 == 0 else 2**n.bit_length()
     ys = y + [galois_field(0)] * (n - len(y))
@@ -58,7 +58,7 @@ def test_interp_extrap(galois_field, polynomial):
 
 def test_fft_decode(galois_field, polynomial):
     d = randint(210, 300)
-    coeffs = [randint(0, galois_field.modulus - 1) for i in range(d)]
+    coeffs = [galois_field.random().value for i in range(d)]
     poly = polynomial(coeffs)
     n = d
     n = n if n & n-1 == 0 else 2**n.bit_length()

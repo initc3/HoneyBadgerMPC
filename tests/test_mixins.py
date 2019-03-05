@@ -1,16 +1,14 @@
-from random import randint
 from pytest import mark
 
 
 @mark.asyncio
-async def test_degree_reduction_share(test_preprocessing):
+async def test_degree_reduction_share(galois_field, test_preprocessing):
     from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.elliptic_curve import Subgroup
     from honeybadgermpc.mixins import DoubleSharing
 
     n, t = 9, 2
 
-    x_expected = randint(0, Subgroup.BLS12_381-1)
+    x_expected = galois_field.random().value
     sid_x_2t = test_preprocessing.generate("share", n, 2*t, x_expected)
     test_preprocessing.generate("double_shares", n, t)
 

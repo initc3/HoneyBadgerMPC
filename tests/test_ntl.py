@@ -1,6 +1,5 @@
 from honeybadgermpc.ntl.helpers import interpolate, batch_vandermonde_interpolate, \
     batch_vandermonde_evaluate, fft, fft_interpolate, fft_batch_interpolate
-import random
 
 
 def test_interpolate(galois_field):
@@ -63,7 +62,7 @@ def test_fft_big(galois_field, galois_field_roots):
     r = 5
     n = 2 ** r
     omega = galois_field_roots[r]
-    coeffs = [random.randint(0, p - 1) for _ in range(d)]
+    coeffs = [galois_field.random().value for _ in range(d)]
 
     # When
     fft_rep = fft(coeffs, omega, p, n)
