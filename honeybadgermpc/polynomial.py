@@ -131,8 +131,7 @@ def polynomials_over(field):
 
         @classmethod
         def random(cls, degree, y0=None):
-            coeffs = [field(random.randint(0, field.modulus-1))
-                      for _ in range(degree+1)]
+            coeffs = [field.random() for _ in range(degree+1)]
             if y0 is not None:
                 coeffs[0] = y0
             return cls(coeffs)
@@ -234,7 +233,7 @@ def get_omega(field, n, seed=None):
     assert n & n-1 == 0, "n must be a power of 2"
     if seed is not None:
         random.seed(seed)
-    x = field(random.randint(0, field.modulus-1))
+    x = field.random()
     y = pow(x, (field.modulus-1)//n)
     if y == 1 or pow(y, n//2) == 1:
         return get_omega(field, n)

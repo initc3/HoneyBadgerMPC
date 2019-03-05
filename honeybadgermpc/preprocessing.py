@@ -68,8 +68,8 @@ class PreProcessedElements(object):
         self._create_sharedata_dir_if_not_exists()
         polys = []
         for _ in range(k):
-            a = self.field(randint(0, self.field.modulus-1))
-            b = self.field(randint(0, self.field.modulus-1))
+            a = self.field.random()
+            b = self.field.random()
             c = a*b
             polys.append(self.poly.random(t, a))
             polys.append(self.poly.random(t, b))
@@ -111,7 +111,7 @@ class PreProcessedElements(object):
         self._create_sharedata_dir_if_not_exists()
         polys = []
         for _ in range(k):
-            r = self.field(randint(0, self.field.modulus-1))
+            r = self.field.random()
             polys.append(self.poly.random(t, r))
             polys.append(self.poly.random(2*t, r))
         self._write_polys(

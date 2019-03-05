@@ -1,5 +1,4 @@
 import asyncio
-from random import randint
 from .field import GF
 from .polynomial import polynomials_over, EvalPoint, fnt_decode_step1
 from .robust_reconstruction import attempt_reconstruct, robust_reconstruct
@@ -254,7 +253,7 @@ async def batch_reconstruct(elem_batches, p, t, n, myid, send, recv, config=None
 
     if config is not None and config.induce_faults:
         logging.debug("[FAULT][BatchReconsutrction] Sending random shares.")
-        elem_batches = [fp(randint(0, fp.modulus-1)) for _ in range(len(elem_batches))]
+        elem_batches = [fp.random() for _ in range(len(elem_batches))]
 
     poly = polynomials_over(fp)
     point = EvalPoint(fp, n, use_fft=use_fft)

@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from random import randint
 from collections import defaultdict
 from .polynomial import polynomials_over
 from .field import GF, GFElement
@@ -77,7 +76,7 @@ class Mpc(object):
             if (ConfigVars.Reconstruction in self.config
                     and self.config[ConfigVars.Reconstruction].induce_faults):
                 logging.debug("[FAULT][RobustReconstruct] Sending random share.")
-                value_to_share = self.field(randint(0, self.field.modulus - 1))
+                value_to_share = self.field.random()
 
             # 'S' is for single shares
             self.send(j, ('S', shareid, value_to_share))

@@ -1,5 +1,4 @@
 import asyncio
-import random
 import logging
 # For testing, use the Ideal Protocol for AVSS and ACS
 from .secretshare_functionality import secret_share_ideal_protocol
@@ -30,7 +29,7 @@ class NaiveShareRandomProtocol(object):
 
         async def _run():
             # Provide random input to my own AVSS
-            v = Field(random.randint(0, 10000))
+            v = Field.random()
             self.avss[myid].inputFromDealer.set_result(v)
 
             # Wait for output from *every* AVSS (this is the problem)
@@ -89,7 +88,7 @@ class ShareSingleProtocol(object):
 
         async def _run():
             # Provide random input to my own AVSS
-            v = Field(random.randint(0, 10000))
+            v = Field.random()
             self._avss[myid].inputFromDealer.set_result(v)
 
             # Wait to observe N-t of the AVSS complete, then provide input to ACS
