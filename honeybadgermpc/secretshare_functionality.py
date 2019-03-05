@@ -88,7 +88,7 @@ async def test1(sid='sid', n=4, f=1, dealer=0):
     logging.info(parties[0]._instances[sid])
 
     # Provide input
-    v = Field(random.randint(0, Field.modulus-1))
+    v = Field.random()
     logging.info(f"Dealer's input: {v}")
     parties[dealer].inputFromDealer.set_result(v)
 

@@ -25,3 +25,8 @@ def test_invalid_operations_on_fields():
     for op in operators:
         with pytest.raises(FieldsNotIdentical):
             op(field1(2), field2(3))
+
+
+def test_random(galois_field):
+    from honeybadgermpc.field import GFElement
+    assert type(galois_field.random()) is GFElement

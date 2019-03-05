@@ -1,4 +1,3 @@
-import random
 from pytest import mark
 
 
@@ -42,8 +41,8 @@ async def test_phase2(galois_field):
     import uuid
 
     field = galois_field
-    a = field(random.randint(0, field.modulus-1))
-    b = field(random.randint(0, field.modulus-1))
+    a = field.random()
+    b = field.random()
     k = 8
     share_id, run_id, node_id = uuid.uuid4().hex, uuid.uuid4().hex, "1"
 

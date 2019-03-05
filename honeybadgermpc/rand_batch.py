@@ -1,5 +1,4 @@
 import asyncio
-import random
 import logging
 from .field import GF
 from .polynomial import polynomials_over, get_omega
@@ -46,7 +45,7 @@ class ShareRandomProtocol(object):
         async def _run():
             # Provide random input to my own AVSS
             for j in range(b):
-                v = Field(random.randint(0, Field.modulus))
+                v = Field.random()
                 self._avss[myid*b+j].inputFromDealer.set_result(v)
 
             # Wait to observe B of the AVSS for each of N-t parties complete
