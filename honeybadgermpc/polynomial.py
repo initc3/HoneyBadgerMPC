@@ -21,13 +21,10 @@ _poly_cache = {}
 
 
 def polynomials_over(field):
+    assert type(field) is GF or field == ZR
+    field_type = GFElement if type(field) is GF else ZR
     if field in _poly_cache:
         return _poly_cache[field]
-
-    use_rust = False
-    if field.modulus == Subgroup.BLS12_381:
-        use_rust = False
-        logging.debug('Using bls12_381_r')
 
     class Polynomial(object):
         def __init__(self, coeffs):
@@ -35,8 +32,7 @@ def polynomials_over(field):
             for i in range(len(self.coeffs)):
                 if type(self.coeffs[i]) is int:
                     self.coeffs[i] = field(self.coeffs[i])
-            if use_rust:
-                self._zrcoeffs = [ZR(c.value) for c in self.coeffs]
+                assert type(self.coeffs[i]) is field_type
             self.field = field
 
         def is_zero(self):
@@ -49,29 +45,19 @@ def polynomials_over(field):
                                for i, a in enumerate(self.coeffs)])
 
         def __call__(self, x):
-            if use_rust:
-                assert type(x) is int
-                x = ZR(x)
-                k = len(self.coeffs) - 1
-                y = ZR(0)
-                for i in range(k):
-                    y *= x
-                    y += self._zrcoeffs[k-i]
-                return field(int(y))
-            else:
-                y = 0
-                xx = 1
-                for coeff in self.coeffs:
-                    y += coeff * xx
-                    xx *= x
-                return y
+            y = field(0)
+            xx = field(1)
+            for coeff in self.coeffs:
+                y += coeff * xx
+                xx *= x
+            return y
 
         @classmethod
         def interpolate_at(cls, shares, x_recomb=field(0)):
             # shares are in the form (x, y=f(x))
             if type(x_recomb) is int:
                 x_recomb = field(x_recomb)
-            assert type(x_recomb) is GFElement
+            assert type(x_recomb) is field_type
             xs, ys = zip(*shares)
             vector = []
             for i, x_i in enumerate(xs):
@@ -114,7 +100,7 @@ def polynomials_over(field):
             """
             n = len(ys)
             assert n & (n-1) == 0, "n must be power of two"
-            assert type(omega) is GFElement
+            assert type(omega) is field_type
             assert omega ** n == 1, "must be an n'th root of unity"
             assert omega ** (n //
                              2) != 1, "must be a primitive n'th root of unity"
@@ -123,7 +109,7 @@ def polynomials_over(field):
 
         def evaluate_fft(self, omega, n):
             assert n & (n-1) == 0, "n must be power of two"
-            assert type(omega) is GFElement
+            assert type(omega) is field_type
             assert omega ** n == 1, "must be an n'th root of unity"
             assert omega ** (n //
                              2) != 1, "must be a primitive n'th root of unity"
@@ -133,6 +119,9 @@ def polynomials_over(field):
         def random(cls, degree, y0=None):
             coeffs = [field.random() for _ in range(degree+1)]
             if y0 is not None:
+                if type(y0) is int:
+                    y0 = field(y0)
+                assert type(y0) is field_type
                 coeffs[0] = y0
             return cls(coeffs)
 

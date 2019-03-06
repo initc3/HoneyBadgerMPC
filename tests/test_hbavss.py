@@ -15,7 +15,7 @@ async def test_hbavss(test_router):
     sid = 1
     (participantpubkeys, participantprivkeys) = ({}, {})
     for i in participantids:
-        sk = ZR.rand()
+        sk = ZR.random()
         participantprivkeys[i] = sk
         participantpubkeys[i] = crs[0] ** sk
     pubparams = (t, n, crs, participantids, participantpubkeys, dealerid, sid)

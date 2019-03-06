@@ -1,6 +1,3 @@
-from Crypto.Cipher import AES
-from Crypto import Random
-import hashlib
 import os
 import pickle
 import asyncio
@@ -10,6 +7,10 @@ import concurrent.futures
 import psutil
 from .config import HbmpcConfig
 from .ipc import ProcessProgramRunner
+
+from honeybadgermpc.polynomial import polynomials_over
+from honeybadgermpc.poly_commit import PolyCommit
+from honeybadgermpc.symmetric_crypto import SymmetricCrypto
 
 # secretshare uses reliable broadcast as a sub protocol
 from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
@@ -33,204 +34,6 @@ async def _run_in_thread(func, *args):
     return await loop.run_in_executor(_HBAVSS_Executor, func, *args)
 
 
-######################
-# Polynomial functions
-######################
-
-# TODO: These should be incorporated into polynomial.py
-# polynomial.py is already inspired by j2kun, and the
-# j2kun library already includes this functionality.
-
-def polynomial_divide(numerator, denominator):
-    temp = list(numerator)
-    factors = []
-    while len(temp) >= len(denominator):
-        diff = len(temp) - len(denominator)
-        factor = temp[len(temp) - 1] / denominator[len(denominator) - 1]
-        factors.insert(0, factor)
-        for i in range(len(denominator)):
-            temp[i+diff] = temp[i+diff] - (factor * denominator[i])
-        temp = temp[:len(temp)-1]
-    return factors
-
-
-def polynomial_multiply_constant(poly1, c):
-    product = [None] * len(poly1)
-    for i in range(len(product)):
-        product[i] = poly1[i] * c
-    return product
-
-
-def polynomial_multiply(poly1, poly2):
-    myzero = ZR(0)
-    product = [myzero] * (len(poly1) + len(poly2) - 1)
-    for i in range(len(poly1)):
-        temp = polynomial_multiply_constant(poly2, poly1[i])
-        while i > 0:
-            temp.insert(0, myzero)
-            i -= 1
-        product = polynomial_add(product, temp)
-    return product
-
-
-def polynomial_add(poly1, poly2):
-    if len(poly1) >= len(poly2):
-        bigger = poly1
-        smaller = poly2
-    else:
-        bigger = poly2
-        smaller = poly1
-    polysum = [None] * len(bigger)
-    for i in range(len(bigger)):
-        polysum[i] = bigger[i]
-        if i < len(smaller):
-            polysum[i] = polysum[i] + smaller[i]
-    return polysum
-
-
-def polynomial_subtract(poly1, poly2):
-    negpoly2 = polynomial_multiply_constant(poly2, -1)
-    return polynomial_add(poly1, negpoly2)
-
-
-# Polynomial evaluation
-
-def f(poly, x):
-    assert type(poly) is list
-    y = ZR(0)
-    xx = ZR(1)
-    for coeff in poly:
-        y += coeff * xx
-        xx *= x
-    return y
-
-
-def f_horner(poly, x):
-    assert type(poly) is list
-    k = len(poly) - 1
-    b = ZR(0)
-    for (i, coeff) in enumerate(poly):
-        b *= x
-        b += poly[k-i]
-    return b
-
-
-# Polynomial interpolation
-
-def interpolate_at_x(coords, x, order=-1):
-    if order == -1:
-        order = len(coords)
-    xs = []
-    sortedcoords = sorted(coords, key=lambda x: x[0])
-    for coord in sortedcoords:
-        xs.append(coord[0])
-    s = set(xs[0:order])
-    # The following line makes it so this code works for both members of G and ZR
-    out = coords[0][1] - coords[0][1]
-    for i in range(order):
-        out += (lagrange_at_x(s, xs[i], x) * sortedcoords[i][1])
-    return out
-
-
-def lagrange_at_x(s, j, x):
-    s = sorted(s)
-    assert j in s
-    l1 = [x - jj for jj in s if jj != j]
-    l2 = [j - jj for jj in s if jj != j]
-    (num, den) = (ZR(1), ZR(1))
-    for item in l1:
-        num *= item
-    for item in l2:
-        den *= item
-    return num / den
-
-
-def interpolate_poly(coords):
-    myone = ZR(1)
-    myzero = ZR(0)
-    logging.debug(
-        "Before: " + str(coords[0][1]) + " After: " + str(myzero + coords[0][1]))
-    poly = [myzero] * len(coords)
-    for i in range(len(coords)):
-        temp = [myone]
-        for j in range(len(coords)):
-            if i == j:
-                continue
-            temp = polynomial_multiply(
-                temp, [-1 * (coords[j][0] * myone), myone])
-            temp = polynomial_divide(
-                temp, [myone * coords[i][0] - myone * coords[j][0]])
-        poly = polynomial_add(
-            poly, polynomial_multiply_constant(temp, coords[i][1]))
-    return poly
-
-
-#####################################
-# Symmetric encryption
-#####################################
-
-# Symmetric cryptography.
-# Uses AES with a 32-byte key
-# Semantic security (iv is randomized)
-
-# Copied from honeybadgerbft
-
-BS = 16
-
-
-def pad(s): return s + (BS - len(s) % BS) * bytes([BS - len(s) % BS])
-
-
-def unpad(s): return s[:-ord(s[len(s)-1:])]
-
-
-def encrypt(key, raw):
-    """ """
-    key = hashlib.sha256(key).digest()  # hash the key
-    assert len(key) == 32
-    raw = pad(pickle.dumps(raw))
-    iv = Random.new().read(AES.block_size)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    enc = (iv + cipher.encrypt(raw))
-    return enc
-
-
-def decrypt(key, enc):
-    """ """
-    key = hashlib.sha256(key).digest()  # hash the key
-    assert len(key) == 32
-    enc = (enc)
-    iv = enc[:16]
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    return pickle.loads(unpad(cipher.decrypt(enc[16:])))
-
-
-########################
-# Polynomial commitments
-########################
-
-class PolyCommitNP:
-    def __init__(self, t, pk):
-        self.g = pk[0].duplicate()
-        self.h = pk[1].duplicate()
-        self.t = t
-
-    def commit(self, poly, secretpoly):
-        # initPP?
-        cs = []
-        for i in range(self.t+1):
-            c = (self.g**poly[i])*(self.h**secretpoly[i])
-            cs.append(c)
-        return cs
-
-    def verify_eval(self, c, i, polyeval, secretpolyeval, witness=None):
-        lhs = G1.one()
-        for j in range(len(c)):
-            lhs *= c[j]**(i**j)
-        rhs = (self.g**polyeval)*(self.h**secretpolyeval)
-        return lhs == rhs
-
-
 ##########################################
 # Dealer part of the hbavss-light protocol
 ##########################################
@@ -249,24 +52,20 @@ class HbAvssDealer:
         (t, n, crs, participantids, participantkeys, dealerid, sid) = publicparams
         (secret, pid) = privateparams
         assert dealerid == pid, "HbAvssDealer called, but wrong pid"
-        (poly, polyhat, sharedkeys, shares, encryptedshares,
-         witnesses, encryptedwitnesses) = ([], [], {}, {}, {}, {}, {})
-        for i in range(t+1):
-            poly.append(ZR.rand())
-            polyhat.append(ZR.rand())
-        poly[0] = ZR(secret)
-        sk = ZR.rand()
+        (sharedkeys, shares, encryptedshares,
+         witnesses, encryptedwitnesses) = ({}, {}, {}, {}, {})
+        poly = polynomials_over(use_rust=True).random(t, secret)
+        sk = ZR.random()
         for j in participantids:
             sharedkeys[j] = participantkeys[j] ** sk
-        pc = PolyCommitNP(t=t, pk=crs)
-        c = pc.commit(poly, polyhat)
+        pc = PolyCommit(crs[0].duplicate(), crs[1].duplicate())
+        c, polyhat = pc.commit(poly)
         for j in participantids:
-            shares[j] = f_horner(poly, j+1)  # TODO: make this omega^j
-            encryptedshares[j] = encrypt(
-                str(sharedkeys[j]).encode('utf-8'), shares[j])
-            witnesses[j] = f_horner(polyhat, j+1)
-            encryptedwitnesses[j] = encrypt(
-                str(sharedkeys[j]).encode('utf-8'), witnesses[j])
+            shares[j] = poly(j+1)  # TODO: make this omega^j
+            key = str(sharedkeys[j]).encode('utf-8')
+            encryptedshares[j] = SymmetricCrypto.encrypt(key, shares[j])
+            witnesses[j] = pc.create_witness(polyhat, j+1)
+            encryptedwitnesses[j] = SymmetricCrypto.encrypt(key, witnesses[j])
         message = pickle.dumps(
             (c, encryptedwitnesses, encryptedshares, crs[0] ** sk))
 
@@ -306,7 +105,7 @@ class HbAvssRecipient:
          self.sharevalid) = (None, False, False, False, False)
         (self.okcount, self.implicatecount,
          self.output, self.secret) = (0, 0, None, None)
-        self.pc = PolyCommitNP(t=self.t, pk=crs)
+        self.pc = PolyCommit(crs[0].duplicate(), crs[1].duplicate())
         (self.shares, self.queues, self.recvs) = ({}, {}, {})
         msgtypes = ["rb", "hbavss"]
         for msgtype in msgtypes:
@@ -348,8 +147,10 @@ class HbAvssRecipient:
             self.sharedkey = await _run_in_thread(lambda: str(pk_d**self.sk)
                                                   .encode('utf-8'))
 
-            self.share = decrypt(self.sharedkey, self.encshares[self.pid])
-            self.witness = decrypt(self.sharedkey, self.encwitnesses[self.pid])
+            self.share = SymmetricCrypto.decrypt(
+                self.sharedkey, self.encshares[self.pid])
+            self.witness = SymmetricCrypto.decrypt(
+                self.sharedkey, self.encwitnesses[self.pid])
             # if self.pc.verify_eval(self.commit, self.pid+1, self.share, self.witness):
             if await _run_in_thread(self.pc.verify_eval, self.commit,
                                     self.pid+1, self.share, self.witness):
@@ -418,7 +219,7 @@ class HbAvssRecipient:
                 coords = []
                 for key, value in self.shares.items():
                     coords.append([key + 1, value])
-                self.secret = interpolate_at_x(coords, 0)
+                self.secret = polynomials_over(use_rust=True).interpolate_at(coords, 0)
                 logging.info(f"self.secret: {self.secret}")
                 self.finished = True
 
@@ -484,16 +285,10 @@ async def rbc_and_send(sid, pid, n, t, k, ignoreme, receive, send):
 
 async def run_hbavss_light_multi(config, n, t, id, k):
     program_runner = ProcessProgramRunner(config, n+1, t, id)
-    sender, listener = program_runner.senders, program_runner.listener
     # Need to give time to the listener coroutine to start
     #  or else the sender will get a connection refused.
     logging.info(f"{n} {t} {k}")
-    # XXX HACK! Increase wait time. Must find better way if possible -- e.g:
-    # try/except retry logic ...
-    await asyncio.sleep(2)
-    await sender.connect()
-    await asyncio.sleep(1)
-
+    await program_runner.start()
     # Generate the CRS deterministically
     crs = [G1.rand(seed=[0, 0, 0, 1]), G1.rand(seed=[0, 0, 0, 2])]
 
@@ -502,7 +297,7 @@ async def run_hbavss_light_multi(config, n, t, id, k):
     participantids = list(range(n))
     for i in participantids:
         # These can also be determined pseudorandomly
-        sk = ZR.rand(seed=17+i)
+        sk = ZR.random(seed=17+i)
         participantprivkeys[i] = sk
         participantpubkeys[i] = crs[0] ** sk
 
@@ -532,40 +327,12 @@ async def run_hbavss_light_multi(config, n, t, id, k):
             tasks.append(thread)
     # Wait for results and clean up
     await asyncio.gather(*[task.run() for task in tasks])
-    await asyncio.sleep(2)
-    await sender.close()
-    await listener.close()
-    await asyncio.sleep(1)
+    await program_runner.close()
     logging.info('Total decrypt time ' + str(total_time))
     nodeid = os.environ.get('HBMPC_NODE_ID')
     bench_logger = logging.LoggerAdapter(
         logging.getLogger("benchmark_logger"), {"node_id": nodeid})
     bench_logger.info('Total decrypt time ' + str(total_time))
-
-############################
-#  Configuration for hbavss
-###########################
-
-
-def make_localhost_config(n, t, base_port):
-    from configparser import ConfigParser
-    config = ConfigParser()
-
-    # General
-    config['general']['N'] = n
-    config['general']['t'] = t
-    config['general']['skipPreProcessing'] = True
-
-    # Peers
-    for i in range(n+1):  # n participants, 1 client
-        config['peers'][i] = "%s:%d" % ('localhost', base_port + i)
-
-    # Keys
-    # Keys are omitted for now
-
-    # Write file
-    with open('conf/hbavss.ini', 'w') as configfile:
-        config.write(configfile)
 
 
 def main():
