@@ -57,6 +57,18 @@ def polynomial(galois_field):
     return polynomials_over(galois_field)
 
 
+@fixture
+def rust_field():
+    from honeybadgermpc.betterpairing import ZR
+    return ZR
+
+
+@fixture
+def rust_polynomial(rust_field):
+    from honeybadgermpc.polynomial import polynomials_over
+    return polynomials_over(rust_field)
+
+
 @fixture(params=(1,))
 def triples_polys(request, triples_fields, polynomial):
     t = request.param
@@ -117,7 +129,7 @@ def test_router():
         def make_send(i):
             def _send(j, o):
                 delay = rnd.random() * maxdelay
-                # print('SEND  %8s [%2d -> %2d] %2.1f' % (o[0], i, j, delay*1000), o[1:])
+                # print('SEND  %8s [%2d -> %2d]' % (o, i, j))
                 asyncio.get_event_loop().call_later(delay, queues[j].put_nowait, (i, o))
                 # queues[j].put_nowait((i, o))
 
@@ -129,8 +141,8 @@ def test_router():
 
         def make_recv(j):
             async def _recv():
-                # print('RECV %8s [%2d -> %2d]' % (o[0], i, j))
                 (i, o) = await queues[j].get()
+                # print('RECV %8s [%2d -> %2d]' % (o, i, j))
                 return (i, o)
             return _recv
 

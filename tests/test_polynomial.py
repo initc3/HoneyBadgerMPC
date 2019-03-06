@@ -14,7 +14,7 @@ def test_poly_eval_at_k(galois_field, polynomial):
     d = randint(1, 50)
     coeffs = [galois_field.random().value for i in range(d)]
     poly3 = polynomial(coeffs)  # random polynomial of degree d
-    x = galois_field(galois_field.random().value)
+    x = galois_field.random()
     y = sum([pow(x, i) * a for i, a in enumerate(coeffs)])
     assert y == poly3(x)
 
@@ -77,3 +77,54 @@ def test_fft_decode(galois_field, polynomial):
     print('Prec_(X):', prec_)
     print('P(X):', poly)
     assert prec_.coeffs == poly.coeffs
+
+
+def test_poly_interpolate_at(galois_field, polynomial):
+    # Take x^2 + 10 as the polynomial
+    values = [(i, pow(i, 2)+10) for i in range(3)]
+    k = galois_field.random()
+    assert polynomial.interpolate_at(values, k) == pow(k, 2)+10
+
+
+def test_poly_interpolate_at_random(galois_field, polynomial):
+    t = randint(10, 50)
+    random_poly = polynomial.random(t)
+    values = [(i, random_poly(i)) for i in range(t+1)]
+    k = galois_field.random()
+    assert polynomial.interpolate_at(values, k) == random_poly(k)
+
+####################################################################################
+# Test cases to cover the scenario when `use_rust` is True.
+####################################################################################
+
+
+def test_rust_poly_eval_at_k(rust_field, rust_polynomial):
+    poly1 = rust_polynomial([0, 1])  # y = x
+    for i in range(10):
+        assert poly1(i) == i
+
+    poly2 = rust_polynomial([10, 0, 1])  # y = x^2 + 10
+    for i in range(10):
+        assert poly2(i) == pow(i, 2) + 10
+
+    d = randint(1, 50)
+    coeffs = [rust_field.random() for i in range(d)]
+    poly3 = rust_polynomial(coeffs)  # random polynomial of degree d
+    x = rust_field.random()
+    y = sum([pow(x, i) * a for i, a in enumerate(coeffs)])
+    assert y == poly3(x)
+
+
+def test_rust_poly_interpolate_at(rust_field, rust_polynomial):
+    # Take x^2 + 10 as the polynomial
+    values = [(i, pow(i, 2)+10) for i in range(3)]
+    k = rust_field.random()
+    assert rust_polynomial.interpolate_at(values, k) == pow(k, 2)+10
+
+
+def test_rust_poly_interpolate_at_random(rust_field, rust_polynomial):
+    t = randint(10, 50)
+    random_poly = rust_polynomial.random(t)
+    values = [(i, random_poly(i)) for i in range(t+1)]
+    k = rust_field.random()
+    assert rust_polynomial.interpolate_at(values, k) == random_poly(k)

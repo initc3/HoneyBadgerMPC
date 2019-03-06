@@ -521,6 +521,10 @@ class ZR:
                 'Invalid addition param. Expected ZR or int. Got '
                 + str(type(other)))
 
+    def __radd__(self, other):
+        assert type(other) is int
+        return self.__add__(ZR(other))
+
     def __iadd__(self, other):
         self.pp = []
         if type(other) is ZR:
@@ -559,6 +563,10 @@ class ZR:
             raise TypeError(
                 'Invalid addition param. Expected ZR or int. Got '
                 + str(type(other)))
+
+    def __rsub__(self, other):
+        assert type(other) is int
+        return ZR(other).__sub__(self)
 
     def __isub__(self, other):
         self.pp = []
@@ -618,6 +626,10 @@ class ZR:
                 'Invalid multiplication param. Expected ZR or int. Got '
                 + str(type(other)))
 
+    def __rmul__(self, other):
+        assert type(other) is int
+        return self.__mul__(ZR(other))
+
     def __truediv__(self, other):
         if type(other) is ZR:
             out = dupe_pyfr(self.val)
@@ -666,8 +678,9 @@ class ZR:
         return ZR(out)
 
     def __eq__(self, other):
-        if type(other) is not ZR:
-            return False
+        if type(other) is int:
+            other = ZR(other)
+        assert type(other) is ZR
         return self.val.equals(other.val)
 
     def __getstate__(self):
@@ -684,7 +697,7 @@ class ZR:
             self.pp.append(power)
 
     @staticmethod
-    def rand(seed=None):
+    def random(seed=None):
         r = bls12_381_r
         if seed is None:
             r = random.SystemRandom().randint(0, r-1)
