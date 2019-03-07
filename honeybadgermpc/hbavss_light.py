@@ -22,10 +22,12 @@ class HbAvssLight(object):
         self.n, self.t, self.my_id = n, t, my_id
         self.g = g
         self.poly_commit = PolyCommit(g, h)
+
         # A different set of send, recv values must be passed for each AVSS object.
         # If the same sends, recvs are reused then the recv_loops of the two objects
         # can get values belonging to the other object.
         self.send, self.recv = send, recv
+
         self.field = ZR
         self.poly = polynomials_over(self.field)
 
@@ -51,9 +53,8 @@ class HbAvssLight(object):
     async def _recv_loop(self):
         while True:
             sender_id, recvd_msg = await self.recv()
-            # 0th element in recvd_msg is the AVSS ID
             msg_type, avss_id = recvd_msg[0]
-            logging.debug("[%d]MsgType [%s] AvssId [%s].", self.my_id, msg_type, avss_id)
+            logging.debug("[%d] MsgType [%s] AvssId [%s]", self.my_id, msg_type, avss_id)
             if msg_type == HbAVSSMessageType.RBC:
                 await self.rbc_queues[avss_id].put((sender_id, recvd_msg))
             elif msg_type == HbAVSSMessageType.AVSS:
@@ -143,5 +144,14 @@ class HbAvssLight(object):
         logging.debug("[%d][HbAVSSLight] RBC completed.", self.my_id)
         share = await self._process_avss_msg(
             avss_id, avss_msg, self.avss_queues[avss_id].get)
-        logging.debug("[%d][HbAVSSLight] AVSS [%s] Completed.", self.my_id, avss_id)
+        logging.debug("[%d][HbAVSSLight] AVSS [%s] completed.", self.my_id, avss_id)
         return share
+
+    async def avss_parallel(self, k, values=None, dealer_id=None):
+        if values is not None:
+            assert len(values) == k
+        avss_tasks = [None]*k
+        for i in range(k):
+            v = None if values is None else values[i]
+            avss_tasks[i] = asyncio.create_task(self.avss(v, dealer_id))
+        return await asyncio.gather(*avss_tasks)
