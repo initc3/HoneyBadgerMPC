@@ -1,8 +1,10 @@
 from pytest import mark
+from random import randint
 from contextlib import ExitStack
 from honeybadgermpc.polynomial import polynomials_over
 from honeybadgermpc.betterpairing import G1, ZR
 from honeybadgermpc.hbavss_light import HbAvssLight
+from honeybadgermpc.mpc import TaskProgramRunner
 import asyncio
 
 
@@ -25,7 +27,7 @@ async def test_hbavss(test_router):
 
     value = ZR.random()
     avss_tasks = [None]*n
-    dealer_id = 0
+    dealer_id = randint(0, n-1)
 
     with ExitStack() as stack:
         for i in range(n):
@@ -71,28 +73,28 @@ async def test_hbavss_client_mode(test_router):
 
 
 @mark.asyncio
-async def test_hbavss_with_mpc_context(test_router):
-    from honeybadgermpc.mpc import TaskProgramRunner
-
+async def test_hbavss_share_open(test_router):
     t = 2
     n = 3*t + 1
 
     g, h, pks, sks = get_avss_params(n, t)
     sends, recvs, _ = test_router(n)
     value = int(ZR.random())
-    dealer_id = 0
+    dealer_id = randint(0, n-1)
+
+    with ExitStack() as stack:
+        avss_tasks = [None]*n
+        for i in range(n):
+            hbavss = HbAvssLight(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
+            stack.enter_context(hbavss)
+            if i == dealer_id:
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(value=value))
+            else:
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(dealer_id=dealer_id))
+        shares = await asyncio.gather(*avss_tasks)
 
     async def _prog(context):
-        my_id = context.myid
-        send, recv = sends[my_id], recvs[my_id]
-
-        with HbAvssLight(pks, sks[my_id], g, h, n, t, my_id, send, recv) as hbavss:
-            if context.myid == dealer_id:
-                share = await hbavss.avss(value=value)
-            else:
-                share = await hbavss.avss(dealer_id=dealer_id)
-
-        share_value = context.field(int(share))
+        share_value = context.field(int(shares[context.myid]))
         assert await context.Share(share_value).open() == value
 
     program_runner = TaskProgramRunner(n, t)
@@ -101,75 +103,34 @@ async def test_hbavss_with_mpc_context(test_router):
 
 
 @mark.asyncio
-async def test_multi_hbavss_with_mpc_context(test_router):
-    from honeybadgermpc.mpc import TaskProgramRunner
-
+async def test_hbavss_parallel_share_array_open(test_router):
     t = 2
     n = 3*t + 1
+    k = 4
 
     g, h, pks, sks = get_avss_params(n, t)
     sends, recvs, _ = test_router(n)
+    values = [int(ZR.random()) for _ in range(k)]
+    dealer_id = randint(0, n-1)
+
+    with ExitStack() as stack:
+        avss_tasks = [None]*n
+        for i in range(n):
+            hbavss = HbAvssLight(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
+            stack.enter_context(hbavss)
+            if i == dealer_id:
+                v, d = values, None
+            else:
+                v, d = None, dealer_id
+            avss_tasks[i] = asyncio.create_task(hbavss.avss_parallel(k, v, d))
+        shares = await asyncio.gather(*avss_tasks)
 
     async def _prog(context):
-        my_id = context.myid
-        send, recv = sends[my_id], recvs[my_id]
-
-        with HbAvssLight(pks, sks[my_id], g, h, n, t, my_id, send, recv) as hbavss:
-            share_tasks = [None]*context.N
-            for i in range(context.N):
-                if i == my_id:
-                    share_tasks[i] = hbavss.avss(value=my_id)
-                else:
-                    share_tasks[i] = hbavss.avss(dealer_id=i)
-
-            shares = map(int, await asyncio.gather(*share_tasks))
-
-        share_values = list(map(context.field, shares))
-
+        share_ints = list(map(int, shares[context.myid]))
+        share_values = list(map(context.field, share_ints))
         opened_shares = set(await context.ShareArray(share_values).open())
-        # The set of opened share should have exactly `N` values
-        assert len(opened_shares) == context.N
-        # All the values in the set of opened shares should lie between [0, N-1]
-        for i in opened_shares:
-            assert i.value >= 0 and i.value < context.N
-
-    program_runner = TaskProgramRunner(n, t)
-    program_runner.add(_prog)
-    await program_runner.join()
-
-
-@mark.asyncio
-async def test_multi_hbavss_from_same_node_with_mpc_context(test_router):
-    from honeybadgermpc.mpc import TaskProgramRunner
-
-    t = 2
-    n = 3*t + 1
-
-    g, h, pks, sks = get_avss_params(n, t)
-    sends, recvs, _ = test_router(n)
-    count = 3
-    values = [int(ZR.random()) for _ in range(count)]
-    dealer_id = 0
-
-    async def _prog(context):
-        my_id = context.myid
-        send, recv = sends[my_id], recvs[my_id]
-
-        with HbAvssLight(pks, sks[my_id], g, h, n, t, my_id, send, recv) as hbavss:
-            share_tasks = [None]*count
-            for i in range(count):
-                if context.myid == dealer_id:
-                    share_task = hbavss.avss(value=values[i])
-                else:
-                    share_task = hbavss.avss(dealer_id=dealer_id)
-                share_tasks[i] = share_task
-            shares = map(int, await asyncio.gather(*share_tasks))
-
-        share_values = list(map(context.field, shares))
-
-        opened_shares = set(await context.ShareArray(share_values).open())
-        # The set of opened share should have exactly `N` values
-        assert len(opened_shares) == count
+        # The set of opened share should have exactly `k` values
+        assert len(opened_shares) == k
         # All the values in the set of opened shares should be from the initial values
         for i in opened_shares:
             assert i.value in values

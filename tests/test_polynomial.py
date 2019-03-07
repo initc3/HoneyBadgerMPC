@@ -94,7 +94,7 @@ def test_poly_interpolate_at_random(galois_field, polynomial):
     assert polynomial.interpolate_at(values, k) == random_poly(k)
 
 ####################################################################################
-# Test cases to cover the scenario when `use_rust` is True.
+# Test cases to cover the scenario when ZR is used.
 ####################################################################################
 
 
