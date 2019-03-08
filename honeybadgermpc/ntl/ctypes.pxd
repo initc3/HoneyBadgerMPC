@@ -37,4 +37,5 @@ cdef extern from "ntlwrapper.h":
     void ZZ_pX_get_coeff "GetCoeff"(ZZ_p_c r, ZZ_pX_c x, int i)
     void ZZ_pX_set_coeff "SetCoeff"(ZZ_pX_c x, int i, ZZ_p_c a)
     void ZZ_pX_eval "eval" (ZZ_p_c b, ZZ_pX_c f, ZZ_p_c a)
+    void SqrRootMod "SqrRootMod"(ZZ_c x, ZZ_c a, ZZ_c n)
     int AvailableThreads()

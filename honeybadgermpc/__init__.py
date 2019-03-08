@@ -6,7 +6,6 @@ import yaml
 import sys
 from honeybadgermpc.config import HbmpcConfig
 
-
 with open('honeybadgermpc/logging.yaml', 'r') as f:
     os.makedirs("benchmark-logs", exist_ok=True)
     logging_config = yaml.safe_load(f.read())

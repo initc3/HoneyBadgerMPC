@@ -7,7 +7,7 @@ from .ctypes cimport ZZ_c, ZZ_p_c, mat_ZZ_p, vec_ZZ_p, ZZ_pX_c
 from .ctypes cimport ZZ_p_conv_from_int, mat_ZZ_p_mul, ZZ_conv_from_int
 from .objectwrapper cimport ccrepr, ccreadstr
 from .ctypes cimport SetNumThreads, AvailableThreads, ZZ_p_init, ZZ_pX_get_coeff, \
-    ZZ_pX_set_coeff, ZZ_pX_eval
+    ZZ_pX_set_coeff, ZZ_pX_eval, SqrRootMod
 from cpython.int cimport PyInt_AS_LONG
 
 cdef ZZ_c py_obj_to_ZZ(object v):
@@ -152,14 +152,16 @@ cpdef batch_vandermonde_interpolate(x, data_list, modulus):
         raise InterpolationError("Interpolation failed")
 
     cdef mat_ZZ_p m
-    cdef int k = len(data_list[0])
+    cdef int k = max([len(d) for d in data_list])
     cdef int n_chunks = len(data_list)
     m.SetDims(k, n_chunks)
 
     for i in range(n_chunks):
-        for j in range(k):
+        l = len(data_list[i])
+        for j in range(l):
             m[j][i] = py_obj_to_ZZ_p(data_list[i][j])
-
+        for j in range(l, k):
+            m[j][i] = py_obj_to_ZZ_p(0)
     cdef mat_ZZ_p reconstructions
     mat_ZZ_p_mul(reconstructions, r, m)
 
@@ -190,7 +192,7 @@ cpdef batch_vandermonde_evaluate(x, polynomials, modulus):
     # Number of chunks
     cdef int k = len(polynomials)
     # Degree of polynomial. Actually number of coefficients.
-    cdef int d = len(polynomials[0])
+    cdef int d = max([len(poly) for poly in polynomials])
 
     cdef ZZ_c zz_modulus = py_obj_to_ZZ(modulus)
     ZZ_p_init(zz_modulus)
@@ -201,9 +203,12 @@ cpdef batch_vandermonde_evaluate(x, polynomials, modulus):
 
     # Set matrix with polynomial coefficients
     poly_matrix.SetDims(d, k)
-    for i in range(d):
-        for j in range(k):
-            poly_matrix[i][j] = py_obj_to_ZZ_p(polynomials[j][i])
+    for i in range(k):
+        l = len(polynomials[i])
+        for j in range(l):
+            poly_matrix[j][i] = py_obj_to_ZZ_p(polynomials[i][j])
+        for j in range(l, d):
+            poly_matrix[j][i] = py_obj_to_ZZ_p(0)
 
     # Finally multiply matrices. This gives evaluation of polynomials at
     # all points chosen
@@ -385,3 +390,8 @@ cpdef gao_interpolate(x, y, int k, modulus, z=None, omega=None, order=None,
         return result, error_poly
 
     return None, None
+
+def sqrt_mod(a, n):
+    cdef ZZ_c x
+    SqrRootMod(x, py_obj_to_ZZ(a), py_obj_to_ZZ(n))
+    return int(ccrepr(x))

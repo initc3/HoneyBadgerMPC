@@ -140,6 +140,7 @@ class Listener(object):
             except asyncio.CancelledError:
                 logging.warning("handle_client was cancelled.")
                 return
+
         task.add_done_callback(cb)
 
         logging.debug(f"Received new connection {writer.get_extra_info('peername')}")
@@ -232,6 +233,7 @@ class ProcessProgramRunner(ProgramRunner):
                 (i, o) = await self.listener.get_message(sid)
                 logging.debug('[%s] RECV %8s [%2d -> %2d]' % (sid, o, i, j))
                 return (i, o)
+
             return _recv
 
         return make_send(self.nodeid, sid), make_recv(self.nodeid, sid)
@@ -239,17 +241,17 @@ class ProcessProgramRunner(ProgramRunner):
     def add(self, sid, program, **kwargs):
         send, recv = self.get_send_and_recv(sid)
         context = Mpc(
-                'sid',
-                self.N,
-                self.t,
-                self.nodeid,
-                sid,
-                send,
-                recv,
-                program,
-                self.config,
-                **kwargs,
-            )
+            'sid',
+            self.N,
+            self.t,
+            self.nodeid,
+            sid,
+            send,
+            recv,
+            program,
+            self.config,
+            **kwargs,
+        )
         self.programs.append(asyncio.ensure_future(context._run()))
         return send, recv
 

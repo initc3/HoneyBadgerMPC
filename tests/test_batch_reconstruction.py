@@ -12,9 +12,9 @@ def reconstruction_input(galois_field):
     t = 1
     fp = galois_field
     p = fp.modulus
-    # x + 2, 3x + 4
-    secret_shares = [(3, 7), (4, 10), (5, 13), (6, 16)]
-    expected = [2, 4]
+    # x + 2, 3x + 4, 2x + 2
+    secret_shares = [(3, 7, 4), (4, 10, 6), (5, 13, 8), (6, 16, 10)]
+    expected = [2, 4, 2]
 
     return n, t, fp, p, secret_shares, expected
 
@@ -62,8 +62,6 @@ async def _get_reconstruction(test_router, secret_shares, n, t, fp, p, use_fft,
 async def test_reconstruction_no_errors(test_router, galois_field, reconstruction_input):
     # Given
     n, t, fp, p, shared_secrets, secrets = reconstruction_input
-    # x + 2, 3x + 4
-    shared_secrets = [(3, 7), (4, 10), (5, 13), (6, 16)]
 
     # When
     results = await _get_reconstruction(
@@ -102,8 +100,8 @@ async def test_reconstruction_timeout(test_router, galois_field, reconstruction_
     # When
     with pytest.raises(asyncio.TimeoutError):
         task = _get_reconstruction(
-                                   test_router, secret_shares, n, t, fp, p,
-                                   False, error_list=[1], skip_list=[2])
+            test_router, secret_shares, n, t, fp, p,
+            False, error_list=[1], skip_list=[2])
         await asyncio.wait_for(task, timeout=1)
 
 
