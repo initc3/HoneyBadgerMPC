@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script runs an MPC program in 4 processes.
-# Usage: sh scripts/launch_mpc.sh honeybadgermpc/ipc.py conf/mpc/local
+# Usage: sh scripts/launch.sh honeybadgermpc/ipc.py conf/mpc/local
 
 if [ $# -eq 3 ] ; then
     echo '>> Invalid number of args passed.'
