@@ -88,6 +88,26 @@ def get_ipc_setup_commands(s3manager, instance_ids):
     return setup_commands
 
 
+def get_batchopening_setup_commands(s3manager, instance_ids):
+    from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
+    n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
+    k = AwsConfig.MPC_CONFIG.K
+
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_rands(k, n, t)
+    input_urls = s3manager.upload_files([
+        f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}_{n}_{t}-{i}.share"
+        for i in range(n)])
+    setup_commands = [[instance_id, [
+            "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
+            "mkdir -p sharedata",
+            "cd sharedata; curl -sSO %s" % (input_urls[i]),
+            "mkdir -p benchmark-logs",
+        ]] for i, instance_id in enumerate(instance_ids)]
+
+    return setup_commands
+
+
 def get_butterfly_network_setup_commands(max_k, s3manager, instance_ids):
     from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
@@ -202,6 +222,9 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("secretshare_hbavsslight"):
         instance_configs = get_instance_configs(
             instance_ips, {"k": AwsConfig.MPC_CONFIG.K})
+    elif AwsConfig.MPC_CONFIG.COMMAND.endswith("batch_opening"):
+        instance_configs = get_instance_configs(
+            instance_ips, {"k": AwsConfig.MPC_CONFIG.K})
     else:
         logging.error("Application not supported to run on AWS.")
         raise SystemError
@@ -233,6 +256,8 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
             setup_commands = get_hbavss_setup_commands(s3manager, instance_ids)
         elif AwsConfig.MPC_CONFIG.COMMAND.endswith("hbavss_multi"):
             setup_commands = get_hbavss_setup_commands(s3manager, instance_ids)
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("batch_opening"):
+            setup_commands = get_batchopening_setup_commands(s3manager, instance_ids)
 
         logging.info("Triggering setup commands.")
         run_commands_on_instances(ec2manager, setup_commands, False)
