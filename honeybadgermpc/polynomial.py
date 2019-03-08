@@ -358,7 +358,7 @@ class EvalPoint(object):
     def __init__(self, field, n, use_fft=False):
         self.use_fft = use_fft
         self.field = field
-
+        self.n = n
         # Need an additional point where we evaluate polynomial to get secret
         order = n
         if use_fft:

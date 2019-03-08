@@ -1,66 +1,29 @@
 import asyncio
-import logging
-from honeybadgermpc.wb_interpolate import make_encoder_decoder
 from honeybadgermpc.polynomial import polynomials_over
+from honeybadgermpc.reed_solomon import get_rs_encoder, get_rs_robust_decoder, \
+    get_rs_decoder, IncrementalDecoder
 
 
-async def wait_for(aws, to_wait):
-    done, pending = set(), set(aws)
-    while len(done) < to_wait:
-        _d, pending = await asyncio.wait(pending,
-                                         return_when=asyncio.FIRST_COMPLETED)
-        done |= _d
-    return done, pending
-
-
-def attempt_reconstruct(encoded, field, n, t, point, precomputed_data=None):
-    # Attempt to reconstruct with a mixture of erasures or errors
-    assert len(encoded) == n
-    assert sum(f is not None for f in encoded) >= 2*t + 1
-
-    # raise ValueError("Sentinel bug")
-
-    # interpolate with error correction to get f(j,y)
-    _, decode, _ = make_encoder_decoder(n, t+1, field.modulus, point)
-
-    try:
-        p = polynomials_over(field)(decode(encoded, precomputed_data=precomputed_data))
-    except Exception:
-        raise ValueError("Did not coincide")
-    if p.degree() > t:
-        raise ValueError("Wrong degree")
-
-    # check for errors
-    coincides = 0
-    failures_detected = set()
-    for j in range(n):
-        if encoded[j] is None:
-            continue
-        if p(point(j)) == encoded[j]:
-            coincides += 1
-        else:
-            failures_detected.add(j)
-
-    if coincides >= 2 * t + 1:
-        return p, failures_detected
-    else:
-        raise ValueError("Did not coincide")
+async def fetch_one(aws):
+    aws_to_idx = {aws[i]: i for i in range(len(aws))}
+    pending = set(aws)
+    while len(pending) > 0:
+        done, pending = await asyncio.wait(pending,
+                                           return_when=asyncio.FIRST_COMPLETED)
+        for d in done:
+            yield (aws_to_idx[d], await d)
 
 
 async def robust_reconstruct(field_futures, field, n, t, point):
-    # Wait for between 2t+1 values and N values,
-    # trying to reconstruct each time
-    assert 2*t < n, "Robust reconstruct waits for at least n=2t+1 values"
-    for n_available in range(2*t + 1, n+1):
-        try:
-            await wait_for(field_futures, n_available)
-            elems = [f.result() if f.done() else None for f in field_futures]
-            p, failures = attempt_reconstruct(elems, field, n, t, point)
-            return p, failures
-        except ValueError as e:
-            logging.debug(f'ValueError: {e}')
-            if str(e) in ("Wrong degree", "no divisors found"):
-                continue
-            else:
-                raise e
-    assert False, "shouldn't reach the end here"
+    use_fft = point.use_fft
+    enc = get_rs_encoder(point, 'fft' if use_fft else 'vandermonde')
+    dec = get_rs_decoder(point, 'fft' if use_fft else 'vandermonde')
+    robust_dec = get_rs_robust_decoder(t, point)
+    online_decoder = IncrementalDecoder(enc, dec, robust_dec, t, 1, t)
+
+    async for (idx, d) in fetch_one(field_futures):
+        online_decoder.add(idx, [d.value])
+        if online_decoder.done():
+            polys, errors = online_decoder.get_results()
+            return polynomials_over(field)(polys[0]), errors
+    return None, None
