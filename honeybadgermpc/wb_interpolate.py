@@ -41,7 +41,7 @@
 import logging
 from honeybadgermpc.linearsolver import some_solution
 from honeybadgermpc.field import GF
-from honeybadgermpc.polynomial import polynomials_over, EvalPoint, fnt_decode_step2
+from honeybadgermpc.polynomial import polynomials_over, EvalPoint
 
 
 def make_encoder_decoder(n, k, p, point=None):
@@ -88,13 +88,14 @@ def make_encoder_decoder(n, k, p, point=None):
 
             def row(i, a, b):
                 return (
-                    [b * a**j for j in range(e_num_vars)] +
-                    [-1 * a**j for j in range(q_num_vars)] + [0]
+                        [b * a ** j for j in range(e_num_vars)] +
+                        [-1 * a ** j for j in range(q_num_vars)] + [0]
                 )  # the "extended" part of the linear system
 
             system = (
-                [row(i, a, b) for (i, (a, b)) in enumerate(encoded_message)] +
-                [[fp(0)] * (e_num_vars - 1) + [fp(1)] + [fp(0)] * (q_num_vars) + [fp(1)]]
+                    [row(i, a, b) for (i, (a, b)) in enumerate(encoded_message)] +
+                    [[fp(0)] * (e_num_vars - 1) + [fp(1)] + [fp(0)] * (q_num_vars) + [
+                        fp(1)]]
             )  # ensure coefficient of x^e in E(x) is 1
 
             if debug:
@@ -124,10 +125,11 @@ def make_encoder_decoder(n, k, p, point=None):
                 return q_, e_
         raise ValueError("found no divisors!")
 
-    def decode(encoded_msg, debug=True, precomputed_data=None):
-        assert(len(encoded_msg) == n)
+    def decode(encoded_msg, debug=True):
+        assert (len(encoded_msg) == n)
         c = sum(m is None for m in encoded_msg)  # number of erasures
-        assert(2*t + 1 + c <= n)
+        logging.debug(f"message: {encoded_msg}")
+        assert (2 * t + 1 + c <= n)
         e = (n - c - (2 * t + 1))  # number of errors to correct
 
         if debug:
@@ -140,14 +142,7 @@ def make_encoder_decoder(n, k, p, point=None):
 
         if e == 0:
             # decode with no errors
-            if point.use_fft:
-                zs, as_, ais_ = precomputed_data
-                ys = [m for m in encoded_msg if m is not None]
-                ys = ys[:t + 1]
-                p_ = fnt_decode_step2(poly, zs, ys, as_, ais_,
-                                      point.omega2, point.order)
-            else:
-                p_ = poly.interpolate(enc_m)
+            p_ = poly.interpolate(enc_m)
             return p_.coeffs
 
         q_, e_ = solve_system(enc_m, max_e=e, debug=debug)
