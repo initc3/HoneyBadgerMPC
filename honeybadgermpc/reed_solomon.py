@@ -2,6 +2,7 @@ from honeybadgermpc.ntl.helpers import batch_vandermonde_evaluate, \
     batch_vandermonde_interpolate
 from honeybadgermpc.ntl.helpers import gao_interpolate
 from honeybadgermpc.ntl.helpers import fft, fft_interpolate, fft_batch_interpolate
+from honeybadgermpc.wb_interpolate import make_encoder_decoder
 
 
 class Encoder(object):
@@ -163,8 +164,29 @@ class GaoRobustDecoder(RobustDecoder):
             return None, None
 
 
-# class WelchBerlekampRobustDecoder(RobustDecoder):
-#     pass
+class WelchBerlekampRobustDecoder(RobustDecoder):
+    def __init__(self, d, point):
+        self.n = point.n
+        self.d = d
+        self.modulus = point.field.modulus
+        self.point = point
+        _, dec, _ = make_encoder_decoder(self.n, self.d + 1, self.modulus, self.point)
+        self._dec = dec
+
+    def robust_decode(self, z, encoded):
+        m = {zi: i for i, zi in enumerate(z)}
+        enc_extended = [self.point.field(encoded[m[i]]) if i in m else None
+                        for i in range(self.n)]
+        coeffs = self._dec(enc_extended)
+        if coeffs is not None:
+            x = [self.point(i).value for i in range(self.point.n)]
+            poly_eval = batch_vandermonde_evaluate(x, [[c.value for c in coeffs]],
+                                                   self.modulus)[0]
+            errors = [i for i in range(self.point.n)
+                      if enc_extended[i] is not None and
+                      enc_extended[i].value != poly_eval[i]]
+            return coeffs, errors
+        return None, None
 
 
 class DecodeValidationError(Exception):

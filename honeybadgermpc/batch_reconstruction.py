@@ -8,6 +8,7 @@ from math import ceil
 import time
 from .reed_solomon import IncrementalDecoder
 from .reed_solomon import get_rs_encoder, get_rs_decoder, get_rs_robust_decoder
+import random
 
 
 async def fetch_one(aws):
@@ -130,7 +131,7 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
 
     if config is not None and config.induce_faults:
         logging.debug("[FAULT][BatchReconstruction] Sending random shares.")
-        secret_shares = [randint(0, p - 1) for _ in range(len(secret_shares))]
+        secret_shares = [random.randint(0, p - 1) for _ in range(len(secret_shares))]
 
     point = EvalPoint(fp, n, use_fft=use_fft)
     bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),
