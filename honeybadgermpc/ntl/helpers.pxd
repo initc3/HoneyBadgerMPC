@@ -2,7 +2,7 @@ from .ctypes cimport ZZ_c, mat_ZZ_p, vec_ZZ_p, ZZ_p_c, ZZ_pX_c
 from libcpp.vector cimport vector
 from libcpp cimport bool
 
-cdef extern from "helpers.h":
+cdef extern from "rsdecode_impl.h":
     cdef void interpolate_c "interpolate"(vector[ZZ_c] r, vector[ZZ_c] x,
                                           vector[ZZ_c] y, ZZ_c modulus)
     cdef bool vandermonde_inverse_c "vandermonde_inverse"(mat_ZZ_p r, vector[ZZ_c] x,

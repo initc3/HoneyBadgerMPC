@@ -85,12 +85,6 @@ def list_transpose(lst):
     return [[lst[j][i] for j in range(len(lst))] for i in range(len(lst[0]))]
 
 
-def to_integer(m):
-    if type(m) is list or type(m) is tuple:
-        return [to_integer(mi) for mi in m]
-    return int(m)
-
-
 async def online_decode(receivers, encoder, decoder, robust_decoder, batch_size, t, n):
     inc_decoder = IncrementalDecoder(encoder, decoder, robust_decoder,
                                      degree=t, batch_size=batch_size,
@@ -147,33 +141,48 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
 
     enc = get_rs_encoder(point, 'fft' if use_fft else 'vandermonde')
     dec = get_rs_decoder(point, 'fft' if use_fft else 'vandermonde')
-    robust_dec = get_rs_robust_decoder(t, point)
+    decoding_algorithm = 'gao' if config is None else config.decoding_algorithm
+    robust_dec = get_rs_robust_decoder(t, point, algorithm=decoding_algorithm)
 
     # Step 1: Compute the polynomial, then send
+    start_time = time.time()
     encoded = enc.encode(round1_chunks)
     to_send = list_transpose(encoded)
     for j in range(n):
         send(j, ('R1', to_send[j]))
+    end_time = time.time()
+    bench_logger.info(f"[BatchReconstruct] P1 Send: {end_time - start_time}")
 
     # Step 2: Attempt to reconstruct P1
     start_time = time.time()
     recons_r2 = await online_decode(data_r1, enc, dec, robust_dec,
                                     num_chunks, t, n)
+    if recons_r2 is None:
+        logging.error("[BatchReconstruct] P1 reconstruction failed!")
+        return None
+
     end_time = time.time()
-    bench_logger.info(f"[BatchReconstruct] P1: {end_time - start_time}")
+    bench_logger.info(f"[BatchReconstruct] P1 Reconstruct: {end_time - start_time}")
 
     # Step 3: Send R2 points
     # These are simply evaluations at x=0 or just the constant term
+    start_time = time.time()
     to_send = [chunk[0] for chunk in recons_r2]
     for j in range(n):
         send(j, ('R2', to_send))
+    end_time = time.time()
+    bench_logger.info(f"[BatchReconstruct] P2 Send: {end_time - start_time}")
 
     # Step 4: Attempt to reconstruct R2
     start_time = time.time()
     recons_p = await online_decode(data_r2, enc, dec, robust_dec,
                                    num_chunks, t, n)
+    if recons_p is None:
+        logging.error("[BatchReconstruct] P2 reconstruction failed!")
+        return None
+
     end_time = time.time()
-    bench_logger.info(f"[BatchReconstruct] P2: {end_time - start_time}")
+    bench_logger.info(f"[BatchReconstruct] P2 Reconstruct: {end_time - start_time}")
 
     task_r1.cancel()
     task_r2.cancel()
