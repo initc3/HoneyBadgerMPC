@@ -13,9 +13,6 @@ def test_decoding():
     enc, dec, _ = make_encoder_decoder(n, k, p)
     encoded = enc(int_msg)
 
-    # print("plain message is: %r" % (integerMessage,))
-    # print("encoded message is: %r" % (encoded,))  # cleaner output
-
     # Check decoding with no errors
     decoded = dec(encoded, debug=False)
     assert (decoded == int_msg)
@@ -49,10 +46,9 @@ def test_decoding_all_zeros():
 
     enc, dec, _ = make_encoder_decoder(n, k, p)
     encoded = enc(int_msg)
-    # print("plain message is: %r" % (integerMessage,))
-    # print("encoded message is: %r" % (encoded,))  # cleaner output
 
     # Check decoding with no errors
+    # https://github.com/initc3/HoneyBadgerMPC/issues/143
     with pytest.raises(IndexError):
         # If this error is not raised then the bug has been fixed :D
         _ = dec(encoded, debug=False)

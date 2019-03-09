@@ -52,7 +52,7 @@ cdef vec_ZZ_p py_list_to_vec_ZZ_p(object v):
 cdef str ZZ_to_str(ZZ_c x):
     return ccrepr(x)
 
-cpdef interpolate(x, y, modulus):
+cpdef lagrange_interpolate(x, y, modulus):
     """Interpolate polynomial P s.t. P(x[i]) = y[i]
     :param x: Evaluation points for polynomial
     :type x: list of integers
@@ -119,7 +119,7 @@ class InterpolationError(Exception):
     pass
 
 
-cpdef batch_vandermonde_interpolate(x, data_list, modulus):
+cpdef vandermonde_batch_interpolate(x, data_list, modulus):
     """Interpolate polynomials using vandermonde matrices
     
     This code is based on the observation that we have evaluations for different 
@@ -174,7 +174,7 @@ cpdef batch_vandermonde_interpolate(x, data_list, modulus):
     r.kill()
     return polynomials
 
-cpdef batch_vandermonde_evaluate(x, polynomials, modulus):
+cpdef vandermonde_batch_evaluate(x, polynomials, modulus):
     """Evaluate polynomials at given points x using vandermonde matrices
     
     :param x: evaluation points
@@ -240,34 +240,6 @@ cpdef fft(coeffs, omega, modulus, int n):
         result[i] = int(ccrepr(result_vec[i]))
 
     return result
-
-cpdef fnt_decode_step1(zs, omega, modulus, int n):
-    cdef int i, k
-    k = len(zs)
-    ZZ_p_init(py_obj_to_ZZ(modulus))
-
-    cdef ZZ_pX_c A
-    cdef vec_ZZ_p Ad_evals_vec
-    cdef vector[int] z_vec
-    cdef ZZ_p_c zz_omega = py_obj_to_ZZ_p(omega)
-
-    z_vec.resize(k)
-    for i in range(k):
-        z_vec[i] = PyInt_AS_LONG(zs[i])
-
-    fnt_decode_step1_c(A, Ad_evals_vec, z_vec, zz_omega, n)
-
-    A_coeffs, Ad_evals = [None] * (k + 1), [None] * k
-
-    cdef ZZ_p_c A_coeff
-    for i in range(k + 1):
-        ZZ_pX_get_coeff(A_coeff, A, i)
-        A_coeffs[i] = int(ccrepr(A_coeff))
-
-    for i in range(k):
-        Ad_evals[i] = int(ccrepr(Ad_evals_vec[i]))
-
-    return A_coeffs, Ad_evals
 
 def fft_interpolate(zs, ys, omega, modulus, int n):
     cdef int i

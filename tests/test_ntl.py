@@ -1,6 +1,7 @@
-from honeybadgermpc.ntl.helpers import interpolate, batch_vandermonde_interpolate, \
-    batch_vandermonde_evaluate, fft, fft_interpolate, fft_batch_interpolate, \
-    gao_interpolate, evaluate
+from honeybadgermpc.ntl.helpers import lagrange_interpolate, \
+    vandermonde_batch_interpolate, \
+    vandermonde_batch_evaluate, fft, fft_interpolate, fft_batch_interpolate, \
+    gao_interpolate, evaluate, sqrt_mod
 import random
 
 
@@ -11,7 +12,7 @@ def test_interpolate(galois_field):
     p = galois_field.modulus
 
     # When
-    poly = interpolate(x, y, p)
+    poly = lagrange_interpolate(x, y, p)
 
     # Then
     assert poly == [0, 1]
@@ -24,7 +25,7 @@ def test_batch_vandermonde_interpolate(galois_field):
     p = galois_field.modulus
 
     # When
-    polynomials = batch_vandermonde_interpolate(x, y, p)
+    polynomials = vandermonde_batch_interpolate(x, y, p)
 
     # Then
     assert polynomials == [[0, 1], [1, 2]]
@@ -37,7 +38,7 @@ def test_batch_vandermonde_evaluate(galois_field):
     p = galois_field.modulus
 
     # When
-    y = batch_vandermonde_evaluate(x, polynomials, p)
+    y = vandermonde_batch_evaluate(x, polynomials, p)
 
     # Then
     assert y == [[1, 2], [3, 5]]
@@ -261,3 +262,16 @@ def corrupt(message, num_errors, num_nones, min_val=0, max_val=131):
     for i in range(0, num_nones):
         message[indices[i + num_errors]] = None
     return message
+
+
+def test_sqrt_mod(galois_field):
+    p = galois_field.modulus
+    random.seed(0)
+    x = [random.randint(0, p - 1) for _ in range(500)]
+    # Square
+    x_sqr = [pow(xi, 2, p) for xi in x]
+
+    actual = [sqrt_mod(yi, p) for yi in x_sqr]
+    actual_sqr = [pow(xi, 2, p) for xi in actual]
+
+    assert actual_sqr == x_sqr

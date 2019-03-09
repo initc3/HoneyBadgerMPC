@@ -1,5 +1,5 @@
-from honeybadgermpc.ntl.helpers import batch_vandermonde_evaluate, \
-    batch_vandermonde_interpolate
+from honeybadgermpc.ntl.helpers import vandermonde_batch_evaluate, \
+    vandermonde_batch_interpolate
 from honeybadgermpc.ntl.helpers import gao_interpolate
 from honeybadgermpc.ntl.helpers import fft, fft_interpolate, fft_batch_interpolate
 from honeybadgermpc.wb_interpolate import make_encoder_decoder
@@ -68,10 +68,10 @@ class VandermondeEncoder(Encoder):
         self.modulus = point.field.modulus
 
     def encode_one(self, data):
-        return batch_vandermonde_evaluate(self.x, [data], self.modulus)[0]
+        return vandermonde_batch_evaluate(self.x, [data], self.modulus)[0]
 
     def encode_batch(self, data):
-        return batch_vandermonde_evaluate(self.x, data, self.modulus)
+        return vandermonde_batch_evaluate(self.x, data, self.modulus)
 
 
 class FFTEncoder(Encoder):
@@ -100,11 +100,11 @@ class VandermondeDecoder(Decoder):
 
     def decode_one(self, z, encoded):
         x = [self.point(zi).value for zi in z]
-        return batch_vandermonde_interpolate(x, [encoded], self.modulus)[0]
+        return vandermonde_batch_interpolate(x, [encoded], self.modulus)[0]
 
     def decode_batch(self, z, encoded):
         x = [self.point(zi).value for zi in z]
-        return batch_vandermonde_interpolate(x, encoded, self.modulus)
+        return vandermonde_batch_interpolate(x, encoded, self.modulus)
 
 
 class FFTDecoder(Decoder):
@@ -156,7 +156,7 @@ class GaoRobustDecoder(RobustDecoder):
                 errors = []
                 if len(error_poly) > 1:
                     x = [self.point(i).value for i in range(self.point.n)]
-                    err_eval = batch_vandermonde_evaluate(x, [error_poly],
+                    err_eval = vandermonde_batch_evaluate(x, [error_poly],
                                                           self.modulus)[0]
                     errors = [i for i in range(self.point.n)
                               if err_eval[i] == 0]
@@ -180,7 +180,7 @@ class WelchBerlekampRobustDecoder(RobustDecoder):
         coeffs = self._dec(enc_extended)
         if coeffs is not None:
             x = [self.point(i).value for i in range(self.point.n)]
-            poly_eval = batch_vandermonde_evaluate(x, [[c.value for c in coeffs]],
+            poly_eval = vandermonde_batch_evaluate(x, [[c.value for c in coeffs]],
                                                    self.modulus)[0]
             errors = [i for i in range(self.point.n)
                       if enc_extended[i] is not None and
