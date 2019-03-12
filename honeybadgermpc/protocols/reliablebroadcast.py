@@ -185,7 +185,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
         # strings
         # (with Python 2 it used to be: assert type(m) is str)
         assert isinstance(m, (str, bytes))
-        logging.debug('Input received: %d bytes' % (len(m),))
+        logging.debug('[%d] Input received: %d bytes' % (pid, len(m),))
 
         stripes = encode(k, n, m)
         mt = merkle_tree(stripes)  # full binary tree
@@ -221,12 +221,12 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
             # Validation
             (_, _, roothash, branch, stripe) = msg
             if sender != leader:
-                logging.info(f"VAL message from other than leader: {sender}")
+                logging.info(f"[{pid}] VAL message from other than leader: {sender}")
                 continue
             try:
                 assert merkle_verify(n, stripe, roothash, branch, pid)
             except Exception as e:
-                logging.info(f"Failed to validate VAL message: {e}")
+                logging.info(f"[{pid}]Failed to validate VAL message: {e}")
                 continue
 
             # Update
@@ -238,7 +238,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
             # Validation
             if roothash in stripes and stripes[roothash][sender] is not None \
                or sender in echo_senders:
-                logging.info("Redundant ECHO")
+                logging.info("[{pid}] Redundant ECHO")
                 continue
 
             # We can optimistically skip the merkleVerify for "ECHO", because the
@@ -266,7 +266,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
             (_, _, roothash) = msg
             # Validation
             if sender in ready[roothash] or sender in ready_senders:
-                logging.info("Redundant READY")
+                logging.info("[{pid}] Redundant READY")
                 continue
 
             # Update

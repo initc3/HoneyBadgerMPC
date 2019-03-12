@@ -35,12 +35,12 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
 
     async def _recv():
         while True:     # main receive loop
-            logging.debug(f'entering loop', extra={'nodeid': pid, 'epoch': '?'})
+            logging.debug(f'[{pid}] entering loop', extra={'nodeid': pid, 'epoch': '?'})
             # New shares for some round r, from sender i
             (i, (_, r, sig_bytes)) = await receive()
             sig = deserialize1(sig_bytes)
             logging.debug(
-                          f'received i, _, r, sig: {i, _, r, sig}',
+                          f'[{pid}] received i, _, r, sig: {i, _, r, sig}',
                           extra={'nodeid': pid, 'epoch': r})
             assert i in range(n)
             assert r >= 0
@@ -63,7 +63,7 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
             # After reaching the threshold, compute the output and
             # make it available locally
             logging.debug(
-                f'if len(received[r]) == f + 1: {len(received[r]) == f + 1}',
+                f'[{pid}] if len(received[r]) == f + 1: {len(received[r]) == f + 1}',
                 extra={'nodeid': pid, 'epoch': r},
             )
             if len(received[r]) == f + 1:
@@ -76,7 +76,7 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
                 # Compute the bit from the least bit of the hash
                 bit = hash(serialize(sig))[0] % 2
                 logging.debug(
-                    f'put bit {bit} in output queue', extra={'nodeid': pid, 'epoch': r})
+                    f'[{pid}] put bit {bit} in output queue', extra={'nodeid': pid, 'epoch': r})
                 output_queue[r].put_nowait(bit)
 
     recv_task = asyncio.create_task(_recv())
@@ -91,7 +91,7 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
         # I have to do mapping to 1..l
         h = pk.hash_message(str((sid, round)))
         logging.debug(
-                      f"broadcast {('COIN', round, sk.sign(h))}",
+                      f"[{pid}] broadcast {('COIN', round, sk.sign(h))}",
                       extra={'nodeid': pid, 'epoch': round})
         broadcast(('COIN', round, serialize(sk.sign(h))))
         return await output_queue[round].get()
@@ -113,7 +113,7 @@ async def run_common_coin(config, pbk, pvk, n, f, nodeid):
 
     coin, crecv_task = await shared_coin('sidA', nodeid, n, f, pbk, pvk, broadcast, recv)
     for i in range(10):
-        logging.info("%d COIN VALUE: %s", i, await coin(i))
+        logging.info("[%d] %d COIN VALUE: %s", nodeid, i, await coin(i))
     crecv_task.cancel()
 
     await sender.close()

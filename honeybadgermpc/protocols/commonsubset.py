@@ -71,13 +71,13 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
     from honeybadgermpc.protocols.binaryagreement import binaryagreement
     from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
 
-    coin_recvs = [None] * n
-    aba_recvs = [None] * n
-    rbc_recvs = [None] * n
+    coin_recvs = [asyncio.Queue() for _ in range(n)]
+    aba_recvs = [asyncio.Queue() for _ in range(n)]
+    rbc_recvs = [asyncio.Queue() for _ in range(n)]
 
-    aba_inputs = [asyncio.Queue(1) for _ in range(n)]
-    aba_outputs = [asyncio.Queue(1) for _ in range(n)]
-    rbc_outputs = [asyncio.Queue(1) for _ in range(n)]
+    aba_inputs = [asyncio.Queue() for _ in range(n)]
+    aba_outputs = [asyncio.Queue() for _ in range(n)]
+    rbc_outputs = [asyncio.Queue() for _ in range(n)]
 
     async def _recv():
         while True:
@@ -98,14 +98,12 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
         def coin_bcast(o):
             bcast(('ACS_COIN', j, o))
 
-        coin_recvs[j] = asyncio.Queue()
         coin, coin_recv_task = await shared_coin(
             sid + 'COIN' + str(j), pid, n, f, pk, sk, coin_bcast, coin_recvs[j].get)
 
         def aba_bcast(o):
             bcast(('ACS_ABA', j, o))
 
-        aba_recvs[j] = asyncio.Queue()
         aba_task = asyncio.create_task(
             binaryagreement(sid+'ABA'+str(j), pid, n, f, coin, aba_inputs[j].get,
                             aba_outputs[j].put_nowait, aba_bcast, aba_recvs[j].get))
@@ -115,7 +113,7 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
 
         # Only leader gets input
         rbc_input = await input_msg() if j == pid else None
-        rbc_recvs[j] = asyncio.Queue()
+
         rbc_outputs[j] = asyncio.create_task(
             reliablebroadcast(sid+'RBC'+str(j), pid, n, f, j, rbc_input,
                               rbc_recvs[j].get, rbc_send))
