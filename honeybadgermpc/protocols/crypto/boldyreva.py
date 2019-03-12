@@ -173,7 +173,10 @@ class TBLSPrivateKey(TBLSPublicKey):
 def dealer(players=10, k=5, seed=None):
     """ """
     # Random polynomial coefficients
-    a = group.random(ZR, count=k, seed=seed)
+    if seed is not None:
+        a = [group.random(ZR, seed=seed+i) for i in range(k)]
+    else:
+        a = group.random(ZR, count=k)
     assert len(a) == k
     secret = a[0]
 
