@@ -132,12 +132,31 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
                         [_.get for _ in aba_outputs]), recv_tasks, work_tasks
 
 
-async def run_common_subset(config, pbk, pvk, n, f, nodeid):
+async def run_common_subset(sid, pbk, pvk, n, f, nodeid, send, recv, value):
+    def mcast(o):
+        for i in range(n):
+            send(i, o)
+
+    input_q = asyncio.Queue(1)
+
+    create_acs_task = asyncio.create_task(
+        make_commonsubset(sid, nodeid, n, f, pbk, pvk, input_q.get, send, recv, mcast))
+
+    await input_q.put(value)
+    acs, recv_tasks, work_tasks = await create_acs_task
+    acs_output = await acs
+    await asyncio.gather(*work_tasks)
+    for task in recv_tasks:
+        task.cancel()
+
+    return acs_output
+
+
+async def run_common_subset_in_processes(config, pbk, pvk, n, f, nodeid):
     sid = 'sidA'
 
     program_runner = ProcessProgramRunner(config, n, f, nodeid)
-    sender, listener = program_runner.senders, program_runner.listener
-    await sender.connect()
+    await program_runner.start()
 
     send, recv = program_runner.get_send_and_recv(sid)
 
@@ -158,8 +177,7 @@ async def run_common_subset(config, pbk, pvk, n, f, nodeid):
         task.cancel()
 
     logging.info(f"OUTPUT: {acs_output}")
-    await sender.close()
-    await listener.close()
+    await program_runner.close()
 
 
 if __name__ == "__main__":
@@ -178,7 +196,7 @@ if __name__ == "__main__":
     loop.set_debug(True)
     try:
         loop.run_until_complete(
-            run_common_subset(
+            run_common_subset_in_processes(
                 HbmpcConfig.peers,
                 pbk,
                 pvk,
