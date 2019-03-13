@@ -34,9 +34,9 @@ async def test_hbavss(test_router):
             hbavss = HbAvssLight(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
             stack.enter_context(hbavss)
             if i == dealer_id:
-                avss_tasks[i] = asyncio.create_task(hbavss.avss(value=value))
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=value))
             else:
-                avss_tasks[i] = asyncio.create_task(hbavss.avss(dealer_id=dealer_id))
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
         shares = await asyncio.gather(*avss_tasks)
 
     assert polynomials_over(ZR).interpolate_at(zip(range(1, n+1), shares)) == value
@@ -59,12 +59,12 @@ async def test_hbavss_client_mode(test_router):
             pks, None, g, h, n, t, dealer_id, sends[dealer_id], recvs[dealer_id])
         stack.enter_context(client_hbavss)
         avss_tasks[n] = asyncio.create_task(
-            client_hbavss.avss(value=value, client_mode=True))
+            client_hbavss.avss(0, value=value, client_mode=True))
         for i in range(n):
             hbavss = HbAvssLight(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
             stack.enter_context(hbavss)
             avss_tasks[i] = asyncio.create_task(
-                hbavss.avss(dealer_id=dealer_id, client_mode=True))
+                hbavss.avss(0, dealer_id=dealer_id, client_mode=True))
 
         # Ignore the result from the dealer
         shares = (await asyncio.gather(*avss_tasks))[:-1]
@@ -88,13 +88,14 @@ async def test_hbavss_share_open(test_router):
             hbavss = HbAvssLight(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
             stack.enter_context(hbavss)
             if i == dealer_id:
-                avss_tasks[i] = asyncio.create_task(hbavss.avss(value=value))
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=value))
             else:
-                avss_tasks[i] = asyncio.create_task(hbavss.avss(dealer_id=dealer_id))
+                avss_tasks[i] = asyncio.create_task(
+                    hbavss.avss(0, dealer_id=dealer_id))
         shares = await asyncio.gather(*avss_tasks)
 
     async def _prog(context):
-        share_value = context.field(int(shares[context.myid]))
+        share_value = context.field(shares[context.myid])
         assert await context.Share(share_value).open() == value
 
     program_runner = TaskProgramRunner(n, t)
@@ -122,12 +123,11 @@ async def test_hbavss_parallel_share_array_open(test_router):
                 v, d = values, None
             else:
                 v, d = None, dealer_id
-            avss_tasks[i] = asyncio.create_task(hbavss.avss_parallel(k, v, d))
+            avss_tasks[i] = asyncio.create_task(hbavss.avss_parallel(0, k, v, d))
         shares = await asyncio.gather(*avss_tasks)
 
     async def _prog(context):
-        share_ints = list(map(int, shares[context.myid]))
-        share_values = list(map(context.field, share_ints))
+        share_values = list(map(context.field, shares[context.myid]))
         opened_shares = set(await context.ShareArray(share_values).open())
         # The set of opened share should have exactly `k` values
         assert len(opened_shares) == k
