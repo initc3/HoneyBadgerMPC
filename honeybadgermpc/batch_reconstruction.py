@@ -6,8 +6,8 @@ from collections import defaultdict
 from asyncio import Queue
 from math import ceil
 import time
+from .reed_solomon import Algorithm, EncoderFactory, DecoderFactory, RobustDecoderFactory
 from .reed_solomon import IncrementalDecoder
-from .reed_solomon import get_rs_encoder, get_rs_decoder, get_rs_robust_decoder
 import random
 
 
@@ -62,7 +62,6 @@ def to_chunks(data, chunk_size, default=0):
     """
     res = []
     n_chunks = ceil(len(data) / chunk_size)
-    logging.debug(f'toChunks: {chunk_size} {len(data)} {n_chunks}')
     for j in range(n_chunks):
         start = chunk_size * j
         stop = chunk_size * (j + 1)
@@ -85,7 +84,8 @@ def list_transpose(lst):
     return [[lst[j][i] for j in range(len(lst))] for i in range(len(lst[0]))]
 
 
-async def online_decode(receivers, encoder, decoder, robust_decoder, batch_size, t, n):
+async def incremental_decode(receivers, encoder, decoder, robust_decoder, batch_size, t,
+                             n):
     inc_decoder = IncrementalDecoder(encoder, decoder, robust_decoder,
                                      degree=t, batch_size=batch_size,
                                      max_errors=t)
@@ -139,10 +139,12 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     data_r2 = [asyncio.create_task(recv()) for recv in q_r2]
     del subscribe  # ILC should determine we can garbage collect after this
 
-    enc = get_rs_encoder(point, 'fft' if use_fft else 'vandermonde')
-    dec = get_rs_decoder(point, 'fft' if use_fft else 'vandermonde')
-    decoding_algorithm = 'gao' if config is None else config.decoding_algorithm
-    robust_dec = get_rs_robust_decoder(t, point, algorithm=decoding_algorithm)
+    enc = EncoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
+    dec = DecoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
+    decoding_algorithm = Algorithm.GAO
+    if config is not None:
+        decoding_algorithm = config.decoding_algorithm
+    robust_dec = RobustDecoderFactory.get(t, point, algorithm=decoding_algorithm)
 
     # Step 1: Compute the polynomial, then send
     start_time = time.time()
@@ -155,8 +157,8 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
 
     # Step 2: Attempt to reconstruct P1
     start_time = time.time()
-    recons_r2 = await online_decode(data_r1, enc, dec, robust_dec,
-                                    num_chunks, t, n)
+    recons_r2 = await incremental_decode(data_r1, enc, dec, robust_dec,
+                                         num_chunks, t, n)
     if recons_r2 is None:
         logging.error("[BatchReconstruct] P1 reconstruction failed!")
         return None
@@ -175,8 +177,8 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
 
     # Step 4: Attempt to reconstruct R2
     start_time = time.time()
-    recons_p = await online_decode(data_r2, enc, dec, robust_dec,
-                                   num_chunks, t, n)
+    recons_p = await incremental_decode(data_r2, enc, dec, robust_dec,
+                                        num_chunks, t, n)
     if recons_p is None:
         logging.error("[BatchReconstruct] P2 reconstruction failed!")
         return None

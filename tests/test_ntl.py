@@ -1,6 +1,6 @@
 from honeybadgermpc.ntl.helpers import lagrange_interpolate, \
-    vandermonde_batch_interpolate, \
-    vandermonde_batch_evaluate, fft, fft_interpolate, fft_batch_interpolate, \
+    vandermonde_batch_interpolate, vandermonde_batch_evaluate, \
+    fft, fft_interpolate, fft_batch_interpolate, \
     gao_interpolate, evaluate, sqrt_mod
 import random
 

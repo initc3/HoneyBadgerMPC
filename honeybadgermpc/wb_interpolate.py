@@ -44,7 +44,7 @@ from honeybadgermpc.field import GF
 from honeybadgermpc.polynomial import polynomials_over, EvalPoint
 
 
-def make_encoder_decoder(n, k, p, point=None):
+def make_wb_encoder_decoder(n, k, p, point=None):
     """
     n: number of symbols to encode
     k: number of symbols in the message
@@ -128,10 +128,9 @@ def make_encoder_decoder(n, k, p, point=None):
     def decode(encoded_msg, debug=True):
         assert (len(encoded_msg) == n)
         c = sum(m is None for m in encoded_msg)  # number of erasures
-        logging.debug(f"message: {encoded_msg}")
         assert (2 * t + 1 + c <= n)
-        e = (n - c - (2 * t + 1))  # number of errors to correct
-
+        # e = ceil((n - c - t - 1) / 2) = ((n - c - t) // 2)
+        e = (n - c - t) // 2
         if debug:
             logging.debug(f'n: {n} k: {k} t: {t} c: {c}')
             logging.debug(f'decoding with e: {e}')

@@ -1,6 +1,6 @@
 import random
 import pytest
-from honeybadgermpc.wb_interpolate import make_encoder_decoder
+from honeybadgermpc.wb_interpolate import make_wb_encoder_decoder
 
 
 def test_decoding():
@@ -10,7 +10,7 @@ def test_decoding():
     p = 53  # prime
     t = k - 1  # degree of polynomial
 
-    enc, dec, _ = make_encoder_decoder(n, k, p)
+    enc, dec, _ = make_wb_encoder_decoder(n, k, p)
     encoded = enc(int_msg)
 
     # Check decoding with no errors
@@ -44,7 +44,7 @@ def test_decoding_all_zeros():
     p = 53  # prime
     t = k - 1  # degree of polynomial
 
-    enc, dec, _ = make_encoder_decoder(n, k, p)
+    enc, dec, _ = make_wb_encoder_decoder(n, k, p)
     encoded = enc(int_msg)
 
     # Check decoding with no errors
@@ -57,8 +57,8 @@ def test_decoding_all_zeros():
     cmax = n - 2 * t - 1
 
     corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
-    coeffs = dec(corrupted, debug=False)
-    assert coeffs == [0]
+    with pytest.raises(IndexError):
+        _ = dec(corrupted, debug=False)
 
     # Corrupt with maximum number of errors:
     emax = (n - 2 * t - 1) // 2
