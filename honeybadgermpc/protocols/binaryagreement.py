@@ -109,7 +109,8 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
                     est_sent[r][v] = True
                     broadcast(('EST', r, v))
                     logging.debug(
-                        f"[{pid}] broadcast {('EST', r, v)}", extra={'nodeid': pid, 'epoch': r})
+                        f"[{pid}] broadcast {('EST', r, v)}",
+                        extra={'nodeid': pid, 'epoch': r})
 
                 # Output after reaching second threshold
                 if len(est_values[r][v]) >= 2 * f + 1:
@@ -136,8 +137,8 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
                         'Redundant AUX received {}'.format(msg))
 
                 logging.debug(
-                    f'[{pid}] add sender = {sender} to aux_value[{r}][{v}] = {aux_values[r][v]}',
-                    extra={'nodeid': pid, 'epoch': r},
+                    f'[{pid}] add sender = {sender} to aux_value[{r}][{v}] = \
+                        {aux_values[r][v]}', extra={'nodeid': pid, 'epoch': r},
                 )
                 aux_values[r][v].add(sender)
                 logging.debug(
@@ -166,7 +167,8 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
     r = 0
     already_decided = None
     while True:  # Unbounded number of rounds
-        logging.info(f'[{pid}] Starting with est = {est}', extra={'nodeid': pid, 'epoch': r})
+        logging.info(f'[{pid}] Starting with est = {est}',
+                     extra={'nodeid': pid, 'epoch': r})
 
         if not est_sent[r][est]:
             est_sent[r][est] = True
@@ -178,7 +180,8 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
             await bv_signal.wait()
 
         w = next(iter(bin_values[r]))  # take an element
-        logging.debug(f"[{pid}] broadcast {('AUX', r, w)}", extra={'nodeid': pid, 'epoch': r})
+        logging.debug(f"[{pid}] broadcast {('AUX', r, w)}",
+                      extra={'nodeid': pid, 'epoch': r})
         broadcast(('AUX', r, w))
 
         values = None
@@ -187,9 +190,11 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
                       extra={'nodeid': pid, 'epoch': r})
         while True:
             logging.debug(
-                f'[{pid}] bin_values[{r}]: {bin_values[r]}', extra={'nodeid': pid, 'epoch': r})
+                f'[{pid}] bin_values[{r}]: {bin_values[r]}',
+                extra={'nodeid': pid, 'epoch': r})
             logging.debug(
-                f'[{pid}] aux_values[{r}]: {aux_values[r]}', extra={'nodeid': pid, 'epoch': r})
+                f'[{pid}] aux_values[{r}]: {aux_values[r]}',
+                extra={'nodeid': pid, 'epoch': r})
             # Block until at least N-f AUX values are received
             if 1 in bin_values[r] and len(aux_values[r][1]) >= n - f:
                 values = set((1,))
@@ -212,8 +217,8 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
 
         # CONF phase
         logging.debug(
-                      f'[{pid}] block until at least N-f ({n-f}) CONF values are received',
-                      extra={'nodeid': pid, 'epoch': r})
+                      f'[{pid}] block until at least N-f ({n-f}) CONF values\
+                    are received', extra={'nodeid': pid, 'epoch': r})
         if not conf_sent[r][tuple(values)]:
             values = await wait_for_conf_values(
                 pid=pid,

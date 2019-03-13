@@ -42,6 +42,13 @@ def subscribe_recv(recv):
     return _task, subscribe
 
 
+def wrap_send(tag, send):
+    def _send(j, o):
+        send(j, (tag, o))
+
+    return _send
+
+
 def recv_each_party(recv, n):
     queues = [Queue() for _ in range(n)]
 

@@ -76,7 +76,8 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
                 # Compute the bit from the least bit of the hash
                 bit = hash(serialize(sig))[0] % 2
                 logging.debug(
-                    f'[{pid}] put bit {bit} in output queue', extra={'nodeid': pid, 'epoch': r})
+                    f'[{pid}] put bit {bit} in output queue',
+                    extra={'nodeid': pid, 'epoch': r})
                 output_queue[r].put_nowait(bit)
 
     recv_task = asyncio.create_task(_recv())

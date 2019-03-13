@@ -1,30 +1,37 @@
 import asyncio
 import logging
 from pickle import dumps, loads
+from collections import defaultdict
 from honeybadgermpc.protocols.commonsubset import run_common_subset
-from honeybadgermpc.exceptions import HoneyBadgerMPCError
-
-
-class NotEnoughAVSSValuesError(HoneyBadgerMPCError):
-    pass
+from honeybadgermpc.sequencer import Sequencer
 
 
 class AvssValueProcessor(object):
+    # How often to wait before checking if a value became available?
+    WAIT_PERIOD_IN_SECONDS = 0.1
+    # How often to wait before running another instance of ACS?
+    ACS_PERIOD_IN_SECONDS = 1
 
     def __init__(self, pk, sk, n, t, my_id, send, recv, get_input):
-
         # This stores the AVSSed values which have been received from each dealer.
         self.inputs_per_dealer = [list() for _ in range(n)]
 
         # This stores the AVSSed values for each dealer which have been agreed.
         # This is a list of Futures which are marked done when the value is received.
         # The Future gurantees that the AVSS value has been agreed by at least `t+1`
-        # parties and will resolve to the value once it is received by this node.
+        # parties and will resolve to a share once it is received by this node.
         self.outputs_per_dealer = [list() for _ in range(n)]
 
-        # This stores a list of the idxes of the next AVSS value to be returned
+        # This stores a list of the indices of the next AVSS value to be returned
         # when a consumer requests a value dealt from a particular dealer.
         self.next_idx_to_return_per_dealer = [0]*n
+
+        # The input to ACS is the count of values received at this node dealt by all
+        # the nodes. In order to get the share of the same element at each node the
+        # ordering of messages per dealer needs to be ensured. This is ensured by a
+        # using an instance of a sequencer per dealer. The sequencer buffers any values
+        # received out of order and delivers them in an order based on the AVSS Id.
+        self.sequencers = defaultdict(Sequencer)
 
         self.pk, self.sk = pk, sk
         self.n, self.t, self.my_id = n, t, my_id
@@ -32,54 +39,66 @@ class AvssValueProcessor(object):
         self.get_input = get_input
 
     async def get_value_future(self, dealer_id):
+        """
+        dealer_id: Id of the dealer from which the AVSS value needs to be returned.
+
+        This method checks to see if there is an available value dealt by the dealer
+        whose id=`dealer_id`. If not, it blocks until such a value becomes available.
+        """
         assert type(dealer_id) is int
         assert dealer_id >= 0 and dealer_id < self.n
 
-        next_id = self.next_idx_to_return_per_dealer[dealer_id]
-        outputs = self.outputs_per_dealer[dealer_id]
+        while True:
+            next_idx = self.next_idx_to_return_per_dealer[dealer_id]
+            outputs = self.outputs_per_dealer[dealer_id]
 
-        # If we have already added the Future for the next value to be returned
-        # then we just return a reference to that future and increment the next idx.
-        if next_id < len(outputs):
-            logging.debug("[%d] Future already available, id: %d", self.my_id, next_id)
-            future = self.outputs_per_dealer[dealer_id][next_id]
-            self.next_idx_to_return_per_dealer[dealer_id] += 1
-            return future
+            # If we have the Future available for the next value to be returned
+            # then return a reference to that future and increment the next idx
+            # otherwise keep waiting.
+            if next_idx < len(outputs):
+                logging.debug("[%d] Future available, dealer_id: %d, next idx: %d",
+                              self.my_id, dealer_id, next_idx)
+                self.next_idx_to_return_per_dealer[dealer_id] += 1
+                return self.outputs_per_dealer[dealer_id][next_idx]
 
-        # If we don't have the Future then we need to run ACS and then check again.
-        logging.debug("[%d] Future not available, will need to run ACS", self.my_id)
-        await self._process_values()
-
-        next_id = self.next_idx_to_return_per_dealer[dealer_id]
-        outputs = self.outputs_per_dealer[dealer_id]
-        if next_id < len(outputs):
-            logging.debug("[%d] Future available after ACS, id: %d", self.my_id, next_id)
-            future = self.outputs_per_dealer[dealer_id][next_id]
-            self.next_idx_to_return_per_dealer[dealer_id] += 1
-            return future
-
-        logging.error(
-            "[%d] No value from dealer [%d] even after ACS", self.my_id, dealer_id)
-        raise NotEnoughAVSSValuesError(f"DealerId: {dealer_id}")
+            await asyncio.sleep(AvssValueProcessor.WAIT_PERIOD_IN_SECONDS)
 
     async def _recv_loop(self):
-        logging.debug("[%d] Starting recv_loop", self.my_id)
-
+        logging.debug("[%d] Starting _recv_loop", self.my_id)
         while True:
-            dealer_id, avss_value = await self.get_input()
+            dealer_id, avss_id, avss_value = await self.get_input()
             assert type(dealer_id) is int
             assert dealer_id >= 0 and dealer_id < self.n
+            assert type(avss_id) is int
+            assert avss_id >= 0
 
-            # Add the value to the input list based on who dealt the value
-            self.inputs_per_dealer[dealer_id].append(avss_value)
+            self.sequencers[dealer_id].add((avss_id, avss_value))
 
-            # If this value has already been agreed upon by other parties
-            # then it means that its Future has been added to the output list.
-            # So we need to set the result of that future to be equal to this value.
-            idx = len(self.inputs_per_dealer[dealer_id])-1
-            if idx < len(self.outputs_per_dealer[dealer_id]):
-                assert not self.outputs_per_dealer[dealer_id][idx].done()
-                self.outputs_per_dealer[dealer_id][idx].set_result(avss_value)
+            # Process the values only if they are in order.
+            while self.sequencers[dealer_id].is_next_available():
+                _, avss_value = self.sequencers[dealer_id].get()
+
+                # Add the value to the input list based on who dealt the value
+                self.inputs_per_dealer[dealer_id].append(avss_value)
+
+                # If this value has already been agreed upon by other parties
+                # then it means that its Future has been added to the output list.
+                # So we need to set the result of that future to be equal to this value.
+                idx = len(self.inputs_per_dealer[dealer_id])-1
+                if idx < len(self.outputs_per_dealer[dealer_id]):
+                    assert not self.outputs_per_dealer[dealer_id][idx].done()
+                    self.outputs_per_dealer[dealer_id][idx].set_result(avss_value)
+
+    async def _acs_runner(self):
+        logging.debug("[%d] Starting ACS runner", self.my_id)
+        acs_counter = 0
+        while True:
+            # Sleep first, then run so that you wait until some values are received
+            await asyncio.sleep(AvssValueProcessor.ACS_PERIOD_IN_SECONDS)
+            sid = f"AVSS-ACS-{acs_counter}"
+            logging.info("[%d] ACS Id: %s", self.my_id, sid)
+            await self._run_acs_to_process_values(sid)
+            acs_counter += 1
 
     def _process_acs_output(self, acs_outputs):
         # This loop does a transpose of the AVSS counts from each party.
@@ -100,6 +119,8 @@ class AvssValueProcessor(object):
             assert len(value_counts_at_node) == self.n
             for j in range(self.n):
                 counts_view_at_all_nodes[j][i] = value_counts_at_node[j]
+
+        logging.debug("[%d] Counts View: %s", self.my_id, counts_view_at_all_nodes)
 
         # After you have every node's view, you find the kth largest element in each
         # row where k = n-(t+1). This element denotes the minimum number of values
@@ -128,17 +149,17 @@ class AvssValueProcessor(object):
                 if j < len(self.inputs_per_dealer[i]):
                     future.set_result(self.inputs_per_dealer[i][j])
 
-    async def _process_values(self):
+    async def _run_acs_to_process_values(self, sid):
         # Get a count of all values which have been received
         # until now from all the other participating nodes.
         value_counts_per_dealer = [len(self.inputs_per_dealer[i]) for i in range(self.n)]
 
         acs_input = dumps(value_counts_per_dealer)
-        logging.debug("[%d] Starting ACS for AVSS", self.my_id)
+        logging.debug("[%d] Starting ACS[%s] for AVSS", self.my_id, sid)
         logging.debug("[%d] ACS Input: %s", self.my_id, value_counts_per_dealer)
 
         acs_outputs = await run_common_subset(
-            "AVSS-ACS",
+            sid,
             self.pk, self.sk,
             self.n, self.t, self.my_id,
             self.send, self.recv,
@@ -158,7 +179,9 @@ class AvssValueProcessor(object):
 
     def __enter__(self):
         self.recv_loop_task = asyncio.create_task(self._recv_loop())
+        self.acs_runner_task = asyncio.create_task(self._acs_runner())
         return self
 
     def __exit__(self, type, value, traceback):
         self.recv_loop_task.cancel()
+        self.acs_runner_task.cancel()

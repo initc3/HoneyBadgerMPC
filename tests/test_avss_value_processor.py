@@ -12,10 +12,10 @@ async def test_avss_value_processor_with_diff_inputs(test_router):
     sends, recvs, _ = test_router(n)
 
     node_inputs = [
-        [(0, "00"), (1, "10"), (2, "20")],
-        [(0, "01")],
-        [(0, "02"), (2, "22")],
-        [(3, "33")]
+        [(0, 0, "00"), (1, 0, "10"), (2, 0, "20")],
+        [(0, 0, "01")],
+        [(0, 0, "02"), (2, 0, "22")],
+        [(3, 0, "33")]
     ]
 
     get_tasks = [None]*n
@@ -248,7 +248,7 @@ async def test_with_agreed_values_on_same_node_with_input(k, acs_outputs):
     with AvssValueProcessor(None, None, n, t, my_id,
                             None, None, input_q.get) as proc:
         for i in range(k):
-            value = (my_id, i)  # dealer_id, value
+            value = (my_id, i, i)  # dealer_id, avss_id, value
             input_q.put_nowait(value)
         await asyncio.sleep(0.1)  # Give the recv loop a chance to run
         proc._process_acs_output(acs_outputs)
@@ -304,7 +304,7 @@ async def test_with_agreed_values_on_another_node_with_input(k, acs_outputs):
         assert all(proc.next_idx_to_return_per_dealer[i] == 0 for i in range(n))
 
         for i in range(k):
-            value = (sender_id, i)  # dealer_id, avss_value
+            value = (sender_id, i, i)  # dealer_id, avss_id, value
             input_q.put_nowait(value)  # Make the 0th node receive the value now
 
         await asyncio.sleep(0.1)  # Give the recv loop a chance to run
