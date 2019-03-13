@@ -12,6 +12,7 @@ Sample config can be found at: conf/sample.ini
 
 from argparse import ArgumentParser
 import json
+from honeybadgermpc.reed_solomon import Algorithm as RSAlgorithm
 
 
 class NodeDetails(object):
@@ -31,7 +32,7 @@ class ReconstructionConfig(object):
 
     @classmethod
     def default(cls):
-        return cls(induce_faults=False, decoding_algorithm="gao")
+        return cls(induce_faults=False, decoding_algorithm=RSAlgorithm.GAO)
 
     @classmethod
     def from_json(cls, json_config):
@@ -39,10 +40,11 @@ class ReconstructionConfig(object):
         if 'induce_faults' in json_config:
             res.induce_faults = json_config['induce_faults']
 
+        decoding_algorithms = [RSAlgorithm.WELCH_BERLEKAMP, RSAlgorithm.GAO]
         if 'decoding_algorithm' in json_config:
             decoding_algorithm = json_config['decoding_algorithm']
-            assert decoding_algorithm in ["gao", "welch-berlekamp"], \
-                "decoding_algorithm must be gao or welch-berlekamp"
+            assert decoding_algorithm in decoding_algorithms, \
+                f"decoding_algorithm must be in {decoding_algorithms}"
             res.decoding_algorithm = json_config['decoding_algorithm']
 
         return res

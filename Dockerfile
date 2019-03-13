@@ -33,7 +33,6 @@ RUN ln -sf bash /bin/sh
 RUN git clone https://github.com/JHUISI/charm.git
 RUN cd charm && git reset --hard be9587ccdd4d61c591fb50728ebf2a4690a2064f && ./configure.sh && make install
 
-
 # This is needed otherwise the build for the power sum solver will fail.
 # This is a known issue in the version of libflint-dev in apt.
 # https://github.com/wbhart/flint2/issues/217

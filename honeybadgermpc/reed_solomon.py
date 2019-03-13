@@ -2,15 +2,20 @@ from honeybadgermpc.ntl.helpers import vandermonde_batch_evaluate, \
     vandermonde_batch_interpolate
 from honeybadgermpc.ntl.helpers import gao_interpolate
 from honeybadgermpc.ntl.helpers import fft, fft_interpolate, fft_batch_interpolate
-from honeybadgermpc.wb_interpolate import make_encoder_decoder
+from honeybadgermpc.wb_interpolate import make_wb_encoder_decoder
+from honeybadgermpc.exceptions import HoneyBadgerMPCError
+import logging
 
 
 class Encoder(object):
+    """
+    Generate encoding for given data
+    """
+
     def encode(self, data):
-        if type(data[0]) is list or type(data[0]) is tuple:
+        if type(data[0]) in [list, tuple]:
             return self.encode_batch(data)
-        else:
-            return self.encode_one(data)
+        return self.encode_one(data)
 
     def encode_one(self, data):
         """
@@ -28,11 +33,14 @@ class Encoder(object):
 
 
 class Decoder(object):
+    """
+    Recover data from encoded values
+    """
+
     def decode(self, z, encoded):
-        if type(encoded[0]) is list:
+        if type(encoded[0]) in [list, tuple]:
             return self.decode_batch(z, encoded)
-        else:
-            return self.decode_one(z, encoded)
+        return self.decode_one(z, encoded)
 
     def decode_one(self, z, encoded):
         """
@@ -170,26 +178,36 @@ class WelchBerlekampRobustDecoder(RobustDecoder):
         self.d = d
         self.modulus = point.field.modulus
         self.point = point
-        _, dec, _ = make_encoder_decoder(self.n, self.d + 1, self.modulus, self.point)
+        _, dec, _ = make_wb_encoder_decoder(self.n, self.d + 1, self.modulus, self.point)
         self._dec = dec
 
     def robust_decode(self, z, encoded):
         m = {zi: i for i, zi in enumerate(z)}
         enc_extended = [self.point.field(encoded[m[i]]) if i in m else None
                         for i in range(self.n)]
-        coeffs = self._dec(enc_extended)
+        try:
+            coeffs = self._dec(enc_extended)
+        except Exception as e:
+            # Welch-Berlekamp doesn't throw any specific exceptions.
+            # Just catch 'em all
+            if str(e) not in ("Wrong degree", "found no divisors!"):
+                raise e
+            coeffs = None
+
         if coeffs is not None:
+            coeffs = [c.value for c in coeffs]
             x = [self.point(i).value for i in range(self.point.n)]
-            poly_eval = vandermonde_batch_evaluate(x, [[c.value for c in coeffs]],
+            poly_eval = vandermonde_batch_evaluate(x, [coeffs],
                                                    self.modulus)[0]
             errors = [i for i in range(self.point.n)
                       if enc_extended[i] is not None and
                       enc_extended[i].value != poly_eval[i]]
+
             return coeffs, errors
         return None, None
 
 
-class DecodeValidationError(Exception):
+class DecodeValidationError(HoneyBadgerMPCError):
     pass
 
 
@@ -199,12 +217,13 @@ class IncrementalDecoder(object):
     case where no error is present extremely fast.
 
     1) Validate that the data is indeed correct.
-    2) If at least d + 1 points are available, then we can use a non-robust decoder
+    2) If at least d + 1 points are available (where d is the degree of the polynomial
+    we wish to reconstruct), then we can use a non-robust decoder
        (which is usually faster) to decode available data and arrive at our first guess
     3) As we get more data, validate it against the previous guess, if we find an
     error now, then our guess is probably wrong. We then use robust decoding to arrive
     at new guesses.
-    4) We are done after at least (t + 1) + max_errors - confirmed_errors parties
+    4) We are done after at least (d + 1) + max_errors - confirmed_errors parties
     agree on every polynomial in the batch
     """
 
@@ -267,13 +286,12 @@ class IncrementalDecoder(object):
             self._guess_encoded = self.encoder.encode_batch(self._guess_decoded)
         else:
             # We have a guess. It might be right. Check now
-            all_match = True
             for i in range(self.batch_size):
                 if data[i] != self._guess_encoded[i][idx]:
-                    all_match = False
+                    success = False
                     break
 
-            if all_match is False:
+            if success is False:
                 # Guess was incorrect
                 self._guess_decoded = None
                 self._guess_encoded = None
@@ -287,9 +305,9 @@ class IncrementalDecoder(object):
 
     def _robust_update(self):
         while self._num_decoded < self.batch_size:
-            print(f"len(z): {len(self._z)} len(data): {len(self._available_data[0])}")
             decoded, errors = self.robust_decoder.robust_decode(self._z,
                                                                 self._available_data[0])
+
             # Need to wait for more data
             if decoded is None:
                 break
@@ -325,7 +343,8 @@ class IncrementalDecoder(object):
             return
 
         if self._validate(data) is False:
-            return
+            logging.error("Logging failed for data from %d: %s", idx, str(data))
+            raise DecodeValidationError("Custom validation failed for %s" % str(data))
 
         # Update data
         self._available_points.add(idx)
@@ -355,27 +374,45 @@ class IncrementalDecoder(object):
         return None, None
 
 
-def get_rs_encoder(point, algorithm='vandermonde'):
-    if algorithm == 'vandermonde':
-        return VandermondeEncoder(point)
-    elif algorithm == 'fft':
-        return FFTEncoder(point)
-    raise ValueError("Incorrect algorithm. "
-                     "Supported algorithms are [vandermonde, fft]")
+class Algorithm:
+    VANDERMONDE = 'vandermonde'
+    FFT = 'fft'
+    GAO = 'gao'
+    WELCH_BERLEKAMP = 'welch-berlekamp'
 
 
-def get_rs_decoder(point, algorithm='vandermonde'):
-    if algorithm == 'vandermonde':
-        return VandermondeDecoder(point)
-    elif algorithm == 'fft':
-        return FFTDecoder(point)
+class EncoderFactory:
+    @staticmethod
+    def get(point, algorithm=Algorithm.VANDERMONDE):
+        if algorithm == Algorithm.VANDERMONDE:
+            return VandermondeEncoder(point)
+        elif algorithm == Algorithm.FFT:
+            return FFTEncoder(point)
+        raise ValueError(f"Incorrect algorithm. "
+                         f"Supported algorithms are "
+                         f"{[Algorithm.VANDERMONDE, Algorithm.FFT]}")
 
-    raise ValueError("Invalid algorithm. "
-                     "Supported algorithms are [vandermonde, fft]")
+
+class DecoderFactory:
+    @staticmethod
+    def get(point, algorithm=Algorithm.VANDERMONDE):
+        if algorithm == Algorithm.VANDERMONDE:
+            return VandermondeDecoder(point)
+        elif algorithm == Algorithm.FFT:
+            return FFTDecoder(point)
+        raise ValueError(f"Incorrect algorithm. "
+                         f"Supported algorithms are "
+                         f"{[Algorithm.VANDERMONDE, Algorithm.FFT]}")
 
 
-def get_rs_robust_decoder(t, point, algorithm='gao'):
-    if algorithm == 'gao':
-        return GaoRobustDecoder(t, point)
-    raise ValueError("Invalid algorithm. "
-                     "Supported algorithms are [gao]")
+class RobustDecoderFactory:
+    @staticmethod
+    def get(t, point, algorithm=Algorithm.GAO):
+        if algorithm == Algorithm.GAO:
+            return GaoRobustDecoder(t, point)
+        elif algorithm == Algorithm.WELCH_BERLEKAMP:
+            return WelchBerlekampRobustDecoder(t, point)
+        raise ValueError(f"Invalid algorithm. "
+                         f"Supported algorithms are "
+                         f"[{Algorithm.GAO},"
+                         f" {Algorithm.WELCH_BERLEKAMP}]")
