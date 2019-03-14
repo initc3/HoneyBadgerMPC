@@ -7,9 +7,7 @@ from honeybadgermpc.sequencer import Sequencer
 
 
 class AvssValueProcessor(object):
-    # How often to wait before checking if a value became available?
-    WAIT_PERIOD_IN_SECONDS = 0.1
-    # How often to wait before running another instance of ACS?
+    # How long to wait before running another instance of ACS?
     ACS_PERIOD_IN_SECONDS = 1
 
     def __init__(self, pk, sk, n, t, my_id, send, recv, get_input):
@@ -33,35 +31,27 @@ class AvssValueProcessor(object):
         # received out of order and delivers them in an order based on the AVSS Id.
         self.sequencers = defaultdict(Sequencer)
 
+        # This queue contains values AVSSed from all nodes such that at least `n-t`
+        # nodes have received a value corresponding to a particular batch.
+        # Eg: Let the following be the set of values received by all nodes:
+        #
+        #   |  0  |  1  |  2  |  3  |
+        #   -------------------------
+        #   |  x0 |  x1 |     |     |  => Each row is a batch.
+        #   |     |     |     |     |
+        #
+        # n=4, t=1. Since n-t nodes have not yet received a value therefore we will not
+        # add any of the available values to the output. Once we get a value dealt from
+        # 2 or 3, then we can go ahead and output all the available values to the queue.
+        self.output_queue = asyncio.Queue()
+
         self.pk, self.sk = pk, sk
         self.n, self.t, self.my_id = n, t, my_id
         self.send, self.recv = send, recv
         self.get_input = get_input
 
-    async def get_value_future(self, dealer_id):
-        """
-        dealer_id: Id of the dealer from which the AVSS value needs to be returned.
-
-        This method checks to see if there is an available value dealt by the dealer
-        whose id=`dealer_id`. If not, it blocks until such a value becomes available.
-        """
-        assert type(dealer_id) is int
-        assert dealer_id >= 0 and dealer_id < self.n
-
-        while True:
-            next_idx = self.next_idx_to_return_per_dealer[dealer_id]
-            outputs = self.outputs_per_dealer[dealer_id]
-
-            # If we have the Future available for the next value to be returned
-            # then return a reference to that future and increment the next idx
-            # otherwise keep waiting.
-            if next_idx < len(outputs):
-                logging.debug("[%d] Future available, dealer_id: %d, next idx: %d",
-                              self.my_id, dealer_id, next_idx)
-                self.next_idx_to_return_per_dealer[dealer_id] += 1
-                return self.outputs_per_dealer[dealer_id][next_idx]
-
-            await asyncio.sleep(AvssValueProcessor.WAIT_PERIOD_IN_SECONDS)
+    async def get(self):
+        return await self.output_queue.get()
 
     async def _recv_loop(self):
         logging.debug("[%d] Starting _recv_loop", self.my_id)
@@ -100,8 +90,8 @@ class AvssValueProcessor(object):
             await self._run_acs_to_process_values(sid)
             acs_counter += 1
 
-    def _process_acs_output(self, acs_outputs):
-        # This loop does a transpose of the AVSS counts from each party.
+    def _process_acs_output(self, pickled_acs_outputs):
+        # Do a transpose of the AVSS counts from each party.
         #
         # acs_outputs[i][j] -> Represents the number of AVSSed
         # values received by node `i` dealt by node `j`.
@@ -111,14 +101,8 @@ class AvssValueProcessor(object):
         #
         # Each row is basically a node's view of its own
         # values which have been received by other nodes.
-
-        counts_view_at_all_nodes = [[0 for _ in range(self.n)] for _ in range(self.n)]
-        for i in range(self.n):
-            value_counts_at_node = loads(acs_outputs[i])
-            assert type(value_counts_at_node) == list
-            assert len(value_counts_at_node) == self.n
-            for j in range(self.n):
-                counts_view_at_all_nodes[j][i] = value_counts_at_node[j]
+        acs_outputs = map(loads, pickled_acs_outputs)
+        counts_view_at_all_nodes = list(map(list, zip(*acs_outputs)))
 
         logging.debug("[%d] Counts View: %s", self.my_id, counts_view_at_all_nodes)
 
@@ -148,6 +132,58 @@ class AvssValueProcessor(object):
                 # you also set the result of the future to the corresponding value.
                 if j < len(self.inputs_per_dealer[i]):
                     future.set_result(self.inputs_per_dealer[i][j])
+
+        self._add_to_output_queue()
+
+    def _add_to_output_queue(self):
+        # TODO: This can definitelt be optimized for space.
+        # The first loop is probably not needed.
+
+        # Get all the values dealt by each dealer which have been agreed and not
+        # yet added to the output queue. i_th row represents the set of values
+        # dealt by the i_th dealer.
+        pending_values = [None]*self.n
+        pending_counts = [0]*self.n
+        for i in range(self.n):
+            s, e = self.next_idx_to_return_per_dealer[i], len(self.outputs_per_dealer[i])
+            assert e - s >= 0
+            pending_values[i] = list(self.outputs_per_dealer[i][s:])
+            pending_counts[i] = len(pending_values[i])
+
+        pending_counts.sort()
+        # The t_th index represents the maximum values which at least `n-t` nodes have
+        # received. So we can add at max `pending_counts[t]` values to the output queue
+        # from the `n-t` nodes. We pick all the values from the nodes which have less
+        # than `pending_counts[t]`. Values are added in a round robin order from all
+        # nodes until all the required values have been added.
+
+        # |  0  |  1  |  2  |  3  |
+        # -------------------------
+        # | 00  | 10  | 20  | 30  |  => Each row is a batch.
+        # | 01  | 11  | 21  | 31  |
+        # |     | 12  | 22  | 32  |
+        # |     |     | 23  | 33  |
+        # |     |     |     | 34  |
+        # |     |     |     | 35  |
+
+        # Counts => [2, 3, 4, 6]
+
+        # Sorted in ascending order:
+        # max_values_to_output_per_dealer = pending_counts[t] = t_th idx value = 3
+        # Batch 1 => 00, 10, 20, 30
+        # Batch 2 => 01, 11, 21, 31
+        # Batch 3 => 12, 22, 32
+
+        # We want values from at least `n-t` nodes in one batch.
+
+        # AVSS Value Proessor Output Order => 00, 10, 20, 30, 01, 11, 21, 31, 12, 22, 32
+        max_values_to_output_per_dealer = pending_counts[self.t]
+        for i in range(max_values_to_output_per_dealer):
+            for j in range(self.n):
+                if len(pending_values[j]) > i:
+                    self.output_queue.put_nowait(pending_values[j][i])
+                    # Increment the index of the next return value for this dealer
+                    self.next_idx_to_return_per_dealer[j] += 1
 
     async def _run_acs_to_process_values(self, sid):
         # Get a count of all values which have been received
