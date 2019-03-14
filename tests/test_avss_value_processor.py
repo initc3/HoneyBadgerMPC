@@ -14,7 +14,7 @@ async def test_avss_value_processor_with_diff_inputs(test_router):
     node_inputs = [
         [(0, 0, "00"), (1, 0, "10"), (2, 0, "20")],
         [(0, 0, "01")],
-        [(0, 0, "02"), (2, 0, "22")],
+        [(0, 0, "02"), (2, 0, "22"), (3, 0, "32")],
         [(3, 0, "33")]
     ]
 
@@ -31,7 +31,7 @@ async def test_avss_value_processor_with_diff_inputs(test_router):
             avss_value_procs[i] = AvssValueProcessor(
                 pk, sks[i], n, t, i, sends[i], recvs[i], input_qs[i].get)
             stack.enter_context(avss_value_procs[i])
-            get_tasks[i] = asyncio.create_task(avss_value_procs[i].get_value_future(0))
+            get_tasks[i] = asyncio.create_task(avss_value_procs[i].get())
 
         futures = await asyncio.gather(*get_tasks)
         for i, future in enumerate(futures):
@@ -47,66 +47,69 @@ async def test_avss_value_processor_with_diff_inputs(test_router):
         inputs = [
             [1, 1, 1, 0],
             [1, 0, 0, 0],
-            [1, 0, 1, 0],
+            [1, 0, 1, 1],
             [0, 0, 0, 1],
         ]
         # this is based on the fact that only values dealt by 0 and 2 have been agreed
         outputs = [
-            [1, 0, 1, 0],
-            [1, 0, 1, 0],
-            [1, 0, 1, 0],
-            [1, 0, 1, 0],
+            [1, 0, 1, 1],
+            [1, 0, 1, 1],
+            [1, 0, 1, 1],
+            [1, 0, 1, 1],
         ]
 
         for j, proc in enumerate(avss_value_procs):
             assert [len(proc.inputs_per_dealer[i]) for i in range(n)] == inputs[j]
             assert [len(proc.outputs_per_dealer[i]) for i in range(n)] == outputs[j]
-            # a value from node 0 was requested
-            assert proc.next_idx_to_return_per_dealer == [1, 0, 0, 0]
+            # 1 value was already retrieved
+            assert proc.output_queue.qsize() == 2
+            # The values from 0, 2 and 3 have been added to the queue so their
+            # next indices should be updated
+            assert proc.next_idx_to_return_per_dealer == [1, 0, 1, 1]
 
         for i in range(n):
             if i in [0, 2]:
                 # only nodes 0 and 2 have received the value dealt by 2
                 # executing this sequentially also ensurs that ACS is not run again
                 # since this value is already available
-                await (await avss_value_procs[i].get_value_future(2)) == f"2{i}"
+                assert (await (await avss_value_procs[i].get())) == f"2{i}"
             else:
                 # nodes 1 and 3 have not received the value dealt by 2
-                assert not (await avss_value_procs[i].get_value_future(2)).done()
+                assert not (await avss_value_procs[i].get()).done()
 
         for j, proc in enumerate(avss_value_procs):
             assert [len(proc.inputs_per_dealer[i]) for i in range(n)] == inputs[j]
             assert [len(proc.outputs_per_dealer[i]) for i in range(n)] == outputs[j]
             # values from node 0 and 1 have been requested
-            assert proc.next_idx_to_return_per_dealer == [1, 0, 1, 0]
+            assert proc.next_idx_to_return_per_dealer == [1, 0, 1, 1]
 
 
 # [i][j] -> Represents the number of AVSSed values
 # received by node `i` dealt by node `j`.
-@mark.parametrize("n, t, output_counts, acs_outputs", (
+@mark.parametrize("n, t, output_counts, next_idx, acs_outputs", (
     # When only one party has received one AVSSed value.
-    (4, 1, [0, 0, 0, 0], (
+    (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], (
         dumps([1, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
     )),
     # When only one party has received AVSSed values from all nodes.
-    (4, 1, [0, 0, 0, 0], (
+    (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], (
         dumps([1, 1, 1, 1]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
     )),
     # When only one party has received AVSSed values from a subset of nodes.
-    (4, 1, [0, 0, 0, 0], (
+    (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], (
         dumps([1, 0, 1, 0]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
     )),
     # When each party has received a value only from itself.
-    (4, 1, [0, 0, 0, 0], (
+    (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], (
         dumps([1, 0, 0, 0]),
         dumps([0, 1, 0, 0]),
         dumps([0, 0, 1, 0]),
@@ -114,81 +117,81 @@ async def test_avss_value_processor_with_diff_inputs(test_router):
     )),
     # When each party has received a value from some other party but
     # t+1 parties have not yet received the same value.
-    (4, 1, [0, 0, 0, 0], (
+    (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], (
         dumps([0, 0, 0, 1]),
         dumps([0, 0, 1, 0]),
         dumps([0, 1, 0, 0]),
         dumps([1, 0, 0, 0]),
     )),
     # When one party has received more than 1 value from multiple parties.
-    (4, 1, [0, 0, 0, 0], (
+    (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], (
         dumps([2, 3, 4, 5]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
     )),
     # When two parties other than the current node receive the same value.
-    (4, 1, [0, 1, 0, 0], (
+    (4, 1, [0, 1, 0, 0], [0, 0, 0, 0], (
         dumps([0, 1, 0, 0]),
         dumps([0, 1, 0, 0]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
     )),
     # When all parties other than the current node receive the same value.
-    (4, 1, [0, 1, 0, 0], (
+    (4, 1, [0, 1, 0, 0], [0, 0, 0, 0], (
         dumps([0, 1, 0, 0]),
         dumps([0, 1, 0, 0]),
         dumps([0, 1, 0, 0]),
         dumps([0, 1, 0, 0]),
     )),
     # When two parties other than the current node receive the same values.
-    (4, 1, [0, 4, 0, 0], (
+    (4, 1, [0, 4, 0, 0], [0, 0, 0, 0], (
         dumps([0, 4, 0, 0]),
         dumps([0, 4, 0, 0]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
     )),
     # When all parties other than the current node receive the same values.
-    (4, 1, [0, 4, 0, 0], (
+    (4, 1, [0, 4, 0, 0], [0, 0, 0, 0], (
         dumps([0, 4, 0, 0]),
         dumps([0, 4, 0, 0]),
         dumps([0, 4, 0, 0]),
         dumps([0, 4, 0, 0]),
     )),
     # When two parties other than the current node receive at least k values.
-    (4, 1, [0, 4, 0, 0], (
+    (4, 1, [0, 4, 0, 0], [0, 0, 0, 0], (
         dumps([0, 4, 0, 0]),
         dumps([0, 10, 0, 0]),
         dumps([0, 0, 0, 0]),
         dumps([0, 0, 0, 0]),
     )),
     # When all parties other than the current node receive at least k values.
-    (4, 1, [0, 4, 0, 0], (
+    (4, 1, [0, 4, 0, 0], [0, 0, 0, 0], (
         dumps([0, 4, 0, 0]),
         dumps([0, 10, 0, 0]),
         dumps([0, 4, 0, 0]),
         dumps([0, 4, 0, 0]),
     )),
     # When t+1 parties other than the current node receive at least k values.
-    (4, 1, [0, 6, 0, 0], (
+    (4, 1, [0, 6, 0, 0], [0, 0, 0, 0], (
         dumps([0, 4, 0, 0]),
         dumps([0, 5, 0, 0]),
         dumps([0, 6, 0, 0]),
         dumps([0, 7, 0, 0]),
     )),
-    (4, 1, [3, 5, 3, 5], (
+    (4, 1, [3, 5, 3, 5], [3, 3, 3, 3], (
         dumps([1, 5, 4, 2]),
         dumps([2, 5, 3, 3]),
         dumps([3, 2, 0, 5]),
         dumps([4, 3, 0, 9]),
     )),
-    (4, 1, [0, 3, 2, 1], (
+    (4, 1, [0, 3, 2, 1], [0, 1, 1, 1], (
         dumps([0, 4, 0, 2]),
         dumps([0, 3, 0, 1]),
         dumps([0, 3, 2, 1]),
         dumps([4, 3, 8, 1]),
     )),
-    (7, 2, [4, 3, 5, 0, 4, 6, 2], (
+    (7, 2, [4, 3, 5, 0, 4, 6, 2], [3, 3, 3, 0, 3, 3, 2], (
         dumps([0, 4, 1, 0, 2, 1, 0]),
         dumps([0, 3, 2, 0, 1, 1, 0]),
         dumps([0, 3, 3, 0, 3, 8, 1]),
@@ -199,7 +202,7 @@ async def test_avss_value_processor_with_diff_inputs(test_router):
     )),
 ))
 @mark.asyncio
-async def test_acs_output(n, t, output_counts, acs_outputs):
+async def test_acs_output(n, t, output_counts, next_idx, acs_outputs):
     my_id = 0
 
     input_q = asyncio.Queue()
@@ -213,7 +216,8 @@ async def test_acs_output(n, t, output_counts, acs_outputs):
 
         # These are set by another method and shouldn't have been updated.
         assert all(len(proc.inputs_per_dealer[i]) == 0 for i in range(n))
-        assert all(proc.next_idx_to_return_per_dealer[i] == 0 for i in range(n))
+        print("YOOOOOO", proc.next_idx_to_return_per_dealer)
+        assert proc.next_idx_to_return_per_dealer == next_idx
 
 
 # [i][j] -> Represents the number of AVSSed values
@@ -319,3 +323,87 @@ async def test_with_agreed_values_on_another_node_with_input(k, acs_outputs):
 
         # This is set by another method and should not have been updated.
         assert all(proc.next_idx_to_return_per_dealer[i] == 0 for i in range(n))
+
+
+@mark.parametrize(
+        "n, t, input_next_ids, output_next_ids, per_dealer_input, output_queue_vals", (
+            (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], []),  # 1 test case
+            (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 0, 0], []),
+            (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 1, 0], []),
+            (4, 1, [0, 0, 0, 0], [1, 1, 1, 0], [1, 1, 1, 0], ["00", "10", "20"]),
+            (4, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 1, 1], ["00", "10", "20", "30"]),
+            (4, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 2, 1], ["00", "10", "20", "30"]),
+            (4, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 2, 2], ["00", "10", "20", "30"]),
+            (4, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 2, 2], ["00", "10", "20", "30"]),
+            (4, 1, [0, 0, 0, 0], [1, 2, 2, 2], [1, 2, 2, 2],
+             ["00", "10", "20", "30", "11", "21", "31"]),
+            (4, 1, [0, 0, 0, 0], [2, 2, 2, 2], [2, 2, 2, 2],
+             ["00", "10", "20", "30", "01", "11", "21", "31"]),
+            (4, 1, [1, 0, 1, 0], [1, 1, 2, 1], [1, 2, 2, 2], ["10", "21", "30"]),
+            (4, 1, [1, 0, 1, 0], [1, 2, 3, 2], [1, 2, 3, 2],
+             ["10", "21", "30", "11", "22", "31"]),
+            (4, 1, [1, 0, 1, 0], [1, 0, 1, 0], [1, 0, 1, 0], []),
+            (4, 1, [1, 0, 1, 0], [1, 0, 1, 0], [1, 0, 1, 0], []),
+            (4, 1, [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], []),
+            (7, 2, [0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0], [0, 0, 1, 1, 1, 1, 1],
+             []),
+            (7, 2, [0, 0, 0, 0, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1], [0, 1, 1, 1, 1, 1, 1],
+             ["10", "20", "30", "40", "60"]),
+        ))
+def test_add_to_output_queue(n, t, input_next_ids, output_next_ids, per_dealer_input,
+                             output_queue_vals):
+    """
+    Each row is a test case.
+    This test runs on only one node.
+    This is to test the part of code which runs after ACS i.e. all nodes see the same
+    view of the output list and they have to add a set of values in the output queue
+    in the same order such that each batch of values has values from at least `n-t`
+    dealers.
+
+
+
+    input_next_idx:     This denotes the index which has the next value to be added to
+                        the output queue for a particular dealer. Basically this
+                        represents the state of already outputted values.
+    output_next_ids:    This denotes the next index to return after the values have been
+                        added to the output queue. This is to verify the output.
+    per_dealer_input:   This is the count of values that have been received by this node
+                        per dealer. We take this list and add as many values as the
+                        counts in the output list. The output list is the one which gets
+                        updated after ACS and all nodes have the same view of the output
+                        list.
+    output_queue_vals:  This is for verification. This denotes the order in which the
+                        output values should be available in the queue. THe first
+                        character is the node who dealt the value and the second
+                        character is the count starting from 0 for each dealer.
+
+
+    We want to verify the AVSS Value Proessor Output Order.
+
+    |  0  |  1  |  2  |  3  |
+    -------------------------
+    | 00  | 10  | 20  | 30  |  => Each row is a batch.
+    | 01  | 11  | 21  | 31  |
+    |     | 12  | 22  | 32  |
+    |     |     | 23  | 33  |
+    |     |     |     | 34  |
+    |     |     |     | 35  |
+
+    Counts => [2, 3, 4, 6]
+    Sorted in ascending order:
+    max_values_to_output_per_dealer = pending_counts[t] = t_th idx value = 3
+    Batch 1 => 00, 10, 20, 30
+    Batch 2 => 01, 11, 21, 31
+    Batch 3 => 12, 22, 32
+    AVSS Value Proessor Output Order => 00, 10, 20, 30, 01, 11, 21, 31, 12, 22, 32
+    """
+    avss_proc = AvssValueProcessor(None, None, n, t, 0, None, None, None)
+    avss_proc.next_idx_to_return_per_dealer = input_next_ids
+    for i in range(n):
+        for j in range(per_dealer_input[i]):
+            avss_proc.outputs_per_dealer[i].append(f"{i}{j}")
+    avss_proc._add_to_output_queue()
+    assert output_next_ids == avss_proc.next_idx_to_return_per_dealer
+    assert len(output_queue_vals) == avss_proc.output_queue.qsize()
+    for val in output_queue_vals:
+        assert val == avss_proc.output_queue.get_nowait()
