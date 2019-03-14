@@ -61,8 +61,8 @@ async def test_avss_value_processor_with_diff_inputs(test_router):
         for j, proc in enumerate(avss_value_procs):
             assert [len(proc.inputs_per_dealer[i]) for i in range(n)] == inputs[j]
             assert [len(proc.outputs_per_dealer[i]) for i in range(n)] == outputs[j]
-            # 1 value was already retrieved
-            assert proc.output_queue.qsize() == 2
+            # 1 value was already retrieved, two values and 1 batch delimiter expected
+            assert proc.output_queue.qsize() == 3
             # The values from 0, 2 and 3 have been added to the queue so their
             # next indices should be updated
             assert proc.next_idx_to_return_per_dealer == [1, 0, 1, 1]
@@ -326,31 +326,47 @@ async def test_with_agreed_values_on_another_node_with_input(k, acs_outputs):
 
 
 @mark.parametrize(
-        "n, t, input_next_ids, output_next_ids, per_dealer_input, output_queue_vals", (
-            (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], []),  # 1 test case
-            (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 0, 0], []),
-            (4, 1, [0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 1, 0], []),
-            (4, 1, [0, 0, 0, 0], [1, 1, 1, 0], [1, 1, 1, 0], ["00", "10", "20"]),
-            (4, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 1, 1], ["00", "10", "20", "30"]),
-            (4, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 2, 1], ["00", "10", "20", "30"]),
-            (4, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 2, 2], ["00", "10", "20", "30"]),
-            (4, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 2, 2], ["00", "10", "20", "30"]),
-            (4, 1, [0, 0, 0, 0], [1, 2, 2, 2], [1, 2, 2, 2],
-             ["00", "10", "20", "30", "11", "21", "31"]),
-            (4, 1, [0, 0, 0, 0], [2, 2, 2, 2], [2, 2, 2, 2],
-             ["00", "10", "20", "30", "01", "11", "21", "31"]),
-            (4, 1, [1, 0, 1, 0], [1, 1, 2, 1], [1, 2, 2, 2], ["10", "21", "30"]),
-            (4, 1, [1, 0, 1, 0], [1, 2, 3, 2], [1, 2, 3, 2],
-             ["10", "21", "30", "11", "22", "31"]),
-            (4, 1, [1, 0, 1, 0], [1, 0, 1, 0], [1, 0, 1, 0], []),
-            (4, 1, [1, 0, 1, 0], [1, 0, 1, 0], [1, 0, 1, 0], []),
-            (4, 1, [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], []),
-            (7, 2, [0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0], [0, 0, 1, 1, 1, 1, 1],
-             []),
-            (7, 2, [0, 0, 0, 0, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1], [0, 1, 1, 1, 1, 1, 1],
-             ["10", "20", "30", "40", "60"]),
+        "n, t, b, input_next_ids, output_next_ids, per_dealer_input, output_queue_vals",
+        (
+            (4, 1, 1, [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], []),  # 1 test case
+            (4, 1, 1, [0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 0, 0], []),
+            (4, 1, 1, [0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 1, 0], []),
+            # b = 3, we want to get a triple, so we need at least three values per dealer
+            (4, 1, 3, [0, 0, 0, 0], [0, 0, 0, 0], [2, 2, 2, 2], []),
+            (4, 1, 3, [0, 0, 0, 0], [0, 0, 0, 0], [0, 2, 0, 0], []),
+            (4, 1, 3, [0, 0, 0, 0], [0, 0, 0, 0], [0, 3, 0, 0], []),
+            (4, 1, 3, [0, 0, 0, 0], [0, 0, 0, 0], [0, 10, 0, 0], []),
+            (4, 1, 3, [0, 0, 0, 0], [0, 3, 3, 3], [0, 3, 3, 3],
+             ["10", "11", "12", "20", "21", "22", "30", "31", "32", None]),
+            (4, 1, 3, [0, 0, 0, 0], [0, 3, 3, 3], [0, 3, 6, 6],
+             ["10", "11", "12", "20", "21", "22", "30", "31", "32", None]),
+            (4, 1, 1, [0, 0, 0, 0], [1, 1, 1, 0], [1, 1, 1, 0],
+             ["00", "10", "20", None]),
+            (4, 1, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 1, 1],
+             ["00", "10", "20", "30", None]),
+            (4, 1, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 2, 1],
+             ["00", "10", "20", "30", None]),
+            (4, 1, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 2, 2],
+             ["00", "10", "20", "30", None]),
+            (4, 1, 1, [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 2, 2],
+             ["00", "10", "20", "30", None]),
+            (4, 1, 1, [0, 0, 0, 0], [1, 2, 2, 2], [1, 2, 2, 2],
+             ["00", "10", "20", "30", None, "11", "21", "31", None]),
+            (4, 1, 1, [0, 0, 0, 0], [2, 2, 2, 2], [2, 2, 2, 2],
+             ["00", "10", "20", "30", None, "01", "11", "21", "31", None]),
+            (4, 1, 1, [1, 0, 1, 0], [1, 1, 2, 1], [1, 2, 2, 2],
+             ["10", "21", "30", None]),
+            (4, 1, 1, [1, 0, 1, 0], [1, 2, 3, 2], [1, 2, 3, 2],
+             ["10", "21", "30", None, "11", "22", "31", None]),
+            (4, 1, 1, [1, 0, 1, 0], [1, 0, 1, 0], [1, 0, 1, 0], []),
+            (4, 1, 1, [1, 0, 1, 0], [1, 0, 1, 0], [1, 0, 1, 0], []),
+            (4, 1, 1, [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], []),
+            (7, 2, 1, [0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0],
+             [0, 0, 1, 1, 1, 1, 1], []),
+            (7, 2, 1, [0, 0, 0, 0, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1],
+             [0, 1, 1, 1, 1, 1, 1], ["10", "20", "30", "40", "60", None]),
         ))
-def test_add_to_output_queue(n, t, input_next_ids, output_next_ids, per_dealer_input,
+def test_add_to_output_queue(n, t, b, input_next_ids, output_next_ids, per_dealer_input,
                              output_queue_vals):
     """
     Each row is a test case.
@@ -397,7 +413,7 @@ def test_add_to_output_queue(n, t, input_next_ids, output_next_ids, per_dealer_i
     Batch 3 => 12, 22, 32
     AVSS Value Proessor Output Order => 00, 10, 20, 30, 01, 11, 21, 31, 12, 22, 32
     """
-    avss_proc = AvssValueProcessor(None, None, n, t, 0, None, None, None)
+    avss_proc = AvssValueProcessor(None, None, n, t, 0, None, None, None, b)
     avss_proc.next_idx_to_return_per_dealer = input_next_ids
     for i in range(n):
         for j in range(per_dealer_input[i]):

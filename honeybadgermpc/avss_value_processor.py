@@ -10,7 +10,10 @@ class AvssValueProcessor(object):
     # How long to wait before running another instance of ACS?
     ACS_PERIOD_IN_SECONDS = 1
 
-    def __init__(self, pk, sk, n, t, my_id, send, recv, get_input):
+    # Delimiter to separate two batches in the output queue.
+    BATCH_DELIMITER = None
+
+    def __init__(self, pk, sk, n, t, my_id, send, recv, get_input, chunk_size=1):
         # This stores the AVSSed values which have been received from each dealer.
         self.inputs_per_dealer = [list() for _ in range(n)]
 
@@ -44,6 +47,10 @@ class AvssValueProcessor(object):
         # add any of the available values to the output. Once we get a value dealt from
         # 2 or 3, then we can go ahead and output all the available values to the queue.
         self.output_queue = asyncio.Queue()
+
+        # This is for retrieving consecutive values from the same dealer in a situation
+        # when they are coupled to each other. This is true for triples and powers.
+        self.chunk_size = chunk_size
 
         self.pk, self.sk = pk, sk
         self.n, self.t, self.my_id = n, t, my_id
@@ -176,14 +183,18 @@ class AvssValueProcessor(object):
 
         # We want values from at least `n-t` nodes in one batch.
 
-        # AVSS Value Proessor Output Order => 00, 10, 20, 30, 01, 11, 21, 31, 12, 22, 32
-        max_values_to_output_per_dealer = pending_counts[self.t]
+        # AVSS Value Proessor Output Order =>
+        # 00, 10, 20, 30, None, 01, 11, 21, 31, None, 12, 22, 32, None
+        # `None` is the batch delimiter here.
+        max_values_to_output_per_dealer = pending_counts[self.t] // self.chunk_size
         for i in range(max_values_to_output_per_dealer):
             for j in range(self.n):
-                if len(pending_values[j]) > i:
-                    self.output_queue.put_nowait(pending_values[j][i])
-                    # Increment the index of the next return value for this dealer
-                    self.next_idx_to_return_per_dealer[j] += 1
+                if len(pending_values[j]) // self.chunk_size > i:
+                    for k in range(self.chunk_size):
+                        self.output_queue.put_nowait(pending_values[j][i+k])
+                        # Increment the index of the next return value for this dealer
+                        self.next_idx_to_return_per_dealer[j] += 1
+            self.output_queue.put_nowait(AvssValueProcessor.BATCH_DELIMITER)
 
     async def _run_acs_to_process_values(self, sid):
         # Get a count of all values which have been received
