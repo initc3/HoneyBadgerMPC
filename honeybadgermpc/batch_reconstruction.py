@@ -12,7 +12,6 @@ import random
 
 
 async def fetch_one(aws):
-    aws = list(map(asyncio.ensure_future, aws))
     aws_to_idx = {aws[i]: i for i in range(len(aws))}
     pending = set(aws)
     while len(pending) > 0:
