@@ -21,23 +21,25 @@ def get_avss_params(n, t, my_id):
 
 
 class PreProcessingBase(ABC):
-    PERIOD_IN_SECONDS = 1
+    PERIOD_IN_SECONDS = 3
 
     def __init__(self, n, t, my_id, send, recv, tag,
                  batch_size=10, avss_value_processor_chunk_size=1):
         self.n, self.t, self.my_id = n, t, my_id
-        self.batch_size = batch_size
         self.tag = tag
         self.avss_value_processor_chunk_size = avss_value_processor_chunk_size
 
+        # Batch size of values to AVSS from a node
+        self.batch_size = batch_size
+        # Minimum number of values before triggering another set of AVSSes
         self.low_watermark = self.batch_size
-
-        subscribe_recv_task, subscribe = subscribe_recv(recv)
-        self.tasks = [subscribe_recv_task]
 
         self.output_queue = asyncio.Queue()
 
         # Create a mechanism to split the `send` and `recv` channels based on `tag`
+        subscribe_recv_task, subscribe = subscribe_recv(recv)
+        self.tasks = [subscribe_recv_task]
+
         def _get_send_recv(tag):
             return wrap_send(tag, send), subscribe(tag)
         self.get_send_recv = _get_send_recv
@@ -62,7 +64,6 @@ class PreProcessingBase(ABC):
                     self.avss_instance.avss_parallel(
                         avss_id, len(inputs), dealer_id=i)))
         await asyncio.gather(*avss_tasks)
-        logging.debug("[%d] AVSS for offline phase completed - %d", self.my_id, avss_id)
 
     async def _runner(self):
         counter = 0
@@ -71,9 +72,9 @@ class PreProcessingBase(ABC):
             # If the number of values in the output queue are below the lower
             # watermark then we want to trigger the next set of AVSSes.
             if self.output_queue.qsize() < self.low_watermark:
-                logging.debug("[%d] Starting AVSS: %d", self.my_id, counter)
+                logging.debug("[%d] Starting AVSS Batch: %d", self.my_id, counter)
                 await self._trigger_and_wait_for_avss(counter)
-                logging.debug("[%d] AVSS Completed: %d", self.my_id, counter)
+                logging.debug("[%d] AVSS Batch Completed: %d", self.my_id, counter)
                 counter += 1
             # Wait for sometime before checking again.
             await asyncio.sleep(PreProcessingBase.PERIOD_IN_SECONDS)
@@ -174,3 +175,48 @@ class TripleGenerator(PreProcessingBase):
                 for i in range(0, n, 3):
                     a, b, ab = triple_shares_int[i:i+3]
                     self.output_queue.put_nowait((a, b, ab))
+
+
+async def get_random(n, t, my_id, send, recv):
+    from random import randint
+
+    # AVSS a random batch size of values from each node
+    b = randint(5, 20)
+    with RandomGenerator(n, t, my_id, send, recv, b) as random_generator:
+        while True:
+            yield await random_generator.get()
+
+
+async def _mpc_prog(context, **kwargs):
+    randoms = kwargs["randoms"]
+    n, i = 1000, 0
+    async for random in randoms:
+        logging.info("i: %d => %d", i, await context.Share(random).open())
+        i += 1
+        if i == n:
+            break
+    await randoms.aclose()
+
+
+async def _prog(peers, n, t, my_id):
+    program_runner = ProcessProgramRunner(peers, n, t, my_id)
+    await program_runner.start()
+    send, recv = program_runner.get_send_and_recv(0)
+
+    program_runner.add(1, _mpc_prog, randoms=get_random(n, t, my_id, send, recv))
+    await program_runner.join()
+    await program_runner.close()
+
+
+if __name__ == "__main__":
+    from honeybadgermpc.config import HbmpcConfig
+    from honeybadgermpc.ipc import ProcessProgramRunner
+
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    loop.set_debug(True)
+    try:
+        loop.run_until_complete(_prog(
+            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))
+    finally:
+        loop.close()

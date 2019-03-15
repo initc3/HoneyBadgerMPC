@@ -6,6 +6,12 @@ from collections import defaultdict
 import hashlib
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+# Uncomment this when you want logs from this file.
+# logger.setLevel(logging.NOTSET)
+
+
 class CommonCoinFailureException(Exception):
     """Raised for common coin failures."""
     pass
@@ -35,17 +41,17 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
 
     async def _recv():
         while True:     # main receive loop
-            logging.debug(f'[{pid}] entering loop', extra={'nodeid': pid, 'epoch': '?'})
+            logger.debug(f'[{pid}] entering loop', extra={'nodeid': pid, 'epoch': '?'})
             # New shares for some round r, from sender i
             (i, (_, r, sig_bytes)) = await receive()
             sig = deserialize1(sig_bytes)
-            logging.debug(
+            logger.debug(
                           f'[{pid}] received i, _, r, sig: {i, _, r, sig}',
                           extra={'nodeid': pid, 'epoch': r})
             assert i in range(n)
             assert r >= 0
             if i in received[r]:
-                print("redundant coin sig received", (sid, pid, i, r))
+                logger.error(f"redundant coin sig received {(sid, pid, i, r)}")
                 continue
 
             h = pk.hash_message(str((sid, r)))
@@ -55,14 +61,14 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
             try:
                 pk.verify_share(sig, i, h)
             except AssertionError:
-                print("Signature share failed!", (sid, pid, i, r))
+                logger.error(f"Signature share failed! {(sid, pid, i, r)}")
                 continue
 
             received[r][i] = sig
 
             # After reaching the threshold, compute the output and
             # make it available locally
-            logging.debug(
+            logger.debug(
                 f'[{pid}] if len(received[r]) == f + 1: {len(received[r]) == f + 1}',
                 extra={'nodeid': pid, 'epoch': r},
             )
@@ -75,7 +81,7 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
 
                 # Compute the bit from the least bit of the hash
                 bit = hash(serialize(sig))[0] % 2
-                logging.debug(
+                logger.debug(
                     f'[{pid}] put bit {bit} in output queue',
                     extra={'nodeid': pid, 'epoch': r})
                 output_queue[r].put_nowait(bit)
@@ -91,7 +97,7 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
         """
         # I have to do mapping to 1..l
         h = pk.hash_message(str((sid, round)))
-        logging.debug(
+        logger.debug(
                       f"[{pid}] broadcast {('COIN', round, sk.sign(h))}",
                       extra={'nodeid': pid, 'epoch': round})
         broadcast(('COIN', round, serialize(sk.sign(h))))
@@ -114,7 +120,7 @@ async def run_common_coin(config, pbk, pvk, n, f, nodeid):
 
     coin, crecv_task = await shared_coin('sidA', nodeid, n, f, pbk, pvk, broadcast, recv)
     for i in range(10):
-        logging.info("[%d] %d COIN VALUE: %s", nodeid, i, await coin(i))
+        logger.info("[%d] %d COIN VALUE: %s", nodeid, i, await coin(i))
     crecv_task.cancel()
 
     await sender.close()

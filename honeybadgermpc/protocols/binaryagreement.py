@@ -5,11 +5,17 @@ import logging
 from honeybadgermpc.exceptions import RedundantMessageError, AbandonedNodeError
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+# Uncomment this when you want logs from this file.
+# logger.setLevel(logging.NOTSET)
+
+
 def handle_conf_messages(*, sender, message, conf_values, pid, bv_signal):
     _, r, v = message
     assert v in ((0,), (1,), (0, 1))
     if sender in conf_values[r][v]:
-        logging.warning(
+        logger.warning(
             f'[{pid}] Redundant CONF received {message} by {sender}',
             extra={'nodeid': pid, 'epoch': r})
         # FIXME: Raise for now to simplify things & be consistent
@@ -20,7 +26,7 @@ def handle_conf_messages(*, sender, message, conf_values, pid, bv_signal):
             'Redundant CONF received {}'.format(message))
 
     conf_values[r][v].add(sender)
-    logging.debug(
+    logger.debug(
         f'[{pid}] add v = {v} to conf_value[{r}] = {conf_values[r]}',
         extra={'nodeid': pid, 'epoch': r},
     )
@@ -31,12 +37,12 @@ def handle_conf_messages(*, sender, message, conf_values, pid, bv_signal):
 async def wait_for_conf_values(*, pid, n, f, epoch, conf_sent, bin_values,
                                values, conf_values, bv_signal, broadcast):
     conf_sent[epoch][tuple(values)] = True
-    logging.debug(
+    logger.debug(
         f"[{pid}] broadcast {('CONF', epoch, tuple(values))}",
         extra={'nodeid': pid, 'epoch': epoch})
     broadcast(('CONF', epoch, tuple(bin_values[epoch])))
     while True:
-        logging.debug(
+        logger.debug(
             f'[{pid}] looping ... conf_values[epoch] is: {conf_values[epoch]}',
             extra={'nodeid': pid, 'epoch': epoch},
         )
@@ -82,7 +88,7 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
     async def _recv():
         while True:  # not finished[pid]:
             (sender, msg) = await receive()
-            logging.debug(
+            logger.debug(
                 f'[{pid}] receive {msg} from node {sender}',
                 extra={'nodeid': pid, 'epoch': msg[1]})
             assert sender in range(n)
@@ -95,7 +101,7 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
                     # because it appeared first, but maybe the protocol simply
                     # needs to continue.
                     print(f'[{pid}] Redundant EST received by {sender}', msg)
-                    logging.warning(
+                    logger.warning(
                         f'[{pid}] Redundant EST message received by {sender}: {msg}',
                         extra={'nodeid': pid, 'epoch': msg[1]}
                     )
@@ -108,18 +114,18 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
                 if len(est_values[r][v]) >= f + 1 and not est_sent[r][v]:
                     est_sent[r][v] = True
                     broadcast(('EST', r, v))
-                    logging.debug(
+                    logger.debug(
                         f"[{pid}] broadcast {('EST', r, v)}",
                         extra={'nodeid': pid, 'epoch': r})
 
                 # Output after reaching second threshold
                 if len(est_values[r][v]) >= 2 * f + 1:
-                    logging.debug(
+                    logger.debug(
                         f'[{pid}] add v = {v} to bin_value[{r}] = {bin_values[r]}',
                         extra={'nodeid': pid, 'epoch': r},
                     )
                     bin_values[r].add(v)
-                    logging.debug(
+                    logger.debug(
                         f'[{pid}] bin_values[{r}] is now: {bin_values[r]}',
                         extra={'nodeid': pid, 'epoch': r})
                     bv_signal.set()
@@ -136,12 +142,12 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
                     raise RedundantMessageError(
                         'Redundant AUX received {}'.format(msg))
 
-                logging.debug(
+                logger.debug(
                     f'[{pid}] add sender = {sender} to aux_value[{r}][{v}] = \
                         {aux_values[r][v]}', extra={'nodeid': pid, 'epoch': r},
                 )
                 aux_values[r][v].add(sender)
-                logging.debug(
+                logger.debug(
                     f'[{pid}] aux_value[{r}][{v}] is now: {aux_values[r][v]}',
                     extra={'nodeid': pid, 'epoch': r},
                 )
@@ -167,7 +173,7 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
     r = 0
     already_decided = None
     while True:  # Unbounded number of rounds
-        logging.info(f'[{pid}] Starting with est = {est}',
+        logger.debug(f'[{pid}] Starting with est = {est}',
                      extra={'nodeid': pid, 'epoch': r})
 
         if not est_sent[r][est]:
@@ -180,19 +186,19 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
             await bv_signal.wait()
 
         w = next(iter(bin_values[r]))  # take an element
-        logging.debug(f"[{pid}] broadcast {('AUX', r, w)}",
-                      extra={'nodeid': pid, 'epoch': r})
+        logger.debug(f"[{pid}] broadcast {('AUX', r, w)}",
+                     extra={'nodeid': pid, 'epoch': r})
         broadcast(('AUX', r, w))
 
         values = None
-        logging.debug(
+        logger.debug(
                       f'block until at least N-f ({n-f}) AUX values are received',
                       extra={'nodeid': pid, 'epoch': r})
         while True:
-            logging.debug(
+            logger.debug(
                 f'[{pid}] bin_values[{r}]: {bin_values[r]}',
                 extra={'nodeid': pid, 'epoch': r})
-            logging.debug(
+            logger.debug(
                 f'[{pid}] aux_values[{r}]: {aux_values[r]}',
                 extra={'nodeid': pid, 'epoch': r})
             # Block until at least N-f AUX values are received
@@ -211,12 +217,12 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
             bv_signal.clear()
             await bv_signal.wait()
 
-        logging.debug(
+        logger.debug(
                       f'[{pid}] Completed AUX phase with values = {values}',
                       extra={'nodeid': pid, 'epoch': r})
 
         # CONF phase
-        logging.debug(
+        logger.debug(
                       f'[{pid}] block until at least N-f ({n-f}) CONF values\
                     are received', extra={'nodeid': pid, 'epoch': r})
         if not conf_sent[r][tuple(values)]:
@@ -232,17 +238,17 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
                 bv_signal=bv_signal,
                 broadcast=broadcast,
             )
-        logging.debug(
+        logger.debug(
                       f'[{pid}] Completed CONF phase with values = {values}',
                       extra={'nodeid': pid, 'epoch': r})
 
-        logging.debug(
+        logger.debug(
             f'[{pid}] Block until receiving the common coin value',
             extra={'nodeid': pid, 'epoch': r},
         )
         # Block until receiving the common coin value
         s = await coin(r)
-        logging.info(
+        logger.debug(
             f'[{pid}] Received coin with value = {s}', extra={'nodeid': pid, 'epoch': r})
 
         try:
@@ -254,7 +260,7 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
             )
         except AbandonedNodeError:
             # print('[sid:%s] [pid:%d] QUITTING in round %d' % (sid,pid,r))
-            logging.debug(f'[{pid}] QUIT!', extra={'nodeid': pid, 'epoch': r})
+            logger.debug(f'[{pid}] QUIT!', extra={'nodeid': pid, 'epoch': r})
             _thread_recv.cancel()
             return
 
@@ -316,8 +322,8 @@ async def run_binary_agreement(config, pbk, pvk, n, f, nodeid):
 
     await ba_task
 
-    logging.info("[%d] BA VALUE: %s", nodeid, await outputq.get())
-    # logging.info("[%d] COIN VALUE: %s", nodeid, await coin(0))
+    logger.info("[%d] BA VALUE: %s", nodeid, await outputq.get())
+    # logger.info("[%d] COIN VALUE: %s", nodeid, await coin(0))
     crecv_task.cancel()
 
     await sender.close()

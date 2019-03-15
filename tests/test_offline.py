@@ -118,7 +118,7 @@ async def test_get_triples(test_router, rust_field, n, t, b):
         for i in range(n):
             # k => each node has a different batch size
             # for the number of values which it AVSSes
-            k = randint(1, 10)
+            k = randint(50, 100)
             triple_generators[i] = TripleGenerator(n, t, i, sends[i], recvs[i], k)
             stack.enter_context(triple_generators[i])
             for j in range(b):

@@ -9,15 +9,19 @@ handlers:
     class: logging.StreamHandler
     formatter: simple
     stream: ext://sys.stdout
-  logfile:
+  benchmark_log_file:
     class: logging.FileHandler
     filename: benchmark-logs/benchmark.log
     formatter: with_node_id
+  basic_log_file:
+    class: logging.FileHandler
+    filename: dump.log
+    formatter: simple
 loggers:
   benchmark_logger:
     level: DEBUG
-    handlers: [logfile]
+    handlers: [benchmark_log_file]
     propagate: no
 root:
-  level: INFO
-  handlers: [console]
+  level: DEBUG
+  handlers: [console, basic_log_file]

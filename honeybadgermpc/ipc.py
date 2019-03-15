@@ -9,13 +9,19 @@ from .program_runner import ProgramRunner
 from .preprocessing import wait_for_preprocessing, preprocessing_done
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+# Uncomment this when you want logs from this file.
+# logger.setLevel(logging.NOTSET)
+
+
 async def robust_open_connection(host, port):
     backoff = 1
     for _ in range(4):
         try:
             return await asyncio.open_connection(host, port)
         except (ConnectionRefusedError, ConnectionResetError):
-            logging.info(f'backing off: {backoff} seconds')
+            logger.info(f'backing off: {backoff} seconds')
             await asyncio.sleep(backoff)
             backoff *= 2
 
@@ -76,7 +82,7 @@ class Senders(object):
                     msg = await asyncio.wait_for(q.get(), timeout=1)
                 except asyncio.TimeoutError:
                     # FIXME: debug diagnostic below
-                    # logging.debug(f'timeout sending to: {recvid} \
+                    # logger.debug(f'timeout sending to: {recvid} \
                     # sent: {writer._bytesSent}')
                     # Option 1: heartbeat
                     msg = "heartbeat"
@@ -84,30 +90,30 @@ class Senders(object):
                     # continue
 
                 if msg is None:
-                    logging.debug('Close the connection')
+                    logger.debug('Close the connection')
                     writer.close()
                     await writer.wait_closed()
                     break
 
-                # logging.debug('[%2d] SEND %8s [%2d -> %s]' % (
+                # logger.debug('[%2d] SEND %8s [%2d -> %s]' % (
                 #      msg[0], msg[1][1][0], msg[1][0], recvid
                 # ))
 
                 # start_time = os.times()
                 data = pickle.dumps(msg)
                 # pickle_time = str(os.times()[4] - start_time[4])
-                # logging.debug(f'pickle time {pickle_time}')
+                # logger.debug(f'pickle time {pickle_time}')
                 padded_msg = struct.pack('>I', len(data)) + data
                 self.totalBytesSent += len(padded_msg)
                 writer.write(padded_msg)
                 await writer.drain()
                 writer._bytesSent += len(padded_msg)
         except ConnectionResetError:
-            logging.warning(f"Connection with peer [{recvid}] reset.")
+            logger.warning(f"Connection with peer [{recvid}] reset.")
         except ConnectionRefusedError:
-            logging.warning(f"Connection with peer [{recvid}] refused.")
+            logger.warning(f"Connection with peer [{recvid}] refused.")
         except BrokenPipeError:
-            logging.warning(f"Connection with peer [{recvid}] broken   .")
+            logger.warning(f"Connection with peer [{recvid}] broken   .")
 
     async def close(self):
         await asyncio.gather(*[q.put(None) for q in self.queues])
@@ -138,11 +144,11 @@ class Listener(object):
             try:
                 future.result()
             except asyncio.CancelledError:
-                logging.warning("handle_client was cancelled.")
+                logger.warning("handle_client was cancelled.")
                 return
         task.add_done_callback(cb)
 
-        logging.debug(f"Received new connection {writer.get_extra_info('peername')}")
+        logger.debug(f"Received new connection {writer.get_extra_info('peername')}")
         reader._whoFrom = None
         reader._bytesRead = 0
         while True:
@@ -155,15 +161,15 @@ class Listener(object):
                 break
             unpickled = pickle.loads(received_raw_msg)
             if unpickled == "heartbeat":
-                # logging.debug(f"received heartbeat {reader._whoFrom}")
+                # logger.debug(f"received heartbeat {reader._whoFrom}")
                 continue
             sid, received_msg = unpickled
             if reader._whoFrom is None:
                 reader._whoFrom = received_msg[0]
-                logging.debug(f"{reader._whoFrom} {reader}")
+                logger.debug(f"{reader._whoFrom} {reader}")
             assert reader._whoFrom == received_msg[0]
 
-            logging.debug('[%s] RECV %s' % (sid, received_msg))
+            logger.debug('[%s] RECV %s' % (sid, received_msg))
             while sid not in self.queues:
                 # Wait for queue to get set up
                 await asyncio.sleep(1)
@@ -178,7 +184,7 @@ class Listener(object):
                                                 timeout=4)
                 reader._bytesRead += len(packet)
             except asyncio.TimeoutError:
-                logging.info(f'recv timeout {reader._whoFrom} reading: \
+                logger.info(f'recv timeout {reader._whoFrom} reading: \
                 {n - len(data)} bytesRead: {reader._bytesRead}')
                 continue
             if len(packet) == 0:
@@ -217,7 +223,7 @@ class ProcessProgramRunner(ProgramRunner):
 
         def make_send(i, sid):
             def _send(j, o):
-                logging.debug('[%s] SEND %8s [%2d -> %2d]' % (sid, o, i, j))
+                logger.debug('[%s] SEND %8s [%2d -> %2d]' % (sid, o, i, j))
                 if i == j:
                     # If attempting to send the message to yourself
                     # then skip the network stack.
@@ -230,7 +236,7 @@ class ProcessProgramRunner(ProgramRunner):
         def make_recv(j, sid):
             async def _recv():
                 (i, o) = await self.listener.get_message(sid)
-                logging.debug('[%s] RECV %8s [%2d -> %2d]' % (sid, o, i, j))
+                logger.debug('[%s] RECV %8s [%2d -> %2d]' % (sid, o, i, j))
                 return (i, o)
             return _recv
 
@@ -284,9 +290,9 @@ if __name__ == "__main__":
             # Only one party needs to generate the initial shares
             if HbmpcConfig.my_id == 0:
                 pp_elements = PreProcessedElements()
-                logging.info('Generating random shares of zero in sharedata/')
+                logger.info('Generating random shares of zero in sharedata/')
                 pp_elements.generate_zeros(1000, HbmpcConfig.N, HbmpcConfig.t)
-                logging.info('Generating random shares of triples in sharedata/')
+                logger.info('Generating random shares of triples in sharedata/')
                 pp_elements.generate_triples(1000, HbmpcConfig.N, HbmpcConfig.t)
                 preprocessing_done()
             else:
