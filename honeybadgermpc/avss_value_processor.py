@@ -3,6 +3,7 @@ import logging
 from pickle import dumps, loads
 from collections import defaultdict
 from honeybadgermpc.protocols.commonsubset import run_common_subset
+from honeybadgermpc.batch_reconstruction import subscribe_recv, wrap_send
 from honeybadgermpc.sequencer import Sequencer
 
 
@@ -52,9 +53,15 @@ class AvssValueProcessor(object):
         # when they are coupled to each other. This is true for triples and powers.
         self.chunk_size = chunk_size
 
+        subscribe_recv_task, subscribe = subscribe_recv(recv)
+        self.tasks = [subscribe_recv_task]
+
+        def _get_send_recv(tag):
+            return wrap_send(tag, send), subscribe(tag)
+        self.get_send_recv = _get_send_recv
+
         self.pk, self.sk = pk, sk
         self.n, self.t, self.my_id = n, t, my_id
-        self.send, self.recv = send, recv
         self.get_input = get_input
 
     async def get(self):
@@ -93,7 +100,7 @@ class AvssValueProcessor(object):
             # Sleep first, then run so that you wait until some values are received
             await asyncio.sleep(AvssValueProcessor.ACS_PERIOD_IN_SECONDS)
             sid = f"AVSS-ACS-{acs_counter}"
-            logging.info("[%d] ACS Id: %s", self.my_id, sid)
+            logging.debug("[%d] ACS Id: %s", self.my_id, sid)
             await self._run_acs_to_process_values(sid)
             acs_counter += 1
 
@@ -108,7 +115,21 @@ class AvssValueProcessor(object):
         #
         # Each row is basically a node's view of its own
         # values which have been received by other nodes.
-        acs_outputs = map(loads, pickled_acs_outputs)
+
+        # Some parties may be slow in submitting their inputs and as a result ACS might
+        # return None for them. In order to handle this, initialize acs_outputs to be
+        # the same as the current set of agreed output values for that party. This
+        # indicates that the parties which were late are treated as if it has not seen
+        # any new values.
+        acs_outputs = [None]*self.n
+        default_acs_output = [len(self.outputs_per_dealer[j]) for j in range(self.n)]
+        for i, pickled_acs_output in enumerate(pickled_acs_outputs):
+            if pickled_acs_output is not None:
+                acs_outputs[i] = loads(pickled_acs_output)
+            else:
+                acs_outputs[i] = default_acs_output[::]
+
+        logging.debug("[%d] ACS output: %s", self.my_id, acs_outputs)
         counts_view_at_all_nodes = list(map(list, zip(*acs_outputs)))
 
         logging.debug("[%d] Counts View: %s", self.my_id, counts_view_at_all_nodes)
@@ -202,33 +223,34 @@ class AvssValueProcessor(object):
         value_counts_per_dealer = [len(self.inputs_per_dealer[i]) for i in range(self.n)]
 
         acs_input = dumps(value_counts_per_dealer)
-        logging.debug("[%d] Starting ACS[%s] for AVSS", self.my_id, sid)
-        logging.debug("[%d] ACS Input: %s", self.my_id, value_counts_per_dealer)
+        logging.debug("[%d] ACS [%s] Input:%s", self.my_id, sid, value_counts_per_dealer)
+
+        send, recv = self.get_send_recv(sid)
 
         acs_outputs = await run_common_subset(
             sid,
             self.pk, self.sk,
             self.n, self.t, self.my_id,
-            self.send, self.recv,
+            send, recv,
             acs_input)
-
-        logging.debug("[%d] ACS completed", self.my_id)
 
         assert type(acs_outputs) is tuple
         assert len(acs_outputs) == self.n
+
+        logging.debug("[%d] ACS [%s] completed", self.my_id, sid)
 
         # The output of ACS is a tuple of `n` entries.
         # Each entry denotes the count of AVSSed values which
         # that node has received from each of the other nodes.
         self._process_acs_output(acs_outputs)
 
-        logging.debug("[%d] All values processed", self.my_id)
+        logging.debug("[%d] All values processed [%s]", self.my_id, sid)
 
     def __enter__(self):
-        self.recv_loop_task = asyncio.create_task(self._recv_loop())
-        self.acs_runner_task = asyncio.create_task(self._acs_runner())
+        self.tasks.append(asyncio.create_task(self._recv_loop()))
+        self.tasks.append(asyncio.create_task(self._acs_runner()))
         return self
 
     def __exit__(self, type, value, traceback):
-        self.recv_loop_task.cancel()
-        self.acs_runner_task.cancel()
+        for task in self.tasks:
+            task.cancel()

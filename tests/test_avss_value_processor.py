@@ -366,8 +366,9 @@ async def test_with_agreed_values_on_another_node_with_input(k, acs_outputs):
             (7, 2, 1, [0, 0, 0, 0, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1],
              [0, 1, 1, 1, 1, 1, 1], ["10", "20", "30", "40", "60", None]),
         ))
-def test_add_to_output_queue(n, t, b, input_next_ids, output_next_ids, per_dealer_input,
-                             output_queue_vals):
+@mark.asyncio
+async def test_add_to_output_queue(n, t, b, input_next_ids, output_next_ids,
+                                   per_dealer_input, output_queue_vals):
     """
     Each row is a test case.
     This test runs on only one node.

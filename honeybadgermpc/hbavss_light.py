@@ -12,6 +12,12 @@ from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
 from honeybadgermpc.batch_reconstruction import subscribe_recv, wrap_send
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+# Uncomment this when you want logs from this file.
+# logger.setLevel(logging.NOTSET)
+
+
 class HbAVSSMessageType:
     OK = "OK"
 
@@ -72,7 +78,7 @@ class HbAvssLight(object):
         share_int = int(share)
         self.output_queue.put_nowait((dealer_id, avss_id, share_int))
 
-        logging.debug("[%d] 2t+1 OKs received.", self.my_id)
+        logger.debug("[%d] 2t+1 OKs received.", self.my_id)
         return share_int
 
     def _get_dealer_msg(self, value):
@@ -132,8 +138,8 @@ class HbAvssLight(object):
             assert dealer_id == self.n
         assert type(avss_id) is int
 
-        logging.debug("[%d] Starting AVSS. Id: %s, Dealer Id: %d, Client Mode: %s",
-                      self.my_id, avss_id, dealer_id, client_mode)
+        logger.debug("[%d] Starting AVSS. Id: %s, Dealer Id: %d, Client Mode: %s",
+                     self.my_id, avss_id, dealer_id, client_mode)
 
         broadcast_msg = None if self.my_id != dealer_id else self._get_dealer_msg(value)
         # In the client_mode, the dealer is the last node
@@ -157,9 +163,9 @@ class HbAvssLight(object):
             # anything after sending the initial value.
             return
 
-        logging.debug("[%d] RBC completed.", self.my_id)
+        logger.debug("[%d] RBC completed.", self.my_id)
         share = await self._process_avss_msg(avss_id, dealer_id, avss_msg)
-        logging.debug("[%d] AVSS [%s] completed.", self.my_id, avss_id)
+        logger.debug("[%d] AVSS [%s] completed.", self.my_id, avss_id)
         return share
 
     async def avss_parallel(self, avss_id, k, values=None, dealer_id=None):

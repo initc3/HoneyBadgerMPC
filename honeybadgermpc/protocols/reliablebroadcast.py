@@ -6,6 +6,12 @@ import hashlib
 import math
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+# Uncomment this when you want logs from this file.
+# logger.setLevel(logging.NOTSET)
+
+
 #####################
 #    zfec encode    #
 #####################
@@ -118,7 +124,7 @@ def merkle_verify(n, val, root_hash, branch, index):
         tmp = hash((tindex & 1) and br + tmp or tmp + br)
         tindex >>= 1
     if tmp != root_hash:
-        logging.info(f"Verification failed with {hash(val)} {root_hash} \
+        logger.info(f"Verification failed with {hash(val)} {root_hash} \
         {branch} {tmp == root_hash}")
         return False
     return True
@@ -185,7 +191,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
         # strings
         # (with Python 2 it used to be: assert type(m) is str)
         assert isinstance(m, (str, bytes))
-        logging.debug('[%d] Input received: %d bytes' % (pid, len(m),))
+        logger.debug('[%d] Input received: %d bytes' % (pid, len(m),))
 
         stripes = encode(k, n, m)
         mt = merkle_tree(stripes)  # full binary tree
@@ -221,12 +227,12 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
             # Validation
             (_, _, roothash, branch, stripe) = msg
             if sender != leader:
-                logging.info(f"[{pid}] VAL message from other than leader: {sender}")
+                logger.info(f"[{pid}] VAL message from other than leader: {sender}")
                 continue
             try:
                 assert merkle_verify(n, stripe, roothash, branch, pid)
             except Exception as e:
-                logging.info(f"[{pid}]Failed to validate VAL message: {e}")
+                logger.info(f"[{pid}]Failed to validate VAL message: {e}")
                 continue
 
             # Update
@@ -238,7 +244,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
             # Validation
             if roothash in stripes and stripes[roothash][sender] is not None \
                or sender in echo_senders:
-                logging.info("[{pid}] Redundant ECHO")
+                logger.info("[{pid}] Redundant ECHO")
                 continue
 
             # We can optimistically skip the merkleVerify for "ECHO", because the
@@ -247,7 +253,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
             # try:
             #     assert merkleVerify(N, stripe, roothash, branch, sender)
             # except AssertionError as e:
-                # logging.debug(f"Failed to validate ECHO message: {e}")
+                # logger.debug(f"Failed to validate ECHO message: {e}")
             #     continue
 
             # Update
@@ -266,7 +272,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
             (_, _, roothash) = msg
             # Validation
             if sender in ready[roothash] or sender in ready_senders:
-                logging.info("[{pid}] Redundant READY")
+                logger.info("[{pid}] Redundant READY")
                 continue
 
             # Update
