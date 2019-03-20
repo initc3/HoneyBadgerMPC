@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from honeybadgermpc.hbavss_light import HbAvssLight
+from honeybadgermpc.hbavss import HbAvssLight
 from honeybadgermpc.avss_value_processor import AvssValueProcessor
 from honeybadgermpc.protocols.crypto.boldyreva import dealer
 from honeybadgermpc.betterpairing import G1, ZR
