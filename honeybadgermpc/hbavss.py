@@ -20,9 +20,12 @@ logger.setLevel(logging.ERROR)
 
 class HbAVSSMessageType:
     OK = "OK"
+    # IMPLICATE = "IMPLICATE"
+    READY = "READY"
 
 
-class HbAvssLight(object):
+class HbAvss(object):
+    # base class of HbAvss containing light and batch version
     def __init__(self, public_keys, private_key, g, h, n, t, my_id, send, recv):
         self.public_keys, self.private_key = public_keys, private_key
         self.n, self.t, self.my_id = n, t, my_id
@@ -50,6 +53,8 @@ class HbAvssLight(object):
     def __exit__(self, type, value, traceback):
         self.subscribe_recv_task.cancel()
 
+
+class HbAvssLight(HbAvss):
     async def _process_avss_msg(self, avss_id, dealer_id, avss_msg):
         tag = f"{dealer_id}-{avss_id}-AVSS"
         send, recv = self.get_send(tag), self.subscribe_recv(tag)
@@ -68,11 +73,13 @@ class HbAvssLight(object):
             logging.error("PolyCommit verification failed.")
             raise HoneyBadgerMPCError("PolyCommit verification failed.")
 
-        oks_recvd = 0
-        while oks_recvd < 2*self.t + 1:
-            _, avss_msg = await recv()  # First value is the `sid`
-            if avss_msg == HbAVSSMessageType.OK:
-                oks_recvd += 1
+        # to handle the case that a (malicious) node sends
+        # an OK message multiple times
+        ok_set = set()
+        while len(ok_set) < 2 * self.t + 1:
+            sender, avss_msg = await recv()  # First value is the `sid`
+            if avss_msg == HbAVSSMessageType.OK and sender not in ok_set:
+                ok_set.add(sender)
 
         # Output the share as an integer so it is not tied to a type like ZR/GFElement
         share_int = int(share)
@@ -138,7 +145,7 @@ class HbAvssLight(object):
             assert dealer_id == self.n
         assert type(avss_id) is int
 
-        logger.debug("[%d] Starting AVSS. Id: %s, Dealer Id: %d, Client Mode: %s",
+        logger.debug("[%d] Starting Light AVSS. Id: %s, Dealer Id: %d, Client Mode: %s",
                      self.my_id, avss_id, dealer_id, client_mode)
 
         broadcast_msg = None if self.my_id != dealer_id else self._get_dealer_msg(value)
@@ -182,3 +189,141 @@ class HbAvssLight(object):
             v = None if values is None else values[i]
             avss_tasks[i] = asyncio.create_task(self.avss(k*avss_id+i, v, dealer_id))
         return await asyncio.gather(*avss_tasks)
+
+
+class HbAvssBatch(HbAvss):
+    async def _process_avss_msg(self, avss_id, dealer_id, dispersal_msg):
+        tag = f"{dealer_id}-{avss_id}-B-AVSS"
+        send, recv = self.get_send(tag), self.subscribe_recv(tag)
+
+        def multicast(msg):
+            for i in range(self.n):
+                send(i, msg)
+
+        commitments, ephemeral_public_key, encrypted_witnesses = loads(
+            dispersal_msg)
+        secret_size = len(commitments)
+
+        # all_encrypted_witnesses: n
+        shared_key = pow(ephemeral_public_key, self.private_key)
+
+        shares = [None] * secret_size
+        witnesses = [None] * secret_size
+        # Decrypt
+        for k in range(secret_size):
+            shares[k], witnesses[k] = SymmetricCrypto.decrypt(
+                str(shared_key).encode("utf-8"),
+                encrypted_witnesses[self.my_id * secret_size + k])
+
+        # verify & send all ok
+        for i in range(secret_size):
+            if not self.poly_commit.verify_eval(
+                    commitments[i], self.my_id+1, shares[i], witnesses[i]):
+                # will be replaced by sending out IMPLICATE message later
+                # multicast(HbAVSSMessageType.IMPLICATE)
+                logging.error("PolyCommit verification failed.")
+                raise HoneyBadgerMPCError("PolyCommit verification failed.")
+
+        multicast(HbAVSSMessageType.OK)
+
+        # Bracha-style agreement
+        # to handle the case that a (malicious) node sends
+        # an OK or READY message multiple times
+        ok_set = set()
+        ready_set = set()
+        # if 2t+1 OK or t+1 READY -> send all ready
+        while len(ok_set) < 2 * self.t + 1 and len(ready_set) < self.t + 1:
+            sender, avss_msg = await recv()  # First value is the `sid`
+            if avss_msg == HbAVSSMessageType.OK and sender not in ok_set:
+                ok_set.add(sender)
+            elif avss_msg == HbAVSSMessageType.READY and sender not in ready_set:
+                ready_set.add(sender)
+
+        multicast(HbAVSSMessageType.READY)
+
+        # if 2t+1 ready -> output shares
+        while len(ready_set) < 2 * self.t + 1:
+            sender, avss_msg = await recv()  # First value is the `sid`
+            if avss_msg == HbAVSSMessageType.READY and sender not in ready_set:
+                ready_set.add(sender)
+
+        return shares
+
+    def _get_dealer_msg(self, values):
+        # Sample a random degree-(t,t) bivariate polynomial φ(·,·)
+        # such that each φ(0,k) = sk and φ(i,k) is Pi’s share of sk
+        secret_size = len(values)
+        phi = [None] * secret_size
+        commitments = [None] * secret_size
+        aux_poly = [None] * secret_size
+        # for k ∈ [t+1]
+        #   Ck, auxk <- PolyCommit(SP,φ(·,k))
+        for k in range(secret_size):
+            phi[k] = self.poly.random(self.t, values[k])
+            commitments[k], aux_poly[k] = self.poly_commit.commit(phi[k])
+
+        ephemeral_secret_key = self.field.random()
+        ephemeral_public_key = pow(self.g, ephemeral_secret_key)
+        # for each party Pi and each k ∈ [t+1]
+        #   1. w[i][k] <- CreateWitnesss(Ck,auxk,i)
+        #   2. z[i][k] <- EncPKi(φ(i,k), w[i][k])
+        z = [None] * self.n * secret_size
+        for i in range(self.n):
+            shared_key = pow(self.public_keys[i], ephemeral_secret_key)
+            for k in range(secret_size):
+                witness = self.poly_commit.create_witness(aux_poly[k], i+1)
+                z[i * secret_size + k] = SymmetricCrypto.encrypt(
+                    str(shared_key).encode("utf-8"), (phi[k](i+1), witness))
+
+        return dumps((commitments, ephemeral_public_key, z))
+
+    async def avss(self, avss_id, values=None, dealer_id=None, client_mode=False):
+        """
+        A batched version of avss similar to the one in light version
+        """
+        # If `values` is passed then the node is a 'Sender'
+        # `dealer_id` must be equal to `self.my_id`
+        if values is not None:
+            if dealer_id is None:
+                dealer_id = self.my_id
+            assert dealer_id == self.my_id, "Only dealer can share values."
+        # If `values` is not passed then the node is a 'Recipient'
+        # Verify that the `dealer_id` is not the same as `self.my_id`
+        elif dealer_id is not None:
+            assert dealer_id != self.my_id
+        if client_mode:
+            assert dealer_id is not None
+            assert dealer_id == self.n
+        assert type(avss_id) is int
+
+        logger.debug("[%d] Starting Batch AVSS. Id: %s, Dealer Id: %d, Client Mode: %s",
+                     self.my_id, avss_id, dealer_id, client_mode)
+
+        broadcast_msg = None if self.my_id != dealer_id else self._get_dealer_msg(values)
+        # In the client_mode, the dealer is the last node
+        n = self.n if not client_mode else self.n+1
+
+        tag = f"{dealer_id}-{avss_id}-B-RBC"
+        send, recv = self.get_send(tag), self.subscribe_recv(tag)
+
+        # this will be replaced by Disperse
+        avss_msg = await reliablebroadcast(
+            tag,
+            self.my_id,
+            n,
+            self.t,
+            dealer_id,
+            broadcast_msg,
+            recv,
+            send
+        )
+
+        if client_mode and self.my_id == dealer_id:
+            # In client_mode, the dealer is not supposed to do
+            # anything after sending the initial value.
+            return
+
+        logger.debug("[%d] Dispersal completed.", self.my_id)
+        share = await self._process_avss_msg(avss_id, dealer_id, avss_msg)
+        logger.debug("[%d] Batch AVSS [%s] completed.", self.my_id, avss_id)
+        return share

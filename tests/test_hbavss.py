@@ -3,7 +3,7 @@ from random import randint
 from contextlib import ExitStack
 from honeybadgermpc.polynomial import polynomials_over
 from honeybadgermpc.betterpairing import G1, ZR
-from honeybadgermpc.hbavss_light import HbAvssLight
+from honeybadgermpc.hbavss import HbAvssLight, HbAvssBatch
 from honeybadgermpc.mpc import TaskProgramRunner
 import asyncio
 
@@ -18,7 +18,7 @@ def get_avss_params(n, t):
 
 
 @mark.asyncio
-async def test_hbavss(test_router):
+async def test_hbavss_light(test_router):
     t = 2
     n = 3*t + 1
 
@@ -43,7 +43,38 @@ async def test_hbavss(test_router):
 
 
 @mark.asyncio
-async def test_hbavss_client_mode(test_router):
+async def test_hbavss_batch(test_router):
+    t = 2
+    n = 3*t + 1
+
+    g, h, pks, sks = get_avss_params(n, t)
+    sends, recvs, _ = test_router(n)
+
+    values = [ZR.random()] * (t+1)
+    avss_tasks = [None]*n
+    dealer_id = randint(0, n-1)
+
+    with ExitStack() as stack:
+        for i in range(n):
+            hbavss = HbAvssBatch(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
+            stack.enter_context(hbavss)
+            if i == dealer_id:
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(0, values=values))
+            else:
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
+        shares = await asyncio.gather(*avss_tasks)
+
+    fliped_shares = list(map(list, zip(*shares)))
+    recovered_values = []
+    for item in fliped_shares:
+        recovered_values.append(polynomials_over(
+            ZR).interpolate_at(zip(range(1, n+1), item)))
+
+    assert recovered_values == values
+
+
+@mark.asyncio
+async def test_hbavss_light_client_mode(test_router):
     t = 2
     n = 3*t + 1
 
@@ -73,7 +104,7 @@ async def test_hbavss_client_mode(test_router):
 
 
 @mark.asyncio
-async def test_hbavss_share_open(test_router):
+async def test_hbavss_light_share_open(test_router):
     t = 2
     n = 3*t + 1
 
@@ -104,7 +135,7 @@ async def test_hbavss_share_open(test_router):
 
 
 @mark.asyncio
-async def test_hbavss_parallel_share_array_open(test_router):
+async def test_hbavss_light_parallel_share_array_open(test_router):
     t = 2
     n = 3*t + 1
     k = 4
