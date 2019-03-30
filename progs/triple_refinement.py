@@ -1,4 +1,4 @@
-from .polynomial import get_omega
+from honeybadgermpc.polynomial import get_omega
 import asyncio
 import itertools
 
