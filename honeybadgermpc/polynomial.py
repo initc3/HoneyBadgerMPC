@@ -6,6 +6,8 @@ from .field import GF, GFElement
 from itertools import zip_longest
 from .betterpairing import ZR
 from .elliptic_curve import Subgroup
+from honeybadgermpc.ntl.helpers import fft as fft_cpp
+from honeybadgermpc.ntl.helpers import fft_interpolate as fft_interpolate_cpp
 
 
 def strip_trailing_zeros(a):
@@ -142,6 +144,26 @@ def polynomials_over(field):
 
             # Evaluate the polynomial
             xs2 = poly.evaluate_fft(omega, 2*n)
+
+            return xs2
+
+        @classmethod
+        def interp_extrap_cpp(cls, xs, omega):
+            """
+            Interpolates the polynomial based on the even points omega^2i
+            then evaluates at all points omega^i using C++ FFT routines.
+            """
+            n = len(xs)
+            assert n & (n-1) == 0, "n must be power of 2"
+            assert pow(omega, 2*n) == 1, "omega must be 2n'th root of unity"
+            assert pow(omega, n) != 1, "omega must be primitive 2n'th root of unity"
+            p = omega.modulus
+
+            # Interpolate the polynomial up to degree n
+            poly = fft_interpolate_cpp(list(range(n)), xs, (pow(omega, 2)).value, p, n)
+
+            # Evaluate the polynomial
+            xs2 = fft_cpp(poly, omega.value, p, 2*n)
 
             return xs2
 
