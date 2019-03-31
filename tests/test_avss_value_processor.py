@@ -216,7 +216,6 @@ async def test_acs_output(n, t, output_counts, next_idx, acs_outputs):
 
         # These are set by another method and shouldn't have been updated.
         assert all(len(proc.inputs_per_dealer[i]) == 0 for i in range(n))
-        print("YOOOOOO", proc.next_idx_to_return_per_dealer)
         assert proc.next_idx_to_return_per_dealer == next_idx
 
 

@@ -4,7 +4,7 @@ from honeybadgermpc.hbavss import HbAvssLight
 from honeybadgermpc.avss_value_processor import AvssValueProcessor
 from honeybadgermpc.protocols.crypto.boldyreva import dealer
 from honeybadgermpc.betterpairing import G1, ZR
-from honeybadgermpc.polynomial import get_omega, polynomials_over
+from progs.random_refinement import refine_randoms
 from honeybadgermpc.field import GF
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.batch_reconstruction import subscribe_recv, wrap_send
@@ -135,19 +135,10 @@ class RandomGenerator(PreProcessingBase):
         while True:
             async for batch in self._get_output_batch():
                 random_shares_int = await asyncio.gather(*batch)
-                # Number of nodes which have contributed values to this batch
-                n = len(batch)
-
-                random_shares_gf = list(map(self.field, random_shares_int))
-                def nearest_power_of_two(x): return 2**(x-1).bit_length()   # Round up
-                d = nearest_power_of_two(n)
-                omega = get_omega(self.field, 2*d, seed=0)
-                random_shares_gf += [self.field(0)] * (d-n)
-                output_shares_gf = polynomials_over(self.field).interp_extrap(
-                    random_shares_gf, omega)
-                # Output only values at the odd indices
-                for value in output_shares_gf[1:2*(n-self.t):2]:
-                    self.output_queue.put_nowait(value)
+                output_shares_int = refine_randoms(
+                    self.n, self.t, self.field, random_shares_int)
+                for value in output_shares_int:
+                    self.output_queue.put_nowait(self.field(value))
 
 
 class TripleGenerator(PreProcessingBase):
@@ -179,18 +170,14 @@ class TripleGenerator(PreProcessingBase):
 
 
 async def get_random(n, t, my_id, send, recv):
-    from random import randint
-
-    # AVSS a random batch size of values from each node
-    b = randint(5, 20)
-    with RandomGenerator(n, t, my_id, send, recv, b) as random_generator:
+    with RandomGenerator(n, t, my_id, send, recv) as random_generator:
         while True:
             yield await random_generator.get()
 
 
 async def _mpc_prog(context, **kwargs):
     randoms = kwargs["randoms"]
-    n, i = 1000, 0
+    n, i = 10, 0
     async for random in randoms:
         logging.info("i: %d => %d", i, await context.Share(random).open())
         i += 1
