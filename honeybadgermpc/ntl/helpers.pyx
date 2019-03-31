@@ -60,7 +60,7 @@ cpdef lagrange_interpolate(x, y, modulus):
     :type y: list of integers
     :param modulus: Field modulus
     :type modulus: integer
-    :return: 
+    :return:
     """
     assert len(x) == len(y)
 
@@ -68,10 +68,9 @@ cpdef lagrange_interpolate(x, y, modulus):
     cdef vector[ZZ_c] y_vec;
     cdef vector[ZZ_c] r_vec;
 
-    for xi in x:
-        x_vec.push_back(py_obj_to_ZZ(xi))
-    for yi in y:
-        y_vec.push_back(py_obj_to_ZZ(yi))
+    for i in range(len(x)):
+        x_vec.push_back(py_obj_to_ZZ(x[i]))
+        y_vec.push_back(py_obj_to_ZZ(y[i]))
 
     cdef ZZ_c zz_modulus = py_obj_to_ZZ(modulus)
     interpolate_c(r_vec, x_vec, y_vec, zz_modulus)
@@ -101,7 +100,7 @@ cpdef vandermonde_inverse(x, modulus):
     :type x: list of integers
     :param modulus: Field modulus
     :type modulus: integers
-    :return: 
+    :return:
     """
     cdef vector[ZZ_c] x_vec;
 
@@ -121,16 +120,16 @@ class InterpolationError(Exception):
 
 cpdef vandermonde_batch_interpolate(x, data_list, modulus):
     """Interpolate polynomials using vandermonde matrices
-    
-    This code is based on the observation that we have evaluations for different 
+
+    This code is based on the observation that we have evaluations for different
     polynomials P0, P1, etc on the same set of points x[0], x[1], .., x[k]
-    
+
     We first generate the vandermonde matrix `A`
     https://en.wikipedia.org/wiki/Vandermonde_matrix
-    
+
     More on the math behind this here
     http://pages.cs.wisc.edu/~sifakis/courses/cs412-s13/lecture_notes/CS412_12_Feb_2013.pdf
-    
+
     :param x: list of evaluation points
     :type x: list of integers
     :param data_list: evaluations of polynomials
@@ -138,7 +137,7 @@ cpdef vandermonde_batch_interpolate(x, data_list, modulus):
     :type data_list: list of lists
     :param modulus: field modulus
     :type modulus: integer
-    :return: 
+    :return:
     """
     cdef vector[ZZ_c] x_vec;
 
@@ -176,15 +175,15 @@ cpdef vandermonde_batch_interpolate(x, data_list, modulus):
 
 cpdef vandermonde_batch_evaluate(x, polynomials, modulus):
     """Evaluate polynomials at given points x using vandermonde matrices
-    
+
     :param x: evaluation points
     :type x: list of integers
-    :param polynomials: polynomial coefficients. polynomials[i] = coefficients of the 
+    :param polynomials: polynomial coefficients. polynomials[i] = coefficients of the
         i'th polynomial
     :type x: list of list of integers
     :param modulus: field modulus
     :type modulus: integer
-    :return: 
+    :return:
     """
     cdef mat_ZZ_p vm_matrix, poly_matrix, res_matrix
     cdef int n = len(x)
@@ -252,11 +251,9 @@ def fft_interpolate(zs, ys, omega, modulus, int n):
     ZZ_p_init(py_obj_to_ZZ(modulus))
     zz_omega = py_obj_to_ZZ_p(omega)
     z_vec.resize(k)
-    for i in range(k):
-        z_vec[i] = PyInt_AS_LONG(zs[i])
-
     y_vec.SetLength(k)
     for i in range(k):
+        z_vec[i] = PyInt_AS_LONG(zs[i])
         y_vec[i] = py_obj_to_ZZ_p(ys[i])
 
     fnt_decode_step1_c(A, Ad_evals_vec, z_vec, zz_omega, n)
