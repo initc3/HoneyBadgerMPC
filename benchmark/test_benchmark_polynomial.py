@@ -1,4 +1,4 @@
-from pytest import mark, fixture
+from pytest import mark
 from random import randint
 from honeybadgermpc.polynomial import get_omega
 from honeybadgermpc.ntl.helpers import (
