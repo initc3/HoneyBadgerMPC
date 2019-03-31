@@ -6,7 +6,7 @@ import itertools
 def rename_and_unpack_inputs(field, a_, b_, c_, d, m):
     n = m // 2  # number of triples
 
-    def pad(arr, k): return arr + [field(0)]*(d-len(arr))
+    def pad(arr, k): return arr + [field(0) for _ in range(d-len(arr))]
     a, b, c = pad(a_[:n], d), pad(b_[:n], d), pad(c_[:n], d)
     x, y, z = pad(a_[n:], d), pad(b_[n:], d), pad(c_[n:], d)
 
@@ -14,8 +14,8 @@ def rename_and_unpack_inputs(field, a_, b_, c_, d, m):
 
 
 def get_extrapolated_values(poly, a, b, d, omega):
-    a_ = poly.interp_extrap(poly.interp_extrap(a, omega**2), omega)
-    b_ = poly.interp_extrap(poly.interp_extrap(b, omega**2), omega)
+    a_ = poly.interp_extrap_cpp(poly.interp_extrap_cpp(a, omega**2), omega)
+    b_ = poly.interp_extrap_cpp(poly.interp_extrap_cpp(b, omega**2), omega)
     return a_[2::4], b_[2::4], a_[1::2], b_[1::2]
 
 

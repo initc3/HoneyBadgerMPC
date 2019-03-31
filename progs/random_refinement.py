@@ -1,5 +1,5 @@
 from honeybadgermpc.polynomial import get_omega, polynomials_over
-
+import cProfile, pstats, io
 
 def refine_randoms(n, t, field, random_shares_int):
     assert 3*t + 1 <= n
@@ -16,3 +16,21 @@ def refine_randoms(n, t, field, random_shares_int):
 
     # Output only values at the odd indices
     return output_shares_int[1:2*(k-t):2]
+
+
+if __name__ == "__main__":
+    from honeybadgermpc.field import GF
+    from honeybadgermpc.elliptic_curve import Subgroup
+    field = GF.get(Subgroup.BLS12_381)
+    n = pow(2, 15)
+    t = (n-1)//3
+    random_shares_int = [field.random().value for _ in range(n)]
+    pr = cProfile.Profile()
+    pr.enable()
+    refine_randoms(n, t, field, random_shares_int)
+    pr.disable()
+    s = io.StringIO()
+    sortby = 'time'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print(s.getvalue())
