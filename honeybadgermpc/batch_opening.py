@@ -14,6 +14,11 @@ async def batch_opening(context):
     logging.info("Batch opening finished.")
 
 
+async def _run(peers, n, t, my_id):
+    async with ProcessProgramRunner(peers, n, t, my_id) as runner:
+        runner.execute(1, batch_opening)
+
+
 if __name__ == "__main__":
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
@@ -27,11 +32,7 @@ if __name__ == "__main__":
                 preprocessing_done()
             else:
                 loop.run_until_complete(wait_for_preprocessing())
-        program_runner = ProcessProgramRunner(
-            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id)
-        loop.run_until_complete(program_runner.start())
-        program_runner.add(1, batch_opening)
-        loop.run_until_complete(program_runner.join())
-        loop.run_until_complete(program_runner.close())
+        loop.run_until_complete(_run(
+            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))
     finally:
         loop.close()
