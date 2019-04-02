@@ -296,38 +296,34 @@ async def run_binary_agreement(config, pbk, pvk, n, f, nodeid):
     sid_c = "sid_coin"
     sid_ba = "sid_ba"
 
-    program_runner = ProcessProgramRunner(config, n, f, nodeid)
-    sender, listener = program_runner.senders, program_runner.listener
-    await sender.connect()
+    async with ProcessProgramRunner(config, n, f, nodeid) as program_runner:
+        send_c, recv_c = program_runner.get_send_recv(sid_c)
 
-    send_c, recv_c = program_runner.get_send_and_recv(sid_c)
+        def bcast_c(o):
+            for i in range(n):
+                send_c(i, o)
+        coin, crecv_task = await shared_coin(
+            sid_c, nodeid, n, f, pbk, pvk, bcast_c, recv_c)
 
-    def bcast_c(o):
-        for i in range(n):
-            send_c(i, o)
-    coin, crecv_task = await shared_coin(sid_c, nodeid, n, f, pbk, pvk, bcast_c, recv_c)
+        inputq = asyncio.Queue()
+        outputq = asyncio.Queue()
 
-    inputq = asyncio.Queue()
-    outputq = asyncio.Queue()
+        send_ba, recv_ba = program_runner.get_send_recv(sid_ba)
 
-    send_ba, recv_ba = program_runner.get_send_and_recv(sid_ba)
+        def bcast_ba(o):
+            for i in range(n):
+                send_ba(i, o)
+        ba_task = binaryagreement(
+            sid_ba, nodeid, n, f, coin, inputq.get, outputq.put_nowait,
+            bcast_ba, recv_ba)
 
-    def bcast_ba(o):
-        for i in range(n):
-            send_ba(i, o)
-    ba_task = binaryagreement(
-        sid_ba, nodeid, n, f, coin, inputq.get, outputq.put_nowait, bcast_ba, recv_ba)
+        inputq.put_nowait(random.randint(0, 1))
 
-    inputq.put_nowait(random.randint(0, 1))
+        await ba_task
 
-    await ba_task
-
-    logger.info("[%d] BA VALUE: %s", nodeid, await outputq.get())
-    # logger.info("[%d] COIN VALUE: %s", nodeid, await coin(0))
-    crecv_task.cancel()
-
-    await sender.close()
-    await listener.close()
+        logger.info("[%d] BA VALUE: %s", nodeid, await outputq.get())
+        # logger.info("[%d] COIN VALUE: %s", nodeid, await coin(0))
+        crecv_task.cancel()
 
 
 if __name__ == "__main__":
@@ -343,7 +339,6 @@ if __name__ == "__main__":
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
-    loop.set_debug(True)
     try:
         loop.run_until_complete(
             run_binary_agreement(

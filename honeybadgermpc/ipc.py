@@ -1,309 +1,209 @@
-import pickle
-import asyncio
-import struct
-import socket
 import logging
-from .mpc import Mpc
-from .config import HbmpcConfig, ConfigVars
-from .program_runner import ProgramRunner
-from .preprocessing import wait_for_preprocessing, preprocessing_done
+import asyncio
+
+from zmq import ROUTER, DEALER, IDENTITY
+from zmq.asyncio import Context
+from pickle import dumps, loads
+
+from honeybadgermpc.mpc import Mpc
+from honeybadgermpc.config import HbmpcConfig, ConfigVars
+from honeybadgermpc.batch_reconstruction import subscribe_recv, wrap_send
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
-# Uncomment this when you want logs from this file.
-# logger.setLevel(logging.NOTSET)
+class NodeCommunicator(object):
+    LAST_MSG = None
 
+    def __init__(self, peers_config, my_id):
+        self.peers_config = peers_config
+        self.my_id = my_id
 
-async def robust_open_connection(host, port):
-    backoff = 1
-    for _ in range(4):
-        try:
-            return await asyncio.open_connection(host, port)
-        except (ConnectionRefusedError, ConnectionResetError):
-            logger.info(f'backing off: {backoff} seconds')
-            await asyncio.sleep(backoff)
-            backoff *= 2
+        self.bytes_sent = 0
+        self.benchmark_logger = logging.LoggerAdapter(
+            logging.getLogger("benchmark_logger"), {"node_id": my_id})
 
+        self._dealer_tasks = []
+        self._router_task = None
 
-class Senders(object):
-    def __init__(self, queues, config, nodeid):
-        self.queues = queues
-        self.config = config
-        self.totalBytesSent = 0
-        self.benchlogger = logging.LoggerAdapter(
-            logging.getLogger("benchmark_logger"), {"node_id": nodeid})
-        self.tasks = []
-
-    async def connect(self):
-        # Setup all connections first before sending messages
-
-        # XXX BEGIN temporary hack
-        # ``socket.getaddrinfo``, called in open_connection may fail thus causing an
-        # unhandled exception.
-        # A connection management mechanism is needed to that failed connections are
-        # re-tried etc.
-        # Basically nodes should be capable to join when they try to connect but if late
-        # it should not crash the whole thing, or more precisely prevent other nodes
-        # from participating in the protocol.
-        while True:
-            try:
-                addrinfo_list = [
-                    socket.getaddrinfo(
-                        self.config[i].ip, self.config[i].port)[0][4]
-                    for i in range(len(self.queues))
-                ]
-            except socket.gaierror:
-                continue
+        n = len(peers_config)
+        self._receiver_queue = asyncio.Queue()
+        self._sender_queues = [None]*n
+        for i in range(n):
+            if i == self.my_id:
+                self._sender_queues[i] = self._receiver_queue
             else:
-                break
-        # XXX END temporary hack
+                self._sender_queues[i] = asyncio.Queue()
 
-        streams = [robust_open_connection(
-            addrinfo_list[i][0],
-            addrinfo_list[i][1],
-        ) for i in range(len(self.queues))]
-        streams = await asyncio.gather(*streams)
-        writers = [stream[1] for stream in streams]
+    def send(self, node_id, msg):
+        msg = (self.my_id, msg) if node_id == self.my_id else msg
+        self._sender_queues[node_id].put_nowait(msg)
 
-        # Setup tasks to consume messages from queues
-        # This is to ensure that messages are delivered in the correct order
-        for i, q in enumerate(self.queues):
-            recvid = "%s:%d" % (self.config[i].ip, self.config[i].port)
-            self.tasks.append(
-                asyncio.ensure_future(self.process_queue(writers[i], q, recvid))
-            )
+    async def recv(self):
+        return await self._receiver_queue.get()
 
-    async def process_queue(self, writer, q, recvid):
-        try:
-            writer._bytesSent = 0
-            while True:
-                try:
-                    msg = await asyncio.wait_for(q.get(), timeout=1)
-                except asyncio.TimeoutError:
-                    # FIXME: debug diagnostic below
-                    # logger.debug(f'timeout sending to: {recvid} \
-                    # sent: {writer._bytesSent}')
-                    # Option 1: heartbeat
-                    msg = "heartbeat"
-                    # Option 2: no heartbeat
-                    # continue
+    async def __aenter__(self):
+        await self._setup()
+        return self
 
-                if msg is None:
-                    logger.debug('Close the connection')
-                    writer.close()
-                    await writer.wait_closed()
-                    break
+    async def __aexit__(self, exc_type, exc, tb):
+        self.benchmark_logger.info("Total bytes sent out: %d", self.bytes_sent)
+        # Add None to the sender queues and drain out all the messages.
+        for q in self._sender_queues:
+            q.put_nowait(None)
+        await asyncio.gather(*self._dealer_tasks)
+        logging.debug("Dealer tasks finished.")
+        self._router_task.cancel()
+        logging.debug("Router task cancelled.")
+        # Let ZMQ garbage collect the context and the sockets
+        # Manually destroying it causes the recipients to hang.
 
-                # logger.debug('[%2d] SEND %8s [%2d -> %s]' % (
-                #      msg[0], msg[1][1][0], msg[1][0], recvid
-                # ))
+    async def _setup(self):
+        # Setup one router for a party, this acts as a
+        # server for receiving messages from other parties.
+        router = Context().socket(ROUTER)
+        router.bind(f"tcp://*:{self.peers_config[self.my_id].port}")
+        # Start a task to receive messages on this node.
+        self._router_task = asyncio.create_task(self._recv_loop(router))
 
-                # start_time = os.times()
-                data = pickle.dumps(msg)
-                # pickle_time = str(os.times()[4] - start_time[4])
-                # logger.debug(f'pickle time {pickle_time}')
-                padded_msg = struct.pack('>I', len(data)) + data
-                self.totalBytesSent += len(padded_msg)
-                writer.write(padded_msg)
-                await writer.drain()
-                writer._bytesSent += len(padded_msg)
-        except ConnectionResetError:
-            logger.warning(f"Connection with peer [{recvid}] reset.")
-        except ConnectionRefusedError:
-            logger.warning(f"Connection with peer [{recvid}] refused.")
-        except BrokenPipeError:
-            logger.warning(f"Connection with peer [{recvid}] broken   .")
+        # Setup one dealer per receving party. This is used
+        # as a client to send messages to other parties.
+        for i in range(len(self.peers_config)):
+            if i != self.my_id:
+                dealer = Context().socket(DEALER)
+                # This identity is sent with each message. Setting it to my_id, this is
+                # used to appropriately route the message. This is not a good idea since
+                # a node can pretend to send messages on behalf of other nodes.
+                dealer.setsockopt(IDENTITY, str(self.my_id).encode())
+                dealer.connect(
+                    f"tcp://{self.peers_config[i].ip}:{self.peers_config[i].port}")
+                # Setup a task which reads messages intended for this
+                # party from a queue and then sends them to this node.
+                self._dealer_tasks.append(
+                    asyncio.create_task(
+                        self._process_node_messages(
+                            i, self._sender_queues[i], dealer.send_multipart)))
 
-    async def close(self):
-        await asyncio.gather(*[q.put(None) for q in self.queues])
-        await asyncio.gather(*self.tasks)
-        self.benchlogger.info("Total bytes sent out: %d", self.totalBytesSent)
-
-
-class Listener(object):
-    def __init__(self, port):
-        self.queues = {}
-        self.tasks = []
-        server_future = asyncio.start_server(self.handle_client, "", port)
-        self.serverTask = asyncio.ensure_future(server_future)
-
-    def get_program_queue(self, sid):
-        assert sid not in self.queues
-        self.queues[sid] = asyncio.Queue()
-        return self.queues[sid]
-
-    def clear_all_program_queues(self):
-        self.queues = {}
-
-    async def handle_client(self, reader, writer):
-        task = asyncio.current_task()
-        self.tasks.append(task)
-
-        def cb(future):
-            try:
-                future.result()
-            except asyncio.CancelledError:
-                logger.warning("handle_client was cancelled.")
-                return
-        task.add_done_callback(cb)
-
-        logger.debug(f"Received new connection {writer.get_extra_info('peername')}")
-        reader._whoFrom = None
-        reader._bytesRead = 0
+    async def _recv_loop(self, router):
         while True:
-            raw_msglen = await self.recvall(reader, 4)
-            if raw_msglen is None:
+            sender_id, raw_msg = await router.recv_multipart()
+            msg = loads(raw_msg)
+            # logging.debug("[RECV] FROM: %s, MSG: %s,", sender_id, msg)
+            self._receiver_queue.put_nowait((int(sender_id), msg))
+
+    async def _process_node_messages(self, node_id, node_msg_queue, send_to_node):
+        while True:
+            msg = await node_msg_queue.get()
+            if msg is None:
+                logging.debug("No more messages to Node: %d can be sent.", node_id)
                 break
-            msglen = struct.unpack('>I', raw_msglen)[0]
-            received_raw_msg = await self.recvall(reader, msglen)
-            if received_raw_msg is None:
-                break
-            unpickled = pickle.loads(received_raw_msg)
-            if unpickled == "heartbeat":
-                # logger.debug(f"received heartbeat {reader._whoFrom}")
-                continue
-            sid, received_msg = unpickled
-            if reader._whoFrom is None:
-                reader._whoFrom = received_msg[0]
-                logger.debug(f"{reader._whoFrom} {reader}")
-            assert reader._whoFrom == received_msg[0]
-
-            logger.debug('[%s] RECV %s' % (sid, received_msg))
-            while sid not in self.queues:
-                # Wait for queue to get set up
-                await asyncio.sleep(1)
-            await self.queues[sid].put(received_msg)
-
-    async def recvall(self, reader, n):
-        # Helper function to recv n bytes or return None if EOF is hit
-        data = b''
-        while len(data) < n:
-            try:
-                packet = await asyncio.wait_for(reader.read(n - len(data)),
-                                                timeout=4)
-                reader._bytesRead += len(packet)
-            except asyncio.TimeoutError:
-                logger.info(f'recv timeout {reader._whoFrom} reading: \
-                {n - len(data)} bytesRead: {reader._bytesRead}')
-                continue
-            if len(packet) == 0:
-                return None
-            data += packet
-        return data
-
-    async def get_message(self, sid):
-        return await self.queues[sid].get()
-
-    async def close(self):
-        server = await self.serverTask
-        server.close()
-        await server.wait_closed()
-        for task in self.tasks:
-            task.cancel()
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
+            raw_msg = dumps(msg)
+            self.bytes_sent += len(raw_msg)
+            # logging.debug("[SEND] TO: %d, MSG: %s", node_id, msg)
+            await send_to_node([raw_msg])
 
 
-class ProcessProgramRunner(ProgramRunner):
-    def __init__(self, network_config, n, t, nodeid, config={}):
-        self.network_config = network_config
-        self.N, self.t, self.nodeid = n, t, nodeid
-        self.senders = Senders(
-            [asyncio.Queue() for _ in range(n)], network_config, nodeid)
-        self.listener = Listener(network_config[nodeid].port)
-        self.programs = []
-        self.config = config
-        self.config[ConfigVars.Reconstruction] = HbmpcConfig.reconstruction
+class ProcessProgramRunner(object):
+    def __init__(self, peers_config, n, t, my_id, mpc_config={}):
+        self.peers_config = peers_config
+        self.n = n
+        self.t = t
+        self.my_id = my_id
+        self.mpc_config = mpc_config
+        self.mpc_config[ConfigVars.Reconstruction] = HbmpcConfig.reconstruction
 
-    def get_send_and_recv(self, sid):
-        listener_queue = self.listener.get_program_queue(sid)
+        self.node_communicator = NodeCommunicator(peers_config, my_id)
+        self.progs = []
 
-        def make_send(i, sid):
-            def _send(j, o):
-                logger.debug('[%s] SEND %8s [%2d -> %2d]' % (sid, o, i, j))
-                if i == j:
-                    # If attempting to send the message to yourself
-                    # then skip the network stack.
-                    listener_queue.put_nowait((i, o))
-                else:
-                    self.senders.queues[j].put_nowait((sid, (i, o)))
-
-            return _send
-
-        def make_recv(j, sid):
-            async def _recv():
-                (i, o) = await self.listener.get_message(sid)
-                logger.debug('[%s] RECV %8s [%2d -> %2d]' % (sid, o, i, j))
-                return (i, o)
-            return _recv
-
-        return make_send(self.nodeid, sid), make_recv(self.nodeid, sid)
-
-    def add(self, sid, program, **kwargs):
-        send, recv = self.get_send_and_recv(sid)
+    def execute(self, program_tag, program, **kwargs):
+        send, recv = self.get_send_recv(program_tag)
         context = Mpc(
                 'sid',
-                self.N,
+                self.n,
                 self.t,
-                self.nodeid,
-                sid,
+                self.my_id,
+                program_tag,
                 send,
                 recv,
                 program,
-                self.config,
+                self.mpc_config,
                 **kwargs,
             )
-        self.programs.append(asyncio.ensure_future(context._run()))
-        return send, recv
+        program_result = asyncio.Future()
+        def callback(future): program_result.set_result(future.result())
+        task = asyncio.create_task(context._run())
+        task.add_done_callback(callback)
+        self.progs.append(task)
+        return program_result
 
-    async def start(self):
-        await self.senders.connect()
+    def get_send_recv(self, tag):
+        return wrap_send(tag, self.send), self.subscribe(tag)
 
-    async def join(self):
-        """
-        This method waits on all the added programs to complete.
-        Once all programs are done, it cleans up the programs and the queues.
-        """
-        results = await asyncio.gather(*self.programs)
-        # Clear out all programs and queues which were using old sids
-        self.programs = []
-        self.listener.clear_all_program_queues()
-        return results
+    async def __aenter__(self):
+        await self.node_communicator.__aenter__()
+        self.subscribe_task, self.subscribe = subscribe_recv(self.node_communicator.recv)
+        self.send = self.node_communicator.send
+        return self
 
-    async def close(self):
-        await self.senders.close()
-        await self.listener.close()
+    async def __aexit__(self, exc_type, exc, tb):
+        await asyncio.gather(*self.progs)
+        logging.debug("All programs finished.")
+        await self.node_communicator.__aexit__(exc_type, exc, tb)
+        logging.debug("NodeCommunicator closed.")
+        self.subscribe_task.cancel()
+        logging.debug("Subscribe task cancelled.")
+
+
+async def verify_all_connections(peers, n, my_id):
+    # Uncomment this if you want to test on multiple processes.
+    # No need to uncomment this when running across servers
+    # since the network latency is already present there.
+
+    # logging.debug("Sleeping for: %d", my_id)
+    # await asyncio.sleep(my_id)
+
+    async with NodeCommunicator(peers, my_id) as node_communicator:
+        for i in range(n):
+            node_communicator.send(i, i)
+        sender_ids = set()
+        keys = set()
+        for i in range(n):
+            msg = await node_communicator.recv()
+            sender_ids.add(msg[0])
+            keys.add(msg[1])
+        assert len(sender_ids) == n
+        for i in range(n):
+            assert i in sender_ids
+        assert len(keys) == 1
+        assert keys.pop() == my_id
+        logging.info("Verfification completed.")
+
+
+async def test_mpc_programs(peers, n, t, my_id):
+    from honeybadgermpc.mpc import test_prog1, test_prog2, test_batchopening
+    from honeybadgermpc.preprocessing import PreProcessedElements
+    from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_done
+
+    if not HbmpcConfig.skip_preprocessing:
+        # Only one party needs to generate the preprocessed elements for testing
+        if HbmpcConfig.my_id == 0:
+            pp_elements = PreProcessedElements()
+            pp_elements.generate_zeros(1000, HbmpcConfig.N, HbmpcConfig.t)
+            pp_elements.generate_triples(1000, HbmpcConfig.N, HbmpcConfig.t)
+            preprocessing_done()
+        else:
+            await wait_for_preprocessing()
+
+    async with ProcessProgramRunner(peers, n, t, my_id) as runner:
+        r1 = runner.execute(0, test_prog1)
+        r2 = runner.execute(1, test_prog2)
+        r3 = runner.execute(2, test_batchopening)
+        results = await asyncio.gather(*[r1, r2, r3])
+        logging.info("%s", results)
 
 
 if __name__ == "__main__":
-    from .mpc import test_prog1, test_prog2, test_batchopening
-    from .preprocessing import PreProcessedElements
-
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
-    loop.set_debug(True)
-    try:
-        if not HbmpcConfig.skip_preprocessing:
-            # Only one party needs to generate the initial shares
-            if HbmpcConfig.my_id == 0:
-                pp_elements = PreProcessedElements()
-                logger.info('Generating random shares of zero in sharedata/')
-                pp_elements.generate_zeros(1000, HbmpcConfig.N, HbmpcConfig.t)
-                logger.info('Generating random shares of triples in sharedata/')
-                pp_elements.generate_triples(1000, HbmpcConfig.N, HbmpcConfig.t)
-                preprocessing_done()
-            else:
-                loop.run_until_complete(wait_for_preprocessing())
-        program_runner = ProcessProgramRunner(
-            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id)
-        loop.run_until_complete(program_runner.start())
-        program_runner.add(1, test_prog1)
-        program_runner.add(2, test_prog2)
-        program_runner.add(3, test_batchopening)
-        loop.run_until_complete(program_runner.join())
-        loop.run_until_complete(program_runner.close())
-    finally:
-        loop.close()
+    # loop.run_until_complete(
+    #     verify_all_connections(HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.my_id))
+    loop.run_until_complete(test_mpc_programs(
+        HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))

@@ -363,6 +363,7 @@ async def test_batchopening(context):
     for i, x in enumerate(xs_):
         assert x.value == i
     logging.info("[%d] Finished batch opening" % (context.myid,))
+    return xs_
 
 
 async def test_prog1(context):

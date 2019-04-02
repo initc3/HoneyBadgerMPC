@@ -138,33 +138,31 @@ async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
     from honeybadgermpc.task_pool import TaskPool
 
     file_prefixes = [uuid.uuid4().hex for _ in range(k)]
-    program_runner = ProcessProgramRunner(network_info, n, t, node_id)
-    await program_runner.start()
-    program_runner.add(0, all_secrets_phase1, k=k, file_prefixes=file_prefixes)
-    await program_runner.join()
+    async with ProcessProgramRunner(network_info, n, t, node_id) as runner:
+        await runner.execute(0, all_secrets_phase1, k=k, file_prefixes=file_prefixes)
+        logging.info("Phase 1 completed.")
 
-    pool = TaskPool(256)
-    stime = time()
-    for i in range(k):
-        pool.submit(phase2(node_id, run_id, file_prefixes[i]))
-    await pool.close()
+        pool = TaskPool(256)
+        stime = time()
+        for i in range(k):
+            pool.submit(phase2(node_id, run_id, file_prefixes[i]))
+        await pool.close()
 
-    bench_logger = logging.LoggerAdapter(
-        logging.getLogger("benchmark_logger"), {"node_id": HbmpcConfig.my_id})
+        bench_logger = logging.LoggerAdapter(
+            logging.getLogger("benchmark_logger"), {"node_id": HbmpcConfig.my_id})
 
-    bench_logger.info(f"[Phase2] Execute CPP code for all secrets: {time() - stime}")
+        bench_logger.info(f"[Phase2] Execute CPP code for all secrets: {time() - stime}")
+        logging.info("Phase 2 completed.")
 
-    program_runner.add(1, phase3, k=k, run_id=run_id)
-    power_sums = (await program_runner.join())[0]
-    await program_runner.close()
+        power_sums = await runner.execute(1, phase3, k=k, run_id=run_id)
 
-    logging.info("Shares from C++ phase opened.")
-    stime = time()
-    result = solve([s.value for s in power_sums])
-    bench_logger.info(f"[SolverPhase] Run Newton Solver: {time() - stime}")
-    logging.info("Equation solver completed.")
-    logging.debug(result)
-    return result
+        logging.info("Shares from C++ phase opened.")
+        stime = time()
+        result = solve([s.value for s in power_sums])
+        bench_logger.info(f"[SolverPhase] Run Newton Solver: {time() - stime}")
+        logging.info("Equation solver completed.")
+        logging.debug(result)
+        return result
 
 
 if __name__ == "__main__":
@@ -175,22 +173,6 @@ if __name__ == "__main__":
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
-
-    def handle_async_exception(loop, ctx):
-        logging.info('handle_async_exception:')
-        if 'exception' in ctx:
-            logging.info(f"exc: {repr(ctx['exception'])}")
-        else:
-            logging.info(f'ctx: {ctx}')
-        logging.info(f"msg: {ctx['message']}")
-
-    loop.set_exception_handler(handle_async_exception)
-    loop.set_debug(True)
-
-    # Cleanup pre existing sums file
-    sums_file = glob.glob(f'{PreProcessingConstants.SHARED_DATA_DIR}*.sums')
-    for f in sums_file:
-        os.remove(f)
 
     try:
         if not HbmpcConfig.skip_preprocessing:
