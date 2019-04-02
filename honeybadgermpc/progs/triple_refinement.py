@@ -3,10 +3,10 @@ import asyncio
 import itertools
 
 
-def rename_and_unpack_inputs(field, a_, b_, c_, d, m):
+def rename_and_unpack_inputs(a_, b_, c_, d, m):
     n = m // 2  # number of triples
 
-    def pad(arr, k): return arr + [field(0) for _ in range(d-len(arr))]
+    def pad(arr, k): return arr + [0]*(d-len(arr))
     a, b, c = pad(a_[:n], d), pad(b_[:n], d), pad(c_[:n], d)
     x, y, z = pad(a_[n:], d), pad(b_[n:], d), pad(c_[n:], d)
 
@@ -49,8 +49,7 @@ async def refine_triples(context, a_dirty, b_dirty, c_dirty):
     d = m // 2 if m & m-1 == 0 else 2**(m-2).bit_length()
     zeroes = d - m
     omega = get_omega(context.field, 4*d, 2)
-    a, b, c, x, y, z = rename_and_unpack_inputs(
-        context.field, a_dirty, b_dirty, c_dirty, d, m)
+    a, b, c, x, y, z = rename_and_unpack_inputs(a_dirty, b_dirty, c_dirty, d, m)
     a_rest, b_rest, p, q = get_extrapolated_values(context.poly, a, b, d, omega)
     c_rest = await batch_beaver(context, a_rest, b_rest, x, y, z)
     c = list(itertools.chain(*zip(c, c_rest)))

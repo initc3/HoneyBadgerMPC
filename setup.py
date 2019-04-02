@@ -19,6 +19,7 @@ REQUIRED = [
     'pycrypto',
     'cffi',
     'psutil',
+    'pyzmq',
 ]
 
 TESTS_REQUIRES = [

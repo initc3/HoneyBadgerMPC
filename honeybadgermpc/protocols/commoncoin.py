@@ -107,24 +107,18 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
 
 
 async def run_common_coin(config, pbk, pvk, n, f, nodeid):
-    program_runner = ProcessProgramRunner(config, n, f, nodeid)
-    sender, listener = program_runner.senders, program_runner.listener
+    async with ProcessProgramRunner(config, n, f, nodeid) as program_runner:
+        send, recv = program_runner.get_send_recv("coin")
 
-    await sender.connect()
+        def broadcast(o):
+            for i in range(n):
+                send(i, o)
 
-    send, recv = program_runner.get_send_and_recv("coin")
-
-    def broadcast(o):
-        for i in range(n):
-            send(i, o)
-
-    coin, crecv_task = await shared_coin('sidA', nodeid, n, f, pbk, pvk, broadcast, recv)
-    for i in range(10):
-        logger.info("[%d] %d COIN VALUE: %s", nodeid, i, await coin(i))
-    crecv_task.cancel()
-
-    await sender.close()
-    await listener.close()
+        coin, crecv_task = await shared_coin(
+            'sidA', nodeid, n, f, pbk, pvk, broadcast, recv)
+        for i in range(10):
+            logger.info("[%d] %d COIN VALUE: %s", nodeid, i, await coin(i))
+        crecv_task.cancel()
 
 
 if __name__ == "__main__":
@@ -139,7 +133,6 @@ if __name__ == "__main__":
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
-    loop.set_debug(True)
     try:
         loop.run_until_complete(
             run_common_coin(

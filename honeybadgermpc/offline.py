@@ -187,13 +187,9 @@ async def _mpc_prog(context, **kwargs):
 
 
 async def _prog(peers, n, t, my_id):
-    program_runner = ProcessProgramRunner(peers, n, t, my_id)
-    await program_runner.start()
-    send, recv = program_runner.get_send_and_recv(0)
-
-    program_runner.add(1, _mpc_prog, randoms=get_random(n, t, my_id, send, recv))
-    await program_runner.join()
-    await program_runner.close()
+    async with ProcessProgramRunner(peers, n, t, my_id) as runner:
+        send, recv = runner.get_send_recv(0)
+        runner.execute(1, _mpc_prog, randoms=get_random(n, t, my_id, send, recv))
 
 
 if __name__ == "__main__":
