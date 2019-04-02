@@ -1,4 +1,3 @@
-import threading
 import uuid
 import os
 import argparse
@@ -6,6 +5,7 @@ import json
 import logging
 from time import time
 from math import log
+from concurrent.futures import ThreadPoolExecutor
 
 from aws.ec2Manager import EC2Manager
 from aws.AWSConfig import AwsConfig
@@ -16,6 +16,9 @@ def get_instance_configs(instance_ips, extra={}):
     port = AwsConfig.MPC_CONFIG.PORT
     num_faulty_nodes = AwsConfig.MPC_CONFIG.NUM_FAULTY_NODES
     instance_configs = [None] * len(instance_ips)
+
+    logging.info("Starting to create config files.")
+    stime = time()
 
     for my_id in range(len(instance_ips)):
         config = {
@@ -32,6 +35,7 @@ def get_instance_configs(instance_ips, extra={}):
             num_faulty_nodes -= 1
             config["reconstruction"]["induce_faults"] = True
         instance_configs[my_id] = (my_id, json.dumps(config))
+    logging.info(f"Config files created in {time()-stime} seconds.")
 
     return instance_configs
 
@@ -43,15 +47,11 @@ def run_commands_on_instances(
         output_file_prefix=None,
         ):
 
-    node_threads = [threading.Thread(
-            target=ec2manager.execute_command_on_instance,
-            args=[id, commands, verbose, output_file_prefix]
-        ) for id, commands in commands_per_instance_list]
+    args = [(instance_id, commands, verbose, output_file_prefix)
+            for instance_id, commands in commands_per_instance_list]
 
-    for thread in node_threads:
-        thread.start()
-    for thread in node_threads:
-        thread.join()
+    with ThreadPoolExecutor(max_workers=100) as executor:
+        executor.map(ec2manager.execute_command_on_instance, *zip(*args))
 
 
 def get_ipc_setup_commands(s3manager, instance_ids):
@@ -86,10 +86,18 @@ def get_batchopening_setup_commands(s3manager, instance_ids):
     k = AwsConfig.MPC_CONFIG.K
 
     pp_elements = PreProcessedElements()
+    logging.info("Starting to create preprocessing files.")
+    stime = time()
     pp_elements.generate_rands(k, n, t)
+    logging.info(f"Preprocessing files created in {time()-stime}")
+
+    logging.info("Uploading inputs to AWS S3.")
+    stime = time()
     input_urls = s3manager.upload_files([
         f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}_{n}_{t}-{i}.share"
         for i in range(n)])
+    logging.info(f"Inputs successfully uploaded in {time()-stime} seconds.")
+
     setup_commands = [[instance_id, [
             "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
             "mkdir -p sharedata",
@@ -192,14 +200,32 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
     os.makedirs("sharedata/", exist_ok=True)
     logging.info(f"Run Id: {run_id}")
     ec2manager, s3manager = EC2Manager(), S3Manager(run_id)
-    instance_ids, instance_ips = ec2manager.create_instances()
+    result = ec2manager.create_instances()
+    instance_ids = result[1]
 
     if cleanup:
+        logging.info("Triggering cleanup commands.")
         instance_commands = [[instance_id, [
                     "sudo docker kill $(sudo docker ps -q); rm -rf *"
                 ]] for i, instance_id in enumerate(instance_ids)]
         run_commands_on_instances(ec2manager, instance_commands)
         return
+
+    if not skip_setup:
+        if AwsConfig.MPC_CONFIG.COMMAND.endswith("ipc"):
+            setup_commands = get_ipc_setup_commands(s3manager, instance_ids)
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("powermixing"):
+            setup_commands = get_powermixing_setup_commands(
+                max_k, run_id, s3manager, instance_ids
+            )
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("butterfly_network"):
+            setup_commands = get_butterfly_network_setup_commands(
+                max_k, s3manager, instance_ids)
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("batch_opening"):
+            setup_commands = get_batchopening_setup_commands(s3manager, instance_ids)
+
+    logging.info("Waiting for VMs to boot up.")
+    instance_ids, instance_ips = ec2manager.wait_to_boot_up(result)
 
     port = AwsConfig.MPC_CONFIG.PORT
 
@@ -207,13 +233,15 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
         instance_configs = get_instance_configs(instance_ips)
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("powermixing"):
         instance_configs = get_instance_configs(
-            instance_ips, {"k": AwsConfig.MPC_CONFIG.K, "run_id": run_id})
+            instance_ips, {"k": AwsConfig.MPC_CONFIG.K, "run_id": run_id,
+                           "linger_timeout_in_seconds": 10})
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("butterfly_network"):
         instance_configs = get_instance_configs(
-            instance_ips, {"k": AwsConfig.MPC_CONFIG.K, "run_id": run_id})
+            instance_ips, {"k": AwsConfig.MPC_CONFIG.K, "run_id": run_id,
+                           "linger_timeout_in_seconds": 10})
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("batch_opening"):
         instance_configs = get_instance_configs(
-            instance_ips, {"k": AwsConfig.MPC_CONFIG.K})
+            instance_ips, {"k": AwsConfig.MPC_CONFIG.K, "linger_timeout_in_seconds": 10})
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("secretshare_hbavsslight"):
         instance_configs = get_instance_configs(
             instance_ips, {"k": AwsConfig.MPC_CONFIG.K})
@@ -238,18 +266,6 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
     logging.info("Config update completed successfully.")
 
     if not skip_setup:
-        if AwsConfig.MPC_CONFIG.COMMAND.endswith("ipc"):
-            setup_commands = get_ipc_setup_commands(s3manager, instance_ids)
-        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("powermixing"):
-            setup_commands = get_powermixing_setup_commands(
-                max_k, run_id, s3manager, instance_ids
-            )
-        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("butterfly_network"):
-            setup_commands = get_butterfly_network_setup_commands(
-                max_k, s3manager, instance_ids)
-        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("batch_opening"):
-            setup_commands = get_batchopening_setup_commands(s3manager, instance_ids)
-
         logging.info("Triggering setup commands.")
         run_commands_on_instances(ec2manager, setup_commands, False)
 

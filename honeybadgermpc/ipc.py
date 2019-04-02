@@ -12,11 +12,11 @@ from honeybadgermpc.batch_reconstruction import subscribe_recv, wrap_send
 
 class NodeCommunicator(object):
     STOP = None
-    LINGER_TIMEOUT_IN_SECONDS = 2000
 
-    def __init__(self, peers_config, my_id):
+    def __init__(self, peers_config, my_id, linger_timeout_in_seconds):
         self.peers_config = peers_config
         self.my_id = my_id
+        self.linger_timeout_in_seconds = linger_timeout_in_seconds
 
         self.bytes_sent = 0
         self.benchmark_logger = logging.LoggerAdapter(
@@ -60,7 +60,7 @@ class NodeCommunicator(object):
         # the messages to any nodes which are lagging get delivered. This should
         # be more than the network latency between the nodes to make sure that the
         # messages have enough time to get delivered.
-        self.zmq_context.destroy(linger=NodeCommunicator.LINGER_TIMEOUT_IN_SECONDS)
+        self.zmq_context.destroy(linger=self.linger_timeout_in_seconds*1000)
 
     async def _setup(self):
         # Setup one router for a party, this acts as a
@@ -108,7 +108,10 @@ class NodeCommunicator(object):
 
 
 class ProcessProgramRunner(object):
-    def __init__(self, peers_config, n, t, my_id, mpc_config={}):
+    LINGER_TIMEOUT_IN_SECONDS = 2
+
+    def __init__(self, peers_config, n, t, my_id, mpc_config={},
+                 linger_timeout_in_seconds=None):
         self.peers_config = peers_config
         self.n = n
         self.t = t
@@ -116,7 +119,10 @@ class ProcessProgramRunner(object):
         self.mpc_config = mpc_config
         self.mpc_config[ConfigVars.Reconstruction] = HbmpcConfig.reconstruction
 
-        self.node_communicator = NodeCommunicator(peers_config, my_id)
+        if linger_timeout_in_seconds is None:
+            linger_timeout_in_seconds = ProcessProgramRunner.LINGER_TIMEOUT_IN_SECONDS
+        self.node_communicator = NodeCommunicator(
+            peers_config, my_id, linger_timeout_in_seconds)
         self.progs = []
 
     def execute(self, program_tag, program, **kwargs):

@@ -27,6 +27,7 @@ async def iterated_butterfly_network(ctx, inputs, k):
     assert k & (k-1) == 0, "Size of input must be a power of 2"
     bench_logger = logging.LoggerAdapter(
         logging.getLogger("benchmark_logger"), {"node_id": ctx.myid})
+    start_time = time()
     iteration = 0
     num_iterations = int(log(k, 2))
     for _ in range(num_iterations):
@@ -49,6 +50,7 @@ async def iterated_butterfly_network(ctx, inputs, k):
             stride *= 2
             bench_logger.info(f"[ButterflyNetwork-{iteration}]: {time()-stime}")
             iteration += 1
+    bench_logger.info(f"[ButterflyNetwork-TotalTime]: {time()-start_time}")
     return inputs
 
 
@@ -69,8 +71,13 @@ async def butterfly_network_helper(ctx, **kwargs):
 async def _run(peers, n, t, my_id):
     from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.mixins import MixinOpName, BeaverTriple
+    from honeybadgermpc.config import ConfigVars
+
     mpc_config = {MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays}
-    async with ProcessProgramRunner(peers, n, t, my_id, mpc_config) as runner:
+    timeout = HbmpcConfig.extras.get(ConfigVars.LingerTimeoutInSeconds, None)
+    logging.info("Linger Timeout: %d", timeout)
+    async with ProcessProgramRunner(peers, n, t, my_id, mpc_config,
+                                    linger_timeout_in_seconds=timeout) as runner:
         runner.execute(0, butterfly_network_helper, k=k)
 
 

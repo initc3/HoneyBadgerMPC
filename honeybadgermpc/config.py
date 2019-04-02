@@ -23,6 +23,7 @@ class NodeDetails(object):
 
 class ConfigVars(object):
     Reconstruction = "reconstruction"
+    LingerTimeoutInSeconds = "linger_timeout_in_seconds"
 
 
 class ReconstructionConfig(object):

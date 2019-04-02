@@ -13,6 +13,7 @@ with open('honeybadgermpc/logging.yaml', 'r') as f:
     logging.config.dictConfig(logging_config)
     logging.getLogger('asyncio').setLevel(logging.WARNING)
 
-# Skip loading the config for tests since the would have different values for sys.argv.
-if "pytest" not in sys.modules:
+# Skip loading the config for tests/aws since
+# they would have different values for sys.argv.
+if "pytest" not in sys.modules and "aws" not in sys.modules:
     HbmpcConfig.load_config()

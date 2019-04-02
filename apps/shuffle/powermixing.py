@@ -136,9 +136,13 @@ async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
     from .solver.solver import solve
     from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.task_pool import TaskPool
+    from honeybadgermpc.config import ConfigVars
 
     file_prefixes = [uuid.uuid4().hex for _ in range(k)]
-    async with ProcessProgramRunner(network_info, n, t, node_id) as runner:
+    timeout = HbmpcConfig.extras.get(ConfigVars.LingerTimeoutInSeconds, None)
+    logging.info("Linger Timeout: %d", timeout)
+    async with ProcessProgramRunner(network_info, n, t, node_id,
+                                    linger_timeout_in_seconds=timeout) as runner:
         await runner.execute(0, all_secrets_phase1, k=k, file_prefixes=file_prefixes)
         logging.info("Phase 1 completed.")
 

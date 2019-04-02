@@ -78,14 +78,14 @@ class PreProcessedElements(object):
 
     def generate_triples(self, k, n, t):
         self._create_sharedata_dir_if_not_exists()
-        polys = []
-        for _ in range(k):
+        polys = [None]*(3*k)
+        for i in range(k):
             a = self.field.random()
             b = self.field.random()
             c = a*b
-            polys.append(self.poly.random(t, a))
-            polys.append(self.poly.random(t, b))
-            polys.append(self.poly.random(t, c))
+            polys[3*i] = self.poly.random(t, a)
+            polys[3*i+1] = self.poly.random(t, b)
+            polys[3*i+2] = self.poly.random(t, c)
         self._write_polys(PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX, n, t, polys)
 
     def generate_zeros(self, k, n, t):

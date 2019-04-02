@@ -3,7 +3,7 @@ import logging
 from honeybadgermpc.preprocessing import PreProcessedElements
 from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_done
 from honeybadgermpc.ipc import ProcessProgramRunner
-from honeybadgermpc.config import HbmpcConfig
+from honeybadgermpc.config import HbmpcConfig, ConfigVars
 
 
 async def batch_opening(context):
@@ -11,11 +11,14 @@ async def batch_opening(context):
     k = HbmpcConfig.extras["k"]
     share_array = context.ShareArray([pp_elements.get_rand(context) for _ in range(k)])
     await share_array.open()
-    logging.info("Batch opening finished.")
+    logging.info("Batch opening finished [k=%d].", k)
 
 
 async def _run(peers, n, t, my_id):
-    async with ProcessProgramRunner(peers, n, t, my_id) as runner:
+    timeout = HbmpcConfig.extras.get(ConfigVars.LingerTimeoutInSeconds, None)
+    logging.info("Linger Timeout: %d", timeout)
+    async with ProcessProgramRunner(peers, n, t, my_id,
+                                    linger_timeout_in_seconds=timeout) as runner:
         runner.execute(1, batch_opening)
 
 

@@ -40,6 +40,7 @@ class EC2Manager:
         if os.path.isfile(EC2Manager.current_vms_file_name):
             logging.info("Picking up VMs from current.vms file.")
             all_instance_ids = self.get_current_vm_instance_ids()
+            return False, all_instance_ids, None
         else:
             logging.info("VM creation started.")
             all_instance_ids = []
@@ -74,7 +75,13 @@ class EC2Manager:
                     region_instance_ids.append(instance.id)
 
                 region_instance_id_map[region] = region_instance_ids
+            with open(EC2Manager.current_vms_file_name, "w") as file_handle:
+                file_handle.write(",".join(all_instance_ids))
+            return True, all_instance_ids, region_instance_id_map
 
+    def wait_to_boot_up(self, result):
+        need_to_wait, all_instance_ids, region_instance_id_map = result
+        if need_to_wait:
             for region, ids in region_instance_id_map.items():
                 ec2_resource = self.ec2Resources[region]
                 for instance_id in ids:
@@ -90,10 +97,9 @@ class EC2Manager:
                     InstanceIds=ids
                 )
 
-            with open(EC2Manager.current_vms_file_name, "w") as file_handle:
-                file_handle.write(",".join(all_instance_ids))
             logging.info("VMs successfully booted up.")
-        all_instance_ips = [self.get_instance_public_ip(id) for id in all_instance_ids]
+        all_instance_ips = [
+            self.get_instance_public_ip(id) for id in all_instance_ids]
         self.instanceIdToNodeIdMap = {id: i for i, id in enumerate(all_instance_ids)}
         return all_instance_ids, all_instance_ips
 
@@ -137,7 +143,7 @@ class EC2Manager:
                     if verbose:
                         print()
                         print(
-                            f"{'#'*10} OUTPUT FROM {ip} | Command: {command} {'#'*10}"
+                            f"{'#'*10} OUTPUT FROM {ip} {'#'*10}"
                         )
                         logging.info(output)
                         print("#" * 30)
@@ -153,7 +159,7 @@ class EC2Manager:
                 if len(err) != 0:
                     print()
                     print(
-                            f"{'#'*10} ERROR FROM {ip} | Command: {command} {'#'*10}"
+                            f"{'#'*10} ERROR FROM {ip} {'#'*10}"
                         )
                     print(err.decode('utf-8'))
                     print("~" * 30)
