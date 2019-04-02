@@ -23,5 +23,5 @@ loggers:
     handlers: [benchmark_log_file]
     propagate: no
 root:
-  level: DEBUG
+  level: INFO
   handlers: [console, basic_log_file]

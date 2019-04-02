@@ -61,15 +61,21 @@ async def butterfly_network_helper(ctx, **kwargs):
     if shuffled is not None:
         shuffled_shares = ctx.ShareArray(list(map(ctx.Share, shuffled)))
         opened_values = await shuffled_shares.open()
-        logging.info(f"[{ctx.myid}] {opened_values}")
+        logging.debug(f"[{ctx.myid}] {opened_values}")
         return shuffled_shares
     return None
 
 
-if __name__ == "__main__":
-    from honeybadgermpc.config import HbmpcConfig
+async def _run(peers, n, t, my_id):
     from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.mixins import MixinOpName, BeaverTriple
+    mpc_config = {MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays}
+    async with ProcessProgramRunner(peers, n, t, my_id, mpc_config) as runner:
+        runner.execute(0, butterfly_network_helper, k=k)
+
+
+if __name__ == "__main__":
+    from honeybadgermpc.config import HbmpcConfig
 
     k = int(HbmpcConfig.extras["k"])
 
@@ -90,12 +96,7 @@ if __name__ == "__main__":
             else:
                 loop.run_until_complete(wait_for_preprocessing())
 
-        program_runner = ProcessProgramRunner(
-            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id, {
-                MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays})
-        loop.run_until_complete(program_runner.start())
-        program_runner.add(0, butterfly_network_helper, k=k)
-        loop.run_until_complete(program_runner.join())
-        loop.run_until_complete(program_runner.close())
+        loop.run_until_complete(
+            _run(HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))
     finally:
         loop.close()

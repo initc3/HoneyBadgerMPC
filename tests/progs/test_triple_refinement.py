@@ -16,7 +16,7 @@ async def test_triple_refinement(test_preprocessing):
         # Every party needs its share of all the `N` triples' shares
         for _ in range(context.N):
             p, q, pq = test_preprocessing.elements.get_triple(context)
-            _a.append(p.v), _b.append(q.v), _c.append(pq.v)
+            _a.append(p.v.value), _b.append(q.v.value), _c.append(pq.v.value)
         a, b, ab = await refine_triples(context, _a, _b, _c)
         p = await asyncio.gather(*map(lambda x: x.open(), a))
         q = await asyncio.gather(*map(lambda x: x.open(), b))
