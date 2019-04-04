@@ -280,7 +280,7 @@ class ShareFuture(ABC, asyncio.Future):
         elif isinstance(other, (Share, GFElement)):
             self.add_done_callback(cb)
         else:
-            return NotImplemented
+            return NotImplementedError
 
         return res
 
