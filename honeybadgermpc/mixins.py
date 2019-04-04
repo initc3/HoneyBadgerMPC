@@ -5,6 +5,8 @@ from .preprocessing import PreProcessedElements
 class MixinOpName(object):
     MultiplyShare = "multiply_share"
     MultiplyShareArray = "multiply_share_array"
+    InvertShare = "invert_share"
+    InvertShareArray = "invert_share_array"
 
 
 class MixinBase(object):
@@ -41,6 +43,32 @@ class BeaverTriple(MixinBase):
         xy = [d*e + d*q + e*p + pq for (p, q, pq, d, e) in zip(a, b, ab, f, g)]
 
         return context.ShareArray(xy)
+
+
+class Inverter(MixinBase):
+    @staticmethod
+    async def invert_share(context, x):
+        """Given share [x], compute 1/[x]
+        """
+        assert isinstance(x, context.Share)
+
+        r = MixinBase.pp_elements.get_rand(context)
+        sig = await(await(x * r)).open()
+
+        return await(r * context.Share(1/sig))
+
+    @staticmethod
+    async def invert_share_array(context, x):
+        """Given array of shares {[x1], [x2],...}, compute {1/[x1], 1/[x2],...}
+        """
+        assert isinstance(x, context.ShareArray)
+
+        rs = context.ShareArray([MixinBase.pp_elements.get_rand(context)
+                                 for _ in range(len(x._shares))])
+        sigs = await(await(x * rs)).open()
+        sig_invs = context.ShareArray([1/sig for sig in sigs])
+
+        return await(rs * sig_invs)
 
 
 class DoubleSharing(MixinBase):

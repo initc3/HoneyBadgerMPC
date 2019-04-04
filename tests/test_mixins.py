@@ -1,11 +1,11 @@
-from pytest import mark
+from pytest import mark, raises
+
+from honeybadgermpc.mpc import TaskProgramRunner
+from honeybadgermpc.mixins import BeaverTriple, MixinOpName, DoubleSharing, Inverter
 
 
 @mark.asyncio
 async def test_degree_reduction_share(galois_field, test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.mixins import DoubleSharing
-
     n, t = 9, 2
 
     x_expected = galois_field.random().value
@@ -25,9 +25,6 @@ async def test_degree_reduction_share(galois_field, test_preprocessing):
 
 @mark.asyncio
 async def test_degree_reduction_share_array(test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.mixins import DoubleSharing
-
     n, t = 9, 2
 
     test_preprocessing.generate("double_shares", n, t)
@@ -49,9 +46,6 @@ async def test_degree_reduction_share_array(test_preprocessing):
 
 @mark.asyncio
 async def test_multiplication_using_double_sharing(galois_field, test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.mixins import DoubleSharing, MixinOpName
-
     n, t = 9, 2
 
     test_preprocessing.generate("rands", n, t)
@@ -73,9 +67,6 @@ async def test_multiplication_using_double_sharing(galois_field, test_preprocess
 
 @mark.asyncio
 async def test_batch_double_sharing_multiply(galois_field, test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.mixins import DoubleSharing, MixinOpName
-
     n, t = 9, 2
 
     test_preprocessing.generate("double_shares", n, t)
@@ -100,9 +91,6 @@ async def test_batch_double_sharing_multiply(galois_field, test_preprocessing):
 
 @mark.asyncio
 async def test_beaver_mul_with_zeros(test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.mixins import BeaverTriple, MixinOpName
-
     n, t = 3, 1
     x_secret, y_secret = 10, 15
     test_preprocessing.generate("zeros", n, t)
@@ -131,9 +119,6 @@ async def test_beaver_mul_with_zeros(test_preprocessing):
 
 @mark.asyncio
 async def test_beaver_mul(test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.mixins import BeaverTriple, MixinOpName
-
     n, t = 3, 1
     test_preprocessing.generate("triples", n, t)
     test_preprocessing.generate("rands", n, t)
@@ -160,9 +145,6 @@ async def test_beaver_mul(test_preprocessing):
 
 @mark.asyncio
 async def test_batch_beaver_multiply(test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.mixins import BeaverTriple, MixinOpName
-
     n, t = 3, 1
     test_preprocessing.generate("triples", n, t)
     test_preprocessing.generate("rands", n, t)
@@ -182,3 +164,112 @@ async def test_batch_beaver_multiply(test_preprocessing):
     program_runner.add(_prog)
     results = await program_runner.join()
     assert len(results) == n
+
+
+@mark.asyncio
+async def test_invert_share(test_preprocessing):
+    n, t = 3, 1
+    test_preprocessing.generate("triples", n, t)
+    test_preprocessing.generate("rands", n, t)
+
+    async def _prog(context):
+        share = test_preprocessing.elements.get_rand(context)
+        # assert 1/x * x == 1
+        assert await(await(await(Inverter.invert_share(context, share))
+                           * share)).open() == 1
+
+    program_runner = TaskProgramRunner(
+        n, t, {
+            MixinOpName.MultiplyShare: BeaverTriple.multiply_shares,
+            MixinOpName.InvertShare: Inverter.invert_share
+        }
+    )
+
+    program_runner.add(_prog)
+    await program_runner.join()
+
+
+@mark.asyncio
+async def test_invert_share_array(test_preprocessing):
+    n, t = 3, 1
+    test_preprocessing.generate("triples", n, t)
+    test_preprocessing.generate("rands", n, t)
+
+    async def _prog(context):
+        shares = context.ShareArray(
+            [test_preprocessing.elements.get_rand(context) for _ in range(20)])
+        inverted_shares = await(Inverter.invert_share_array(context, shares))
+
+        product = await(shares * inverted_shares)
+        for e in await(product).open():
+            assert e == 1
+
+    program_runner = TaskProgramRunner(
+        n, t, {
+            MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays,
+            MixinOpName.InvertShareArray: Inverter.invert_share_array
+        }
+    )
+
+    program_runner.add(_prog)
+    await program_runner.join()
+
+
+@mark.asyncio
+async def test_share_division(test_preprocessing):
+    n, t = 3, 1
+    test_preprocessing.generate("triples", n, t)
+    test_preprocessing.generate("rands", n, t)
+
+    async def _prog(context):
+        r1 = test_preprocessing.elements.get_rand(context)
+        assert await(await(r1 / r1)).open() == 1
+
+    program_runner = TaskProgramRunner(n, t, {
+        MixinOpName.MultiplyShare: BeaverTriple.multiply_shares,
+        MixinOpName.InvertShare: Inverter.invert_share
+    })
+    program_runner.add(_prog)
+    await program_runner.join()
+
+
+@mark.asyncio
+async def test_share_division_needs_mixins(test_preprocessing):
+    n, t = 3, 1
+    test_preprocessing.generate("triples", n, t)
+    test_preprocessing.generate("rands", n, t)
+
+    async def _prog(context):
+        r1 = test_preprocessing.elements.get_rand(context)
+        with raises(NotImplementedError):
+            assert await(await(r1 / r1)).open() == 1
+
+    program_runner = TaskProgramRunner(n, t, {
+        MixinOpName.MultiplyShare: BeaverTriple.multiply_shares,
+    })
+
+    program_runner.add(_prog)
+    await program_runner.join()
+
+
+@mark.asyncio
+async def test_share_array_division(test_preprocessing):
+    n, t = 3, 1
+    test_preprocessing.generate("triples", n, t)
+    test_preprocessing.generate("rands", n, t)
+
+    async def _prog(context):
+        shares = context.ShareArray(
+            [test_preprocessing.elements.get_rand(context) for _ in range(20)])
+
+        result = await(shares / shares)
+        for e in await(result).open():
+            assert e == 1
+
+    program_runner = TaskProgramRunner(n, t, {
+        MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays,
+        MixinOpName.InvertShareArray: Inverter.invert_share_array
+    })
+
+    program_runner.add(_prog)
+    await program_runner.join()

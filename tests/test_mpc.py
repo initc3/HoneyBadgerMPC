@@ -1,10 +1,9 @@
 from pytest import mark
+from honeybadgermpc.mpc import TaskProgramRunner
 
 
 @mark.asyncio
 async def test_open_shares(test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
-
     n, t = 3, 1
     number_of_secrets = 100
     test_preprocessing.generate("zeros", n, t)

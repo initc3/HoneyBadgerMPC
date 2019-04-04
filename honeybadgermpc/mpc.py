@@ -239,6 +239,23 @@ def share_in_context(context):
 
         def __str__(self): return '{%d}' % (self.v)
 
+        def __div__(self, other):
+            if MixinOpName.InvertShare not in context.config:
+                raise NotImplementedError
+            if MixinOpName.MultiplyShare not in context.config:
+                raise NotImplementedError
+
+            async def divide(curr, other):
+                other_inverted = await(
+                    context.config[MixinOpName.InvertShare](context, other))
+
+                multiplier = context.config[MixinOpName.MultiplyShare]
+                return await(multiplier(context, curr, other_inverted))
+
+            return divide(self, other)
+
+        __truediv__ = __floordiv__ = __div__
+
     def _binop_share(fut, other, op):
         assert type(other) in [ShareFuture, GFElementFuture, Share, GFElement]
         res = ShareFuture()
@@ -317,6 +334,23 @@ def share_in_context(context):
                     context, self, other)
             else:
                 raise NotImplementedError
+
+        def __div__(self, other):
+            if MixinOpName.InvertShareArray not in context.config:
+                raise NotImplementedError
+            elif MixinOpName.MultiplyShareArray not in context.config:
+                raise NotImplementedError
+
+            async def divide(curr, other):
+                other_inverted = await(
+                    context.config[MixinOpName.InvertShareArray](context, other))
+
+                multiplier = context.config[MixinOpName.MultiplyShareArray]
+                return await(multiplier(context, curr, other_inverted))
+
+            return divide(self, other)
+
+        __truediv__ = __floordiv__ = __div__
 
     return Share, ShareArray
 
