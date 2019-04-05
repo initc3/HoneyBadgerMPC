@@ -355,6 +355,7 @@ class EvalPoint(object):
     Without FFT:
     i'th point (zero-indexed) = i + 1
     """
+
     def __init__(self, field, n, use_fft=False):
         self.use_fft = use_fft
         self.field = field
@@ -384,7 +385,7 @@ class EvalPoint(object):
 
 
 if __name__ == "__main__":
-    field = GF.get(Subgroup.BLS12_381)
+    field = GF(Subgroup.BLS12_381)
     Poly = polynomials_over(field)
     poly = Poly.random(degree=7)
     poly = Poly([1, 5, 3, 15, 0, 3])

@@ -124,7 +124,7 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     Reconstruction takes places in chunks of t+1 values
     """
 
-    fp = GF.get(p)
+    fp = GF(p)
     secret_shares = [v.value for v in secret_shares]
     round1_chunks = to_chunks(secret_shares, t + 1)
     num_chunks = len(round1_chunks)

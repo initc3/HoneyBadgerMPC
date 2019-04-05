@@ -19,7 +19,7 @@ singleton Functionality.
 """
 
 # Fix the field for now
-Field = GF.get(Subgroup.BLS12_381)
+Field = GF(Subgroup.BLS12_381)
 Poly = polynomials_over(Field)
 
 

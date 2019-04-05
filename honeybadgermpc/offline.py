@@ -125,7 +125,7 @@ class RandomGenerator(PreProcessingBase):
     def __init__(self, n, t, my_id, send, recv, batch_size=10):
         super(RandomGenerator, self).__init__(
             n, t, my_id, send, recv, "rand", batch_size)
-        self.field = GF.get(Subgroup.BLS12_381)
+        self.field = GF(Subgroup.BLS12_381)
 
     def _get_input_batch(self):
         return [self.field.random().value for _ in range(self.batch_size)]
@@ -154,7 +154,7 @@ class TripleGenerator(PreProcessingBase):
         super(TripleGenerator, self).__init__(n, t, my_id, send, recv, "triple",
                                               batch_size,
                                               avss_value_processor_chunk_size=3)
-        self.field = GF.get(Subgroup.BLS12_381)
+        self.field = GF(Subgroup.BLS12_381)
 
     def _get_input_batch(self):
         inputs = []

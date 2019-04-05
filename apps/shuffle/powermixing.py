@@ -195,7 +195,7 @@ if __name__ == "__main__":
     try:
         if not HbmpcConfig.skip_preprocessing:
             # Need to keep these fixed when running on processes.
-            field = GF.get(Subgroup.BLS12_381)
+            field = GF(Subgroup.BLS12_381)
             a_s = [field(i) for i in range(1000+k, 1000, -1)]
 
             pp_elements = PreProcessedElements()

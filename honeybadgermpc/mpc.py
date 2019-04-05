@@ -34,7 +34,7 @@ class Mpc(object):
         self.t = t
         self.myid = myid
         self.pid = pid
-        self.field = GF.get(Subgroup.BLS12_381)
+        self.field = GF(Subgroup.BLS12_381)
         self.poly = polynomials_over(self.field)
         self.config = config
 

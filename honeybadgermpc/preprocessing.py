@@ -24,7 +24,7 @@ class PreProcessingConstants(object):
 
 class PreProcessedElements(object):
     def __init__(self):
-        self.field = GF.get(Subgroup.BLS12_381)
+        self.field = GF(Subgroup.BLS12_381)
         self.poly = polynomials_over(self.field)
         self._triples = {}
         self._zeros = {}
