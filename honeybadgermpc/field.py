@@ -344,7 +344,7 @@ class GFElement(FieldElement):
         """Hash value."""
         return hash((self.field, self.value))
 
-    def __nonzero__(self):
+    def __bool__(self):
         """Truth value testing.
 
         Returns False if this element is zero, True otherwise.
