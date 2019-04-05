@@ -7,6 +7,7 @@ from honeybadgermpc.poly_commit import PolyCommit
 from honeybadgermpc.symmetric_crypto import SymmetricCrypto
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
 from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
+from honeybadgermpc.protocols.avid import AVID
 
 # TODO: Move these to a separate file instead of using it from batch_reconstruction.py
 from honeybadgermpc.batch_reconstruction import subscribe_recv, wrap_send
@@ -192,6 +193,28 @@ class HbAvssLight(HbAvss):
 
 
 class HbAvssBatch(HbAvss):
+    def __init__(self, public_keys, private_key, g, h, n, t, my_id, send, recv):
+        super(HbAvssBatch, self).__init__(public_keys,
+                                          private_key, g, h, n, t, my_id, send, recv)
+        self.avid_msg_queue = asyncio.Queue()
+        self.tasks = []
+
+    async def _recv_loop(self, q):
+        while True:
+            avid, tag, dispersal_msg_list = await q.get()
+            self.tasks.append(asyncio.create_task(
+                avid.disperse(tag, self.my_id, dispersal_msg_list)))
+
+    def __enter__(self):
+        self._recv_task = asyncio.create_task(self._recv_loop(self.avid_msg_queue))
+        return self
+
+    def __exit__(self, typ, value, traceback):
+        self._recv_task.cancel()
+        for task in self.tasks:
+            task.cancel()
+        super(HbAvssBatch, self).__exit__(typ, value, traceback)
+
     async def _process_avss_msg(self, avss_id, dealer_id, dispersal_msg):
         tag = f"{dealer_id}-{avss_id}-B-AVSS"
         send, recv = self.get_send(tag), self.subscribe_recv(tag)
@@ -212,8 +235,7 @@ class HbAvssBatch(HbAvss):
         # Decrypt
         for k in range(secret_size):
             shares[k], witnesses[k] = SymmetricCrypto.decrypt(
-                str(shared_key).encode("utf-8"),
-                encrypted_witnesses[self.my_id * secret_size + k])
+                str(shared_key).encode("utf-8"), encrypted_witnesses[k])
 
         # verify & send all ok
         for i in range(secret_size):
@@ -267,15 +289,17 @@ class HbAvssBatch(HbAvss):
         # for each party Pi and each k ∈ [t+1]
         #   1. w[i][k] <- CreateWitnesss(Ck,auxk,i)
         #   2. z[i][k] <- EncPKi(φ(i,k), w[i][k])
-        z = [None] * self.n * secret_size
+        dealer_msg_list = [None] * self.n
         for i in range(self.n):
             shared_key = pow(self.public_keys[i], ephemeral_secret_key)
+            z = [None] * secret_size
             for k in range(secret_size):
                 witness = self.poly_commit.create_witness(aux_poly[k], i+1)
-                z[i * secret_size + k] = SymmetricCrypto.encrypt(
+                z[k] = SymmetricCrypto.encrypt(
                     str(shared_key).encode("utf-8"), (phi[k](i+1), witness))
+            dealer_msg_list[i] = dumps((commitments, ephemeral_public_key, z))
 
-        return dumps((commitments, ephemeral_public_key, z))
+        return dealer_msg_list
 
     async def avss(self, avss_id, values=None, dealer_id=None, client_mode=False):
         """
@@ -299,24 +323,21 @@ class HbAvssBatch(HbAvss):
         logger.debug("[%d] Starting Batch AVSS. Id: %s, Dealer Id: %d, Client Mode: %s",
                      self.my_id, avss_id, dealer_id, client_mode)
 
-        broadcast_msg = None if self.my_id != dealer_id else self._get_dealer_msg(values)
+        dispersal_msg_list = None
+        if self.my_id == dealer_id:
+            dispersal_msg_list = self._get_dealer_msg(values)
+
         # In the client_mode, the dealer is the last node
         n = self.n if not client_mode else self.n+1
 
-        tag = f"{dealer_id}-{avss_id}-B-RBC"
+        tag = f"{dealer_id}-{avss_id}-B-AVID"
         send, recv = self.get_send(tag), self.subscribe_recv(tag)
 
-        # this will be replaced by Disperse
-        avss_msg = await reliablebroadcast(
-            tag,
-            self.my_id,
-            n,
-            self.t,
-            dealer_id,
-            broadcast_msg,
-            recv,
-            send
-        )
+        avid = AVID(n, self.t, dealer_id, recv, send, n)
+        # start disperse in the background
+        self.avid_msg_queue.put_nowait((avid, tag, dispersal_msg_list))
+        # message can be retrieved individually
+        avss_msg = await avid.retrieve(tag, self.my_id)
 
         if client_mode and self.my_id == dealer_id:
             # In client_mode, the dealer is not supposed to do
