@@ -54,7 +54,7 @@ def make_wb_encoder_decoder(n, k, p, point=None):
         raise Exception(
             "Must have k <= n <= p but instead had (n,k,p) == (%r, %r, %r)" % (n, k, p))
     t = k - 1  # degree of polynomial
-    fp = GF.get(p)
+    fp = GF(p)
     poly = polynomials_over(fp)
 
     # the message points correspond to polynomial evaluations
@@ -88,14 +88,14 @@ def make_wb_encoder_decoder(n, k, p, point=None):
 
             def row(i, a, b):
                 return (
-                        [b * a ** j for j in range(e_num_vars)] +
-                        [-1 * a ** j for j in range(q_num_vars)] + [0]
+                    [b * a ** j for j in range(e_num_vars)] +
+                    [-1 * a ** j for j in range(q_num_vars)] + [0]
                 )  # the "extended" part of the linear system
 
             system = (
-                    [row(i, a, b) for (i, (a, b)) in enumerate(encoded_message)] +
-                    [[fp(0)] * (e_num_vars - 1) + [fp(1)] + [fp(0)] * (q_num_vars) + [
-                        fp(1)]]
+                [row(i, a, b) for (i, (a, b)) in enumerate(encoded_message)] +
+                [[fp(0)] * (e_num_vars - 1) + [fp(1)] + [fp(0)] * (q_num_vars) + [
+                    fp(1)]]
             )  # ensure coefficient of x^e in E(x) is 1
 
             if debug:

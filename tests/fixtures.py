@@ -7,7 +7,7 @@ from pytest import fixture
 def galois_field():
     from honeybadgermpc.field import GF
     from honeybadgermpc.elliptic_curve import Subgroup
-    return GF.get(Subgroup.BLS12_381)
+    return GF(Subgroup.BLS12_381)
 
 
 @fixture

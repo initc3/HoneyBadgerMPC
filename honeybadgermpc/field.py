@@ -24,7 +24,7 @@ arithmetic one would expect: addition, multiplication, etc.
 
 Defining a field:
 
->>> Zp = GF.get(19)
+>>> Zp = GF(19)
 
 Defining field elements:
 
@@ -62,7 +62,7 @@ prime modulus (see :func:`GF` for more information):
 Field elements from different fields cannot be mixed, you will get a
 type error if you try:
 
->>> Zq = GF.get(17)
+>>> Zq = GF(17)
 >>> z = Zq(2)
 >>> x + z
 Traceback (most recent call last):
@@ -96,28 +96,27 @@ class FieldElement(object):
 
 
 class GF(object):
+    # Class is implemented following the 'multiton' design pattern
+    # When the constructor is called with a value that's been used
+    # before, it returns the previously created field, such that all
+    # fields with the same modulus are the same object
     _field_cache = {}
 
+    def __new__(cls, modulus):
+        # Creates a new field if not present in the cache
+        return GF._field_cache.setdefault(modulus, super(GF, cls).__new__(cls))
+
     def __init__(self, modulus):
+        if not is_prime(mpz(modulus)):
+            raise ValueError(f"{modulus} is not a prime")
+
         self.modulus = modulus
 
     def __call__(self, value):
         return GFElement(value, self)
 
     def __reduce__(self):
-        return (GF.get, (self.modulus,))
-
-    @staticmethod
-    def get(modulus):
-        if modulus in GF._field_cache:
-            return GF._field_cache[modulus]
-
-        if not is_prime(mpz(modulus)):
-            raise ValueError("%d is not a prime" % modulus)
-
-        gf = GF(modulus)
-        GF._field_cache[modulus] = gf
-        return gf
+        return (GF, (self.modulus,))
 
     def random(self):
         return GFElement(randint(0, self.modulus-1), self)
@@ -410,7 +409,7 @@ def fake_gf(modulus):
         __invert__ = sqrt = lambda self: FakeFieldElement(return_value)
 
         # Bit extraction. We pretend that the number is *very* big.
-        bit = lambda self, index: 1     # noqa  XXX for the time being
+        def bit(self, index): return 1     # noqa  XXX for the time being
 
         # Fake field elements are printed with double curly brackets.
         __repr__ = __str__ = lambda self: "{{%d}}" % self.value
