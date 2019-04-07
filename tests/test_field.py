@@ -4,6 +4,13 @@ from pytest import raises
 from honeybadgermpc.field import GF, FieldsNotIdentical
 
 
+def test_bool():
+    from honeybadgermpc.field import GF
+    field1 = GF(17)
+    assert bool(field1(23))
+    assert not bool(field1(0))
+
+
 def test_multiple_fields():
     field1 = GF(17)
     field2 = GF(7)
