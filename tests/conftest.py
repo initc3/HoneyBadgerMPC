@@ -1,1 +1,1 @@
-from fixtures import *  # noqa: F403 F401
+from .fixtures import *  # noqa: F403 F401

@@ -1,6 +1,12 @@
 [run]
-source = .
-omit = *test*, docs/*, setup.py
+source = 
+    honeybadgermpc
+    progs
+omit = 
+    tests/*
+    docs/* 
+    setup.py
+    *__init__.py*
 branch = True
 
 [report]
