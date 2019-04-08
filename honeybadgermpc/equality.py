@@ -76,7 +76,6 @@ async def test_equality(context):
     pp_elements = PreProcessedElements()
     p = pp_elements.get_zero(context) + context.Share(2333)
     q = pp_elements.get_zero(context) + context.Share(2333)
-    # result, count_comm = await equality(context, p, q)
     result = await equality(context, p, q)
 
     if result == 0:
@@ -84,7 +83,6 @@ async def test_equality(context):
     else:
         print("The two numbers are equal!")
 
-    # print("The number of communication count_complexity is: ", count_comm)
 
 if __name__ == '__main__':
     pp_elements = PreProcessedElements()

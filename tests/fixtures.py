@@ -82,7 +82,7 @@ class TestPreProcessing():
         self.cache = {}
         self.elements = PreProcessedElements()
 
-    def generate(self, kind, n, t, arg1=None, arg2=None, k=1000):
+    def generate(self, kind, n, t, arg1=None, arg2=None, k=2000):
         if kind in [
                     "zeros",
                     "triples",
