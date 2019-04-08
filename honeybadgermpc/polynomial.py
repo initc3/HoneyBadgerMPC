@@ -195,7 +195,7 @@ def polynomials_over(field):
             return quotient, remainder
 
         def __truediv__(self, divisor):
-            if divisor.isZero():
+            if divisor.is_zero():
                 raise ZeroDivisionError
             return divmod(self, divisor)[0]
 
