@@ -87,6 +87,7 @@ class TestPreProcessing():
                     "zeros",
                     "triples",
                     "rands",
+                    "bits",
                     "oneminusone",
                     "double_shares",
                     "powers"
@@ -100,6 +101,8 @@ class TestPreProcessing():
                 self.elements.generate_triples(k, n, t)
             elif kind == "rands":
                 self.elements.generate_rands(k, n, t)
+            elif kind == "bits":
+                self.elements.generate_bits(k, n, t)
             elif kind == "oneminusone":
                 self.elements.generate_one_minus_one_rands(k, n, t)
             elif kind == "double_shares":
