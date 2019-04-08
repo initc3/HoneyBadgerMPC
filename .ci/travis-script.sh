@@ -2,10 +2,18 @@
 
 set -ev
 
-BASE_CMD="docker-compose -f .travis.compose.yml run --rm test-hbmpc"
+BASE_CMD="docker-compose -f .travis.compose.yml run test-hbmpc"
 
 if [ "${BUILD}" == "tests" ]; then
-    $BASE_CMD pytest -v --cov=honeybadgermpc --cov-report=term-missing --cov-report=xml
+    $BASE_CMD pytest -v \
+        --cov \
+        --cov-report=term-missing \
+        --cov-report=xml \
+        -Wignore::DeprecationWarning \
+        -nauto
+
+    IMAGE_NAME=$(docker ps -alq --format "{{.Names}}")
+    docker cp $IMAGE_NAME:/usr/src/HoneyBadgerMPC/coverage.xml .
 elif [ "${BUILD}" == "flake8" ]; then
     flake8
 elif [ "${BUILD}" == "docs" ]; then

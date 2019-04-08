@@ -29,7 +29,6 @@ TESTS_REQUIRES = [
     'pytest-mock',
     'pytest-cov',
     'pytest-env',
-    'pytest-sugar',
     'pytest-xdist',
     'pytest-benchmark',
     'pytest-benchmark[histogram]',

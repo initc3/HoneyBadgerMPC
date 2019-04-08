@@ -11,6 +11,7 @@ services:
       - ./aws:/usr/src/HoneyBadgerMPC/aws
       - ./conf:/usr/src/HoneyBadgerMPC/conf
       - ./docs:/usr/src/HoneyBadgerMPC/docs
+      - ./progs:/usr/src/HoneyBadgerMPC/progs
       - ./honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
       - ./scripts:/usr/src/HoneyBadgerMPC/scripts
       - ./tests:/usr/src/HoneyBadgerMPC/tests
