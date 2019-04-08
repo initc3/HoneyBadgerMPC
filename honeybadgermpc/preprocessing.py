@@ -159,7 +159,7 @@ class PreProcessedElements(object):
             file_path = f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}{file_suffix}"
             self._rands[key] = iter(self._read_share_values_from_file(file_path))
         return ctx.Share(next(self._rands[key]), t)
-    
+
     def get_bit(self, ctx):
         key = (ctx.myid, ctx.N, ctx.t)
         if key not in self._bits:

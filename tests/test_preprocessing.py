@@ -53,6 +53,24 @@ async def test_get_rand(test_preprocessing):
 
 
 @mark.asyncio
+async def test_get_bit(test_preprocessing):
+    n, t = 4, 1
+    num_bits = 20
+    test_preprocessing.generate("bits", n, t)
+
+    async def _prog(ctx):
+        shares = [test_preprocessing.elements.get_bit(ctx) for _ in range(num_bits)]
+        x = ctx.ShareArray(shares)
+        x_ = await x.open()
+        for i in x_:
+            assert i == 0 or i == 1
+
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    await program_runner.join()
+
+
+@mark.asyncio
 async def test_get_powers(test_preprocessing):
     n, t = 4, 1
     nums, num_powers = 2, 3
