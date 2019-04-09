@@ -66,10 +66,10 @@ class Mpc(object):
 
         self.Share, self.ShareArray = share_in_context(self)
 
-    async def open_share(self, share):
+    async def open_share(self, share, wait_for_all=False):
         # Choose the shareid based on the order this is called
         shareid = len(self._openings)
-        t = share.t if share.t is not None else self.t
+        degree = share.t
         # Broadcast share
         for j in range(self.N):
             value_to_share = share.v
@@ -85,26 +85,33 @@ class Mpc(object):
         share_buffer = [self._share_buffers[i][shareid] for i in range(self.N)]
 
         point = EvalPoint(self.field, self.N, use_fft=False)
+        # Maximum number of errors to tolerate. This needs to be
+        # `t` to ensure that we are in the robust setting.
+        c = self.t
         opening = robust_reconstruct(
-            share_buffer, self.field, self.N, t, point)
+            share_buffer, self.field, self.N, degree, c,
+            point, wait_for_all=wait_for_all)
         self._openings[shareid] = opening
         p, _ = await opening
         return p(self.field(0))
 
-    def open_share_array(self, sharearray):
+    def open_share_array(self, sharearray, wait_for_all=False):
         # Choose the shareid based on the order this is called
         shareid = len(self._openings)
+        degree = sharearray.t
 
         def _send(j, o):
             (tag, share) = o
             self.send(j, (tag, shareid, share))
         _recv = self._sharearray_buffers[shareid].get
-
+        # Maximum number of errors to tolerate. This needs to be
+        # `t` to ensure that we are in the robust setting.
+        c = self.t
         opening = batch_reconstruct([s.v for s in sharearray._shares],
-                                    self.field.modulus, sharearray.t, self.N, self.myid,
-                                    _send, _recv,
+                                    self.field.modulus, degree, self.N,
+                                    c, self.myid, _send, _recv,
                                     config=self.config.get(ConfigVars.Reconstruction),
-                                    debug=True)
+                                    debug=True, wait_for_all=wait_for_all)
         self._openings[shareid] = opening
         return opening
 
@@ -197,11 +204,12 @@ def share_in_context(context):
             self.t = context.t if t is None else t
 
         # Publicly reconstruct a shared value
-        def open(self):
+        def open(self, wait_for_all=False):
             res = GFElementFuture()
 
             def cb(f): return res.set_result(f.result())
-            opening = asyncio.ensure_future(context.open_share(self))
+            opening = asyncio.ensure_future(
+                context.open_share(self, wait_for_all))
             # context._newopening.put_nowait(opening)
             opening.add_done_callback(cb)
             return res
@@ -277,12 +285,12 @@ def share_in_context(context):
         def __mul__(self, other): return _binop_share(
             self, other, lambda a, b: a * b)
 
-        def open(self):
+        def open(self, wait_for_all=False):
             res = GFElementFuture()
 
             def cb2(sh): return res.set_result(sh.result())
 
-            def cb1(f): return self.result().open().add_done_callback(cb2)
+            def cb1(f): return self.result().open(wait_for_all).add_done_callback(cb2)
             self.add_done_callback(cb1)
             return res
 
@@ -296,13 +304,14 @@ def share_in_context(context):
                 assert type(values[i]) is Share
             self._shares = values
 
-        def open(self):
+        def open(self, wait_for_all=False):
             # TODO: make a list of GFElementFutures?
             # res = GFElementFuture()
             res = asyncio.Future()
 
             def cb(f): return res.set_result(f.result())
-            opening = asyncio.create_task(context.open_share_array(self))
+            opening = asyncio.create_task(
+                context.open_share_array(self, wait_for_all))
             opening.add_done_callback(cb)
             return res
 

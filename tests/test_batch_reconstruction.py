@@ -52,7 +52,7 @@ async def _get_reconstruction(test_router, secret_shares, n, t, fp, p, use_fft,
             ss = [fp(0) for _ in secret_shares[i]]
         else:
             ss = tuple(map(fp, secret_shares[i]))
-        towait.append(batch_reconstruct(ss, p, t, n, i, sends[i], recvs[i],
+        towait.append(batch_reconstruct(ss, p, t, n, t, i, sends[i], recvs[i],
                                         use_fft=use_fft))
     results = await asyncio.gather(*towait)
     return results
