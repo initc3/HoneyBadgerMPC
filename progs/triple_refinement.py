@@ -46,7 +46,6 @@ async def refine_triples(context, a_dirty, b_dirty, c_dirty):
     assert len(a_dirty) == len(b_dirty) == len(c_dirty)
     m = len(a_dirty)
     d = m // 2 if m & m-1 == 0 else 2**(m-2).bit_length()
-    zeroes = d - m
     omega = get_omega(context.field, 4*d, 2)
     a, b, c, x, y, z = rename_and_unpack_inputs(
         context.field, a_dirty, b_dirty, c_dirty, d, m)
@@ -55,7 +54,7 @@ async def refine_triples(context, a_dirty, b_dirty, c_dirty):
     c = list(itertools.chain(*zip(c, c_rest)))
     c_all = context.poly.interp_extrap(c, omega)
     pq = c_all[1::2]
-    num_valid_triples = d - context.t + 1 - zeroes
+    num_valid_triples = (context.t+1)//2
     p_shares = map(context.Share, p[:num_valid_triples])
     q_shares = map(context.Share, q[:num_valid_triples])
     pq_shares = map(context.Share, pq[:num_valid_triples])

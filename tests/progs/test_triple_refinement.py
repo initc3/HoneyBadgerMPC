@@ -22,6 +22,7 @@ async def test_triple_refinement(test_preprocessing):
         q = await asyncio.gather(*map(lambda x: x.open(), b))
         pq = await asyncio.gather(*map(lambda x: x.open(), ab))
         assert len(p) == len(q) == len(pq), "Invalid number of values generated"
+        assert len(p) == (t+1)//2
         for d, e, de in zip(p, q, pq):
             # print("\n[%d] %d * %d == %d" % (context.myid, d, e, de))
             assert d * e == de
