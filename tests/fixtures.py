@@ -86,6 +86,7 @@ class TestPreProcessing():
         if kind in [
                     "zeros",
                     "triples",
+                    "cubes",
                     "rands",
                     "bits",
                     "oneminusone",
@@ -99,6 +100,8 @@ class TestPreProcessing():
                 self.elements.generate_zeros(k, n, t)
             elif kind == "triples":
                 self.elements.generate_triples(k, n, t)
+            elif kind == "cubes":
+                self.elements.generate_cubes(k, n, t)
             elif kind == "rands":
                 self.elements.generate_rands(k, n, t)
             elif kind == "bits":

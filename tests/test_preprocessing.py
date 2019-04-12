@@ -20,6 +20,24 @@ async def test_get_triple(test_preprocessing):
 
 
 @mark.asyncio
+async def test_get_cube(test_preprocessing):
+    n, t = 4, 1
+    num_cubes = 2
+    test_preprocessing.generate("cubes", n, t)
+
+    async def _prog(ctx):
+        for _ in range(num_cubes):
+            a1_sh, a2_sh, a3_sh = test_preprocessing.elements.get_cube(ctx)
+            a1, a2, a3 = await a1_sh.open(), await a2_sh.open(), await a3_sh.open()
+            assert a1*a1 == a2
+            assert a1*a2 == a3
+
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    await program_runner.join()
+
+
+@mark.asyncio
 async def test_get_zero(test_preprocessing):
     n, t = 4, 1
     num_zeros = 2
