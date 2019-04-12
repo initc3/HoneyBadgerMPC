@@ -13,6 +13,7 @@ from .elliptic_curve import Subgroup
 class PreProcessingConstants(object):
     SHARED_DATA_DIR = "sharedata/"
     TRIPLES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}triples"
+    CUBES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}cubes"
     ZEROS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}zeros"
     RANDS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}rands"
     BITS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}bits"
@@ -28,6 +29,7 @@ class PreProcessedElements(object):
         self.field = GF(Subgroup.BLS12_381)
         self.poly = polynomials_over(self.field)
         self._triples = {}
+        self._cubes = {}
         self._zeros = {}
         self._rands = {}
         self._bits = {}
@@ -77,6 +79,18 @@ class PreProcessedElements(object):
             polys.append(self.poly.random(t, b))
             polys.append(self.poly.random(t, c))
         self._write_polys(PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX, n, t, polys)
+
+    def generate_cubes(self, k, n, t):
+        self._create_sharedata_dir_if_not_exists()
+        polys = []
+        for _ in range(k):
+            a1 = self.field.random()
+            a2 = a1*a1
+            a3 = a1*a2
+            polys.append(self.poly.random(t, a1))
+            polys.append(self.poly.random(t, a2))
+            polys.append(self.poly.random(t, a3))
+        self._write_polys(PreProcessingConstants.CUBES_FILE_NAME_PREFIX, n, t, polys)
 
     def generate_zeros(self, k, n, t):
         self._create_sharedata_dir_if_not_exists()
@@ -142,6 +156,17 @@ class PreProcessedElements(object):
         b = ctx.Share(next(self._triples[key]))
         ab = ctx.Share(next(self._triples[key]))
         return a, b, ab
+
+    def get_cube(self, ctx):
+        key = (ctx.myid, ctx.N, ctx.t)
+        if key not in self._cubes:
+            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
+            file_path = f"{PreProcessingConstants.CUBES_FILE_NAME_PREFIX}{file_suffix}"
+            self._cubes[key] = iter(self._read_share_values_from_file(file_path))
+        a1 = ctx.Share(next(self._cubes[key]))
+        a2 = ctx.Share(next(self._cubes[key]))
+        a3 = ctx.Share(next(self._cubes[key]))
+        return a1, a2, a3
 
     def get_zero(self, ctx):
         key = (ctx.myid, ctx.N, ctx.t)
