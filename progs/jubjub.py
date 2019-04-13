@@ -1,5 +1,6 @@
 from honeybadgermpc.elliptic_curve import Jubjub, Point
 from honeybadgermpc.mpc import Mpc
+import asyncio
 
 
 class SharedPoint(object):
@@ -11,10 +12,7 @@ class SharedPoint(object):
     """
 
     def __init__(self, context: Mpc, xs, ys, curve: Jubjub = Jubjub()):
-        if not isinstance(curve, Jubjub):
-            raise Exception(
-                f"Could not create Point-- given \
-                curve not of type Jubjub({type(curve)})")
+        assert isinstance(curve, Jubjub)
 
         self.context = context
         self.curve = curve
@@ -29,25 +27,24 @@ class SharedPoint(object):
         WARNING: This method currently leaks information about the shared point--
                  We need to use share equality testing instead
         """
-        x_sq = await(self.xs * self.xs)
-        y_sq = await(self.ys * self.ys)
-        a_ = self.context.Share(self.curve.a)
-        d_ = self.context.Share(self.curve.d)
+        x_sq = self.xs * self.xs
+        y_sq = self.ys * self.ys
 
         # ax^2 + y^2
-        lhs = await(a_ * x_sq) + y_sq
+        lhs = self.curve.a * x_sq + y_sq
 
         # 1 + dx^2y^2
-        rhs = self.context.Share(1) + await(d_ * await(x_sq * y_sq))
+        rhs = self.context.field(1) + self.curve.d * x_sq * y_sq
 
         # TODO: use share equality to prevent the leaking of data
-        return await lhs.open() == await rhs.open()
+        lhs, rhs = await asyncio.gather(lhs.open(), rhs.open())
+        return lhs == rhs
 
     async def __init(self):
         """asynchronous part of initialization via create or from_point
         """
         if not await(self.__on_curve()):
-            raise Exception(
+            raise ValueError(
                 f"Could not initialize Point {self}-- \
                 does not sit on given curve {self.curve}")
 
@@ -77,10 +74,10 @@ class SharedPoint(object):
         return str(self)
 
     async def neg(self):
-        return await(SharedPoint.create(self.context,
-                                        await(self.context.Share(-1) * self.xs),
+        return await SharedPoint.create(self.context,
+                                        self.context.field(-1) * self.xs,
                                         self.ys,
-                                        self.curve))
+                                        self.curve)
 
     async def add(self, other: 'SharedPoint') -> 'SharedPoint':
         if isinstance(other, SharedIdeal):
@@ -94,25 +91,23 @@ class SharedPoint(object):
             raise Exception("Can't add points from different contexts!")
 
         x1, y1, x2, y2 = self.xs, self.ys, other.xs, other.ys
+        one = self.context.field(1)
 
-        one = self.context.Share(1)
-        y_prod = await(y1 * y2)
-        x_prod = await(x1 * x2)
-        d_ = self.context.Share(self.curve.d)
+        x_prod, y_prod = x1*x2, y1*y2
 
         # d_prod = d*x1*x2*y1*y2
-        d_prod = await(await(d_ * x_prod) * y_prod)
+        d_prod = self.curve.d * x_prod * y_prod
 
         # x3 = ((x1*y2) + (y1*x2)) / (1 + d*x1*x2*y1*y2)
-        x3 = await((await(x1 * y2) + await(y1 * x2)) / (one + d_prod))
+        x3 = (x1 * y2 + y1 * x2) / (one + d_prod)
 
         # y3 = ((y1*y2) + (x1*x2)) / (1 - d*x1*x2*y1*y2)
-        y3 = await((y_prod + x_prod) / (one - d_prod))
+        y3 = (y_prod + x_prod) / (one - d_prod)
 
-        return await(SharedPoint.create(self.context, x3, y3, self.curve))
+        return await SharedPoint.create(self.context, x3, y3, self.curve)
 
     async def sub(self, other: 'SharedPoint') -> 'SharedPoint':
-        return await self.add(await(other.neg()))
+        return await self.add(await other.neg())
 
     async def mul(self, n: int) -> 'SharedPoint':
         # Using the Double-and-Add algorithm
@@ -127,14 +122,14 @@ class SharedPoint(object):
             return SharedIdeal(self.curve)
 
         current = self
-        product = await(SharedPoint.from_point(self.context, Point(0, 1, self.curve)))
+        product = await SharedPoint.from_point(self.context, Point(0, 1, self.curve))
 
         i = 1
         while i <= n:
             if n & i == i:
-                product = await(product.add(current))
+                product = await product.add(current)
 
-            current = await(current.double())
+            current = await current.double()
             i <<= 1
 
         return product
@@ -152,7 +147,7 @@ class SharedPoint(object):
             return SharedIdeal(self.curve)
 
         current = self
-        product = await(SharedPoint.from_point(self.context, Point(0, 1, self.curve)))
+        product = await SharedPoint.from_point(self.context, Point(0, 1, self.curve))
 
         i = 1 << n.bit_length()
         while i > 0:
@@ -169,21 +164,19 @@ class SharedPoint(object):
 
     async def double(self) -> 'SharedPoint':
         # Uses the optimized implementation from wikipedia
-        x, y = self.xs, self.ys
+        x_, y_ = self.xs, self.ys
+        x_sq, y_sq = (x_*x_), (y_*y_)
 
-        x_sq, y_sq = await(x*x), await(y*y)
         ax_sq = self.curve.a * x_sq
-
-        x_prod = 2 * await(x * y)
-        y_prod = y_sq - ax_sq
-
         x_denom = ax_sq + y_sq
-        y_denom = self.context.Share(2) - ax_sq - y_sq
 
-        return await(SharedPoint.create(self.context,
-                                        await(x_prod / x_denom),
-                                        await(y_prod / y_denom),
-                                        self.curve))
+        x = (2 * x_ * y_) / x_denom
+        y = (y_sq - ax_sq) / (self.context.field(2) - x_denom)
+
+        return await SharedPoint.create(self.context,
+                                        x,
+                                        y,
+                                        self.curve)
 
 
 class SharedIdeal(SharedPoint):
