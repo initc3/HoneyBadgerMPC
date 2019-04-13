@@ -241,7 +241,7 @@ async def test_share_division_needs_mixins(test_preprocessing):
 
     async def _prog(context):
         r1 = test_preprocessing.elements.get_rand(context)
-        with raises(NotImplementedError):
+        with raises(TypeError):
             assert await(await(r1 / r1)).open() == 1
 
     program_runner = TaskProgramRunner(n, t, {
