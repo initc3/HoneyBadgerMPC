@@ -78,7 +78,10 @@ class AVID:
         while True:  # recv loop for retrieve
             sender, msg = await self.retrieval_queue.get()
             if msg[1] == AVIDMessageType.RESPONSE:
-                (_, _, roothash, data) = msg
+                (_, _, response_index, roothash, data) = msg
+                # only retrieve the index we are currently retrieving
+                if response_index != index:
+                    continue
 
                 if sender in response_set:
                     logger.warning("Redundant RESPONSE from %s", sender)
@@ -216,7 +219,7 @@ class AVID:
             elif msg[1] == AVIDMessageType.RETRIEVE:
                 _, _, index = msg
                 # send the response sender requested
-                self.send(sender, (sid, AVIDMessageType.RESPONSE,
+                self.send(sender, (sid, AVIDMessageType.RESPONSE, index,
                                    my_roothash_list[index], my_stripes[index]))
 
             elif msg[1] == AVIDMessageType.RESPONSE:
