@@ -1,4 +1,4 @@
-from honeybadgermpc.elliptic_curve import Jubjub, Point
+from honeybadgermpc.elliptic_curve import Jubjub, Point, Ideal
 from honeybadgermpc.mpc import Mpc
 import asyncio
 
@@ -219,3 +219,26 @@ class SharedIdeal(SharedPoint):
 
     async def double(self):
         return self
+
+
+async def share_mul(context, p: Point, x: list) -> 'SharedPoint':
+    """
+    The multiplication of the share of a field element and a point
+    e.g. [X] <- [x]G, where G is a point on the given elliptic curve
+    x is the bitwise shared value,
+    starting from the most significant bit.
+    """
+
+    product = Ideal(p.curve)
+    addend = p
+    x.reverse()
+    for i in x:
+        i_ = await i.open()
+        # Need equality application to compare if i == 1 here
+        # Open it to compare for now
+        if i_ == 1:
+            product = product + addend
+        addend = addend.double()
+    product_ = await SharedPoint.from_point(context, product)
+
+    return product_

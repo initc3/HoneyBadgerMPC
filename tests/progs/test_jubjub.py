@@ -2,7 +2,7 @@ from pytest import mark, raises
 from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.mixins import MixinOpName, BeaverTriple, Inverter
 from honeybadgermpc.elliptic_curve import Ideal, Point, Jubjub
-from progs.jubjub import SharedPoint, SharedIdeal
+from progs.jubjub import SharedPoint, SharedIdeal, share_mul
 import asyncio
 
 TEST_CURVE = Jubjub()
@@ -216,3 +216,20 @@ async def test_shared_point_montgomery_mul(test_preprocessing):
             await p1.montgomery_mul(5))
 
     await run_test_prog(_prog, test_preprocessing)
+
+
+@mark.asyncio
+async def test_share_mul(test_preprocessing):
+    async def _prog(context):
+        p = TEST_POINTS[1]
+        p_ = await SharedPoint.from_point(context, p)
+
+        multiplier = 7
+        multiplier_bin = bin(multiplier)[2:]
+        multiplier_ = [context.Share(int(i)) for i in multiplier_bin]
+
+        assert await shared_point_equals(
+            await share_mul(context, p, multiplier_),
+            await p_.mul(multiplier))
+
+    await run_test_prog(_prog, test_preprocessing, k=10000)
