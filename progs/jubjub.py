@@ -2,6 +2,8 @@ from honeybadgermpc.elliptic_curve import Jubjub, Point, Ideal
 from honeybadgermpc.mpc import Mpc
 import asyncio
 
+from asyncio import gather
+
 
 class SharedPoint(object):
     """
@@ -231,14 +233,13 @@ async def share_mul(context, p: Point, x: list) -> 'SharedPoint':
 
     product = Ideal(p.curve)
     addend = p
-    x.reverse()
-    for i in x:
-        i_ = await i.open()
+    x_ = await gather(*[e.open() for e in reversed(x)])
+
+    for i_ in x_:
         # Need equality application to compare if i == 1 here
         # Open it to compare for now
         if i_ == 1:
             product = product + addend
         addend = addend.double()
-    product_ = await SharedPoint.from_point(context, product)
 
-    return product_
+    return await SharedPoint.from_point(context, product)
