@@ -132,3 +132,6 @@ sharedata/
 
 # Graphs
 *.svg
+
+# OS X noise
+.DS_Store
