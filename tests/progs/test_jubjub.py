@@ -1,9 +1,10 @@
-from pytest import mark, raises
-from honeybadgermpc.mpc import TaskProgramRunner
-from honeybadgermpc.mixins import MixinOpName, BeaverTriple, Inverter
-from honeybadgermpc.elliptic_curve import Ideal, Point, Jubjub
-from progs.jubjub import SharedPoint, SharedIdeal
 import asyncio
+from pytest import mark, raises
+from honeybadgermpc.elliptic_curve import Ideal, Point, Jubjub
+from honeybadgermpc.progs.jubjub import SharedPoint, SharedIdeal
+from honeybadgermpc.progs.mixins.share_arithmetic import (
+    BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
+    DivideShareArrays, Equality)
 
 TEST_CURVE = Jubjub()
 
@@ -19,18 +20,27 @@ TEST_POINTS = [
           TEST_CURVE)
 ]
 
+STANDARD_ARITHMETIC_MIXINS = [
+    BeaverMultiply(),
+    BeaverMultiplyArrays(),
+    InvertShare(),
+    InvertShareArray(),
+    DivideShares(),
+    DivideShareArrays(),
+    Equality()
+]
 
-async def run_test_prog(prog, test_preprocessing=None, n=4, t=1, k=10000):
-    if test_preprocessing is not None:
-        test_preprocessing.generate("rands", n, t, k=k)
-        test_preprocessing.generate("triples", n, t, k=k)
+STANDARD_PREPROCESSING = [
+    'rands', 'triples'
+]
 
-    program_runner = TaskProgramRunner(
-        n, t, {
-            MixinOpName.MultiplyShare: BeaverTriple.multiply_shares,
-            MixinOpName.InvertShare: Inverter.invert_share})
-    program_runner.add(prog)
-    await(program_runner.join())
+n, t = 4, 1
+
+
+async def run_test_program(prog, test_runner, n=n, t=t, k=10000,
+                           mixins=STANDARD_ARITHMETIC_MIXINS):
+
+    return await test_runner(prog, n, t, STANDARD_PREPROCESSING, k, mixins)
 
 
 async def shared_point_equals(a, b):
@@ -70,7 +80,7 @@ def test_basic_point_functionality():
 
 
 @mark.asyncio
-async def test_shared_point_equals(test_preprocessing):
+async def test_shared_point_equals(test_preprocessing, test_runner):
     async def _prog(context):
         p1 = await SharedPoint.from_point(context, TEST_POINTS[0])
         p2 = await SharedPoint.from_point(context, TEST_POINTS[1])
@@ -81,11 +91,11 @@ async def test_shared_point_equals(test_preprocessing):
         assert not await shared_point_equals(p1, p2)
         assert not await shared_point_equals(p1, p3)
 
-    await run_test_prog(_prog, test_preprocessing)
+    await run_test_program(_prog, test_runner)
 
 
 @mark.asyncio
-async def test_contains_shared_point(test_preprocessing):
+async def test_contains_shared_point(test_preprocessing, test_runner):
     async def _prog(context):
         # Will throw an exception if not on the curve
         await SharedPoint.create(context, context.Share(0), context.Share(1))
@@ -93,22 +103,22 @@ async def test_contains_shared_point(test_preprocessing):
         with raises(ValueError):
             await SharedPoint.create(context, context.Share(0), context.Share(2))
 
-    await run_test_prog(_prog, test_preprocessing)
+    await run_test_program(_prog, test_runner)
 
 
 @mark.asyncio
-async def test_shared_point_creation_from_point(test_preprocessing):
+async def test_shared_point_creation_from_point(test_preprocessing, test_runner):
     async def _prog(context):
         p1 = Point(0, 1)
         p1s = await SharedPoint.from_point(context, p1)
         p2 = await SharedPoint.create(context, context.Share(0), context.Share(1))
         assert await shared_point_equals(p1s, p2)
 
-    await run_test_prog(_prog, test_preprocessing)
+    await run_test_program(_prog, test_runner)
 
 
 @mark.asyncio
-async def test_shared_point_double(test_preprocessing):
+async def test_shared_point_double(test_preprocessing, test_runner):
     async def _prog(context):
         shared_points, actual_doubled = await asyncio.gather(
             asyncio.gather(*[SharedPoint.from_point(context, p) for p in TEST_POINTS]),
@@ -116,15 +126,14 @@ async def test_shared_point_double(test_preprocessing):
                              for p in TEST_POINTS]))
 
         results = await asyncio.gather(*[p.double() for p in shared_points])
-
         assert all(await asyncio.gather(
             *[shared_point_equals(a, r) for a, r in zip(actual_doubled, results)]))
 
-    await run_test_prog(_prog, test_preprocessing)
+    await run_test_program(_prog, test_runner)
 
 
 @mark.asyncio
-async def test_shared_point_neg(test_preprocessing):
+async def test_shared_point_neg(test_preprocessing, test_runner):
     async def _prog(context):
         shared_points, actual_negated = await asyncio.gather(
             asyncio.gather(
@@ -138,11 +147,11 @@ async def test_shared_point_neg(test_preprocessing):
         assert all(await asyncio.gather(
             *[shared_point_equals(a, r) for a, r in zipped]))
 
-    await run_test_prog(_prog, test_preprocessing)
+    await run_test_program(_prog, test_runner)
 
 
 @mark.asyncio
-async def test_shared_point_add(test_preprocessing):
+async def test_shared_point_add(test_preprocessing, test_runner):
     async def _prog(context):
         ideal = SharedIdeal(TEST_CURVE)
 
@@ -160,11 +169,11 @@ async def test_shared_point_add(test_preprocessing):
             shared_point_equals(r3, p4)
         ))
 
-    await run_test_prog(_prog, test_preprocessing)
+    await run_test_program(_prog, test_runner)
 
 
 @mark.asyncio
-async def test_shared_point_sub(test_preprocessing):
+async def test_shared_point_sub(test_preprocessing, test_runner):
     async def _prog(context):
         shared_points, actual_negated = await asyncio.gather(
             asyncio.gather(
@@ -181,11 +190,11 @@ async def test_shared_point_sub(test_preprocessing):
         assert all(await asyncio.gather(
             *[shared_point_equals(a, r) for a, r in zip(actual, result)]))
 
-    await run_test_prog(_prog, test_preprocessing)
+    await run_test_program(_prog, test_runner)
 
 
 @mark.asyncio
-async def test_shared_point_mul(test_preprocessing):
+async def test_shared_point_mul(test_preprocessing, test_runner):
     async def _prog(context):
         p1 = await SharedPoint.from_point(context, TEST_POINTS[1])
         p1_double = await p1.double()
@@ -197,11 +206,11 @@ async def test_shared_point_mul(test_preprocessing):
         assert await shared_point_equals(p1_quad, p4)
         assert await shared_point_equals(p1_quint, p5)
 
-    await run_test_prog(_prog, test_preprocessing)
+    await run_test_program(_prog, test_runner)
 
 
 @mark.asyncio
-async def test_shared_point_montgomery_mul(test_preprocessing):
+async def test_shared_point_montgomery_mul(test_preprocessing, test_runner):
     async def _prog(context):
         p1 = await SharedPoint.from_point(context, TEST_POINTS[1])
         p1_double = await p1.double()
@@ -215,4 +224,4 @@ async def test_shared_point_montgomery_mul(test_preprocessing):
             await p1_quad.add(p1),
             await p1.montgomery_mul(5))
 
-    await run_test_prog(_prog, test_preprocessing)
+    await run_test_program(_prog, test_runner)

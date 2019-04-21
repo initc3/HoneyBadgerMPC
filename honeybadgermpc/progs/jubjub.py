@@ -43,7 +43,7 @@ class SharedPoint(object):
     async def __init(self):
         """asynchronous part of initialization via create or from_point
         """
-        if not await(self.__on_curve()):
+        if not await self.__on_curve():
             raise ValueError(
                 f"Could not initialize Point {self}-- \
                 does not sit on given curve {self.curve}")
