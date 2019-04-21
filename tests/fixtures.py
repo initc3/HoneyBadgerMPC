@@ -84,15 +84,15 @@ class TestPreProcessing():
 
     def generate(self, kind, n, t, arg1=None, arg2=None, k=1000):
         if kind in [
-                    "zeros",
-                    "triples",
-                    "cubes",
-                    "rands",
-                    "bits",
-                    "oneminusone",
-                    "double_shares",
-                    "powers"
-                ]:
+            "zeros",
+            "triples",
+            "cubes",
+            "rands",
+            "bits",
+            "oneminusone",
+            "double_shares",
+            "powers"
+        ]:
             if (kind, n, t) in self.cache:
                 return
             self.cache[(kind, n, t)] = True
@@ -154,3 +154,26 @@ def test_router():
         sends, bcasts = zip(*[make_send(i) for i in range(n)])
         return (sends, [make_recv(j) for j in range(n)], bcasts)
     return _test_router
+
+
+@fixture()
+def test_runner(test_preprocessing):
+    from honeybadgermpc.mpc import TaskProgramRunner
+
+    async def _test_runner(prog, n=3, t=1, to_generate=[], k=1000, mixins=[]):
+        for to_gen in to_generate:
+            test_preprocessing.generate(to_gen, n, t, k=k)
+
+        config = {}
+        for mixin in mixins:
+            if mixin.name in config:
+                raise ValueError(f"Multiple mixins with name {mixin.name} loaded!")
+
+            config[mixin.name] = mixin
+
+        program_runner = TaskProgramRunner(n, t, config)
+        program_runner.add(prog)
+
+        return await program_runner.join()
+
+    return _test_runner
