@@ -1,7 +1,8 @@
 import asyncio
 from abc import ABC, abstractmethod
 from honeybadgermpc.field import GFElement
-from .constants import MixinConstants
+from honeybadgermpc.progs.mixins.constants import MixinConstants
+from honeybadgermpc.progs.mixins.utils import type_check
 
 
 class GFElementFuture(ABC, asyncio.Future):
@@ -11,6 +12,7 @@ class GFElementFuture(ABC, asyncio.Future):
     def context(cls):
         return NotImplementedError
 
+    @type_check((int, GFElement, 'GFElementFuture'))
     def __binop_field(self, other, op):
         assert callable(op)
 
@@ -239,6 +241,11 @@ class ShareFuture(ABC, asyncio.Future):
     def context(cls):
         return NotImplementedError
 
+    @type_check((int,
+                 GFElement,
+                 'self.context.Share',
+                 'self.context.ShareFuture',
+                 'self.context.GFElementFuture'))
     def __binop_share(self, other, op):
         """Stacks the application of a function to the resolved value
         of this future with another value, which may or may not be a

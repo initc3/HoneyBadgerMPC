@@ -1,5 +1,6 @@
 from honeybadgermpc.progs.mixins.base import MixinBase, AsyncMixin
 from honeybadgermpc.progs.mixins.constants import MixinConstants
+from honeybadgermpc.progs.mixins.utils import static_type_check
 
 from asyncio import gather
 
@@ -10,6 +11,7 @@ class BeaverMultiply(AsyncMixin):
     name = MixinConstants.MultiplyShare
 
     @staticmethod
+    @static_type_check(Mpc, 'context.Share', 'context.Share')
     async def _prog(context, x, y):
         a, b, ab = MixinBase.pp_elements.get_triple(context)
 
@@ -24,6 +26,7 @@ class BeaverMultiplyArrays(AsyncMixin):
     name = MixinConstants.MultiplyShareArray
 
     @staticmethod
+    @static_type_check(Mpc, 'context.ShareArray', 'context.ShareArray')
     async def _prog(context, j, k):
         assert len(j) == len(k)
 
@@ -47,6 +50,7 @@ class DoubleSharingMultiply(AsyncMixin):
     name = MixinConstants.MultiplyShare
 
     @staticmethod
+    @static_type_check(Mpc, 'context.Share')
     async def reduce_degree_share(context, x_2t):
         assert x_2t.t == context.t*2
 
@@ -56,6 +60,7 @@ class DoubleSharingMultiply(AsyncMixin):
         return r_t + diff
 
     @staticmethod
+    @static_type_check(Mpc, 'context.Share', 'context.Share')
     async def _prog(context, x, y):
 
         xy_2t = context.Share(x.v * y.v, context.t*2)
@@ -69,6 +74,7 @@ class DoubleSharingMultiplyArrays(AsyncMixin):
     name = MixinConstants.MultiplyShareArray
 
     @staticmethod
+    @static_type_check(Mpc, 'context.ShareArray')
     async def reduce_degree_share_array(context, x_2t):
         assert x_2t.t == context.t*2
 
@@ -84,6 +90,7 @@ class DoubleSharingMultiplyArrays(AsyncMixin):
         return context.ShareArray(await (q_t + diff).open())
 
     @staticmethod
+    @static_type_check(Mpc, 'context.ShareArray', 'context.ShareArray')
     async def _prog(context, x, y):
         assert len(x) == len(y)
 
@@ -100,6 +107,7 @@ class InvertShare(AsyncMixin):
     name = MixinConstants.InvertShare
 
     @staticmethod
+    @static_type_check(Mpc, 'context.Share')
     async def _prog(context, x):
         r = MixinBase.pp_elements.get_rand(context)
         sig = await (x*r).open()
@@ -113,6 +121,7 @@ class InvertShareArray(AsyncMixin):
     name = MixinConstants.InvertShareArray
 
     @staticmethod
+    @static_type_check(Mpc, 'context.ShareArray')
     async def _prog(context, xs):
         rs = context.ShareArray([MixinBase.pp_elements.get_rand(context)
                                  for _ in range(len(xs))])
@@ -130,6 +139,7 @@ class DivideShares(AsyncMixin):
     dependencies = [MixinConstants.InvertShare]
 
     @staticmethod
+    @static_type_check(Mpc, 'context.Share', 'context.Share')
     async def _prog(context, x, y):
         y_inv = await context.config[MixinConstants.InvertShare](context, y)
         return await (x * y_inv)
@@ -142,6 +152,7 @@ class DivideShareArrays(AsyncMixin):
     dependencies = [MixinConstants.InvertShareArray]
 
     @staticmethod
+    @static_type_check(Mpc, 'context.ShareArray', 'context.ShareArray')
     async def _prog(context, xs, ys):
         y_invs = await context.config[MixinConstants.InvertShareArray](context, ys)
         return await (xs * y_invs)
@@ -153,6 +164,7 @@ class Equality(AsyncMixin):
     name = MixinConstants.ShareEquality
 
     @staticmethod
+    @static_type_check(GFElement)
     def legendre_mod_p(a):
         """Return the legendre symbol ``legendre(a, p)`` where *p* is the
         order of the field of *a*.
@@ -167,6 +179,7 @@ class Equality(AsyncMixin):
         return 0
 
     @staticmethod
+    @static_type_check(Mpc, 'context.Share')
     async def _gen_test_bit(context, diff):
         # # b \in {0, 1}
         b = MixinBase.pp_elements.get_bit(context)
@@ -187,6 +200,7 @@ class Equality(AsyncMixin):
         return c, _b
 
     @staticmethod
+    @static_type_check(Mpc, 'context.Share')
     async def gen_test_bit(context, diff):
         cj, bj = await Equality._gen_test_bit(context, diff)
         while cj == 0:
@@ -199,6 +213,7 @@ class Equality(AsyncMixin):
         return (legendre / context.field(2)) * (bj + context.Share(legendre))
 
     @staticmethod
+    @static_type_check(Mpc, 'context.Share', 'context.Share', int)
     async def _prog(context, p_share, q_share, security_parameter=32):
         diff = p_share - q_share
 
