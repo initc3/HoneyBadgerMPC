@@ -1,4 +1,3 @@
-from honeybadgermpc.progs.mixins.constants import MixinConstants
 from honeybadgermpc.progs.mixins.dataflow import (
     Share, ShareArray, ShareFuture, GFElementFuture)
 import asyncio
@@ -16,37 +15,7 @@ from .preprocessing import PreProcessedElements
 from .config import ConfigVars
 
 
-class TaskProgramRunner(ProgramRunner):
-    def __init__(self, n, t, config={}):
-        self.N, self.t, self.pid = n, t, 0
-        self.config = config
-        self.tasks = []
-        self.loop = asyncio.get_event_loop()
-
-    def add(self, program, **kwargs):
-        sends, recvs = simple_router(self.N)
-        for i in range(self.N):
-            context = Mpc(
-                'sid',
-                self.N,
-                self.t,
-                i,
-                self.pid,
-                sends[i],
-                recvs[i],
-                program,
-                self.config,
-                **kwargs,
-            )
-            self.tasks.append(self.loop.create_task(context._run()))
-        self.pid += 1
-
-    async def join(self):
-        return await asyncio.gather(*self.tasks)
-
-
 class Mpc(object):
-
     def __init__(self, sid, n, t, myid, pid, send, recv, prog, config, **prog_args):
         # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
@@ -216,6 +185,35 @@ class Mpc(object):
                 self._sharearray_buffers[shareid].put_nowait((j, (tag, share)))
 
         return True
+
+
+class TaskProgramRunner(ProgramRunner):
+    def __init__(self, n, t, config={}):
+        self.N, self.t, self.pid = n, t, 0
+        self.config = config
+        self.tasks = []
+        self.loop = asyncio.get_event_loop()
+
+    def add(self, program, **kwargs):
+        sends, recvs = simple_router(self.N)
+        for i in range(self.N):
+            context = Mpc(
+                'sid',
+                self.N,
+                self.t,
+                i,
+                self.pid,
+                sends[i],
+                recvs[i],
+                program,
+                self.config,
+                **kwargs,
+            )
+            self.tasks.append(self.loop.create_task(context._run()))
+        self.pid += 1
+
+    async def join(self):
+        return await asyncio.gather(*self.tasks)
 
 
 ###############
