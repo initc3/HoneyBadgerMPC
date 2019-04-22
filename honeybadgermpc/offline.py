@@ -98,7 +98,8 @@ class PreProcessingBase(ABC):
         n, t, my_id = self.n, self.t, self.my_id
         send, recv = self.get_send_recv(f'{self.tag}-AVSS')
         g, h, pks, sk = get_avss_params(n, t, my_id)
-        self.avss_instance = HbAvssLight(pks, sk, g, h, n, t, my_id, send, recv)
+        crs = [g, h]
+        self.avss_instance = HbAvssLight(pks, sk, crs, n, t, my_id, send, recv)
         self.avss_instance.__enter__()
         self.tasks.append(asyncio.create_task(self._runner()))
 

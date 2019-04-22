@@ -2,10 +2,11 @@ from honeybadgermpc.betterpairing import G1, ZR
 from honeybadgermpc.polynomial import polynomials_over
 
 
-class PolyCommit(object):
-    def __init__(self, g, h):
-        self.g = g
-        self.h = h
+class PolyCommitLin(object):
+    def __init__(self, crs):
+        assert len(crs) == 2
+        self.g = crs[0]
+        self.h = crs[1]
 
     def commit(self, phi):
         degree = len(phi.coeffs)-1

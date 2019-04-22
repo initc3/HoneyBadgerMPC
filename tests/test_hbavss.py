@@ -2,6 +2,7 @@ from pytest import mark
 from random import randint
 from contextlib import ExitStack
 from honeybadgermpc.polynomial import polynomials_over
+from honeybadgermpc.poly_commit_const import gen_pc_const_crs
 from honeybadgermpc.betterpairing import G1, ZR
 from honeybadgermpc.hbavss import HbAvssLight, HbAvssBatch
 from honeybadgermpc.mpc import TaskProgramRunner
@@ -24,6 +25,7 @@ async def test_hbavss_light(test_router):
 
     g, h, pks, sks = get_avss_params(n, t)
     sends, recvs, _ = test_router(n)
+    crs = [g, h]
 
     value = ZR.random()
     avss_tasks = [None]*n
@@ -31,7 +33,7 @@ async def test_hbavss_light(test_router):
 
     with ExitStack() as stack:
         for i in range(n):
-            hbavss = HbAvssLight(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
+            hbavss = HbAvssLight(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
             stack.enter_context(hbavss)
             if i == dealer_id:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=value))
@@ -49,6 +51,7 @@ async def test_hbavss_batch(test_router):
 
     g, h, pks, sks = get_avss_params(n, t)
     sends, recvs, _ = test_router(n)
+    crs = gen_pc_const_crs(t, g=g, h=h)
 
     values = [ZR.random()] * (t+1)
     avss_tasks = [None]*n
@@ -56,7 +59,7 @@ async def test_hbavss_batch(test_router):
 
     with ExitStack() as stack:
         for i in range(n):
-            hbavss = HbAvssBatch(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
+            hbavss = HbAvssBatch(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
             stack.enter_context(hbavss)
             if i == dealer_id:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, values=values))
@@ -80,6 +83,7 @@ async def test_hbavss_light_client_mode(test_router):
 
     g, h, pks, sks = get_avss_params(n, t)
     sends, recvs, _ = test_router(n+1)
+    crs = [g, h]
 
     value = ZR.random()
     avss_tasks = [None]*(n+1)
@@ -87,12 +91,12 @@ async def test_hbavss_light_client_mode(test_router):
 
     with ExitStack() as stack:
         client_hbavss = HbAvssLight(
-            pks, None, g, h, n, t, dealer_id, sends[dealer_id], recvs[dealer_id])
+            pks, None, crs, n, t, dealer_id, sends[dealer_id], recvs[dealer_id])
         stack.enter_context(client_hbavss)
         avss_tasks[n] = asyncio.create_task(
             client_hbavss.avss(0, value=value, client_mode=True))
         for i in range(n):
-            hbavss = HbAvssLight(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
+            hbavss = HbAvssLight(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
             stack.enter_context(hbavss)
             avss_tasks[i] = asyncio.create_task(
                 hbavss.avss(0, dealer_id=dealer_id, client_mode=True))
@@ -110,13 +114,15 @@ async def test_hbavss_light_share_open(test_router):
 
     g, h, pks, sks = get_avss_params(n, t)
     sends, recvs, _ = test_router(n)
+    crs = [g, h]
+
     value = int(ZR.random())
     dealer_id = randint(0, n-1)
 
     with ExitStack() as stack:
         avss_tasks = [None]*n
         for i in range(n):
-            hbavss = HbAvssLight(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
+            hbavss = HbAvssLight(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
             stack.enter_context(hbavss)
             if i == dealer_id:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=value))
@@ -142,13 +148,15 @@ async def test_hbavss_light_parallel_share_array_open(test_router):
 
     g, h, pks, sks = get_avss_params(n, t)
     sends, recvs, _ = test_router(n)
+    crs = [g, h]
+
     values = [int(ZR.random()) for _ in range(k)]
     dealer_id = randint(0, n-1)
 
     with ExitStack() as stack:
         avss_tasks = [None]*n
         for i in range(n):
-            hbavss = HbAvssLight(pks, sks[i], g, h, n, t, i, sends[i], recvs[i])
+            hbavss = HbAvssLight(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
             stack.enter_context(hbavss)
             if i == dealer_id:
                 v, d = values, None

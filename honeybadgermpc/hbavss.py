@@ -3,7 +3,8 @@ import asyncio
 from pickle import dumps, loads
 from honeybadgermpc.betterpairing import ZR
 from honeybadgermpc.polynomial import polynomials_over
-from honeybadgermpc.poly_commit import PolyCommit
+from honeybadgermpc.poly_commit_const import PolyCommitConst
+from honeybadgermpc.poly_commit_lin import PolyCommitLin
 from honeybadgermpc.symmetric_crypto import SymmetricCrypto
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
 from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
@@ -25,13 +26,12 @@ class HbAVSSMessageType:
     READY = "READY"
 
 
-class HbAvss(object):
-    # base class of HbAvss containing light and batch version
-    def __init__(self, public_keys, private_key, g, h, n, t, my_id, send, recv):
+class HbAvssLight():
+    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv):
         self.public_keys, self.private_key = public_keys, private_key
         self.n, self.t, self.my_id = n, t, my_id
-        self.g = g
-        self.poly_commit = PolyCommit(g, h)
+        self.g = crs[0]
+        self.poly_commit = PolyCommitLin(crs)
 
         # Create a mechanism to split the `recv` channels based on `tag`
         self.subscribe_recv_task, self.subscribe_recv = subscribe_recv(recv)
@@ -54,8 +54,6 @@ class HbAvss(object):
     def __exit__(self, type, value, traceback):
         self.subscribe_recv_task.cancel()
 
-
-class HbAvssLight(HbAvss):
     async def _process_avss_msg(self, avss_id, dealer_id, avss_msg):
         tag = f"{dealer_id}-{avss_id}-AVSS"
         send, recv = self.get_send(tag), self.subscribe_recv(tag)
@@ -192,10 +190,26 @@ class HbAvssLight(HbAvss):
         return await asyncio.gather(*avss_tasks)
 
 
-class HbAvssBatch(HbAvss):
-    def __init__(self, public_keys, private_key, g, h, n, t, my_id, send, recv):
-        super(HbAvssBatch, self).__init__(public_keys,
-                                          private_key, g, h, n, t, my_id, send, recv)
+class HbAvssBatch():
+    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv):
+        self.public_keys, self.private_key = public_keys, private_key
+        self.n, self.t, self.my_id = n, t, my_id
+        assert len(crs) == 3
+        assert len(crs[0]) == t+1
+        self.g = crs[0][0]
+
+        # Create a mechanism to split the `recv` channels based on `tag`
+        self.subscribe_recv_task, self.subscribe_recv = subscribe_recv(recv)
+
+        # Create a mechanism to split the `send` channels based on `tag`
+        def _send(tag):
+            return wrap_send(tag, send)
+        self.get_send = _send
+
+        self.field = ZR
+        self.poly = polynomials_over(self.field)
+        self.poly_commit = PolyCommitConst(crs)
+
         self.avid_msg_queue = asyncio.Queue()
         self.tasks = []
 
@@ -206,14 +220,14 @@ class HbAvssBatch(HbAvss):
                 avid.disperse(tag, self.my_id, dispersal_msg_list)))
 
     def __enter__(self):
-        self._recv_task = asyncio.create_task(self._recv_loop(self.avid_msg_queue))
+        self.avid_recv_task = asyncio.create_task(self._recv_loop(self.avid_msg_queue))
         return self
 
     def __exit__(self, typ, value, traceback):
-        self._recv_task.cancel()
+        self.subscribe_recv_task.cancel()
+        self.avid_recv_task.cancel()
         for task in self.tasks:
             task.cancel()
-        super(HbAvssBatch, self).__exit__(typ, value, traceback)
 
     async def _process_avss_msg(self, avss_id, dealer_id, dispersal_msg):
         tag = f"{dealer_id}-{avss_id}-B-AVSS"
@@ -231,16 +245,12 @@ class HbAvssBatch(HbAvss):
         shared_key = pow(ephemeral_public_key, self.private_key)
 
         shares = [None] * secret_size
-        witnesses = [None] * secret_size
         # Decrypt
         for k in range(secret_size):
-            shares[k], witnesses[k] = SymmetricCrypto.decrypt(
+            shares[k], cur_aux, witness = SymmetricCrypto.decrypt(
                 str(shared_key).encode("utf-8"), encrypted_witnesses[k])
-
-        # verify & send all ok
-        for i in range(secret_size):
             if not self.poly_commit.verify_eval(
-                    commitments[i], self.my_id+1, shares[i], witnesses[i]):
+                    commitments[k], self.my_id+1, shares[k], cur_aux, witness):
                 # will be replaced by sending out IMPLICATE message later
                 # multicast(HbAVSSMessageType.IMPLICATE)
                 logging.error("PolyCommit verification failed.")
@@ -294,9 +304,10 @@ class HbAvssBatch(HbAvss):
             shared_key = pow(self.public_keys[i], ephemeral_secret_key)
             z = [None] * secret_size
             for k in range(secret_size):
-                witness = self.poly_commit.create_witness(aux_poly[k], i+1)
+                witness = self.poly_commit.create_witness(phi[k], aux_poly[k], i+1)
                 z[k] = SymmetricCrypto.encrypt(
-                    str(shared_key).encode("utf-8"), (phi[k](i+1), witness))
+                    str(shared_key).encode("utf-8"),
+                    (phi[k](i+1), aux_poly[k](i+1), witness))
             dealer_msg_list[i] = dumps((commitments, ephemeral_public_key, z))
 
         return dealer_msg_list
