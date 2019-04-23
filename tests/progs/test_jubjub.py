@@ -34,7 +34,7 @@ STANDARD_PREPROCESSING = [
     'rands', 'triples', 'bits'
 ]
 
-n, t = 4, 1
+n, t = 3, 1
 
 
 async def run_test_program(prog, test_runner, n=n, t=t, k=10000,
@@ -221,7 +221,8 @@ async def test_shared_point_montgomery_mul(test_preprocessing, test_runner):
 
 @mark.asyncio
 async def test_share_mul(test_preprocessing, test_runner):
-    bit_length = 255
+    # bit_length = 255
+    bit_length = 80  # Short key for testing
     test_preprocessing.generate('bits', n, t, k=2000)
 
     async def _prog(context):

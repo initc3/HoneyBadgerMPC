@@ -230,13 +230,14 @@ async def share_mul(context: Mpc, bs: list, p: Point) -> SharedPoint:
         return SharedIdeal(p.curve)
 
     terms = []
+    p2i = p
     for i in range(len(bs)):
-        p2i = (2**i) * p
         term = SharedPoint(context,
                            p2i.x * bs[i],
                            (p2i.y - 1) * bs[i] + p.curve.Field(1),
                            p.curve)
         terms.append(term)
+        p2i = p2i.double()
 
     accum = terms[0]
     for i in terms[1:]:
