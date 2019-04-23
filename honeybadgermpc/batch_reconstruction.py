@@ -145,8 +145,9 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     data_r2 = [asyncio.create_task(recv()) for recv in q_r2]
     del subscribe  # ILC should determine we can garbage collect after this
 
-    enc = EncoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
-    dec = DecoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
+    enc = EncoderFactory.get(point)
+    dec = DecoderFactory.get(point)
+
     decoding_algorithm = Algorithm.GAO
     if config is not None:
         decoding_algorithm = config.decoding_algorithm

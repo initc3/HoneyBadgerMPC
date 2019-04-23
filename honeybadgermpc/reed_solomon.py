@@ -1,10 +1,12 @@
 from honeybadgermpc.ntl.helpers import vandermonde_batch_evaluate, \
     vandermonde_batch_interpolate
 from honeybadgermpc.ntl.helpers import gao_interpolate
-from honeybadgermpc.ntl.helpers import fft, fft_interpolate, fft_batch_interpolate
+from honeybadgermpc.ntl.helpers import fft, fft_interpolate, fft_batch_interpolate, \
+    fft_batch_evaluate, SetNumThreads, AvailableNTLThreads
 from honeybadgermpc.wb_interpolate import make_wb_encoder_decoder
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
 import logging
+import psutil
 
 
 class Encoder(object):
@@ -96,8 +98,7 @@ class FFTEncoder(Encoder):
         return fft(data, self.omega, self.modulus, self.order)[:self.n]
 
     def encode_batch(self, data):
-        return [fft(d, self.omega, self.modulus, self.order)[:self.n]
-                for d in data]
+        return fft_batch_evaluate(data, self.omega, self.modulus, self.order, self.n)
 
 
 class VandermondeDecoder(Decoder):
@@ -375,6 +376,94 @@ class IncrementalDecoder(object):
         return None, None
 
 
+class EncoderSelector(object):
+    # If n is lesser than this value, always pick Vandermonde
+    LOW_VAN_THRESHOLD = 8
+    # If n is greater than this value, always pick FFT
+    HIGH_VAN_THRESHOLD = 128
+
+    @staticmethod
+    def set_optimal_thread_count(k):
+        SetNumThreads(min(k, psutil.cpu_count(logical=False)))
+
+    @staticmethod
+    def select(point, k):
+        assert point.use_fft is True
+        n = point.n
+        if n < EncoderSelector.LOW_VAN_THRESHOLD:
+            return VandermondeEncoder(point)
+        if n >= EncoderSelector.HIGH_VAN_THRESHOLD:
+            return FFTEncoder(point)
+
+        # Check if n is close to the nearest power of 2
+        # In the worst case, n would be just one above a power of 2. For example, 65
+        # The nearest power of 2 greater than this is 128
+        # 128 - 65 = 63 > 128 / 4 = 32. This is bad.
+        # So we will use vandermonde here.
+        npow2 = n if n & (n - 1) == 0 else 2 ** n.bit_length()
+        if npow2 - n > npow2 // 4 and n < 128:
+            return VandermondeEncoder(point)
+        else:
+            return FFTEncoder(point)
+
+
+class DecoderSelector(object):
+    # If n is lesser than this value, always pick Vandermonde
+    LOW_VAN_THRESHOLD = 8
+    # If batch size is greater than BATCH_SIZE_THRESH_SLOPE * n * self.cores, then
+    # pick Vandermonde
+    BATCH_SIZE_THRESH_SLOPE = 0.5
+
+    @staticmethod
+    def set_optimal_thread_count(k):
+        SetNumThreads(min(k, psutil.cpu_count(logical=False)))
+
+    @staticmethod
+    def select(point, k):
+        assert point.use_fft is True
+        n = point.n
+        if n < DecoderSelector.LOW_VAN_THRESHOLD:
+            return VandermondeDecoder(point)
+
+        nt = AvailableNTLThreads()
+        if k > DecoderSelector.BATCH_SIZE_THRESH_SLOPE * n * nt:
+            return VandermondeDecoder(point)
+        else:
+            return FFTDecoder(point)
+
+
+class OptimalEncoder(Encoder):
+    """A wrapper for EncoderSelector which can directly be used in EncoderFactory"""
+
+    def __init__(self, point):
+        assert point.use_fft is True
+        self.point = point
+
+    def encode_one(self, data):
+        EncoderSelector.set_optimal_thread_count(1)
+        return EncoderSelector.select(self.point, 1).encode_one(data)
+
+    def encode_batch(self, data):
+        EncoderSelector.set_optimal_thread_count(len(data))
+        return EncoderSelector.select(self.point, len(data)).encode_batch(data)
+
+
+class OptimalDecoder(Decoder):
+    """A wrapper for DecoderSelector which can directly be used in DecoderFactory"""
+
+    def __init__(self, point):
+        assert point.use_fft is True
+        self.point = point
+
+    def decode_one(self, z, data):
+        DecoderSelector.set_optimal_thread_count(1)
+        return DecoderSelector.select(self.point, 1).decode_one(z, data)
+
+    def decode_batch(self, z, data):
+        DecoderSelector.set_optimal_thread_count(len(data))
+        return DecoderSelector.select(self.point, len(data)).decode_batch(z, data)
+
+
 class Algorithm:
     VANDERMONDE = 'vandermonde'
     FFT = 'fft'
@@ -384,26 +473,42 @@ class Algorithm:
 
 class EncoderFactory:
     @staticmethod
-    def get(point, algorithm=Algorithm.VANDERMONDE):
+    def get(point, algorithm=None):
         if algorithm == Algorithm.VANDERMONDE:
             return VandermondeEncoder(point)
         elif algorithm == Algorithm.FFT:
             return FFTEncoder(point)
+        elif algorithm is None:
+            if point.use_fft:
+                return OptimalEncoder(point)
+            else:
+                return VandermondeEncoder(point)
+
         raise ValueError(f"Incorrect algorithm. "
                          f"Supported algorithms are "
-                         f"{[Algorithm.VANDERMONDE, Algorithm.FFT]}")
+                         f"{[Algorithm.VANDERMONDE, Algorithm.FFT]}\n"
+                         f"Pass algorithm=None with FFT Enabled for automatic "
+                         f"selection of encoder")
 
 
 class DecoderFactory:
     @staticmethod
-    def get(point, algorithm=Algorithm.VANDERMONDE):
+    def get(point, algorithm=None):
         if algorithm == Algorithm.VANDERMONDE:
             return VandermondeDecoder(point)
         elif algorithm == Algorithm.FFT:
             return FFTDecoder(point)
+        elif algorithm is None:
+            if point.use_fft:
+                return OptimalDecoder(point)
+            else:
+                return VandermondeDecoder(point)
+
         raise ValueError(f"Incorrect algorithm. "
                          f"Supported algorithms are "
-                         f"{[Algorithm.VANDERMONDE, Algorithm.FFT]}")
+                         f"{[Algorithm.VANDERMONDE, Algorithm.FFT]}\n"
+                         f"Pass algorithm=None with FFT Enabled for automatic "
+                         f"selection of decoder")
 
 
 class RobustDecoderFactory:
@@ -413,6 +518,7 @@ class RobustDecoderFactory:
             return GaoRobustDecoder(t, point)
         elif algorithm == Algorithm.WELCH_BERLEKAMP:
             return WelchBerlekampRobustDecoder(t, point)
+
         raise ValueError(f"Invalid algorithm. "
                          f"Supported algorithms are "
                          f"[{Algorithm.GAO},"
