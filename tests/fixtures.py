@@ -116,7 +116,7 @@ class TestPreProcessing():
             return self.elements.generate_share(arg1, n, t)
 
 
-@fixture(scope="session")
+@fixture(scope="module")
 def test_preprocessing():
     return TestPreProcessing()
 
