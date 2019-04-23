@@ -43,18 +43,16 @@ async def run_test_program(prog, test_runner, n=n, t=t, k=10000,
     return await test_runner(prog, n, t, STANDARD_PREPROCESSING, k, mixins)
 
 
-async def shared_point_equals(a, b):
-    if a.curve != b.curve:
+async def shared_point_equals(a_, b_):
+    if a_.curve != b_.curve:
         return False
-    elif type(a) != type(b):
+    elif type(a_) != type(b_):
         return False
-    elif isinstance(a, (Ideal, SharedIdeal)):
+    elif isinstance(a_, (Ideal, SharedIdeal)):
         return True
 
-    a_x, a_y, b_x, b_y = await asyncio.gather(
-        a.xs.open(), a.ys.open(), b.xs.open(), b.ys.open())
-
-    return (a_x, a_y) == (b_x, b_y)
+    a, b = await asyncio.gather(a_.open(), b_.open())
+    return a == b
 
 
 def test_basic_point_functionality():
@@ -120,9 +118,9 @@ async def test_shared_point_creation_from_point(test_preprocessing, test_runner)
 @mark.asyncio
 async def test_shared_point_double(test_preprocessing, test_runner):
     async def _prog(context):
-        shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS]
+        shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS[:2]]
         actual_doubled = [SharedPoint.from_point(
-            context, p.double()) for p in TEST_POINTS]
+            context, p.double()) for p in TEST_POINTS[:2]]
 
         results = await asyncio.gather(*[p.double() for p in shared_points])
         assert all(await asyncio.gather(
@@ -134,8 +132,8 @@ async def test_shared_point_double(test_preprocessing, test_runner):
 @mark.asyncio
 async def test_shared_point_neg(test_preprocessing, test_runner):
     async def _prog(context):
-        shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS]
-        actual_negated = [SharedPoint.from_point(context, -p) for p in TEST_POINTS]
+        shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS[:2]]
+        actual_negated = [SharedPoint.from_point(context, -p) for p in TEST_POINTS[:2]]
 
         shared_negated = [s.neg() for s in shared_points]
 
@@ -170,14 +168,14 @@ async def test_shared_point_add(test_preprocessing, test_runner):
 @mark.asyncio
 async def test_shared_point_sub(test_preprocessing, test_runner):
     async def _prog(context):
-        shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS]
-        actual_negated = [SharedPoint.from_point(context, -p) for p in TEST_POINTS]
+        shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS[:2]]
+        actual_negated = [SharedPoint.from_point(context, -p) for p in TEST_POINTS[:2]]
 
         # We're going to be testing that given point p, p - p == p + (-p)
         actual, result = await asyncio.gather(
             asyncio.gather(*[p.sub(p) for p in shared_points]),
             asyncio.gather(*[p1.add(p2)
-                           for p1, p2 in zip(shared_points, actual_negated)]))
+                             for p1, p2 in zip(shared_points, actual_negated)]))
 
         assert all(await asyncio.gather(
             *[shared_point_equals(a, r) for a, r in zip(actual, result)]))
@@ -223,28 +221,34 @@ async def test_shared_point_montgomery_mul(test_preprocessing, test_runner):
 async def test_share_mul(test_preprocessing, test_runner):
     # bit_length = 255
     bit_length = 80  # Short key for testing
-    test_preprocessing.generate('bits', n, t, k=2000)
+    # test_preprocessing.generate('bits', n, t, k=2000)
 
     async def _prog(context):
         p = TEST_POINTS[1]
         multiplier_ = [test_preprocessing.elements.get_bit(context)
                        for i in range(bit_length)]
         multiplier = Jubjub.Field(0)
+
         for i in range(bit_length):
             multiplier += (2**i) * multiplier_[i]
         multiplier = await multiplier.open()
-        p_mul = int(multiplier) * p
+
+        actual = int(multiplier) * p
 
         # Compute share_mul
-        p1_ = await share_mul(context, multiplier_, p)
-        px, py = await asyncio.gather(p1_.xs.open(), p1_.ys.open())
+        result_ = await share_mul(context, multiplier_, p)
+        result = await result_.open()
+        # p1_ = await share_mul(context, multiplier_, p)
+        # px, py = await asyncio.gather(p1_.xs.open(), p1_.ys.open())
 
         # Assertation
         if multiplier == Jubjub.Field(0):
-            assert (px, py) == (Jubjub.Field(0), Jubjub.Field(1))
+            assert result == Point(0, 1, TEST_CURVE)
+            # assert (px, py) == (Jubjub.Field(0), Jubjub.Field(1))
         else:
-            assert px == p_mul.x
-            assert py == p_mul.y
+            assert result == actual
+            # assert px == actual.x
+            # assert py == actual.y
 
         q1_ = await share_mul(context, multiplier_, Ideal(TEST_CURVE))
         q2_ = SharedIdeal(TEST_CURVE)

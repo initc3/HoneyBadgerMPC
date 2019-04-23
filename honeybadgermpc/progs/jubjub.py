@@ -1,5 +1,6 @@
 from honeybadgermpc.elliptic_curve import Jubjub, Point, Ideal
 from honeybadgermpc.mpc import Mpc
+import asyncio
 
 
 class SharedPoint(object):
@@ -56,6 +57,13 @@ class SharedPoint(object):
 
         return SharedPoint(context, context.Share(p.x),
                            context.Share(p.y), curve=p.curve)
+
+    async def open(self):
+        """ Creates a public Point by opening the shares of this
+        shared point
+        """
+        x, y = await asyncio.gather(self.xs.open(), self.ys.open())
+        return Point(x, y, self.curve)
 
     def __str__(self) -> str:
         return f"({self.xs}, {self.ys})"
@@ -130,7 +138,7 @@ class SharedPoint(object):
             raise Exception("Can't scale a SharedPoint by something which isn't an int!")
 
         if n < 0:
-            negated = await self.neg()
+            negated = self.neg()
             return await negated.mul(-n)
         elif n == 0:
             return SharedIdeal(self.curve)
