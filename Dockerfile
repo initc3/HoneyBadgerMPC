@@ -23,8 +23,14 @@ RUN apt-get update && apt-get install -y \
     libgmp-dev \
     libmpc-dev \
     libmpfr-dev \
-    libntl-dev \
     libflint-dev
+# Download and build NTL from source
+# Shoup recommends not using O3
+RUN wget -qO- https://www.shoup.net/ntl/ntl-11.3.2.tar.gz | tar xzvf - \
+         &&  cd ntl-11.3.2/src \
+         && ./configure CXXFLAGS="-g -O2 -fPIC -march=native -pthread -std=c++11" \
+         && make -j4 \
+         && make install
 
 # Sets default directory for running the rest of the commands
 WORKDIR /usr/src/HoneyBadgerMPC
