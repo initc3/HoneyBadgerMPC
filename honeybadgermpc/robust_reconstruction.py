@@ -18,4 +18,6 @@ async def robust_reconstruct(field_futures, field, n, t, point):
         if incremental_decoder.done():
             polys, errors = incremental_decoder.get_results()
             return polynomials_over(field)(polys[0]), errors
-    return None, None
+
+    raise Exception('reconstruction failed!')
+    # return None, None
