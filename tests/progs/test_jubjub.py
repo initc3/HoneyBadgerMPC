@@ -34,7 +34,7 @@ STANDARD_PREPROCESSING = [
     'rands', 'triples', 'bits'
 ]
 
-n, t = 4, 1
+n, t = 3, 1
 
 
 async def run_test_program(prog, test_runner, n=n, t=t, k=10000,
@@ -177,7 +177,7 @@ async def test_shared_point_sub(test_preprocessing, test_runner):
         actual, result = await asyncio.gather(
             asyncio.gather(*[p.sub(p) for p in shared_points]),
             asyncio.gather(*[p1.add(p2)
-                           for p1, p2 in zip(shared_points, actual_negated)]))
+                             for p1, p2 in zip(shared_points, actual_negated)]))
 
         assert all(await asyncio.gather(
             *[shared_point_equals(a, r) for a, r in zip(actual, result)]))
