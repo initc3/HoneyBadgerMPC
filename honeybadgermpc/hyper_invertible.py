@@ -3,7 +3,10 @@ import logging
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
 from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from honeybadgermpc.reed_solomon import Algorithm, EncoderFactory, DecoderFactory
-from honeybadgermpc.batch_reconstruction import subscribe_recv, wrap_send
+from honeybadgermpc.utils import wrap_send
+
+# TODO: refactor this method outside of batch_reconstruction
+from honeybadgermpc.batch_reconstruction import subscribe_recv
 
 
 class HyperInvMessageType(object):

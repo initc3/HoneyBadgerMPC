@@ -134,23 +134,6 @@ class Mpc(object):
         self._openings[shareid] = opening
         return opening
 
-    async def _run(self):
-        # Run receive loop as background task, until self.prog finishes
-        # Cancel the background task, even if there's an exception
-        bgtask = asyncio.create_task(self._recvloop())
-        result = asyncio.create_task(self.prog(self, **self.prog_args))
-        await asyncio.wait((bgtask, result), return_when=asyncio.FIRST_COMPLETED)
-
-        if result.done():
-            bgtask.cancel()
-            return result.result()
-        else:
-            logging.info(f'bgtask exception: {bgtask.exception()}')
-            raise bgtask.exception()
-            # FIXME: This code is unreachable and needs to be investigated
-            bgtask.cancel()
-            return await result
-
     async def _recvloop(self):
         """Background task to continually receive incoming shares, and
         put the received share in the appropriate buffer. In the case
@@ -185,6 +168,23 @@ class Mpc(object):
                 self._sharearray_buffers[shareid].put_nowait((j, (tag, share)))
 
         return True
+
+    async def _run(self):
+        # Run receive loop as background task, until self.prog finishes
+        # Cancel the background task, even if there's an exception
+        bgtask = asyncio.create_task(self._recvloop())
+        result = asyncio.create_task(self.prog(self, **self.prog_args))
+        await asyncio.wait((bgtask, result), return_when=asyncio.FIRST_COMPLETED)
+
+        if result.done():
+            bgtask.cancel()
+            return result.result()
+        else:
+            logging.info(f'bgtask exception: {bgtask.exception()}')
+            raise bgtask.exception()
+            # FIXME: This code is unreachable and needs to be investigated
+            bgtask.cancel()
+            return await result
 
 
 class TaskProgramRunner(ProgramRunner):

@@ -1,5 +1,53 @@
 from pytest import raises
-from honeybadgermpc.progs.mixins.utils import static_type_check
+from honeybadgermpc.utils import static_type_check, wrap_send
+
+
+def test_type_check_callable():
+    @static_type_check(str, 'callable(send)')
+    def incorrect_func_with_callable(str, func):
+        pass
+
+    @static_type_check(str, 'callable(func)', 'True')
+    def func_with_callable(str, func, c):
+        pass
+
+    with raises(ValueError):
+        incorrect_func_with_callable('hello', lambda w: 'world')
+
+    func_with_callable('hello', lambda w: 'world', func_with_callable)
+
+
+def test_type_check_arrays():
+    @static_type_check(str, ['str', 'callable(b)'])
+    def func_with_arr_types(a, b):
+        pass
+
+    func_with_arr_types('hello', lambda w: 'world')
+    func_with_arr_types('hello', 'world')
+    with raises(TypeError):
+        func_with_arr_types('hello', 5)
+
+
+def test_type_check_incorrect_types():
+    @static_type_check('{}')
+    def func_1(a):
+        pass
+
+    @static_type_check({})
+    def func_2(a):
+        pass
+
+    @static_type_check([{}])
+    def func_3(a):
+        pass
+
+    @static_type_check(['{}'])
+    def func_4(a):
+        pass
+
+    for func in [func_1, func_2, func_3, func_4]:
+        with raises(ValueError):
+            func({})
 
 
 def test_type_check_simple_func():
@@ -78,3 +126,16 @@ def test_static_type_check_overrun_unnamed():
     func(3, b=3, c=3)
     with raises(TypeError):
         func(3, 'str', b=3)
+
+
+def test_wrap_send():
+    test_dest, test_message = None, None
+
+    def _send(dest, message):
+        nonlocal test_dest, test_message
+        test_dest = dest
+        test_message = message
+
+    wrapped = wrap_send('hello', _send)
+    wrapped(1, 'world')
+    assert (test_dest, test_message) == (1, ('hello', 'world'))

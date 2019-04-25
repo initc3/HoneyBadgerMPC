@@ -4,90 +4,29 @@ from .polynomial import EvalPoint
 import logging
 from collections import defaultdict
 from asyncio import Queue
-from math import ceil
 import time
 from .reed_solomon import Algorithm, EncoderFactory, DecoderFactory, RobustDecoderFactory
 from .reed_solomon import IncrementalDecoder
 import random
+from honeybadgermpc.utils import chunk_data, flatten_lists, transpose_lists
 
 
-async def fetch_one(aws):
-    aws_to_idx = {aws[i]: i for i in range(len(aws))}
-    pending = set(aws)
-    while len(pending) > 0:
-        done, pending = await asyncio.wait(pending,
-                                           return_when=asyncio.FIRST_COMPLETED)
-        for d in done:
-            yield (aws_to_idx[d], await d)
+async def fetch_one(awaitables):
+    """ Given a list of awaitables, run them concurrently and
+    return them in the order they complete
 
+    args:
+        awaitables: List of tasks to run concurrently
 
-def subscribe_recv(recv):
-    tag_table = defaultdict(Queue)
-    taken = set()  # Replace this with a bloom filter?
-
-    async def _recv_loop():
-        while True:
-            j, (tag, o) = await recv()
-            tag_table[tag].put_nowait((j, o))
-
-    def subscribe(tag):
-        # take everything from the queue
-        # further things sent directly
-        assert tag not in taken
-        taken.add(tag)
-        return tag_table[tag].get
-
-    _task = asyncio.create_task(_recv_loop())
-    return _task, subscribe
-
-
-def wrap_send(tag, send):
-    def _send(j, o):
-        send(j, (tag, o))
-
-    return _send
-
-
-def recv_each_party(recv, n):
-    queues = [Queue() for _ in range(n)]
-
-    async def _recv_loop():
-        while True:
-            j, o = await recv()
-            queues[j].put_nowait(o)
-
-    _task = asyncio.create_task(_recv_loop())
-    return _task, [q.get for q in queues]
-
-
-def to_chunks(data, chunk_size, default=0):
-    """Chunkize data into `chunk_size` length pieces
-
-    If len(data) is not a multiple of chunk_size, then the default value is appended
-    to the last chunk to make sure the chunk is of size `chunk_size`
+    output:
+        Yields tuples of the form (idx, result) in the order that the tasks finish
     """
-    res = []
-    n_chunks = ceil(len(data) / chunk_size)
-    for j in range(n_chunks):
-        start = chunk_size * j
-        stop = chunk_size * (j + 1)
-        chunk = data[start:stop]
-        if len(chunk) < chunk_size:
-            chunk += [default] * (chunk_size - len(chunk))
-        res.append(chunk)
-    return res
-
-
-def merge_lists(lists):
-    result = []
-    for l in lists:
-        result += l
-    return result
-
-
-def list_transpose(lst):
-    """Transpose of list of lists"""
-    return [[lst[j][i] for j in range(len(lst))] for i in range(len(lst[0]))]
+    mapping = {elem: idx for (idx, elem) in enumerate(awaitables)}
+    pending = set(awaitables)
+    while len(pending) > 0:
+        done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+        for d in done:
+            yield(mapping[d], await d)
 
 
 async def incremental_decode(receivers, encoder, decoder, robust_decoder, batch_size, t,
@@ -101,7 +40,67 @@ async def incremental_decode(receivers, encoder, decoder, robust_decoder, batch_
         if inc_decoder.done():
             result, _ = inc_decoder.get_results()
             return result
+
     return None
+
+
+def subscribe_recv(recv):
+    """ Given the recv method for this batch reconstruction,
+    create a background loop to put the received events into
+    the appropriate queue for the tag
+
+    Returns _task and subscribe, where _task is to be run in
+    the background to forward events to the associated queue,
+    and subscribe, which is used to register a new tag/queue pair
+
+    TODO: move this out of this file
+    """
+    # Stores the queues for each subscribed tag
+    tag_table = defaultdict(Queue)
+    taken = set()  # Replace this with a bloom filter?
+
+    async def _recv_loop():
+        while True:
+            # Whenever we receive a share array, directly put it in the
+            # appropriate queue for that round
+            j, (tag, o) = await recv()
+            tag_table[tag].put_nowait((j, o))
+
+    def subscribe(tag):
+        # TODO: make this raise an exception
+        # Ensure that this tag has not been subscribed to already
+        assert tag not in taken
+        taken.add(tag)
+
+        # Return the getter of the queue for this tag
+        return tag_table[tag].get
+
+    _task = asyncio.create_task(_recv_loop())
+    return _task, subscribe
+
+
+def recv_each_party(recv, n):
+    """ Given a recv function and number of parties,
+    creates a set of queues for each party, and forwards
+    any recv event to the respective queue for each party
+
+    args:
+        recv: async function that eventually returns a received object
+        n: number of nodes
+
+    output:
+        tuple of a background task to forward elements to the correct queue,
+        and a list of recv functions that corresponds to each node.
+    """
+    queues = [Queue() for _ in range(n)]
+
+    async def _recv_loop():
+        while True:
+            j, o = await recv()
+            queues[j].put_nowait(o)
+
+    _task = asyncio.create_task(_recv_loop())
+    return _task, [q.get for q in queues]
 
 
 async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=None,
@@ -118,52 +117,60 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
       the reconstructed array of B shares
 
     Communication takes place over two rounds,
-      objects sent/received of the form ('R1', shares) or ('R2', shares)
+      objects sent/received of the form('R1', shares) or ('R2', shares)
       up to one of each for each party
 
     Reconstruction takes places in chunks of t+1 values
     """
+    bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),
+                                         {"node_id": myid})
 
-    fp = GF(p)
+    # (optional) Induce faults
+
     secret_shares = [v.value for v in secret_shares]
-    round1_chunks = to_chunks(secret_shares, t + 1)
-    num_chunks = len(round1_chunks)
-
     if config is not None and config.induce_faults:
         logging.debug("[FAULT][BatchReconstruction] Sending random shares.")
         secret_shares = [random.randint(0, p - 1) for _ in range(len(secret_shares))]
 
-    point = EvalPoint(fp, n, use_fft=use_fft)
-    bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),
-                                         {"node_id": myid})
+    # Prepare recv loops for this batch reconstruction
+
     subscribe_task, subscribe = subscribe_recv(recv)
     del recv  # ILC enforces this in type system, no duplication of reads
 
-    task_r1, q_r1 = recv_each_party(subscribe('R1'), n)
-    task_r2, q_r2 = recv_each_party(subscribe('R2'), n)
-    data_r1 = [asyncio.create_task(recv()) for recv in q_r1]
-    data_r2 = [asyncio.create_task(recv()) for recv in q_r2]
+    task_r1, recvs_r1 = recv_each_party(subscribe('R1'), n)
+    data_r1 = [asyncio.create_task(recv()) for recv in recvs_r1]
+
+    task_r2, recvs_r2 = recv_each_party(subscribe('R2'), n)
+    data_r2 = [asyncio.create_task(recv()) for recv in recvs_r2]
     del subscribe  # ILC should determine we can garbage collect after this
 
-    enc = EncoderFactory.get(point)
-    dec = DecoderFactory.get(point)
+    # Set up encoding and decoding algorithms
+    fp = GF(p)
+    decoding_algorithm = Algorithm.GAO if config is None else config.decoding_algorithm
 
-    decoding_algorithm = Algorithm.GAO
-    if config is not None:
-        decoding_algorithm = config.decoding_algorithm
+    point = EvalPoint(fp, n, use_fft=use_fft)
+    enc = EncoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
+    dec = DecoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
     robust_dec = RobustDecoderFactory.get(t, point, algorithm=decoding_algorithm)
 
-    # Step 1: Compute the polynomial, then send
+    # Prepare data for step 1
+    round1_chunks = chunk_data(secret_shares, t + 1)
+    num_chunks = len(round1_chunks)
+
+    # Step 1: Compute the polynomial P1, then send the elements
     start_time = time.time()
+
     encoded = enc.encode(round1_chunks)
-    to_send = list_transpose(encoded)
-    for j in range(n):
-        send(j, ('R1', to_send[j]))
+    to_send = transpose_lists(encoded)
+    for dest, message in enumerate(to_send):
+        send(dest, ('R1', message))
+
     end_time = time.time()
     bench_logger.info(f"[BatchReconstruct] P1 Send: {end_time - start_time}")
 
     # Step 2: Attempt to reconstruct P1
     start_time = time.time()
+
     recons_r2 = await incremental_decode(data_r1, enc, dec, robust_dec,
                                          num_chunks, t, n)
     if recons_r2 is None:
@@ -174,11 +181,13 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     bench_logger.info(f"[BatchReconstruct] P1 Reconstruct: {end_time - start_time}")
 
     # Step 3: Send R2 points
-    # These are simply evaluations at x=0 or just the constant term
     start_time = time.time()
-    to_send = [chunk[0] for chunk in recons_r2]
-    for j in range(n):
-        send(j, ('R2', to_send))
+
+    # Evaluate all chunks at x=0, then broadcast
+    message = [chunk[0] for chunk in recons_r2]
+    for dest in range(n):
+        send(dest, ('R2', message))
+
     end_time = time.time()
     bench_logger.info(f"[BatchReconstruct] P2 Send: {end_time - start_time}")
 
@@ -193,16 +202,12 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     end_time = time.time()
     bench_logger.info(f"[BatchReconstruct] P2 Reconstruct: {end_time - start_time}")
 
-    task_r1.cancel()
-    task_r2.cancel()
-    subscribe_task.cancel()
-    for q in data_r1:
-        q.cancel()
-    for q in data_r2:
-        q.cancel()
+    # Cancel all created tasks
+    for task in [task_r1, task_r2, subscribe_task, *data_r1, *data_r2]:
+        task.cancel()
 
-    result = merge_lists(recons_p)
+    result = flatten_lists(recons_p)
     assert len(result) >= len(secret_shares)
 
     # Get back result as GFElement type
-    return list(map(fp, result[:len(secret_shares)]))
+    return list(map(fp, result[: len(secret_shares)]))

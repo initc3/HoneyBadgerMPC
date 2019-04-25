@@ -1,6 +1,6 @@
 from honeybadgermpc.progs.mixins.base import MixinBase, AsyncMixin
 from honeybadgermpc.progs.mixins.constants import MixinConstants
-from honeybadgermpc.progs.mixins.utils import static_type_check
+from honeybadgermpc.utils import static_type_check
 
 from asyncio import gather
 
