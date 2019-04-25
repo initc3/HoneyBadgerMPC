@@ -1,13 +1,14 @@
-import operator
-import random
 import logging
+import operator
 from functools import reduce
-from .field import GF, GFElement
 from itertools import zip_longest
-from .betterpairing import ZR
-from .elliptic_curve import Subgroup
+
 from honeybadgermpc.ntl.helpers import fft as fft_cpp
 from honeybadgermpc.ntl.helpers import fft_interpolate as fft_interpolate_cpp
+
+from .betterpairing import ZR
+from .elliptic_curve import Subgroup
+from .field import GF, GFElement
 
 
 def strip_trailing_zeros(a):
@@ -242,9 +243,7 @@ def get_omega(field, n, seed=None):
     This only makes sense if n is a power of 2!
     """
     assert n & n-1 == 0, "n must be a power of 2"
-    if seed is not None:
-        random.seed(seed)
-    x = field.random()
+    x = field.random(seed)
     y = pow(x, (field.modulus-1)//n)
     if y == 1 or pow(y, n//2) == 1:
         return get_omega(field, n)
@@ -277,7 +276,7 @@ def fft_helper(a, omega, field):
     return a_bar
 
 
-def fft(poly, omega, n, seed=None):
+def fft(poly, omega, n):
     assert n & n-1 == 0, "n must be a power of 2"
     assert len(poly.coeffs) <= n
     assert pow(omega, n) == 1

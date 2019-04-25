@@ -74,7 +74,7 @@ The reason for the slightly confusing error message is that ``x`` and
 """
 
 from gmpy2 import is_prime, mpz
-from random import randint
+from random import Random
 
 
 class FieldsNotIdentical(Exception):
@@ -118,8 +118,8 @@ class GF(object):
     def __reduce__(self):
         return (GF, (self.modulus,))
 
-    def random(self):
-        return GFElement(randint(0, self.modulus-1), self)
+    def random(self, seed=None):
+        return GFElement(Random(seed).randint(0, self.modulus-1), self)
 
 
 class GFElement(FieldElement):
