@@ -7,9 +7,10 @@ from honeybadgermpc.wb_interpolate import make_wb_encoder_decoder
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
 import logging
 import psutil
+from abc import ABC, abstractmethod
 
 
-class Encoder(object):
+class Encoder(ABC):
     """
     Generate encoding for given data
     """
@@ -19,6 +20,7 @@ class Encoder(object):
             return self.encode_batch(data)
         return self.encode_one(data)
 
+    @abstractmethod
     def encode_one(self, data):
         """
         :type data: list of integers
@@ -26,6 +28,7 @@ class Encoder(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def encode_batch(self, data):
         """
         :type data: list of list of integers
@@ -34,7 +37,7 @@ class Encoder(object):
         raise NotImplementedError
 
 
-class Decoder(object):
+class Decoder(ABC):
     """
     Recover data from encoded values
     """
@@ -44,6 +47,7 @@ class Decoder(object):
             return self.decode_batch(z, encoded)
         return self.decode_one(z, encoded)
 
+    @abstractmethod
     def decode_one(self, z, encoded):
         """
         :type z: list of integers
@@ -52,6 +56,7 @@ class Decoder(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def decode_batch(self, z, encoded):
         """
         :type z: list of integers
@@ -61,7 +66,8 @@ class Decoder(object):
         raise NotImplementedError
 
 
-class RobustDecoder(object):
+class RobustDecoder(ABC):
+    @abstractmethod
     def robust_decode(self, z, encoded):
         """
         :type z: list of integers
@@ -139,38 +145,32 @@ class GaoRobustDecoder(RobustDecoder):
         self.modulus = point.field.modulus
         self.use_fft = point.use_fft
 
+    # TODO: refactor this using `OptimalEncoder`
+    #       see: https://github.com/initc3/HoneyBadgerMPC/pull/268
     def robust_decode(self, z, encoded):
         x = [self.point(zi).value for zi in z]
 
+        args = [x, encoded, self.d + 1, self.modulus]
         if self.use_fft:
-            decoded, error_poly = gao_interpolate(x, encoded, self.d + 1,
-                                                  self.modulus, z,
-                                                  self.point.omega.value,
-                                                  self.point.order,
-                                                  use_fft=True)
+            args += [z, self.point.omega.value, self.point.order]
 
-            if decoded is not None:
-                errors = []
-                if len(error_poly) > 1:
-                    err_eval = fft(error_poly, self.point.omega.value,
-                                   self.modulus, self.point.order)[:self.point.n]
-                    errors = [i for i in range(self.point.n)
-                              if err_eval[i] == 0]
-                return decoded, errors
-            return None, None
-        else:
-            decoded, error_poly = gao_interpolate(x, encoded, self.d + 1, self.modulus)
+        decoded, error_poly = gao_interpolate(*args, use_fft=self.use_fft)
 
-            if decoded is not None:
-                errors = []
-                if len(error_poly) > 1:
-                    x = [self.point(i).value for i in range(self.point.n)]
-                    err_eval = vandermonde_batch_evaluate(x, [error_poly],
-                                                          self.modulus)[0]
-                    errors = [i for i in range(self.point.n)
-                              if err_eval[i] == 0]
-                return decoded, errors
+        if decoded is None:
             return None, None
+
+        errors = []
+        if len(error_poly) > 1:
+            if self.use_fft:
+                err_eval = fft(error_poly, self.point.omega.value,
+                               self.modulus, self.point.order)[:self.point.n]
+            else:
+                x = [self.point(i).value for i in range(self.point.n)]
+                err_eval = vandermonde_batch_evaluate(x, [error_poly], self.modulus)[0]
+
+            errors = [i for i in range(self.point.n) if err_eval[i] == 0]
+
+        return decoded, errors
 
 
 class WelchBerlekampRobustDecoder(RobustDecoder):
@@ -315,24 +315,23 @@ class IncrementalDecoder(object):
                 break
 
             num_agreement = len(self._available_points) - len(errors)
-            if num_agreement >= self._min_points_required():
-                # Errors detected considered to be confirmed errors
-                self._confirmed_errors |= set(errors)
-                self._available_points -= set(errors)
-                error_indices = []
-                for e in errors:
-                    error_idx = self._z.index(e)
-                    error_indices.append(error_idx)
-                    del self._z[error_idx]
-                self._num_decoded += 1
-                self._available_data = self._available_data[1:]
-                self._partial_result.append(decoded)
-
-                for error_idx in error_indices:
-                    for i in range(len(self._available_data)):
-                        del self._available_data[i][error_idx]
-            else:
+            if num_agreement < self._min_points_required():
                 break
+
+            self._num_decoded += 1
+            self._available_data = self._available_data[1:]
+            self._partial_result.append(decoded)
+
+            # Errors detected considered to be confirmed errors
+            self._confirmed_errors |= set(errors)
+            self._available_points -= set(errors)
+
+            for e in errors:
+                error_idx = self._z.index(e)
+
+                del self._z[error_idx]
+                for i in range(len(self._available_data)):
+                    del self._available_data[i][error_idx]
 
         # We're done
         if self._num_decoded == self.batch_size:
@@ -340,12 +339,13 @@ class IncrementalDecoder(object):
 
     # Public API
     def add(self, idx, data):
-        if self.done() or idx in self._available_points or \
-                idx in self._confirmed_errors:
+        if self.done():
+            return
+        elif idx in self._available_points or idx in self._confirmed_errors:
             return
 
-        if self._validate(data) is False:
-            logging.error("Logging failed for data from %d: %s", idx, str(data))
+        if not self._validate(data):
+            logging.error("Validation failed for data from %d: %s", idx, str(data))
             raise DecodeValidationError("Custom validation failed for %s" % str(data))
 
         # Update data

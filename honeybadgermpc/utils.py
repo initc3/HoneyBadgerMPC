@@ -31,19 +31,47 @@ def check_types(func, types, kwtypes, args, kwargs):
     # Build mapping of argument names to specified types
     for (k, t) in [*kwtypes.items(), *zip(spec.args, types)]:
         if k in type_dict:
-            raise TypeError(
+            raise ValueError(
                 f"Type constraint for `{k}` of type `{t}` specified, "
                 f"but type constraint already found ({type_dict[k]})")
 
-        # If there are strings passed in, evaluate them as if they were
-        # evaluated within the method
-        if isinstance(t, tuple):
-            t = tuple(eval(t_, func.__globals__, passed_dict)
-                      if isinstance(t_, str) else t_ for t_ in t)
-        elif isinstance(t, str):
-            t = eval(t, func.__globals__, passed_dict)
+        # Turn type into array of types
+        if isinstance(t, (str, type)):
+            t_arr = [t]
+        elif isinstance(t, (tuple, list)):
+            t_arr = [*t]
+        else:
+            raise ValueError(f"Type constraint for `{k}` of type `{t}` specified, "
+                             f"which in not supported. Valid types are `str`, `list`, "
+                             f"`tuple`, and `type`")
 
-        type_dict[k] = t
+        # Process the types
+        for idx, t_ in enumerate(t_arr):
+            # If the type is a string evaluate it as if it were in the method body
+            if isinstance(t_, str):
+                try:
+                    t_eval = eval(t_, func.__globals__, passed_dict)
+                except Exception as e:
+                    raise ValueError(f'Type constraint for `{k}` specified "{t_}", '
+                                     f'which raised:\n{e}')
+
+                if isinstance(t_eval, bool):
+                    if not t_eval:
+                        del t_arr[idx]
+                    else:
+                        # This will always pass an isinstance check
+                        t_arr[idx] = object
+                elif isinstance(t_eval, type):
+                    t_arr[idx] = t_eval
+                else:
+                    raise ValueError(f"Type constraint for {k} provided type constraint"
+                                     f"{t_}, which evaluates to {t_eval}. String type "
+                                     f"constraints must evaluate to a bool or a type")
+            elif not isinstance(t_, type):
+                raise ValueError(f"Type constraint for {k} provided type constraint "
+                                 f"{t_}, which is neither a type nor a string.")
+
+        type_dict[k] = tuple(t_arr)
 
     # Typically occurs when extra un-named type constraints specified
     if len(type_dict.keys()) < (len(types) + len(kwtypes.keys())):
@@ -113,3 +141,56 @@ def type_check(*types, **kwtypes):
     """
 
     return static_type_check(object, *types, **kwtypes)
+
+
+@static_type_check(str, 'callable(send)')
+def wrap_send(tag, send):
+    """Given a `send` function which takes a destination and message,
+    this returns a modified function which sends the tag with the object.
+    """
+    def _send(dest, message):
+        send(dest, (tag, message))
+
+    return _send
+
+
+@static_type_check(list, int)
+def chunk_data(data, chunk_size, default=0):
+    """ Break data into chunks of size `chunk_size`
+    Last chunk is padded with the default value to have `chunk_size` length
+    If an empty list is provided, this will return a single chunk of default values
+    e.g. chunk_data([1,2,3,4,5], 2) => [[1,2], [3,4], [5, 0]]
+         chunk_data([], 2) => [[0, 0]]
+    """
+    if len(data) == 0:
+        return [default] * chunk_size
+
+    # Main chunking
+    res = [data[start:(start + chunk_size)] for start in range(0, len(data), chunk_size)]
+
+    # Pad final chunk with default value
+    res[-1] += [default] * (chunk_size - len(res[-1]))
+
+    return res
+
+
+@static_type_check(list)
+def flatten_lists(lists):
+    """ Given a 2d list, return a flattened 1d list
+    e.g. [[1,2,3],[4,5,6],[7,8,9]] => [1,2,3,4,5,6,7,8,9]
+    """
+    res = []
+    for inner in lists:
+        res += inner
+
+    return res
+
+
+@static_type_check(list)
+def transpose_lists(lists):
+    """ Given a 2d list, return the transpose of the list
+    e.g. [[1,2,3],[4,5,6],[7,8,9]] => [[1,4,7],[2,5,8],[3,6,9]]
+    """
+    rows = len(lists)
+    cols = len(lists[0])
+    return [[lists[j][i] for j in range(rows)] for i in range(cols)]

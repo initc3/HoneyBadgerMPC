@@ -2,7 +2,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from honeybadgermpc.field import GFElement
 from honeybadgermpc.progs.mixins.constants import MixinConstants
-from honeybadgermpc.progs.mixins.utils import type_check
+from honeybadgermpc.utils import type_check
 
 
 class GFElementFuture(ABC, asyncio.Future):

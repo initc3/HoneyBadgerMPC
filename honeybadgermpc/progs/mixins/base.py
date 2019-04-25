@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from honeybadgermpc.preprocessing import PreProcessedElements
-from honeybadgermpc.progs.mixins.utils import class_type_check
+from honeybadgermpc.utils import class_type_check
 
 
 class MixinBase(ABC):

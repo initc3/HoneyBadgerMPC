@@ -9,9 +9,10 @@ from honeybadgermpc.symmetric_crypto import SymmetricCrypto
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
 from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
 from honeybadgermpc.protocols.avid import AVID
+from honeybadgermpc.utils import wrap_send
 
 # TODO: Move these to a separate file instead of using it from batch_reconstruction.py
-from honeybadgermpc.batch_reconstruction import subscribe_recv, wrap_send
+from honeybadgermpc.batch_reconstruction import subscribe_recv
 
 
 logger = logging.getLogger(__name__)

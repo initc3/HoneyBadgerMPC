@@ -8,7 +8,10 @@ from psutil import cpu_count
 
 from honeybadgermpc.mpc import Mpc
 from honeybadgermpc.config import HbmpcConfig, ConfigVars
-from honeybadgermpc.batch_reconstruction import subscribe_recv, wrap_send
+from honeybadgermpc.utils import wrap_send
+
+# TODO: move this functionality outside of batch_reconstruction
+from honeybadgermpc.batch_reconstruction import subscribe_recv
 
 
 class NodeCommunicator(object):
