@@ -610,30 +610,36 @@ async def test_hbavss_light_parallel_share_array_open(test_router):
             hbavss = HbAvssLight(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
             hbavss_list[i] = hbavss
             stack.enter_context(hbavss)
+
             if i == dealer_id:
                 v, d = values, None
             else:
                 v, d = None, dealer_id
+
             avss_tasks[i] = asyncio.create_task(hbavss.avss_parallel(0, k, v, d))
             avss_tasks[i].add_done_callback(callback)
+
         outputs = [None]*k
         for j in range(k):
             outputs[j] = await asyncio.gather(
                 *[hbavss_list[i].output_queue.get() for i in range(n)])
+
         for task in avss_tasks:
             task.cancel()
 
     shares = [[] for _ in range(n)]
     for i in range(k):
-        round = outputs[i]
-        for j in range(len(round)):
-            shares[j].append(round[j][2])
+        round_output = outputs[i]
+        for j in range(len(round_output)):
+            shares[j].append(round_output[j][2])
 
     async def _prog(context):
         share_values = list(map(context.field, shares[context.myid]))
         opened_shares = set(await context.ShareArray(share_values).open())
+
         # The set of opened share should have exactly `k` values
         assert len(opened_shares) == k
+
         # All the values in the set of opened shares should be from the initial values
         for i in opened_shares:
             assert i.value in values

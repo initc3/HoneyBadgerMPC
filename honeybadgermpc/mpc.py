@@ -13,6 +13,7 @@ from .batch_reconstruction import batch_reconstruct
 from .elliptic_curve import Subgroup
 from .preprocessing import PreProcessedElements
 from .config import ConfigVars
+from .exceptions import HoneyBadgerMPCError
 
 
 class Mpc(object):
@@ -42,9 +43,9 @@ class Mpc(object):
         self.prog = prog
         self.prog_args = prog_args
 
-        # A task representing the opened values
-        # { shareid => Future (field list(field)) }
-        self._openings = {}
+        # Counter that increments by 1 every time you access it
+        # This will be used to assign ids to shares.
+        self._share_id = 0
 
         # Store opened shares until ready to reconstruct
         # playerid => { [shareid => Future share] }
@@ -64,25 +65,50 @@ class Mpc(object):
         self.GFElementFuture = type(
             'GFElementFuture', (GFElementFuture,), {'context': self})
 
+    def _get_share_id(self):
+        """Returns a monotonically increasing int value
+        each time this is called
+        """
+        share_id = self._share_id
+        self._share_id += 1
+        return share_id
+
     def call_mixin(self, name, *args, **kwargs):
+        """Convenience method to check if a mixin is present, and call it if so
+        args:
+            name(str): Name of the mixin to call
+            args(list): arguments to pass to the call to the mixin
+            kwargs(dict): named arguments to pass to the call to the mixin
+
+        outputs:
+            future that resolves to the result of calling the mixin operation
+        """
         if name not in self.config:
             raise NotImplementedError(f"Mixin {name} not present!")
 
-        return asyncio.ensure_future(self.config[name](self, *args, **kwargs))
+        return asyncio.create_task(self.config[name](self, *args, **kwargs))
 
-    async def open_share(self, share):
+    def open_share(self, share):
         """ Given secret-shared value share, open the value by
         broadcasting our local share, and then receive the likewise
         broadcasted local shares from other nodes, and finally reconstruct
         the secret shared value.
+
+        args:
+            share (Share): Secret shared value to open
+
+        outputs:
+            Future that resolves to the plaintext value of the share.
         """
 
+        res = asyncio.Future()
+
         # Choose the shareid based on the order this is called
-        shareid = len(self._openings)
+        shareid = self._get_share_id()
         t = share.t if share.t is not None else self.t
 
         # Broadcast share
-        for j in range(self.N):
+        for dest in range(self.N):
             value_to_share = share.v
 
             # Send random data if meant to induce faults
@@ -92,7 +118,7 @@ class Mpc(object):
                 value_to_share = self.field.random()
 
             # 'S' is for single shares
-            self.send(j, ('S', shareid, value_to_share))
+            self.send(dest, ('S', shareid, value_to_share))
 
         # Set up the buffer of received shares
         share_buffer = [self._share_buffers[i][shareid] for i in range(self.N)]
@@ -100,39 +126,94 @@ class Mpc(object):
         point = EvalPoint(self.field, self.N, use_fft=False)
 
         # Create polynomial that reconstructs the shared value by evaluating at 0
-        opening = robust_reconstruct(
-            share_buffer, self.field, self.N, t, point)
-        self._openings[shareid] = opening
+        reconstruction = asyncio.create_task(robust_reconstruct(
+            share_buffer, self.field, self.N, t, point))
 
-        p, _ = await opening
+        def cb(r):
+            p, errors = r.result()
+            if p is None:
+                logging.error(
+                    f"Robust reconstruction for share (id: {shareid}) "
+                    f"failed with errors: {errors}!")
+                res.set_exception(HoneyBadgerMPCError(
+                    f"Failed to open share with id {shareid}!"))
+            else:
+                res.set_result(p(self.field(0)))
 
-        # Return reconstructed point
-        return p(self.field(0))
+        reconstruction.add_done_callback(cb)
+
+        # Return future that will resolve to reconstructed point
+        return res
 
     def open_share_array(self, sharearray):
-        # Choose the shareid based on the order this is called
-        shareid = len(self._openings)
+        """ Given array of secret shares, opens them in a batch
+        and returns their plaintext values.
+
+        args:
+            sharearray (ShareArray): shares to open
+
+        outputs:
+            Future, which will resolve to an array of GFElements
+        """
+        res = asyncio.Future()
+
+        def cb(r):
+            elements = r.result()
+            if elements is None:
+                logging.error(
+                    f"Batch reconstruction for share_array (id: {shareid}) failed!")
+                res.set_exception(HoneyBadgerMPCError("Batch reconstruction failed!"))
+            else:
+                res.set_result(elements)
+
+        shareid = self._get_share_id()
 
         # Creates unique send function based on the share to open
-        def _send(j, o):
+        def _send(dest, o):
             (tag, share) = o
-            self.send(j, (tag, shareid, share))
+            self.send(dest, (tag, shareid, share))
 
         # Receive function from the respective queue for this node
         _recv = self._sharearray_buffers[shareid].get
 
         # Generate reconstructed array of shares
-        opening = batch_reconstruct([s.v for s in sharearray._shares],
-                                    self.field.modulus,
-                                    sharearray.t,
-                                    self.N,
-                                    self.myid,
-                                    _send,
-                                    _recv,
-                                    config=self.config.get(ConfigVars.Reconstruction),
-                                    debug=True)
-        self._openings[shareid] = opening
-        return opening
+        reconstructed = asyncio.create_task(batch_reconstruct(
+            [s.v for s in sharearray._shares],
+            self.field.modulus,
+            sharearray.t,
+            self.N,
+            self.myid,
+            _send,
+            _recv,
+            config=self.config.get(ConfigVars.Reconstruction),
+            debug=True))
+
+        reconstructed.add_done_callback(cb)
+
+        return res
+
+    async def _run(self):
+        # Run receive loop as background task, until self.prog finishes
+        # Cancel the background task, even if there's an exception
+        bgtask = asyncio.create_task(self._recvloop())
+        result = asyncio.create_task(self.prog(self, **self.prog_args))
+        await asyncio.wait((bgtask, result), return_when=asyncio.FIRST_COMPLETED)
+
+        # bgtask should not exit early-- this should correspond to an error
+        if bgtask.done():
+            logging.error('Background task finished before prog')
+
+            bg_exception = bgtask.exception()
+            if not result.done():
+                result.cancel()
+
+            if bg_exception is None:
+                raise HoneyBadgerMPCError('background task finished before prog!')
+            else:
+                raise bg_exception
+
+        bgtask.cancel()
+        return result.result()
 
     async def _recvloop(self):
         """Background task to continually receive incoming shares, and
@@ -169,23 +250,6 @@ class Mpc(object):
 
         return True
 
-    async def _run(self):
-        # Run receive loop as background task, until self.prog finishes
-        # Cancel the background task, even if there's an exception
-        bgtask = asyncio.create_task(self._recvloop())
-        result = asyncio.create_task(self.prog(self, **self.prog_args))
-        await asyncio.wait((bgtask, result), return_when=asyncio.FIRST_COMPLETED)
-
-        if result.done():
-            bgtask.cancel()
-            return result.result()
-        else:
-            logging.info(f'bgtask exception: {bgtask.exception()}')
-            raise bgtask.exception()
-            # FIXME: This code is unreachable and needs to be investigated
-            bgtask.cancel()
-            return await result
-
 
 class TaskProgramRunner(ProgramRunner):
     def __init__(self, n, t, config={}):
@@ -214,11 +278,6 @@ class TaskProgramRunner(ProgramRunner):
 
     async def join(self):
         return await asyncio.gather(*self.tasks)
-
-
-###############
-# Share class
-###############
 
 
 ###############

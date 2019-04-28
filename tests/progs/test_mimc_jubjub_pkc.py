@@ -1,5 +1,6 @@
 from pytest import mark
 from random import randint
+import asyncio
 from honeybadgermpc.field import GF
 from honeybadgermpc.mpc import Subgroup
 from honeybadgermpc.progs.mixins.share_arithmetic import (
@@ -37,7 +38,8 @@ async def test_mimc_jubjub_pkc(test_preprocessing, test_runner):
         # Encryption & Decryption
         cipher = mimc_encrypt(pub_key, plaintext, seed)
         decrypted_value = await mimc_decrypt(context, priv_key, cipher)
+        decrypted = await asyncio.gather(*[d.open() for d in decrypted_value])
 
-        assert (await context.ShareArray(decrypted_value).open()) == plaintext
+        assert decrypted == plaintext
 
     await test_runner(_prog, n, t, PREPROCESSING, k, STANDARD_ARITHMETIC_MIXINS)

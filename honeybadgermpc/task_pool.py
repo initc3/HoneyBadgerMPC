@@ -10,7 +10,7 @@ class TaskPool(object):
         self.tasks = Queue(loop=self.loop)
         self.workers = []
         for _ in range(num_workers):
-            worker = asyncio.ensure_future(self.worker(), loop=self.loop)
+            worker = asyncio.create_task(self.worker())
             self.workers.append(worker)
 
     async def worker(self):

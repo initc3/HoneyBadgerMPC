@@ -19,35 +19,6 @@ class SharedPoint(object):
         self.xs = xs
         self.ys = ys
 
-    async def _on_curve(self) -> bool:
-        """
-        Checks whether or not the given shares for x and y correspond to a
-        point that sits on the current curve
-        """
-        x_sq = self.xs * self.xs
-        y_sq = self.ys * self.ys
-
-        # ax^2 + y^2
-        lhs = self.curve.a * x_sq + y_sq
-
-        # 1 + dx^2y^2
-        rhs = self.context.field(1) + self.curve.d * x_sq * y_sq
-
-        return await (await lhs == await rhs).open()
-
-    @staticmethod
-    async def create(context: Mpc, xs, ys, curve=Jubjub()):
-        """ Given a context, secret shared coordinates and a curve,
-            creates the given point
-        """
-        point = SharedPoint(context, xs, ys, curve)
-        if not await point._on_curve():
-            raise ValueError(
-                f"Could not initialize Point {point}-- \
-                does not sit on given curve {point.curve}")
-
-        return point
-
     @staticmethod
     def from_point(context: Mpc, p: Point) -> 'SharedPoint':
         """ Given a local point and a context, created a shared point
@@ -64,13 +35,55 @@ class SharedPoint(object):
     def __repr__(self) -> str:
         return str(self)
 
+    def open(self):
+        """Opens the shares of the shared point, and returns a future which evaluates
+        to a point
+        """
+        res = asyncio.Future()
+
+        def cb(r):
+            x, y = r.result()
+            res.set_result(Point(x, y, self.curve))
+
+        opening = asyncio.gather(self.xs.open(), self.ys.open())
+        opening.add_done_callback(cb)
+
+        return res
+
+        # x, y = await asyncio.gather(self.xs.open(), self.ys.open())
+        # return Point(x, y, self.curve)
+
+    def equals(self, other):
+        """Returns a future that evaluates to the result of the equality check
+        """
+        res = asyncio.Future()
+
+        if isinstance(other, (SharedIdeal)):
+            res.set_result(False)
+        elif not isinstance(other, (SharedPoint)):
+            res.set_result(False)
+        elif self.curve != other.curve:
+            res.set_result(False)
+        else:
+            opening = asyncio.gather(
+                (self.xs == other.xs).open(),
+                (self.ys == other.ys).open())
+
+            def cb(r):
+                x_equal, y_equal = r.result()
+                res.set_result(bool(x_equal) and bool(y_equal))
+
+            opening.add_done_callback(cb)
+
+        return res
+
     def neg(self):
         return SharedPoint(self.context,
                            -1 * self.xs,
                            self.ys,
                            self.curve)
 
-    async def add(self, other: 'SharedPoint') -> 'SharedPoint':
+    def add(self, other: 'SharedPoint') -> 'SharedPoint':
         if isinstance(other, SharedIdeal):
             return self
         elif not isinstance(other, SharedPoint):
@@ -95,19 +108,19 @@ class SharedPoint(object):
         # y3 = ((y1*y2) + (x1*x2)) / (1 - d*x1*x2*y1*y2)
         y3 = (y_prod + x_prod) / (one - d_prod)
 
-        return SharedPoint(self.context, await x3, await y3, self.curve)
+        return SharedPoint(self.context, x3, y3, self.curve)
 
-    async def sub(self, other: 'SharedPoint') -> 'SharedPoint':
-        return await self.add(other.neg())
+    def sub(self, other: 'SharedPoint') -> 'SharedPoint':
+        return self.add(other.neg())
 
-    async def mul(self, n: int) -> 'SharedPoint':
+    def mul(self, n: int) -> 'SharedPoint':
         # Using the Double-and-Add algorithm
         # https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
         if not isinstance(n, int):
             raise Exception("Can't scale a SharedPoint by something which isn't an int!")
 
         if n < 0:
-            return await self.neg().mul(-n)
+            return self.neg().mul(-n)
         elif n == 0:
             return SharedIdeal(self.curve)
 
@@ -117,22 +130,22 @@ class SharedPoint(object):
         i = 1
         while i <= n:
             if n & i == i:
-                product = await product.add(current)
+                product = product.add(current)
 
-            current = await current.double()
+            current = current.double()
             i <<= 1
 
         return product
 
-    async def montgomery_mul(self, n: int) -> 'SharedPoint':
+    def montgomery_mul(self, n: int) -> 'SharedPoint':
         # Using the Montgomery Ladder algorithm
         # https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
         if not isinstance(n, int):
             raise Exception("Can't scale a SharedPoint by something which isn't an int!")
 
         if n < 0:
-            negated = await self.neg()
-            return await negated.mul(-n)
+            negated = self.neg()
+            return negated.mul(-n)
         elif n == 0:
             return SharedIdeal(self.curve)
 
@@ -142,17 +155,17 @@ class SharedPoint(object):
         i = 1 << n.bit_length()
         while i > 0:
             if n & i == i:
-                product = await product.add(current)
-                current = await current.double()
+                product = product.add(current)
+                current = current.double()
             else:
-                current = await product.add(current)
-                product = await product.double()
+                current = product.add(current)
+                product = product.double()
 
             i >>= 1
 
         return product
 
-    async def double(self) -> 'SharedPoint':
+    def double(self) -> 'SharedPoint':
         # Uses the optimized implementation from wikipedia
         x_, y_ = self.xs, self.ys
         x_sq, y_sq = (x_*x_), (y_*y_)
@@ -163,7 +176,7 @@ class SharedPoint(object):
         x = (2 * x_ * y_) / x_denom
         y = (y_sq - ax_sq) / (self.context.field(2) - x_denom)
 
-        return SharedPoint(self.context, await x, await y, self.curve)
+        return SharedPoint(self.context, x, y, self.curve)
 
 
 class SharedIdeal(SharedPoint):
@@ -177,10 +190,10 @@ class SharedIdeal(SharedPoint):
     def __str__(self):
         return "SharedIdeal"
 
-    async def neg(self):
+    def neg(self):
         return self
 
-    async def add(self, other):
+    def add(self, other):
         if not isinstance(other, SharedPoint):
             raise Exception(
                 "Can't add a shared point with something which isn't a shared point")
@@ -189,7 +202,7 @@ class SharedIdeal(SharedPoint):
 
         return self
 
-    async def sub(self, other):
+    def sub(self, other):
         if not isinstance(other, SharedPoint):
             raise Exception(
                 "Can't subtract a shared point by something which isn't a shared point")
@@ -198,14 +211,40 @@ class SharedIdeal(SharedPoint):
 
         return self
 
-    async def mul(self, n):
+    def mul(self, n):
         if not isinstance(n, int):
             raise Exception("Can't scale a point by something which isn't an int!")
 
         return self
 
-    async def double(self):
+    def double(self):
         return self
+
+    def equals(self, other):
+        """ Made to return a future for consistency with SharedPoint
+        Future resolves to true if and only if the other object is
+        a SharedPoint with the same curve.
+        """
+
+        res = asyncio.Future()
+
+        if not isinstance(other, SharedIdeal):
+            res.set_result(False)
+        else:
+            res.set_result(self.curve == other.curve)
+
+        return res
+
+    def open(self):
+        """ Made to return a future for consistency with SharedPoint
+        Returns a non-shared Ideal point.
+        """
+
+        res = asyncio.Future()
+
+        res.set_result(Ideal(self.curve))
+
+        return res
 
 
 async def share_mul(context: Mpc, bs: list, p: Point) -> SharedPoint:
@@ -232,16 +271,15 @@ async def share_mul(context: Mpc, bs: list, p: Point) -> SharedPoint:
 
     terms = []
     p2i = p
-    for i in range(len(bs)):
-        x = p2i.x * bs[i]
-        y = (p2i.y - 1) * bs[i] + p.curve.Field(1)
+    for b in bs:
+        x = p2i.x * b
+        y = (p2i.y - 1) * b + p.curve.Field(1)
         terms.append(SharedPoint(context, x, y, p.curve))
         p2i = p2i.double()
 
     while len(terms) > 1:
         left_terms, right_terms = terms[::2], terms[1::2]
-        terms = await asyncio.gather(*[l.add(r) for (l, r) in
-                                     zip(left_terms, right_terms)])
+        terms = [l.add(r) for (l, r) in zip(left_terms, right_terms)]
         if len(left_terms) > len(right_terms):
             terms.append(left_terms[-1])
 
