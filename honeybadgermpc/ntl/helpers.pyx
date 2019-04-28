@@ -369,6 +369,7 @@ def fft_batch_interpolate(zs, ys_list, omega, modulus, int n):
         for i in prange(n_chunks):
             fnt_decode_step2_c(result_vec_list[i], A, Ad_evals_vec, z_vec, y_vec_list[i],
                                zz_omega, n)
+
     result = [[None] * k for _ in range(n_chunks)]
     for i in range(n_chunks):
         for j in range(k):

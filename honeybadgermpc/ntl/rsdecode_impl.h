@@ -218,7 +218,7 @@ void fnt_decode_step1(ZZ_pX &A, vec_ZZ_p &Ad_evals, vector<int>& zs,
 
     Ad_evals.SetLength(k);
     for (int i=0; i < k; i++) {
-        Ad_evals[i] = Ad_evals_all[zs[i]];
+        inv(Ad_evals[i], Ad_evals_all[zs[i]]);
     }
 }
 
@@ -230,7 +230,7 @@ void fnt_decode_step2(vec_ZZ_p &P_coeffs, ZZ_pX &A, vec_ZZ_p &Ad_evals,
     vec_ZZ_p nis;
     nis.SetLength(k);
     for (int i=0; i < k; i++) {
-        div(nis[i], ys[i], Ad_evals[i]);
+        mul(nis[i], ys[i], Ad_evals[i]);
     }
 
     // Build N
@@ -258,7 +258,7 @@ void fnt_decode_step2(vec_ZZ_p &P_coeffs, ZZ_pX &A, vec_ZZ_p &Ad_evals,
     }
 
     ZZ_pX P;
-    mul(P, Q, A);
+    MulTrunc(P, Q, A, k);
 
     VectorCopy(P_coeffs, P, k);
 }
