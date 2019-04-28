@@ -118,6 +118,8 @@ class Point(object):
     def __eq__(self, other: object) -> bool:
         if type(other) is Ideal:
             return False
+        elif self.curve != other.curve:
+            return False
 
         return (self.x, self.y) == (other.x, other.y)
 

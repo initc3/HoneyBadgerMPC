@@ -65,18 +65,17 @@ class Share(ABC):
 
         if isinstance(self.v, asyncio.Future):
             def cb1(v):
-                opening = asyncio.ensure_future(
-                    self.context.open_share(self.context.Share(v.result())))
+                # Future that will resolve to the opened share
+                opening = self.context.open_share(self.context.Share(v.result()))
                 opening.add_done_callback(lambda f: res.set_result(f.result()))
 
             self.v.add_done_callback(cb1)
         else:
-            # Wraps the open_share coroutine in a Task
-            opening = asyncio.ensure_future(self.context.open_share(self))
+            # Future that will resolve to the opened share
+            opening = self.context.open_share(self)
 
             # Make res resolve to the opened value
             opening.add_done_callback(lambda f: res.set_result(f.result()))
-
         return res
 
     # Linear combinations of shares can be computed directly
@@ -190,13 +189,8 @@ class ShareArray(ABC):
 
     def open(self):
         # TODO: make a list of GFElementFutures?
-        # res = GFElementFuture()
-        res = asyncio.Future()
 
-        opening = asyncio.create_task(self.context.open_share_array(self))
-        opening.add_done_callback(lambda f: res.set_result(f.result()))
-
-        return res
+        return self.context.open_share_array(self)
 
     def __len__(self):
         return len(self._shares)
@@ -324,3 +318,8 @@ class ShareFuture(ABC, asyncio.Future):
         return self.__binop_share(other, lambda a, b: b / a)
 
     __rtruediv__ = __rfloordiv__ = __rdiv__
+
+    def __eq__(self, other):
+        return self.__binop_share(other, lambda a, b: a == b)
+
+    __hash__ = asyncio.Future.__hash__
