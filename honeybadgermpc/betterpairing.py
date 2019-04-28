@@ -668,6 +668,9 @@ class ZR:
                 'Invalid division param. Expected ZR or int. Got '
                 + str(type(other)))
 
+    def __rtruediv__(self, other):
+        return ZR(other).__truediv__(self)
+
     def __pow__(self, other):
         if type(other) is int:
             exponend = ZR(other % (bls12_381_r-1))
@@ -717,3 +720,30 @@ class ZR:
     @staticmethod
     def one():
         return ZR(PyFr("1"))
+
+
+def lagrange_at_x(s, j, x):
+    s = sorted(s)
+    assert j in s
+    l1 = [x - jj for jj in s if jj != j]
+    l2 = [j - jj for jj in s if jj != j]
+    (num, den) = (ZR(1), ZR(1))
+    for item in l1:
+        num *= item
+    for item in l2:
+        den *= item
+    return num / den
+
+
+def interpolate_g1_at_x(coords, x, order=-1):
+    if order == -1:
+        order = len(coords)
+    xs = []
+    sortedcoords = sorted(coords, key=lambda x: x[0])
+    for coord in sortedcoords:
+        xs.append(coord[0])
+    s = set(xs[0:order])
+    out = G1.one()
+    for i in range(order):
+        out = out * (sortedcoords[i][1] ** (lagrange_at_x(s, xs[i], x)))
+    return out
