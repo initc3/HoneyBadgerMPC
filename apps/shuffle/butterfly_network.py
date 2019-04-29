@@ -77,7 +77,7 @@ async def butterfly_network_helper(ctx, **kwargs):
 
 async def _run(peers, n, t, my_id):
     async with ProcessProgramRunner(peers, n, t, my_id) as runner:
-        runner.execute(0, butterfly_network_helper, k=k)
+        runner.execute("0", butterfly_network_helper, k=k)
 
 
 if __name__ == "__main__":
