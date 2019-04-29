@@ -137,7 +137,7 @@ async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
 
     file_prefixes = [uuid.uuid4().hex for _ in range(k)]
     async with ProcessProgramRunner(network_info, n, t, node_id) as runner:
-        await runner.execute(0, all_secrets_phase1, k=k, file_prefixes=file_prefixes)
+        await runner.execute('0', all_secrets_phase1, k=k, file_prefixes=file_prefixes)
         logging.info("Phase 1 completed.")
 
         pool = TaskPool(256)
@@ -152,7 +152,7 @@ async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
         bench_logger.info(f"[Phase2] Execute CPP code for all secrets: {time() - stime}")
         logging.info("Phase 2 completed.")
 
-        power_sums = await runner.execute(1, phase3, k=k, run_id=run_id)
+        power_sums = await runner.execute('1', phase3, k=k, run_id=run_id)
 
         logging.info("Shares from C++ phase opened.")
         stime = time()

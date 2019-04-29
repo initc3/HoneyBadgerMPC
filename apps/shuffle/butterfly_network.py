@@ -1,8 +1,8 @@
 import asyncio
 import logging
 from math import log
-from honeybadgermpc.preprocessing import PreProcessedElements
-from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_done
+from honeybadgermpc.preprocessing import (
+    PreProcessedElements, wait_for_preprocessing, preprocessing_done)
 from time import time
 
 
@@ -68,10 +68,12 @@ async def butterfly_network_helper(ctx, **kwargs):
 
 async def _run(peers, n, t, my_id):
     from honeybadgermpc.ipc import ProcessProgramRunner
-    from honeybadgermpc.mixins import MixinOpName, BeaverTriple
-    mpc_config = {MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays}
+    from honeybadgermpc.progs.mixins.share_arithmetic import (
+        MixinConstants, BeaverMultiplyArrays)
+
+    mpc_config = {MixinConstants.MultiplyShareArray: BeaverMultiplyArrays()}
     async with ProcessProgramRunner(peers, n, t, my_id, mpc_config) as runner:
-        runner.execute(0, butterfly_network_helper, k=k)
+        runner.execute('0', butterfly_network_helper, k=k)
 
 
 if __name__ == "__main__":
