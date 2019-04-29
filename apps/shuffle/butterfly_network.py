@@ -1,18 +1,28 @@
 import asyncio
 import logging
 from math import log
-from honeybadgermpc.preprocessing import PreProcessedElements
-from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_done
 from time import time
+from honeybadgermpc.preprocessing import AWSPreProcessedElements
+from honeybadgermpc.ipc import ProcessProgramRunner
+
+
+async def batch_beaver(context, j, k):
+    a, b, ab = [None]*len(j._shares), [None]*len(j._shares), [None]*len(j._shares)
+    for i in range(len(j._shares)):
+        a[i], b[i], ab[i] = next(triples)
+    u, v = context.ShareArray(a), context.ShareArray(b)
+    f, g = await asyncio.gather(*[(j - u).open(), (k - v).open()])
+    xy = [d*e + d*q + e*p + pq for (p, q, pq, d, e) in zip(a, b, ab, f, g)]
+
+    return context.ShareArray(xy)
 
 
 async def batch_switch(ctx, xs, ys, n):
-    pp_elements = PreProcessedElements()
-    sbits = [pp_elements.get_one_minus_one_rand(ctx).v for _ in range(n//2)]
+    sbits = [next(one_minus_ones) for _ in range(n//2)]
     ns = [1 / ctx.field(2) for _ in range(n)]
 
     xs, ys, sbits = list(map(ctx.ShareArray, [xs, ys, sbits]))
-    ms = (await (sbits * (xs - ys)))._shares
+    ms = (await batch_beaver(ctx, sbits, (xs - ys)))._shares
 
     t1s = [n * (x + y + m).v for x, y, m, n in zip(xs._shares, ys._shares, ms, ns)]
     t2s = [n * (x + y - m).v for x, y, m, n in zip(xs._shares, ys._shares, ms, ns)]
@@ -54,8 +64,7 @@ async def iterated_butterfly_network(ctx, inputs, k):
 
 async def butterfly_network_helper(ctx, **kwargs):
     k = kwargs['k']
-    pp_elements = PreProcessedElements()
-    inputs = [pp_elements.get_rand(ctx).v for _ in range(k)]
+    inputs = [next(rands) for _ in range(k)]
     logging.info(f"[{ctx.myid}] Running permutation network.")
     shuffled = await iterated_butterfly_network(ctx, inputs, k)
     if shuffled is not None:
@@ -67,35 +76,26 @@ async def butterfly_network_helper(ctx, **kwargs):
 
 
 async def _run(peers, n, t, my_id):
-    from honeybadgermpc.ipc import ProcessProgramRunner
-    from honeybadgermpc.mixins import MixinOpName, BeaverTriple
-    mpc_config = {MixinOpName.MultiplyShareArray: BeaverTriple.multiply_share_arrays}
-    async with ProcessProgramRunner(peers, n, t, my_id, mpc_config) as runner:
+    async with ProcessProgramRunner(peers, n, t, my_id) as runner:
         runner.execute(0, butterfly_network_helper, k=k)
 
 
 if __name__ == "__main__":
     from honeybadgermpc.config import HbmpcConfig
 
-    k = int(HbmpcConfig.extras["k"])
+    k = HbmpcConfig.extras["k"]
+    seed = HbmpcConfig.extras.get("seed", 0)
 
+    pp_elements = AWSPreProcessedElements(
+        HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id, seed)
+    NUM_SWITCHES = k * int(log(k, 2)) ** 2
+    rands = iter([i for i in pp_elements.get_rand(k)])
+    one_minus_ones = iter([i for i in pp_elements.get_one_minus_one_rand(NUM_SWITCHES)])
+    triples = iter([i for i in pp_elements.get_triple(2*NUM_SWITCHES)])
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        if not HbmpcConfig.skip_preprocessing:
-            if HbmpcConfig.my_id == 0:
-                NUM_SWITCHES = k * int(log(k, 2)) ** 2
-                pp_elements = PreProcessedElements()
-                pp_elements.generate_one_minus_one_rands(
-                    NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t)
-                pp_elements.generate_triples(
-                    2 * NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t)
-                pp_elements.generate_rands(k, HbmpcConfig.N, HbmpcConfig.t)
-                preprocessing_done()
-            else:
-                loop.run_until_complete(wait_for_preprocessing())
-
         loop.run_until_complete(
             _run(HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))
     finally:

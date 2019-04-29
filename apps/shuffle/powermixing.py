@@ -1,11 +1,10 @@
 import asyncio
 import uuid
+import os
 from time import time
 from honeybadgermpc.mpc import TaskProgramRunner
-from honeybadgermpc.field import GF
-from honeybadgermpc.elliptic_curve import Subgroup
-from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
-from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_done
+from honeybadgermpc.config import HbmpcConfig
+from honeybadgermpc.preprocessing import AWSPreProcessedElements, PreProcessingConstants
 import logging
 
 
@@ -13,12 +12,10 @@ async def all_secrets_phase1(context, **kwargs):
     k, file_prefixes = kwargs['k'], kwargs['file_prefixes']
     as_, a_minus_b_shares, all_powers = [], [], []
 
-    pp_elements = PreProcessedElements()
-
     stime = time()
     for i in range(k):
-        a = pp_elements.get_rand(context)
-        powers = pp_elements.get_powers(context, i)
+        a = next(random_shares)
+        powers = next(power_shares)
         a_minus_b_shares.append(a - powers[0])
         as_.append(a)
         all_powers.append(powers)
@@ -37,11 +34,11 @@ async def all_secrets_phase1(context, **kwargs):
         file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
         with open(file_path, "w") as f:
             print(context.field.modulus, file=f)
-            print(as_[i].v.value, file=f)
+            print(as_[i].value, file=f)
             print(opened_shares[i].value, file=f)
             print(k, file=f)
             for power in all_powers[i]:
-                print(power.v.value, file=f)
+                print(power.value, file=f)
     bench_logger.info(f"[Phase1] Write shares to file: {time() - stime}")
     return as_
 
@@ -164,27 +161,20 @@ async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
 
 
 if __name__ == "__main__":
-    from honeybadgermpc.config import HbmpcConfig
 
     run_id = HbmpcConfig.extras["run_id"]
     k = int(HbmpcConfig.extras["k"])
+    seed = HbmpcConfig.extras.get("seed", 0)
 
+    os.makedirs(PreProcessingConstants.SHARED_DATA_DIR, exist_ok=True)
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
 
     try:
-        if not HbmpcConfig.skip_preprocessing:
-            # Need to keep these fixed when running on processes.
-            field = GF(Subgroup.BLS12_381)
-            a_s = [field(i) for i in range(1000+k, 1000, -1)]
-
-            pp_elements = PreProcessedElements()
-            if HbmpcConfig.my_id == 0:
-                pp_elements.generate_rands(k, HbmpcConfig.N, HbmpcConfig.t)
-                pp_elements.generate_powers(k, HbmpcConfig.N, HbmpcConfig.t, k)
-                preprocessing_done()
-            else:
-                loop.run_until_complete(wait_for_preprocessing())
+        pp_elements = AWSPreProcessedElements(
+            HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id, seed)
+        random_shares = iter([i for i in pp_elements.get_rand(k)])
+        power_shares = iter([i for i in pp_elements.get_powers(k, k)])
 
         loop.run_until_complete(
             async_mixing_in_processes(

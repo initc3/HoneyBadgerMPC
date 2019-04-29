@@ -119,8 +119,8 @@ def polynomials_over(field):
             return fft(self, omega, n)
 
         @classmethod
-        def random(cls, degree, y0=None):
-            coeffs = [field.random() for _ in range(degree+1)]
+        def random(cls, degree, y0=None, seed=None):
+            coeffs = [field.random(seed) for _ in range(degree+1)]
             if y0 is not None:
                 if type(y0) is int:
                     y0 = field(y0)

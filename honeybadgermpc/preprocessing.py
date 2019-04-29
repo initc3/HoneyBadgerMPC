@@ -2,10 +2,10 @@ import logging
 import asyncio
 import os
 from uuid import uuid4
-from random import randint
+from random import randint, Random
 from os import makedirs
 from .field import GF
-from .polynomial import polynomials_over
+from .polynomial import polynomials_over, EvalPoint
 from .ntl.helpers import vandermonde_batch_evaluate
 from .elliptic_curve import Subgroup
 
@@ -22,6 +22,87 @@ class PreProcessingConstants(object):
     ONE_MINUS_ONE_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}one_minus_one"
     DOUBLE_SHARES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}double_shares"
     READY_FILE_NAME = f"{SHARED_DATA_DIR}READY"
+
+
+class AWSPreProcessedElements(object):
+    def __init__(self, n, t, my_id, seed):
+        logging.info("USING SEED: %d", seed)
+        self.seed = seed
+        self.t = t
+        self.field = GF(Subgroup.BLS12_381)
+        self.poly = polynomials_over(self.field)
+        self.eval_point = EvalPoint(self.field, n, use_fft=True)
+        self.my_point = pow(self.eval_point.omega, my_id)
+
+    def horner(self, coefficients, x):
+        acc = 0
+        for c in reversed(coefficients):
+            acc = acc * x + c
+        return acc
+
+    def _get_rand(self):
+        while True:
+            v = self.field.random(self.seed)
+            self.seed += 1
+            random_poly = self.poly.random(self.t, v, seed=self.seed)
+            self.seed += self.t+1
+            yield self.horner(random_poly.coeffs, self.my_point)
+
+    def get_rand(self, k):
+        rands = [next(self._get_rand()) for i in range(k)]
+        return iter(rands)
+
+    def _get_one_minus_one_rand(self):
+        while True:
+            v = Random(self.seed).randint(0, 1)*2 - 1
+            self.seed += 1
+            random_poly = self.poly.random(self.t, v, seed=self.seed)
+            self.seed += self.t+1
+            yield self.horner(random_poly.coeffs, self.my_point)
+
+    def get_one_minus_one_rand(self, k):
+        one_minus_one_rands = [next(self._get_one_minus_one_rand()) for i in range(k)]
+        return iter(one_minus_one_rands)
+
+    def _get_triple(self):
+        while True:
+            a = self.field(self.seed)
+            self.seed += 1
+            random_poly_a = self.poly.random(self.t, a, seed=self.seed)
+            self.seed += self.t+1
+            b = self.field(self.seed)
+            self.seed += 1
+            random_poly_b = self.poly.random(self.t, b, seed=self.seed)
+            self.seed += self.t+1
+            ab = a*b
+            random_poly_ab = self.poly.random(self.t, ab, seed=self.seed)
+            self.seed += self.t+1
+            yield (self.horner(random_poly_a.coeffs, self.my_point),
+                   self.horner(random_poly_b.coeffs, self.my_point),
+                   self.horner(random_poly_ab.coeffs, self.my_point))
+
+    def get_triple(self, k):
+        triples = [next(self._get_triple()) for _ in range(k)]
+        return iter(triples)
+
+    def _get_powers(self, k):
+        b = self.field.random(self.seed).value
+        self.seed += 1
+        powers = [None] * k
+        powers[0] = b
+        for i in range(1, k):
+            powers[i] = powers[i-1] * b
+        while True:
+            shares = [None]*k
+            for i in range(k):
+                random_poly = self.poly.random(self.t, powers[i], seed=self.seed)
+                self.seed += self.t + 1
+                shares[i] = self.horner(random_poly.coeffs, self.my_point)
+            yield shares
+
+    def get_powers(self, k, z):
+        powers = [next(self._get_powers(k)) for _ in range(z)]
+        return iter(powers)
 
 
 class PreProcessedElements(object):

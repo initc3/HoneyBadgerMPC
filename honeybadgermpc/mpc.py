@@ -97,7 +97,7 @@ class Mpc(object):
         # Set up the buffer of received shares
         share_buffer = [self._share_buffers[i][shareid] for i in range(self.N)]
 
-        point = EvalPoint(self.field, self.N, use_fft=False)
+        point = EvalPoint(self.field, self.N, use_fft=True)
 
         # Create polynomial that reconstructs the shared value by evaluating at 0
         opening = robust_reconstruct(
@@ -130,6 +130,7 @@ class Mpc(object):
                                     _send,
                                     _recv,
                                     config=self.config.get(ConfigVars.Reconstruction),
+                                    use_fft=True,
                                     debug=True)
         self._openings[shareid] = opening
         return opening
