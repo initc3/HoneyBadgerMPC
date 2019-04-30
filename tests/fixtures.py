@@ -1,3 +1,4 @@
+from honeybadgermpc.router import SimpleRouter
 import asyncio
 import random
 from pytest import fixture
@@ -121,38 +122,31 @@ def test_preprocessing():
     return TestPreProcessing()
 
 
+class TestRouter(SimpleRouter):
+    def __init__(self, num_parties, max_delay=0.005, seed=None):
+        super().__init__(num_parties)
+
+        self.rnd = random.Random(seed)
+        self.max_delay = max_delay
+
+    def send(self, player_id: int, dest_id: int, message: object):
+        """Overridden to introduce delays.
+        """
+        delay = self.rnd.random() * self.max_delay
+        asyncio.get_event_loop().call_later(delay,
+                                            super().send,
+                                            player_id, dest_id, message)
+
+
 @fixture
 def test_router():
     def _test_router(n, maxdelay=0.005, seed=None):
         """Builds a set of connected channels, with random delay
         @return (receives, sends)
         """
-        rnd = random.Random(seed)
+        router = TestRouter(n, maxdelay, seed)
+        return router.sends, router.recvs, router.broadcasts
 
-        queues = [asyncio.Queue() for _ in range(n)]
-
-        def make_send(i):
-            def _send(j, o):
-                delay = rnd.random() * maxdelay
-                # print('SEND  %8s [%2d -> %2d]' % (o, i, j))
-                asyncio.get_event_loop().call_later(delay, queues[j].put_nowait, (i, o))
-                # queues[j].put_nowait((i, o))
-
-            def _bc(o):
-                # print('BCAST  %8s [%2d ->  *]' % (o[0], i), o[1])
-                for j in range(n):
-                    _send(j, o)
-            return _send, _bc
-
-        def make_recv(j):
-            async def _recv():
-                (i, o) = await queues[j].get()
-                # print('RECV %8s [%2d -> %2d]' % (o, i, j))
-                return (i, o)
-            return _recv
-
-        sends, bcasts = zip(*[make_send(i) for i in range(n)])
-        return (sends, [make_recv(j) for j in range(n)], bcasts)
     return _test_router
 
 
