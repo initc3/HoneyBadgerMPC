@@ -24,8 +24,7 @@ async def key_generation(context, key_length=32):
 
     # Compute [X] = [x]G, then open it as public key
     pub_key_share = await share_mul(context, priv_key, GP)
-    x, y = await asyncio.gather(pub_key_share.xs.open(), pub_key_share.ys.open())
-    pub_key = Point(x, y, Jubjub())
+    pub_key = await pub_key_share.open()
     return priv_key, pub_key
 
 
@@ -74,7 +73,7 @@ async def mimc_decrypt(context, priv_key, ciphertext):
     k_share = (await share_mul(context, priv_key, a_)).xs
 
     mpcs = await asyncio.gather(*[mimc_mpc(context, context.field(i), k_share)
-                                for i in range(len(cs))])
+                                  for i in range(len(cs))])
     decrypted = [c - m for (c, m) in zip(cs, mpcs)]
 
     return decrypted
