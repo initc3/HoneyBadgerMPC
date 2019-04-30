@@ -234,8 +234,8 @@ async def test_hbavss_batch_share_fault(test_router):
 
     # Injects one invalid share
     class BadDealer(HbAvssBatch):
-        def _get_dealer_msg(self, values):
-            fault_n = randint(1, self.n-1)
+        def _get_dealer_msg(self, values, n):
+            fault_n = randint(1, n-1)
             fault_k = randint(1, len(values)-1)
             secret_size = len(values)
             phi = [None] * secret_size
@@ -247,8 +247,8 @@ async def test_hbavss_batch_share_fault(test_router):
 
             ephemeral_secret_key = self.field.random()
             ephemeral_public_key = pow(self.g, ephemeral_secret_key)
-            dispersal_msg_list = [None] * self.n
-            for i in range(self.n):
+            dispersal_msg_list = [None] * n
+            for i in range(n):
                 shared_key = pow(self.public_keys[i], ephemeral_secret_key)
                 z = [None] * secret_size
                 for k in range(secret_size):
@@ -315,11 +315,11 @@ async def test_hbavss_batch_t_share_faults(test_router):
                 raise ex
 
     class BadDealer(HbAvssBatch):
-        def _get_dealer_msg(self, values):
+        def _get_dealer_msg(self, values, n):
             # return super(BadDealer, self)._get_dealer_msg(values)
             fault_n_list = []
             while len(fault_n_list) < self.t:
-                i = randint(1, self.n-1)
+                i = randint(1, n-1)
                 if i not in fault_n_list:
                     fault_n_list.append(i)
             secret_size = len(values)
@@ -332,8 +332,8 @@ async def test_hbavss_batch_t_share_faults(test_router):
 
             ephemeral_secret_key = self.field.random()
             ephemeral_public_key = pow(self.g, ephemeral_secret_key)
-            dispersal_msg_list = [None] * self.n
-            for i in range(self.n):
+            dispersal_msg_list = [None] * n
+            for i in range(n):
                 shared_key = pow(self.public_keys[i], ephemeral_secret_key)
                 z = [None] * secret_size
                 for k in range(secret_size):
@@ -399,8 +399,8 @@ async def test_hbavss_batch_encryption_fault(test_router):
                 raise ex
 
     class BadDealer(HbAvssBatch):
-        def _get_dealer_msg(self, values):
-            fault_n = randint(1, self.n-1)
+        def _get_dealer_msg(self, values, n):
+            fault_n = randint(1, n-1)
             secret_size = len(values)
             phi = [None] * secret_size
             commitments = [None] * secret_size
@@ -411,8 +411,8 @@ async def test_hbavss_batch_encryption_fault(test_router):
 
             ephemeral_secret_key = self.field.random()
             ephemeral_public_key = pow(self.g, ephemeral_secret_key)
-            dispersal_msg_list = [None] * self.n
-            for i in range(self.n):
+            dispersal_msg_list = [None] * n
+            for i in range(n):
                 shared_key = pow(self.public_keys[i], ephemeral_secret_key)
                 z = [None] * secret_size
                 for k in range(secret_size):
@@ -503,6 +503,45 @@ async def test_hbavss_light_client_mode(test_router):
     for item in outputs:
         shares.append(item[2])
     assert polynomials_over(ZR).interpolate_at(zip(range(1, n+1), shares)) == value
+
+
+@mark.asyncio
+async def test_hbavss_batch_client_mode(test_router):
+    t = 2
+    n = 3*t + 1
+
+    g, h, pks, sks = get_avss_params(n+1, t)
+    sends, recvs, _ = test_router(n+1)
+    crs = gen_pc_const_crs(t, g=g, h=h)
+
+    values = [ZR.random()] * (t+1)
+    avss_tasks = [None] * (n+1)
+    hbavss_list = [None] * n
+    dealer_id = n
+
+    with ExitStack() as stack:
+        client_hbavss = HbAvssBatch(
+            pks, None, crs, n, t, dealer_id, sends[dealer_id], recvs[dealer_id])
+        stack.enter_context(client_hbavss)
+        avss_tasks[n] = asyncio.create_task(
+            client_hbavss.avss(0, values=values, client_mode=True))
+        for i in range(n):
+            hbavss = HbAvssBatch(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
+            hbavss_list[i] = hbavss
+            stack.enter_context(hbavss)
+            avss_tasks[i] = asyncio.create_task(
+                hbavss.avss(0, dealer_id=dealer_id, client_mode=True))
+        shares = await asyncio.gather(*[hbavss_list[i].shares_future for i in range(n)])
+        for task in avss_tasks:
+            task.cancel()
+
+    fliped_shares = list(map(list, zip(*shares)))
+    recovered_values = []
+    for item in fliped_shares:
+        recovered_values.append(polynomials_over(
+            ZR).interpolate_at(zip(range(1, n+1), item)))
+
+    assert recovered_values == values
 
 
 @mark.asyncio
