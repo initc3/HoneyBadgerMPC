@@ -6,7 +6,7 @@ from collections import defaultdict
 from .polynomial import polynomials_over
 from .field import GF, GFElement
 from .polynomial import EvalPoint
-from .router import simple_router
+from .router import SimpleRouter
 from .program_runner import ProgramRunner
 from .robust_reconstruction import robust_reconstruct
 from .batch_reconstruction import batch_reconstruct
@@ -193,9 +193,9 @@ class TaskProgramRunner(ProgramRunner):
         self.config = config
         self.tasks = []
         self.loop = asyncio.get_event_loop()
+        self.router = SimpleRouter(self.N)
 
     def add(self, program, **kwargs):
-        sends, recvs = simple_router(self.N)
         for i in range(self.N):
             context = Mpc(
                 'sid',
@@ -203,8 +203,8 @@ class TaskProgramRunner(ProgramRunner):
                 self.t,
                 i,
                 self.pid,
-                sends[i],
-                recvs[i],
+                self.router.sends[i],
+                self.router.recvs[i],
                 program,
                 self.config,
                 **kwargs,
