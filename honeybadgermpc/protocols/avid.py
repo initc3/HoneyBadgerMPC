@@ -189,32 +189,16 @@ class AVID:
                 if sender in echo_set:
                     logger.warning("[%d] Redundant ECHO", pid)
                     continue
-
                 # Update
                 echo_set.add(sender)
-
-                if len(echo_set) >= echo_threshold and not ready_sent:
-                    ready_sent = True
-                    self.broadcast((sid, AVIDMessageType.READY))
 
             elif msg[1] == AVIDMessageType.READY:
                 # Validation
                 if sender in ready_set:
                     logger.warning("[%d] Redundant READY", pid)
                     continue
-
                 # Update
                 ready_set.add(sender)
-
-                # Amplify ready messages
-                if len(ready_set) >= ready_threshold and not ready_sent:
-                    ready_sent = True
-                    self.broadcast((sid, AVIDMessageType.READY))
-
-                if len(ready_set) >= output_threshold and len(echo_set) >= k:
-                    # update ok future indicating ready for retrieve
-                    if not self.ok_future.done():
-                        self.ok_future.set_result(True)
 
             elif msg[1] == AVIDMessageType.RETRIEVE:
                 _, _, index = msg
@@ -225,3 +209,17 @@ class AVID:
             elif msg[1] == AVIDMessageType.RESPONSE:
                 # put in the queue for retrieve
                 self.retrieval_queue.put_nowait((sender, msg))
+
+            if len(echo_set) >= echo_threshold and not ready_sent:
+                ready_sent = True
+                self.broadcast((sid, AVIDMessageType.READY))
+
+            # Amplify ready messages
+            if len(ready_set) >= ready_threshold and not ready_sent:
+                ready_sent = True
+                self.broadcast((sid, AVIDMessageType.READY))
+
+            if len(ready_set) >= output_threshold and len(echo_set) >= k:
+                # update ok future indicating ready for retrieve
+                if not self.ok_future.done():
+                    self.ok_future.set_result(True)

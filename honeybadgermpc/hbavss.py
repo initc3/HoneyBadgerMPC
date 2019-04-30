@@ -73,7 +73,7 @@ class HbAvssLight():
         except Exception:  # TODO: specific exception
             return True
         return not self.poly_commit.verify_eval(
-                commitment, j+1, j_share, j_aux)
+            commitment, j+1, j_share, j_aux)
 
     async def _process_avss_msg(self, avss_id, dealer_id, avss_msg):
         tag = f"{dealer_id}-{avss_id}-AVSS"
@@ -303,7 +303,7 @@ class HbAvssBatch():
         except Exception:
             return True
         return not self.poly_commit.verify_eval(
-                commitments[j_k], j+1, j_share, j_aux, j_witnesses)
+            commitments[j_k], j+1, j_share, j_aux, j_witnesses)
 
     async def _process_avss_msg(self, avss_id, dealer_id, rbc_msg, avid):
         tag = f"{dealer_id}-{avss_id}-B-AVSS"
@@ -443,7 +443,7 @@ class HbAvssBatch():
                 if all_shares_valid and not self.shares_future.done():
                     self.shares_future.set_result(shares)
 
-    def _get_dealer_msg(self, values):
+    def _get_dealer_msg(self, values, n):
         # Sample a random degree-(t,t) bivariate polynomial φ(·,·)
         # such that each φ(0,k) = sk and φ(i,k) is Pi’s share of sk
         secret_size = len(values)
@@ -461,8 +461,8 @@ class HbAvssBatch():
         # for each party Pi and each k ∈ [t+1]
         #   1. w[i][k] <- CreateWitnesss(Ck,auxk,i)
         #   2. z[i][k] <- EncPKi(φ(i,k), w[i][k])
-        dispersal_msg_list = [None] * self.n
-        for i in range(self.n):
+        dispersal_msg_list = [None] * n
+        for i in range(n):
             shared_key = pow(self.public_keys[i], ephemeral_secret_key)
             z = [None] * secret_size
             for k in range(secret_size):
@@ -495,15 +495,15 @@ class HbAvssBatch():
         logger.debug("[%d] Starting Batch AVSS. Id: %s, Dealer Id: %d, Client Mode: %s",
                      self.my_id, avss_id, dealer_id, client_mode)
 
+        # In the client_mode, the dealer is the last node
+        n = self.n if not client_mode else self.n+1
+
         broadcast_msg = None
         dispersal_msg_list = None
         if self.my_id == dealer_id:
             # broadcast_msg: phi & public key for reliable broadcast
             # dispersal_msg_list: the list of payload z
-            broadcast_msg, dispersal_msg_list = self._get_dealer_msg(values)
-
-        # In the client_mode, the dealer is the last node
-        n = self.n if not client_mode else self.n+1
+            broadcast_msg, dispersal_msg_list = self._get_dealer_msg(values, n)
 
         tag = f"{dealer_id}-{avss_id}-B-AVID"
         send, recv = self.get_send(tag), self.subscribe_recv(tag)
