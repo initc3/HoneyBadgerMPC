@@ -1,3 +1,4 @@
+from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.router import SimpleRouter
 import asyncio
 import random
@@ -150,24 +151,51 @@ def test_router():
     return _test_router
 
 
-@fixture()
+def _preprocess(test_preprocessing, n, t, k, to_generate):
+    for kind in to_generate:
+        test_preprocessing.generate(kind, n, t, k=k)
+
+
+def _build_config(mixins=[]):
+    config = {}
+
+    for mixin in mixins:
+        if mixin.name in config:
+            raise ValueError(f"Multiple mixins with name {mixin.name} loaded!")
+
+        config[mixin.name] = mixin
+
+    return config
+
+
+@fixture
 def test_runner(test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
+    async def _test_runner(prog, n=4, t=1, to_generate=[], k=1000, mixins=[]):
+        _preprocess(test_preprocessing, n, t, k, to_generate)
 
-    async def _test_runner(prog, n=3, t=1, to_generate=[], k=1000, mixins=[]):
-        for to_gen in to_generate:
-            test_preprocessing.generate(to_gen, n, t, k=k)
-
-        config = {}
-        for mixin in mixins:
-            if mixin.name in config:
-                raise ValueError(f"Multiple mixins with name {mixin.name} loaded!")
-
-            config[mixin.name] = mixin
-
+        config = _build_config(mixins)
         program_runner = TaskProgramRunner(n, t, config)
         program_runner.add(prog)
 
         return await program_runner.join()
 
     return _test_runner
+
+
+@fixture
+def benchmark_runner(benchmark, test_preprocessing):
+    def _benchmark_runner(prog, n=4, t=1, to_generate=[], k=1000, mixins=[]):
+
+        _preprocess(test_preprocessing, n, t, k, to_generate)
+
+        config = _build_config(mixins)
+        program_runner = TaskProgramRunner(n, t, config)
+        program_runner.add(prog)
+        loop = asyncio.get_event_loop()
+
+        def _work():
+            loop.run_until_complete(program_runner.join())
+
+        benchmark(_work)
+
+    return _benchmark_runner

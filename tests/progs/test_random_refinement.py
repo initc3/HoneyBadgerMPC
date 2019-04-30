@@ -1,4 +1,4 @@
-from progs.random_refinement import refine_randoms
+from honeybadgermpc.progs.random_refinement import refine_randoms
 from honeybadgermpc.polynomial import get_omega
 from pytest import mark
 
