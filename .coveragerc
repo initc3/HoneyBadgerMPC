@@ -5,6 +5,7 @@ source =
 omit = 
     tests/*
     docs/* 
+    benchmarks/*
     setup.py
     *__init__.py*
 branch = True
