@@ -3,7 +3,8 @@ from asyncio import gather
 from random import randint
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
-    DivideShareArrays, Equality, DoubleSharingMultiply, DoubleSharingMultiplyArrays)
+    DivideShareArrays, DoubleSharingMultiply, DoubleSharingMultiplyArrays)
+from honeybadgermpc.progs.mixins.share_comparison import Equality
 
 STANDARD_ARITHMETIC_MIXINS = [
     BeaverMultiply(),
@@ -182,24 +183,6 @@ async def test_batch_beaver_multiply(test_preprocessing, test_runner):
         pq_actual = await (await (p*q)).open()
         for xy, x, y in zip(pq_actual, p_f, q_f):
             assert xy == x*y
-
-    results = await run_test_program(_prog, test_runner)
-    assert len(results) == n
-
-
-@mark.asyncio
-async def test_equality(test_preprocessing, galois_field, test_runner):
-    equality = Equality()
-
-    async def _prog(context):
-        share0 = test_preprocessing.elements.get_zero(context)
-        share1 = test_preprocessing.elements.get_rand(context)
-        share1_ = share0 + share1
-        share2 = test_preprocessing.elements.get_rand(context)
-
-        assert await (await equality(context, share1, share1_)).open()
-        assert await (share1 == share1_).open()
-        assert not await (share1 == share2).open()
 
     results = await run_test_program(_prog, test_runner)
     assert len(results) == n

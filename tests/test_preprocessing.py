@@ -1,5 +1,6 @@
 from pytest import mark
 from honeybadgermpc.mpc import TaskProgramRunner
+import asyncio
 
 
 @mark.asyncio
@@ -134,6 +135,23 @@ async def test_get_double_share(test_preprocessing):
         await r_t_sh.open()
         await r_2t_sh.open()
         assert await r_t_sh.open() == await r_2t_sh.open()
+
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    await program_runner.join()
+
+
+@mark.asyncio
+async def test_get_share_bits(test_preprocessing):
+    n, t, = 4, 1
+    test_preprocessing.generate("share_bits", n, t, k=1)
+
+    async def _prog(ctx):
+        share, bits = test_preprocessing.elements.get_share_bits(ctx)
+        opened_share = await share.open()
+        opened_bits = await asyncio.gather(*[b.open() for b in bits])
+        bit_value = int(''.join([str(b.value) for b in reversed(opened_bits)]), 2)
+        assert bit_value == opened_share.value
 
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(_prog)

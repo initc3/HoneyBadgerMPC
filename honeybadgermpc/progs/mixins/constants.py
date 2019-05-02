@@ -5,6 +5,7 @@ class MixinConstants(object):
     InvertShare = 'invert_share'
     DivideShare = 'divide_share'
     ShareEquality = 'share_equality'
+    ShareLessThan = 'share_less_than'
 
     MultiplyShareArray = 'multiply_share_array'
     InvertShareArray = 'invert_share_array'
