@@ -93,7 +93,8 @@ class TestPreProcessing():
             "bits",
             "oneminusone",
             "double_shares",
-            "powers"
+            "powers",
+            "share_bits"
         ]:
             if (kind, n, t) in self.cache:
                 return
@@ -114,6 +115,8 @@ class TestPreProcessing():
                 self.elements.generate_double_shares(k, n, t)
             elif kind == "powers":
                 self.elements.generate_powers(arg1, n, t, arg2)
+            elif kind == "share_bits":
+                self.elements.generate_share_bits(k, n, t)
         elif kind == "share":
             return self.elements.generate_share(arg1, n, t)
 

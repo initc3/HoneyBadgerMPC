@@ -164,6 +164,17 @@ class Share(ABC):
 
         return res
 
+    def __lt__(self, other):
+        if not isinstance(other, self.context.Share):
+            return NotImplemented
+
+        res = self.context.ShareFuture()
+
+        lt = self.context.call_mixin(MixinConstants.ShareLessThan, self, other)
+        lt.add_done_callback(lambda r: res.set_result(r.result()))
+
+        return res
+
     def __str__(self):
         return '{%d}' % (self.v)
 
@@ -374,5 +385,8 @@ class ShareFuture(ABC, asyncio.Future):
 
     def __eq__(self, other):
         return self.__binop_share(other, lambda a, b: a == b)
+
+    def __lt__(self, other):
+        return self.__binop_share(other, lambda a, b: a < b)
 
     __hash__ = asyncio.Future.__hash__

@@ -22,17 +22,20 @@ class PreProcessingConstants(object):
     ONE_MINUS_ONE_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}one_minus_one"
     DOUBLE_SHARES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}double_shares"
     READY_FILE_NAME = f"{SHARED_DATA_DIR}READY"
+    SHARE_BITS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}share_bits"
 
 
 class PreProcessedElements(object):
     def __init__(self):
         self.field = GF(Subgroup.BLS12_381)
         self.poly = polynomials_over(self.field)
+        self._bit_length = self.field.modulus.bit_length()
         self._triples = {}
         self._cubes = {}
         self._zeros = {}
         self._rands = {}
         self._bits = {}
+        self._share_bits = {}
         self._one_minus_one_rands = {}
         self._double_shares = {}
 
@@ -50,10 +53,42 @@ class PreProcessedElements(object):
             # remaining lines: shared values
             return [int(line) for line in lines]
 
+    def _read_share_bit_values_from_file(self, file_name):
+        """ Given a file written using _write_share_bits_to_file, read the
+        file and return a list of tuples of shares with a list of their bit-sharings.
+
+        args:
+            file_name (str): filename to read from
+
+        output:
+            Returns a list of tuples, where the first element of each tuple is
+            the value of a share, and the second element is a list of values of
+            the shares that compose the bitwise sharing of the share.
+            Note: bits are given LSB first
+        """
+        values = self._read_share_values_from_file(file_name)
+        assert len(values) % (self._bit_length + 1) == 0
+
+        stride = self._bit_length + 1
+        share_bits = [(values[i * stride], values[i * stride + 1: (i+1) * stride])
+                      for i in range(len(values) // stride)]
+
+        return share_bits
+
     def _write_shares_to_file(self, f, degree, myid, shares):
+        """ Given a list of field elements representing shares,
+        write their values to file f.
+
+        args:
+            f (file): file to write shares to
+            degree (int): degree of polynomial used to generate shares
+            myid (int): id the shares belong to
+            shares (list): list of GFElements representing share values
+        """
         content = f"{self.field.modulus}\n{degree}\n{myid}\n"
         for share in shares:
             content += f"{share.value}\n"
+
         f.write(content)
 
     def _write_polys(self, file_name_prefix, n, t, polys):
@@ -62,6 +97,7 @@ class PreProcessedElements(object):
             list(range(1, n+1)), polys, self.field.modulus)
         for i in range(n):
             shares = [self.field(s[i]) for s in all_shares]
+            # with open(f'{file_name_prefix}_{n}_{t}_{i}.share', 'w') as f:
             with open('%s_%d_%d-%d.share' % (file_name_prefix, n, t, i), 'w') as f:
                 self._write_shares_to_file(f, t, i, shares)
 
@@ -146,6 +182,28 @@ class PreProcessedElements(object):
             f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}_{sid}", n, t, polys)
         return sid
 
+    def generate_share_bits(self, k, n, t):
+        """ Generates random shares, alongside their bitwise sharings.
+
+        args:
+            k (int): number of shares to generate
+            n (int): number of parties to generate shares for
+            t (int): degree of polynomial to use when generating shares
+        """
+        self._create_sharedata_dir_if_not_exists()
+        polys = []
+        for _ in range(k):
+            r = self.field.random()
+            r_bits = [self.field(b) for b in map(
+                int, reversed(f'{{0:0{self._bit_length}b}}'.format(r.value)))]
+
+            polys.append(self.poly.random(t, r))
+            for b in r_bits:
+                polys.append(self.poly.random(t, b))
+
+        self._write_polys(
+            PreProcessingConstants.SHARE_BITS_FILE_NAME_PREFIX, n, t, polys)
+
     def get_triple(self, ctx):
         key = (ctx.myid, ctx.N, ctx.t)
         if key not in self._triples:
@@ -224,6 +282,19 @@ class PreProcessedElements(object):
         r_t = ctx.Share(next(self._double_shares[key]))
         r_2t = ctx.Share(next(self._double_shares[key]), 2*ctx.t)
         return r_t, r_2t
+
+    def get_share_bits(self, ctx):
+        key = (ctx.myid, ctx.N, ctx.t)
+        if key not in self._share_bits:
+            suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
+            path = f"{PreProcessingConstants.SHARE_BITS_FILE_NAME_PREFIX}{suffix}"
+            self._share_bits[key] = iter(self._read_share_bit_values_from_file(path))
+
+        share_val, bit_vals = next(self._share_bits[key])
+        share = ctx.Share(share_val)
+        bits = [ctx.Share(val) for val in bit_vals]
+
+        return share, bits
 
 
 async def wait_for_preprocessing():
