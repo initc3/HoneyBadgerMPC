@@ -56,6 +56,18 @@ def test_interp_extrap(galois_field, polynomial):
         assert a == b
 
 
+def test_interp_extrap_cpp(galois_field, polynomial):
+    d = randint(210, 300)
+    y = [galois_field.random().value for i in range(d)]
+    n = len(y)
+    n = n if n & n-1 == 0 else 2**n.bit_length()
+    ys = y + [0] * (n - len(y))
+    omega = get_omega(galois_field, 2*n)
+    values = polynomial.interp_extrap_cpp(ys, omega)
+    for a, b in zip(ys, values[0:201:2]):  # verify only 100 points
+        assert a == b
+
+
 def test_fft_decode(galois_field, polynomial):
     d = randint(210, 300)
     coeffs = [galois_field.random().value for i in range(d)]

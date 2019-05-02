@@ -1,6 +1,7 @@
 from pytest import mark
 from honeybadgermpc.mpc import TaskProgramRunner
-from honeybadgermpc.mixins import MixinOpName, BeaverTriple
+from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiply
+from honeybadgermpc.progs.mixins.constants import MixinConstants
 import asyncio
 
 
@@ -51,6 +52,6 @@ async def test_open_future_shares(test_preprocessing):
         assert await wrapped_final_prod_2.open() == await final_prod_2.open()
 
     program_runner = TaskProgramRunner(n, t, {
-        MixinOpName.MultiplyShare: BeaverTriple.multiply_shares})
+        MixinConstants.MultiplyShare: BeaverMultiply()})
     program_runner.add(_prog)
     await program_runner.join()

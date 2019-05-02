@@ -1,11 +1,14 @@
-import operator
-import random
 import logging
+import operator
 from functools import reduce
-from .field import GF, GFElement
 from itertools import zip_longest
+
+from honeybadgermpc.ntl.helpers import fft as fft_cpp
+from honeybadgermpc.ntl.helpers import fft_interpolate as fft_interpolate_cpp
+
 from .betterpairing import ZR
 from .elliptic_curve import Subgroup
+from .field import GF, GFElement
 
 
 def strip_trailing_zeros(a):
@@ -145,6 +148,26 @@ def polynomials_over(field):
 
             return xs2
 
+        @classmethod
+        def interp_extrap_cpp(cls, xs, omega):
+            """
+            Interpolates the polynomial based on the even points omega^2i
+            then evaluates at all points omega^i using C++ FFT routines.
+            """
+            n = len(xs)
+            assert n & (n-1) == 0, "n must be power of 2"
+            assert pow(omega, 2*n) == 1, "omega must be 2n'th root of unity"
+            assert pow(omega, n) != 1, "omega must be primitive 2n'th root of unity"
+            p = omega.modulus
+
+            # Interpolate the polynomial up to degree n
+            poly = fft_interpolate_cpp(list(range(n)), xs, (pow(omega, 2)).value, p, n)
+
+            # Evaluate the polynomial
+            xs2 = fft_cpp(poly, omega.value, p, 2*n)
+
+            return xs2
+
         # the valuation only gives 0 to the zero polynomial, i.e. 1+degree
         def __abs__(self): return len(self.coeffs)
 
@@ -220,9 +243,7 @@ def get_omega(field, n, seed=None):
     This only makes sense if n is a power of 2!
     """
     assert n & n-1 == 0, "n must be a power of 2"
-    if seed is not None:
-        random.seed(seed)
-    x = field.random()
+    x = field.random(seed)
     y = pow(x, (field.modulus-1)//n)
     if y == 1 or pow(y, n//2) == 1:
         return get_omega(field, n)
@@ -255,7 +276,7 @@ def fft_helper(a, omega, field):
     return a_bar
 
 
-def fft(poly, omega, n, seed=None):
+def fft(poly, omega, n):
     assert n & n-1 == 0, "n must be a power of 2"
     assert len(poly.coeffs) <= n
     assert pow(omega, n) == 1

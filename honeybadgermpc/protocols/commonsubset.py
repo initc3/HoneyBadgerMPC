@@ -153,29 +153,27 @@ async def run_common_subset(sid, pbk, pvk, n, f, nodeid, send, recv, value):
 async def run_common_subset_in_processes(config, pbk, pvk, n, f, nodeid):
     sid = 'sidA'
 
-    program_runner = ProcessProgramRunner(config, n, f, nodeid)
-    await program_runner.start()
+    async with ProcessProgramRunner(config, n, f, nodeid) as program_runner:
+        send, recv = program_runner.get_send_recv(sid)
 
-    send, recv = program_runner.get_send_and_recv(sid)
+        def bcast(o):
+            for i in range(n):
+                send(i, o)
 
-    def bcast(o):
-        for i in range(n):
-            send(i, o)
+        input_q = asyncio.Queue(1)
 
-    input_q = asyncio.Queue(1)
+        create_acs_task = asyncio.create_task(
+            make_commonsubset(
+                sid, nodeid, n, f, pbk, pvk, input_q.get, send, recv, bcast))
 
-    create_acs_task = asyncio.create_task(
-        make_commonsubset(sid, nodeid, n, f, pbk, pvk, input_q.get, send, recv, bcast))
+        await input_q.put('<[ACS Input %d]>' % nodeid)
+        acs, recv_tasks, work_tasks = await create_acs_task
+        acs_output = await acs
+        await asyncio.gather(*work_tasks)
+        for task in recv_tasks:
+            task.cancel()
 
-    await input_q.put('<[ACS Input %d]>' % nodeid)
-    acs, recv_tasks, work_tasks = await create_acs_task
-    acs_output = await acs
-    await asyncio.gather(*work_tasks)
-    for task in recv_tasks:
-        task.cancel()
-
-    logging.info(f"OUTPUT: {acs_output}")
-    await program_runner.close()
+        logging.info(f"OUTPUT: {acs_output}")
 
 
 if __name__ == "__main__":

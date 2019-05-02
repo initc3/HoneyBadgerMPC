@@ -4,9 +4,64 @@
 #include <NTL/vec_ZZ_p.h>
 #include <vector>
 #include <iostream>
+#include <map>
+#include <omp.h>
 
 using namespace NTL;
 using namespace std;
+
+// Threshold to decide when to use Vandermonde in _fft
+// Determined experimentally based on minimising time taken by fft
+#define FFT_VAN_THRESHOLD 16
+
+map <pair<int, ZZ>, mat_ZZ_p> _fft_van_matrices;
+ZZ _fft_van_modulus;
+mutex _interp_mutex;
+
+
+void set_vm_matrix(mat_ZZ_p &result, vec_ZZ_p &x_list, int d)
+{
+    int n = x_list.length();
+
+    result.SetDims(n, d);
+    for (int i=0; i < n; i++) {
+        ZZ_p x(1);
+        ZZ_p x_here = x_list[i];
+        for (int j=0; j < d; j++) {
+            result[i][j] = x;
+            x = x * x_here;
+        }
+    }
+}
+
+void _set_fft_vandermonde_matrix(ZZ_p omega, int n)
+{
+    vec_ZZ_p x;
+    x.SetLength(n);
+    set(x[0]);
+    for (int i=1; i < n; i++) {
+        mul(x[i], x[i-1], omega);
+    }
+    mat_ZZ_p interpolator;
+    set_vm_matrix(interpolator, x, n);
+
+    _fft_van_matrices.emplace(make_pair(make_pair(n, rep(omega)), interpolator));
+}
+
+mat_ZZ_p& get_fft_vandermonde_matrix(ZZ_p omega, int n)
+{
+    lock_guard<mutex> lock(_interp_mutex);
+    if (ZZ_p::modulus() != _fft_van_modulus) {
+        _fft_van_modulus = ZZ_p::modulus();
+        _fft_van_matrices.clear();
+    }
+
+    if (_fft_van_matrices.find(make_pair(n, rep(omega))) == _fft_van_matrices.end()) {
+        _set_fft_vandermonde_matrix(omega, n);
+    }
+
+    return (_fft_van_matrices.find(make_pair(n, rep(omega))))->second;
+}
 
 void interpolate(vector<ZZ> &result, vector<ZZ> &x, vector<ZZ> &y, ZZ &modulus)
 {
@@ -65,76 +120,74 @@ bool vandermonde_inverse(mat_ZZ_p &result, vector<ZZ> &x, ZZ &modulus)
     return !IsZero(det);
 }
 
-void set_vm_matrix(mat_ZZ_p &result, vec_ZZ_p &x_list, int d, ZZ &modulus)
-{
-    ZZ_p::init(modulus);
-    int n = x_list.length();
 
-    result.SetDims(n, d);
-    for (int i=0; i < n; i++) {
-        ZZ_p x(1);
-        ZZ_p x_here = x_list[i];
-        for (int j=0; j < d; j++) {
-            result[i][j] = x;
-            x = x * x_here;
-        }
-    }
-}
+void _fft(vec_ZZ_p &a, ZZ_p omega, int n, int m=-1,
+          mat_ZZ_p *van_matrix=NULL, int van_threshold=-1) {
+    m = (m == -1) ? n : m;
 
-void _fft(ZZ_p *a, ZZ_p *tmp, ZZ_p omega, int n) {
     if (n == 1) {
         return;
     }
 
-    for (int i=0; i < n; i++) {
-        tmp[i] = a[i];
+    if (van_matrix != NULL && van_threshold == n) {
+        mul(a, *van_matrix, a);
+        return;
     }
 
-    ZZ_p *a0 = a, *a1 = a + n / 2;
+    vec_ZZ_p a0, a1;
+    a0.SetLength(n / 2);
+    a1.SetLength(n / 2);
+
     for (int k=0; k < n / 2; k++) {
-        a0[k] = tmp[2 * k];
-        a1[k] = tmp[2 * k + 1];
+        a0[k] = a[2 * k];
+        a1[k] = a[2 * k + 1];
     }
 
-    ZZ_p omega2 = omega * omega;
+    ZZ_p omega2;
+    mul(omega2, omega, omega);
 
-    _fft(a0, tmp, omega2, n / 2);
-    _fft(a1, tmp + n / 2, omega2, n / 2);
+    _fft(a0, omega2, n / 2, m, van_matrix, van_threshold);
+    _fft(a1, omega2, n / 2, m, van_matrix, van_threshold);
 
-    for (int i=0; i < n; i++) {
-        tmp[i] = a[i];
-    }
+    ZZ_p w;
+    set(w);
 
-    ZZ_p w(1);
-    ZZ_p *t0 = tmp, *t1 = tmp + n / 2;
+    int lim = (m + 1) / 2;
+    ZZ_p t2;
 
     for (unsigned int k=0; k < n / 2; k++) {
-        a[k] = t0[k] +  w * t1[k];
-        a[k + n / 2] = t0[k] - w * t1[k];
-        w = w * omega;
+        mul(t2, w, a1[k]);
+        if (k < m) {
+            add(a[k], a0[k], t2);
+        }
+        if (k + n / 2 < m) {
+            sub(a[k + n / 2], a0[k], t2);
+        }
+        mul(w, w, omega);
     }
 }
 
-void fft(vec_ZZ_p &result, vec_ZZ_p &coeffs, ZZ_p &omega, int n) {
-    ZZ_p *a = new ZZ_p[n];
-    ZZ_p *tmp = new ZZ_p[n];
-
+void fft(vec_ZZ_p &a, vec_ZZ_p &coeffs, ZZ_p &omega, int n, int k=-1) {
+    a.SetLength(n);
     for (unsigned int i=0; i < coeffs.length() && i < n; i++) {
         a[i] = coeffs[i];
     }
     for (int i=coeffs.length(); i < n; i++) {
-        a[i] = ZZ_p(0);
+        clear(a[i]);
     }
 
-    _fft(a, tmp, omega, n);
-
-    result.SetLength(n);
-    for (int i=0; i < n; i++) {
-        result[i] = a[i];
+    mat_ZZ_p *van_matrix=NULL;
+    int van_threshold = FFT_VAN_THRESHOLD;
+    if (n >= van_threshold) {
+        ZZ_p omega_pow;
+        power(omega_pow, omega, n / van_threshold);
+        van_matrix = &get_fft_vandermonde_matrix(omega_pow, van_threshold);
     }
 
-    delete[] tmp;
-    delete[] a;
+    _fft(a, omega, n, k, van_matrix, van_threshold);
+    if (k != -1) {
+        a.SetLength(k);
+    }
 }
 
 void fnt_decode_step1(ZZ_pX &A, vec_ZZ_p &Ad_evals, vector<int>& zs,
@@ -165,7 +218,7 @@ void fnt_decode_step1(ZZ_pX &A, vec_ZZ_p &Ad_evals, vector<int>& zs,
 
     Ad_evals.SetLength(k);
     for (int i=0; i < k; i++) {
-        Ad_evals[i] = Ad_evals_all[zs[i]];
+        inv(Ad_evals[i], Ad_evals_all[zs[i]]);
     }
 }
 
@@ -177,37 +230,37 @@ void fnt_decode_step2(vec_ZZ_p &P_coeffs, ZZ_pX &A, vec_ZZ_p &Ad_evals,
     vec_ZZ_p nis;
     nis.SetLength(k);
     for (int i=0; i < k; i++) {
-        div(nis[i], ys[i], Ad_evals[i]);
+        mul(nis[i], ys[i], Ad_evals[i]);
     }
 
     // Build N
     vec_ZZ_p N_coeffs;
     N_coeffs.SetLength(n);
     for (int i=0; i < n; i++) {
-       N_coeffs[i] = 0;
+       clear(N_coeffs[i]);
     }
 
     for (int i=0; i < k; i++) {
-        N_coeffs[zs[i]] = nis[i];
+        swap(N_coeffs[zs[i]], nis[i]);
     }
 
     // Build Q = P / A
     vec_ZZ_p N_rev_evals;
-    fft(N_rev_evals, N_coeffs, omega, n);
+    ZZ_p omega_inv;
+    inv(omega_inv, omega);
+
+    fft(N_rev_evals, N_coeffs, omega_inv, n, (k < n) ? k + 1: n);
 
     ZZ_pX Q;
-    Q.SetMaxLength(n);
-    for (int i=0; i < n; i++) {
-        SetCoeff(Q, i, -N_rev_evals[n - i - 1]);
+    Q.SetMaxLength(k);
+    for (int i=0; i < k; i++) {
+        SetCoeff(Q, i, -N_rev_evals[(i + 1) % n]);
     }
 
     ZZ_pX P;
-    mul(P, Q, A);
+    MulTrunc(P, Q, A, k);
 
-    P_coeffs.SetLength(k);
-    for (int i=0; i < k; i++) {
-        P_coeffs[i] = coeff(P, i);
-    }
+    VectorCopy(P_coeffs, P, k);
 }
 
 // This combines fnt_decode steps 1 and step 2

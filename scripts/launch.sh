@@ -30,7 +30,7 @@ CMD="python -m ${MODULE_PATH}"
 echo ">>> Command to be executed: '${CMD}'"
 
 set -x
-rm -f sharedata/READY # NOTE: see preprocessing.py wait_for_preprocessing
+rm -rf sharedata/
 tmux new-session     "${CMD} -d -f ${CONFIG_PATH}.0.json; sh" \; \
      splitw -h -p 50 "${CMD} -d -f ${CONFIG_PATH}.1.json; sh" \; \
      splitw -v -p 50 "${CMD} -d -f ${CONFIG_PATH}.2.json; sh" \; \
