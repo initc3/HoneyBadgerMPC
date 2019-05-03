@@ -24,3 +24,15 @@ class PolyCommitLin(object):
             lhs *= pow(cs[j], pow(i, j))
         rhs = pow(self.g, phi_at_i) * pow(self.h, witness)
         return lhs == rhs
+
+    # TODO: Explore ways to do this faster
+    def batch_verify_eval(self, commits, i, shares, witnesses):
+        assert len(commits) == len(shares) and len(commits) == len(witnesses)
+        for j in range(len(commits)):
+            if not self.verify_eval(commits[j], i, shares[j], witnesses[j]):
+                return False
+        return True
+
+    def preprocess(self, level=4):
+        self.g.preprocess(level)
+        self.h.preprocess(level)
