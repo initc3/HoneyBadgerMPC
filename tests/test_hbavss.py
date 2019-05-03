@@ -22,6 +22,12 @@ def get_avss_params(n, t):
 
 @mark.asyncio
 async def test_hbavss_light(test_router):
+    def callback(future):
+        if future.done():
+            ex = future.exception()
+            if ex is not None:
+                print('\nException:', ex)
+                raise ex
     t = 2
     n = 3*t + 1
 
@@ -43,6 +49,7 @@ async def test_hbavss_light(test_router):
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=value))
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
+            avss_tasks[i].add_done_callback(callback)
         # shares = await asyncio.gather(*avss_tasks)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
@@ -77,12 +84,12 @@ async def test_hbavss_light_share_fault(test_router):
                 shared_key = pow(self.public_keys[i], ephemeral_secret_key)
                 if i == fault_i:
                     z[i] = SymmetricCrypto.encrypt(
-                        str(shared_key).encode(), (ZR.random(), witness))
+                        str(shared_key).encode(), ([ZR.random()], [witness]))
                 else:
                     z[i] = SymmetricCrypto.encrypt(
-                        str(shared_key).encode(), (phi(i+1), witness))
+                        str(shared_key).encode(), ([phi(i+1)], [witness]))
 
-            return dumps((commitment, ephemeral_public_key, z))
+            return dumps(([commitment], ephemeral_public_key, z))
 
     t = 2
     n = 3*t + 1
@@ -143,12 +150,12 @@ async def test_hbavss_light_encryption_fault(test_router):
                 shared_key = pow(self.public_keys[i], ephemeral_secret_key)
                 if i == fault_i:
                     z[i] = SymmetricCrypto.encrypt(
-                        str(ZR.random()).encode(), (phi(i+1), witness))
+                        str(ZR.random()).encode(), ([phi(i+1)], [witness]))
                 else:
                     z[i] = SymmetricCrypto.encrypt(
-                        str(shared_key).encode(), (phi(i+1), witness))
+                        str(shared_key).encode(), ([phi(i+1)], [witness]))
 
-            return dumps((commitment, ephemeral_public_key, z))
+            return dumps(([commitment], ephemeral_public_key, z))
 
     t = 2
     n = 3*t + 1
@@ -184,6 +191,130 @@ async def test_hbavss_light_encryption_fault(test_router):
     for item in outputs:
         shares.append(item[2])
     assert polynomials_over(ZR).interpolate_at(zip(range(1, n+1), shares)) == value
+
+
+@mark.asyncio
+async def test_hbavss_light_batch(test_router):
+    def callback(future):
+        if future.done():
+            ex = future.exception()
+            if ex is not None:
+                print('\nException:', ex)
+                raise ex
+    t = 2
+    n = 3*t + 1
+    batchsize = 50
+
+    g, h, pks, sks = get_avss_params(n, t)
+    sends, recvs, _ = test_router(n)
+    crs = [g, h]
+
+    values = [int(ZR.random()) for _ in range(batchsize)]
+    avss_tasks = [None]*n
+    hbavss_list = [None]*n
+    dealer_id = randint(0, n-1)
+
+    with ExitStack() as stack:
+        for i in range(n):
+            hbavss = HbAvssLight(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
+            hbavss_list[i] = hbavss
+            stack.enter_context(hbavss)
+            if i == dealer_id:
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=values))
+            else:
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
+            avss_tasks[i].add_done_callback(callback)
+        # shares = await asyncio.gather(*avss_tasks)
+        outputs = await asyncio.gather(
+            *[hbavss_list[i].output_queue.get() for i in range(n)])
+        for task in avss_tasks:
+            task.cancel()
+    shares = [[] for _ in range(batchsize)]
+    for i in range(n):
+        for j in range(batchsize):
+            shares[j].append(outputs[i][2][j])
+    for j in range(batchsize):
+        assert polynomials_over(ZR).interpolate_at(
+            zip(range(1, n+1), shares[j])) == values[j]
+
+
+@mark.asyncio
+async def test_hbavss_light_batch_share_fault(test_router):
+    def callback(future):
+        if future.done():
+            ex = future.exception()
+            if ex is not None:
+                print('\nException:', ex)
+                raise ex
+
+    class BadDealer(HbAvssLight):
+        def _get_dealer_msg(self, value):
+            if type(value) in (list, tuple):
+                valuelist = value
+            else:
+                valuelist = [value]
+            philist, commitlist, auxlist = [], [], []
+            fault_i = randint(0, self.n-1)
+            for val in valuelist:
+                phi = self.poly.random(self.t, val)
+                philist.append(phi)
+                commitment, aux_poly = self.poly_commit.commit(phi)
+                commitlist.append(commitment)
+                auxlist.append(aux_poly)
+            ephemeral_secret_key = self.field.random()
+            ephemeral_public_key = pow(self.g, ephemeral_secret_key)
+            z = [None]*self.n
+            for i in range(self.n):
+                shared_key = pow(self.public_keys[i], ephemeral_secret_key)
+                shares, witnesses = [], []
+                for phi in philist:
+                    shares.append(phi(i+1))
+                for aux in auxlist:
+                    witnesses.append(self.poly_commit.create_witness(aux, i+1))
+                if i == fault_i:
+                    shares[20] = ZR.random()
+                z[i] = SymmetricCrypto.encrypt(
+                    str(shared_key).encode(), (shares, witnesses))
+
+            return dumps((commitlist, ephemeral_public_key, z))
+    t = 2
+    n = 3*t + 1
+    batchsize = 50
+
+    g, h, pks, sks = get_avss_params(n, t)
+    sends, recvs, _ = test_router(n)
+    crs = [g, h]
+
+    values = [int(ZR.random()) for _ in range(batchsize)]
+    avss_tasks = [None]*n
+    hbavss_list = [None]*n
+    dealer_id = randint(0, n-1)
+
+    with ExitStack() as stack:
+        for i in range(n):
+            if i == dealer_id:
+                hbavss = BadDealer(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
+            else:
+                hbavss = HbAvssLight(pks, sks[i], crs, n, t, i, sends[i], recvs[i])
+            hbavss_list[i] = hbavss
+            stack.enter_context(hbavss)
+            if i == dealer_id:
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=values))
+            else:
+                avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
+            avss_tasks[i].add_done_callback(callback)
+        # shares = await asyncio.gather(*avss_tasks)
+        outputs = await asyncio.gather(
+            *[hbavss_list[i].output_queue.get() for i in range(n)])
+        for task in avss_tasks:
+            task.cancel()
+    shares = [[] for _ in range(batchsize)]
+    for i in range(n):
+        for j in range(batchsize):
+            shares[j].append(outputs[i][2][j])
+    for j in range(batchsize):
+        assert polynomials_over(ZR).interpolate_at(
+            zip(range(1, n+1), shares[j])) == values[j]
 
 
 @mark.asyncio
@@ -626,10 +757,14 @@ async def test_hbavss_light_parallel_share_array_open(test_router):
 
         for task in avss_tasks:
             task.cancel()
-
+    # Sort the outputs incase they're out of order
+    round_outputs = [[[]for __ in range(n)] for _ in range(k)]
+    for i in range(k):
+        for j in range(n):
+            round_outputs[outputs[i][j][1]][j] = outputs[i][j]
     shares = [[] for _ in range(n)]
     for i in range(k):
-        round_output = outputs[i]
+        round_output = round_outputs[i]
         for j in range(len(round_output)):
             shares[j].append(round_output[j][2])
 
