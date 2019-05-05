@@ -11,7 +11,7 @@ matrix:
   include:
     - env: BUILD=tests
     - env: BUILD=flake8
-    - env: BUILD=docs
+    # - env: BUILD=docs
 
 install:  .ci/travis-install.sh
 
