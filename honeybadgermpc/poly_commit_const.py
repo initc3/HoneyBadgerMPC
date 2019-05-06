@@ -1,4 +1,4 @@
-from honeybadgermpc.betterpairing import ZR, G1, G2
+from honeybadgermpc.betterpairing import ZR, G1, G2, pair
 from honeybadgermpc.polynomial import polynomials_over
 
 
@@ -47,6 +47,23 @@ class PolyCommitConst:
         lhs = c.pair_with(self.ghats[0])
         rhs = witness.pair_with(self.ghats[1] / (self.ghats[0] ** i)) \
             * self.gg**phi_at_i * self.gh**phi_hat_at_i
+        return lhs == rhs
+
+    def batch_verify_eval(self, commits, i, shares, auxes, witnesses):
+        assert len(commits) == len(shares) and len(commits) == len(witnesses) \
+            and len(commits) == len(auxes)
+        commitprod = G1.one()
+        witnessprod = G1.one()
+        sharesum = ZR(0)
+        auxsum = ZR(0)
+        for j in range(len(commits)):
+            commitprod *= commits[j]
+            witnessprod *= witnesses[j]
+            sharesum += shares[j]
+            auxsum += auxes[j]
+        lhs = pair(commitprod, self.ghats[0])
+        rhs = pair(witnessprod, self.ghats[1] * self.ghats[0]**(-i)) \
+            * (self.gg ** sharesum) * (self.gh ** auxsum)
         return lhs == rhs
 
     def preprocess_verifier(self, level=4):
