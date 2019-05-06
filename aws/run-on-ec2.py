@@ -80,6 +80,15 @@ def get_ipc_setup_commands(s3manager, instance_ids):
     return setup_commands
 
 
+def get_hbavss_setup_commands(s3manager, instance_ids):
+    setup_commands = [[instance_id, [
+            "sudo docker pull %s" % (AwsConfig.DOCKER_IMAGE_PATH),
+            "mkdir -p benchmark-logs",
+        ]] for i, instance_id in enumerate(instance_ids)]
+
+    return setup_commands
+
+
 def get_butterfly_network_setup_commands(max_k, s3manager, instance_ids):
     from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
@@ -191,6 +200,12 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
     elif AwsConfig.MPC_CONFIG.COMMAND.endswith("butterfly_network"):
         instance_configs = get_instance_configs(
             instance_ips, {"k": AwsConfig.MPC_CONFIG.K, "run_id": run_id})
+    elif AwsConfig.MPC_CONFIG.COMMAND.endswith("hbavss_batch"):
+        instance_configs = get_instance_configs(
+            instance_ips, {"k": AwsConfig.MPC_CONFIG.K, "run_id": run_id})
+    elif AwsConfig.MPC_CONFIG.COMMAND.endswith("hbavss_light"):
+        instance_configs = get_instance_configs(
+            instance_ips, {"k": AwsConfig.MPC_CONFIG.K, "run_id": run_id})
     else:
         logging.error("Application not supported to run on AWS.")
         raise SystemError
@@ -218,7 +233,10 @@ def trigger_run(run_id, skip_setup, max_k, only_setup, cleanup):
         elif AwsConfig.MPC_CONFIG.COMMAND.endswith("butterfly_network"):
             setup_commands = get_butterfly_network_setup_commands(
                 max_k, s3manager, instance_ids)
-
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("hbavss_batch"):
+            setup_commands = get_hbavss_setup_commands(s3manager, instance_ids)
+        elif AwsConfig.MPC_CONFIG.COMMAND.endswith("hbavss_light"):
+            setup_commands = get_hbavss_setup_commands(s3manager, instance_ids)
         logging.info("Triggering setup commands.")
         run_commands_on_instances(ec2manager, setup_commands, False)
 
