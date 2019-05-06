@@ -85,13 +85,13 @@ def gen_pc_const_crs(t, alpha=None, g=None, h=None, ghat=None):
     assert type(h) in (G1, nonetype)
     assert type(ghat) in (G2, nonetype)
     if alpha is None:
-        alpha = ZR.random()
+        alpha = ZR.random(0)
     if g is None:
-        g = G1.rand()
+        g = G1.rand([0, 0, 0, 1])
     if h is None:
-        h = G1.rand()
+        h = G1.rand([0, 0, 0, 1])
     if ghat is None:
-        ghat = G2.rand()
+        ghat = G2.rand([0, 0, 0, 1])
     (gs, ghats, hs) = ([], [], [])
     for i in range(t+1):
         gs.append(g**(alpha**i))

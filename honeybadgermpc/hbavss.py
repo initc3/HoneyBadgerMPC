@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from pickle import dumps, loads
-from honeybadgermpc.betterpairing import ZR, interpolate_g1_at_x
+from honeybadgermpc.betterpairing import ZR, interpolate_g1_at_x, G1
 from honeybadgermpc.polynomial import polynomials_over
 from honeybadgermpc.poly_commit_const import PolyCommitConst
 from honeybadgermpc.poly_commit_lin import PolyCommitLin
@@ -9,6 +9,7 @@ from honeybadgermpc.symmetric_crypto import SymmetricCrypto
 from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
 from honeybadgermpc.protocols.avid import AVID
 from honeybadgermpc.utils import wrap_send
+import time
 
 # TODO: Move these to a separate file instead of using it from batch_reconstruction.py
 from honeybadgermpc.batch_reconstruction import subscribe_recv
@@ -17,7 +18,7 @@ from honeybadgermpc.batch_reconstruction import subscribe_recv
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 # Uncomment this when you want logs from this file.
-# logger.setLevel(logging.NOTSET)
+logger.setLevel(logging.NOTSET)
 
 
 class HbAVSSMessageType:
@@ -92,6 +93,7 @@ class HbAvssLight():
                 str(shared_key).encode(), encrypted_blobs[self.my_id])
             if self.poly_commit.batch_verify_eval(
                     commitments, self.my_id+1, shares, witnesses):
+                logger.info(f"OK_timestamp: {time.time()}")
                 multicast((HbAVSSMessageType.OK, ""))
             else:
                 multicast((HbAVSSMessageType.IMPLICATE, self.private_key))
@@ -393,6 +395,7 @@ class HbAvssBatch():
                         multicast((HbAVSSMessageType.IMPLICATE, self.private_key, k))
                         break
         if all_shares_valid:
+            logger.info(f"OK_timestamp: {time.time()}")
             multicast((HbAVSSMessageType.OK, ""))
 
         ok_set = set()
@@ -559,22 +562,37 @@ class HbAvssBatch():
             # dispersal_msg_list: the list of payload z
             broadcast_msg, dispersal_msg_list = self._get_dealer_msg(values, n)
 
-        tag = f"{dealer_id}-{avss_id}-B-AVID"
+        tag = f"{dealer_id}-{avss_id}-B-RBC"
         send, recv = self.get_send(tag), self.subscribe_recv(tag)
 
         logger.debug("[%d] Starting reliable broadcast", self.my_id)
         rbc_msg = await reliablebroadcast(
             tag, self.my_id, n, self.t, dealer_id, broadcast_msg, recv, send)
 
+        tag = f"{dealer_id}-{avss_id}-B-AVID"
+        send, recv = self.get_send(tag), self.subscribe_recv(tag)
+
         logger.debug("[%d] Starting AVID disperse", self.my_id)
         avid = AVID(n, self.t, dealer_id, recv, send, n)
-        # start disperse in the background
-        self.avid_msg_queue.put_nowait((avid, tag, dispersal_msg_list))
 
         if client_mode and self.my_id == dealer_id:
             # In client_mode, the dealer is not supposed to do
             # anything after sending the initial value.
+            await avid.disperse(tag, self.my_id, dispersal_msg_list, client_mode=True)
+            self.shares_future.set_result(True)
             return
+
+        # start disperse in the background
+        self.avid_msg_queue.put_nowait((avid, tag, dispersal_msg_list))
 
         # avss processing
         await self._process_avss_msg(avss_id, dealer_id, rbc_msg, avid)
+
+
+def get_avss_params(n, t):
+    g, h = G1.rand(seed=[0, 0, 0, 1]), G1.rand(seed=[0, 0, 0, 1])
+    public_keys, private_keys = [None]*n, [None]*n
+    for i in range(n):
+        private_keys[i] = ZR.random(0)
+        public_keys[i] = pow(g, private_keys[i])
+    return g, h, public_keys, private_keys

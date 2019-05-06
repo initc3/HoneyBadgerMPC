@@ -1,9 +1,9 @@
 {
     "mpc" : {
-        "command": "python -m honeybadgermpc.ipc",
+        "command": "python -m honeybadgermpc.hbavss_batch",
         "t": 1,
         "n": 4,
-        "k": 8,
+        "k": 1,
         "num_faulty_nodes": 0,
         "num_triples": 1000,
         "port": 7000
@@ -14,11 +14,32 @@
 
         "region":{
             "us-east-1": {
-                "vm_count": 4,
+                "vm_count": 2,
                 "security_group_ids": ["sg-0faaf975"],
                 "image_id": "ami-0ac019f4fcb7cb7e6",
-                "key_file_path": "./aws/us-east1.pem",
-                "key_name": "us-east1"
+                "key_file_path": "./aws/rahul-us-east1.pem",
+                "key_name": "rahul-us-east1"
+            },
+            "sa-east-1": {
+                "vm_count": 1,
+                "security_group_ids": ["sg-0dfef222a2d4b2d2f"],
+                "image_id": "ami-03c6239555bb12112",
+                "key_file_path": "./aws/rahul-sa-east1.pem",
+                "key_name": "rahul-sa-east1"
+            },
+            "eu-central-1": {
+                "vm_count": 1,
+                "security_group_ids": ["sg-0c25c1a9b4cb83d5a"],
+                "image_id": "ami-0bdf93799014acdc4",
+                "key_file_path": "./aws/rahul-eu-central1.pem",
+                "key_name": "rahul-eu-central1"
+            },
+            "ca-central-1": {
+                "vm_count": 1,
+                "security_group_ids": ["sg-0eca21d071e9647c8"],
+                "image_id": "ami-0427e8367e3770df1",
+                "key_file_path": "./aws/rahul-ca-central1.pem",
+                "key_name": "rahul-ca-central1"
             }
         },
 
@@ -31,6 +52,6 @@
     },
 
     "docker": {
-        "image_path": "dsluiuc/honeybadgermpc:latest"
+        "image_path": "rahulsm2/honeybadgermpc:latest"
     }
 }
