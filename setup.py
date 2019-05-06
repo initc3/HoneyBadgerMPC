@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import io
 import os
 
 from setuptools import setup, find_packages
@@ -65,17 +64,19 @@ EXTRAS = {
 here = os.path.abspath(os.path.dirname(__file__))
 
 try:
-    with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
-        long_description = '\n' + f.read()
+    with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+        long_description = f"\n{f.read()}"
 except FileNotFoundError:
     long_description = DESCRIPTION
 
-about = {}
 if not VERSION:
+    g = {}
+
+    # TODO: consolidate how we do this
     with open(os.path.join(here, NAME, '__version__.py')) as f:
-        exec(f.read(), about)
-else:
-    about['__version__'] = VERSION
+        exec(f.read(), g)
+        VERSION = g['__version__']
+
 
 extra_compile_args = ['-std=c++11', '-O3', '-pthread', '-fopenmp', '-march=native']
 extra_link_args = ['-std=c++11', '-O3', '-pthread', '-fopenmp', '-lntl', '-lgmp', '-lm',
@@ -93,7 +94,7 @@ extensions = [
 
 setup(
     name=NAME,
-    version=about['__version__'],
+    version=VERSION,
     description=DESCRIPTION,
     long_description=long_description,
     long_description_content_type='text/markdown',
