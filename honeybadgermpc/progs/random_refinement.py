@@ -1,4 +1,5 @@
-from honeybadgermpc.polynomial import get_omega, polynomials_over
+from honeybadgermpc.polynomial import EvalPoint
+from honeybadgermpc.reed_solomon import EncoderFactory
 
 
 def refine_randoms(n, t, field, random_shares_int):
@@ -8,11 +9,11 @@ def refine_randoms(n, t, field, random_shares_int):
     k = len(random_shares_int)
     assert k >= n-t and k <= n
 
-    d = 2**(k-1).bit_length()  # Get the nearest power of 2
-    omega = get_omega(field, 2*d, seed=0)
-    random_shares_int += [0]*(d-k)
-    output_shares_int = polynomials_over(field).interp_extrap_cpp(
-        random_shares_int, omega)
+    encoder = EncoderFactory.get(EvalPoint(field, n, use_fft=True))
 
-    # Output only values at the odd indices
-    return output_shares_int[1:2*(k-t):2]
+    # Assume these shares to be the coefficients of a random polynomial. The
+    # refined shares are evaluations of this polynomial at powers of omega.
+    output_shares_int = encoder.encode(random_shares_int)
+
+    # Remove `t` shares since they might have been contributed by corrupt parties.
+    return output_shares_int[:k-t]
