@@ -1,4 +1,5 @@
 import time
+import logging
 import asyncio
 from honeybadgermpc.config import HbmpcConfig
 from honeybadgermpc.ipc import ProcessProgramRunner
@@ -79,10 +80,12 @@ async def refine_triples(context, a_dirty, b_dirty, c_dirty):
 
 
 async def _prog(context, a, b, ab):
+    logger = logging.LoggerAdapter(logging.getLogger(
+        "benchmark_logger"), {"node_id": context.myid})
     start_time = time.time()
     await refine_triples(context, a, b, ab)
     end_time = time.time()
-    print("Finished in: %f seconds." % (end_time-start_time))
+    logger.info("Finished in: %f seconds.", end_time-start_time)
 
 
 async def _run(peers, n, t, my_id):

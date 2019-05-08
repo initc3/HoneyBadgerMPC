@@ -114,12 +114,14 @@ async def generate_double_shares(n, t, my_id, _send, _recv, field):
 
 async def _run(peers, n, t, my_id):
     field = GF(Subgroup.BLS12_381)
+    logger = logging.LoggerAdapter(logging.getLogger(
+        "benchmark_logger"), {"node_id": my_id})
     async with ProcessProgramRunner(peers, n, t, my_id) as runner:
         send, recv = runner.get_send_recv("0")
         start_time = time.time()
         await generate_double_shares(n, t, my_id, send, recv, field)
         end_time = time.time()
-        logging.info("[%d] Finished in %s", my_id, end_time-start_time)
+        logger.info("[%d] Finished in %s", my_id, end_time-start_time)
 
 if __name__ == "__main__":
     asyncio.set_event_loop(asyncio.new_event_loop())
