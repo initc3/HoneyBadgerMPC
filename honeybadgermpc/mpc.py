@@ -109,7 +109,7 @@ class Mpc(object):
         # Return reconstructed point
         return p(self.field(0))
 
-    def open_share_array(self, sharearray):
+    def open_share_array(self, sharearray, use_powers_of_omega=True):
         # Choose the shareid based on the order this is called
         shareid = len(self._openings)
 
@@ -130,7 +130,7 @@ class Mpc(object):
                                     _send,
                                     _recv,
                                     config=self.config.get(ConfigVars.Reconstruction),
-                                    use_fft=True,
+                                    use_fft=use_powers_of_omega,
                                     debug=True)
         self._openings[shareid] = opening
         return opening

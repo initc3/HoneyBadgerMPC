@@ -1,4 +1,8 @@
+import time
 import asyncio
+from honeybadgermpc.config import HbmpcConfig
+from honeybadgermpc.ipc import ProcessProgramRunner
+from honeybadgermpc.preprocessing import AWSPreProcessedElements
 from honeybadgermpc.ntl.helpers import vandermonde_batch_evaluate
 from honeybadgermpc.ntl.helpers import vandermonde_batch_interpolate
 
@@ -7,7 +11,9 @@ async def batch_beaver(context, a_, b_, x_, y_, z_):
     assert len(a_) == len(b_) == len(x_) == len(y_) == len(z_)
     a, b, x, y = list(map(context.ShareArray, [a_, b_, x_, y_]))
 
-    f, g = await asyncio.gather(*[(a - x).open(), (b - y).open()])
+    use_power_of_omega = False
+    f, g = await asyncio.gather(*[
+        (a - x).open(use_power_of_omega), (b - y).open(use_power_of_omega)])
     c = [(d*e).value + (d*q).v.value + (e*p).v.value + pq
          for (p, q, pq, d, e) in zip(x_, y_, z_, f, g)]
     return c
@@ -70,3 +76,29 @@ async def refine_triples(context, a_dirty, b_dirty, c_dirty):
 
     assert len(p) == len(q) == len(pq) == k
     return p, q, pq
+
+
+async def _prog(context, a, b, ab):
+    start_time = time.time()
+    await refine_triples(context, a, b, ab)
+    end_time = time.time()
+    print("Finished in: %f seconds." % (end_time-start_time))
+
+
+async def _run(peers, n, t, my_id):
+    seed = HbmpcConfig.extras.get("seed", 0)
+    pp_elements = AWSPreProcessedElements(n, t, my_id, seed, use_power_of_omega=False)
+    a, b, ab = [], [], []
+    for p, q, pq in pp_elements.get_triple(n):
+        a.append(p.value)
+        b.append(q.value)
+        ab.append(pq.value)
+    async with ProcessProgramRunner(peers, n, t, my_id) as runner:
+        await runner.execute("0", _prog, a=a, b=b, ab=ab)
+
+
+if __name__ == "__main__":
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(_run(
+        HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))

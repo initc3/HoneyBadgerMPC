@@ -25,14 +25,17 @@ class PreProcessingConstants(object):
 
 
 class AWSPreProcessedElements(object):
-    def __init__(self, n, t, my_id, seed):
+    def __init__(self, n, t, my_id, seed, use_power_of_omega=True):
         logging.info("USING SEED: %d", seed)
         self.seed = seed
         self.t = t
         self.field = GF(Subgroup.BLS12_381)
         self.poly = polynomials_over(self.field)
-        self.eval_point = EvalPoint(self.field, n, use_fft=True)
-        self.my_point = pow(self.eval_point.omega, my_id)
+        self.eval_point = EvalPoint(self.field, n, use_fft=use_power_of_omega)
+        if use_power_of_omega:
+            self.my_point = pow(self.eval_point.omega, my_id)
+        else:
+            self.my_point = my_id+1
 
     def horner(self, coefficients, x):
         acc = 0

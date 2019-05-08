@@ -188,12 +188,13 @@ class ShareArray(ABC):
 
         self._shares = values
 
-    def open(self):
+    def open(self, use_powers_of_omega=True):
         # TODO: make a list of GFElementFutures?
         # res = GFElementFuture()
         res = asyncio.Future()
 
-        opening = asyncio.create_task(self.context.open_share_array(self))
+        opening = asyncio.create_task(
+            self.context.open_share_array(self, use_powers_of_omega))
         opening.add_done_callback(lambda f: res.set_result(f.result()))
 
         return res

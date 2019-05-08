@@ -13,7 +13,7 @@ async def test_triple_refinement(n, t, k, test_preprocessing, test_runner):
             p, q, pq = test_preprocessing.elements.get_triple(context)
             _a.append(p.v.value), _b.append(q.v.value), _c.append(pq.v.value)
         p, q, pq = await refine_triples(context, _a, _b, _c)
-        async def _open(x): return await context.ShareArray(x).open()
+        async def _open(x): return await context.ShareArray(x).open(False)
         p, q, pq = await asyncio.gather(*[_open(p), _open(q), _open(pq)])
         assert len(p) == len(q) == len(pq) == (k-2*t+1)//2
         for d, e, de in zip(p, q, pq):
