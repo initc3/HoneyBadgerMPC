@@ -99,7 +99,7 @@ RUN pip install Cython
 RUN pip install -e .
 RUN pip install pairing/
 
-
+RUN make -C apps/shuffle/cpp
 
 # Installs test dependencies
 # For now, upload this to docker-hub
