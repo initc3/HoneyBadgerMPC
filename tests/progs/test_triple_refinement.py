@@ -1,31 +1,22 @@
-from pytest import mark
 import asyncio
+from pytest import mark
+from honeybadgermpc.progs.triple_refinement import refine_triples
 
 
 @mark.asyncio
-async def test_triple_refinement(test_preprocessing):
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.progs.triple_refinement import refine_triples
-
-    n, t = 7, 2
-
-    test_preprocessing.generate("triples", n, t)
-
+@mark.parametrize("n, t, k", [(4, 1, 3), (4, 1, 4), (7, 2, 5), (7, 2, 7)])
+async def test_triple_refinement(n, t, k, test_preprocessing, test_runner):
     async def _prog(context):
         _a, _b, _c = [], [], []
         # Every party needs its share of all the `N` triples' shares
-        for _ in range(context.N):
+        for _ in range(k):
             p, q, pq = test_preprocessing.elements.get_triple(context)
             _a.append(p.v.value), _b.append(q.v.value), _c.append(pq.v.value)
-        a, b, ab = await refine_triples(context, _a, _b, _c)
-        p = await asyncio.gather(*map(lambda x: x.open(), a))
-        q = await asyncio.gather(*map(lambda x: x.open(), b))
-        pq = await asyncio.gather(*map(lambda x: x.open(), ab))
-        assert len(p) == len(q) == len(pq), "Invalid number of values generated"
+        p, q, pq = await refine_triples(context, _a, _b, _c)
+        async def _open(x): return await context.ShareArray(x).open()
+        p, q, pq = await asyncio.gather(*[_open(p), _open(q), _open(pq)])
+        assert len(p) == len(q) == len(pq) == (k-2*t+1)//2
         for d, e, de in zip(p, q, pq):
-            # print("\n[%d] %d * %d == %d" % (context.myid, d, e, de))
             assert d * e == de
 
-    program_runner = TaskProgramRunner(n, t)
-    program_runner.add(_prog)
-    await program_runner.join()
+    await test_runner(_prog, n, t, ["triples"], n*k)
