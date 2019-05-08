@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from pickle import dumps, loads
-from honeybadgermpc.betterpairing import ZR, interpolate_g1_at_x
+from honeybadgermpc.betterpairing import ZR, interpolate_g1_at_x, G1
 from honeybadgermpc.polynomial import polynomials_over
 from honeybadgermpc.poly_commit_const import PolyCommitConst
 from honeybadgermpc.poly_commit_lin import PolyCommitLin
@@ -9,6 +9,7 @@ from honeybadgermpc.symmetric_crypto import SymmetricCrypto
 from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
 from honeybadgermpc.protocols.avid import AVID
 from honeybadgermpc.utils import wrap_send
+import time
 
 # TODO: Move these to a separate file instead of using it from batch_reconstruction.py
 from honeybadgermpc.batch_reconstruction import subscribe_recv
@@ -17,7 +18,7 @@ from honeybadgermpc.batch_reconstruction import subscribe_recv
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 # Uncomment this when you want logs from this file.
-# logger.setLevel(logging.NOTSET)
+logger.setLevel(logging.NOTSET)
 
 
 class HbAVSSMessageType:
@@ -35,6 +36,7 @@ class HbAvssLight():
         self.n, self.t, self.my_id = n, t, my_id
         self.g = crs[0]
         self.poly_commit = PolyCommitLin(crs)
+        self.poly_commit.preprocess(5)
 
         # Create a mechanism to split the `recv` channels based on `tag`
         self.subscribe_recv_task, self.subscribe_recv = subscribe_recv(recv)
@@ -57,7 +59,7 @@ class HbAvssLight():
     def __exit__(self, type, value, traceback):
         self.subscribe_recv_task.cancel()
 
-    def _handle_implication(self, commitment, ephemeral_public_key, j, j_sk, j_z):
+    def _handle_implication(self, commitments, ephemeral_public_key, j, j_sk, j_z):
         """
         Handle the implication of AVSS.
         Return True if the implication is valid, False otherwise.
@@ -68,12 +70,12 @@ class HbAvssLight():
         # decrypt and verify
         j_shared_key = pow(ephemeral_public_key, j_sk)
         try:
-            j_share, j_aux = SymmetricCrypto.decrypt(
+            j_shares, j_auxs = SymmetricCrypto.decrypt(
                 str(j_shared_key).encode(), j_z)
         except Exception:  # TODO: specific exception
             return True
-        return not self.poly_commit.verify_eval(
-            commitment, j+1, j_share, j_aux)
+        return not self.poly_commit.batch_verify_eval(
+                commitments, j+1, j_shares, j_auxs)
 
     async def _process_avss_msg(self, avss_id, dealer_id, avss_msg):
         tag = f"{dealer_id}-{avss_id}-AVSS"
@@ -83,13 +85,15 @@ class HbAvssLight():
             for i in range(self.n):
                 send(i, msg)
 
-        commitment, ephemeral_public_key, encrypted_blobs = loads(avss_msg)
+        commitments, ephemeral_public_key, encrypted_blobs = loads(avss_msg)
         shared_key = pow(ephemeral_public_key, self.private_key)
         share_valid = True
         try:
-            share, witness = SymmetricCrypto.decrypt(
+            shares, witnesses = SymmetricCrypto.decrypt(
                 str(shared_key).encode(), encrypted_blobs[self.my_id])
-            if self.poly_commit.verify_eval(commitment, self.my_id+1, share, witness):
+            if self.poly_commit.batch_verify_eval(
+                    commitments, self.my_id+1, shares, witnesses):
+                logger.info(f"OK_timestamp: {time.time()}")
                 multicast((HbAVSSMessageType.OK, ""))
             else:
                 multicast((HbAVSSMessageType.IMPLICATE, self.private_key))
@@ -100,61 +104,100 @@ class HbAvssLight():
 
         # RECEIVE LOOP
         ok_set = set()
-        recovery_shares = []
+        recovery_set = set()
+        implicate_set = set()
+        recovery_shares = [[] for _ in range(len(commitments))]
         sent_recovery = False
         output = False
+        recovered = False
         while True:
             if len(ok_set) == 2 * self.t + 1 and share_valid and not output:
-                share_int = int(share)
-                self.output_queue.put_nowait((dealer_id, avss_id, share_int))
+                if len(commitments) == 1:
+                    self.output_queue.put_nowait((dealer_id, avss_id, int(shares[0])))
+                else:
+                    int_shares = [int(shares[i]) for i in range(len(shares))]
+                    self.output_queue.put_nowait((dealer_id, avss_id, int_shares))
                 output = True
-            elif len(recovery_shares) == self.t + 1 and not output:
-                share_int = int(self.poly.interpolate_at(recovery_shares, self.my_id+1))
-                self.output_queue.put_nowait((dealer_id, avss_id, share_int))
+            elif len(recovery_set) == self.t + 1 and not output:
+                if len(commitments) == 1:
+                    shares = [self.poly.interpolate_at(recovery_shares[0], self.my_id+1)]
+                    self.output_queue.put_nowait((dealer_id, avss_id, int(shares[0])))
+                else:
+                    shares = [None]*len(commitments)
+                    share_ints = [None]*len(commitments)
+                    for i in range(len(commitments)):
+                        shares[i] = self.poly.interpolate_at(
+                            recovery_shares[i], self.my_id+1)
+                        share_ints[i] = int(shares[i])
+                    self.output_queue.put_nowait((dealer_id, avss_id, share_ints))
                 output = True
                 share_valid = True
-            # We can safely stop running at this point
-            if len(ok_set) == self.n:
+                recovered = True
+                multicast((HbAVSSMessageType.OK, ""))
+
+            # Conditions where we can terminate
+            if len(ok_set) == self.n or len(implicate_set) >= self.t + 1 \
+                    or len(ok_set) >= 2*self.t + 1 and (sent_recovery or recovered):
                 break
+
             sender, avss_msg = await recv()  # First value is `sid` (not true anymore?)
             if avss_msg[0] == HbAVSSMessageType.OK and sender not in ok_set:
                 ok_set.add(sender)
+            if avss_msg[0] == HbAVSSMessageType.IMPLICATE \
+                    and sender not in implicate_set:
+                implicate_set.add(sender)
             if avss_msg[0] == HbAVSSMessageType.IMPLICATE \
                     and not sent_recovery and share_valid:
                 j_sk = avss_msg[1]
                 j = sender
                 # validate the implicate
                 if not self._handle_implication(
-                        commitment, ephemeral_public_key, j, j_sk, encrypted_blobs[j]):
+                        commitments, ephemeral_public_key, j, j_sk, encrypted_blobs[j]):
                     # Count an invalid implicate as an okay
                     if sender not in ok_set:
                         ok_set.add(sender)
                     continue
                 sent_recovery = True
                 multicast((HbAVSSMessageType.RECOVERY, self.private_key))
-            if avss_msg[0] == HbAVSSMessageType.RECOVERY and not share_valid:
+            if avss_msg[0] == HbAVSSMessageType.RECOVERY \
+                    and not share_valid and sender not in recovery_set:
                 try:
-                    share_j, aux_j = SymmetricCrypto.decrypt(
+                    shares_j, auxs_j = SymmetricCrypto.decrypt(
                         str(ephemeral_public_key**avss_msg[1]).encode(), encrypted_blobs[sender])  # (# noqa: E501)
                 except Exception:
                     ok_set.add(sender)
                     continue
-                if self.poly_commit.verify_eval(commitment, sender+1, share_j, aux_j):
-                    if ([sender+1, share_j] not in recovery_shares):
-                        recovery_shares.append([sender+1, share_j])
+                if self.poly_commit.batch_verify_eval(
+                        commitments, sender+1, shares_j, auxs_j):
+                    for i in range(len(commitments)):
+                        recovery_shares[i].append([sender+1, shares_j[i]])
+                    recovery_set.add(sender)
 
     def _get_dealer_msg(self, value):
-        phi = self.poly.random(self.t, value)
-        commitment, aux_poly = self.poly_commit.commit(phi)
+        if type(value) in (list, tuple):
+            valuelist = value
+        else:
+            valuelist = [value]
+        philist, commitlist, auxlist = [], [], []
+        for val in valuelist:
+            phi = self.poly.random(self.t, val)
+            philist.append(phi)
+            # Todo: precompute commit stuff
+            commitment, aux_poly = self.poly_commit.commit(phi)
+            commitlist.append(commitment)
+            auxlist.append(aux_poly)
         ephemeral_secret_key = self.field.random()
         ephemeral_public_key = pow(self.g, ephemeral_secret_key)
         z = [None]*self.n
         for i in range(self.n):
-            witness = self.poly_commit.create_witness(aux_poly, i+1)
             shared_key = pow(self.public_keys[i], ephemeral_secret_key)
-            z[i] = SymmetricCrypto.encrypt(str(shared_key).encode(), (phi(i+1), witness))
+            shares, witnesses = [], []
+            for j in range(len(philist)):
+                shares.append(philist[j](i+1))
+                witnesses.append(self.poly_commit.create_witness(auxlist[j], i+1))
+            z[i] = SymmetricCrypto.encrypt(str(shared_key).encode(), (shares, witnesses))
 
-        return dumps((commitment, ephemeral_public_key, z))
+        return dumps((commitlist, ephemeral_public_key, z))
 
     async def avss(self, avss_id, value=None, dealer_id=None, client_mode=False):
         """
@@ -263,10 +306,13 @@ class HbAvssBatch():
         self.field = ZR
         self.poly = polynomials_over(self.field)
         self.poly_commit = PolyCommitConst(crs)
+        self.poly_commit.preprocess_prover()
+        self.poly_commit.preprocess_verifier()
 
         self.avid_msg_queue = asyncio.Queue()
         self.tasks = []
         self.shares_future = asyncio.Future()
+        self.output_queue = asyncio.Queue()
 
     async def _recv_loop(self, q):
         while True:
@@ -319,17 +365,17 @@ class HbAvssBatch():
         dispersal_msg = await avid.retrieve(tag, self.my_id)
         encrypted_witnesses = loads(dispersal_msg)
 
-        secret_size = len(commitments)
+        secret_count = len(commitments)
 
         # all_encrypted_witnesses: n
         shared_key = pow(ephemeral_public_key, self.private_key)
 
-        shares = [None] * secret_size
-        auxes = [None] * secret_size
-        witnesses = [None] * secret_size
+        shares = [None] * secret_count
+        auxes = [None] * secret_count
+        witnesses = [None] * secret_count
         # Decrypt
         all_shares_valid = True
-        for k in range(secret_size):
+        for k in range(secret_count):
             try:
                 shares[k], auxes[k], witnesses[k] = SymmetricCrypto.decrypt(
                     str(shared_key).encode(), encrypted_witnesses[k])
@@ -337,23 +383,29 @@ class HbAvssBatch():
                 all_shares_valid = False
                 multicast((HbAVSSMessageType.IMPLICATE, self.private_key, k))
                 break
-            if not self.poly_commit.verify_eval(
-                    commitments[k], self.my_id+1, shares[k], auxes[k], witnesses[k]):
-                # invalid share found and send all implicate msg
-                all_shares_valid = False
-                multicast((HbAVSSMessageType.IMPLICATE, self.private_key, k))
-                break
-
+        # call if decryption was successful
         if all_shares_valid:
+            if not self.poly_commit.batch_verify_eval(
+                    commitments, self.my_id+1, shares, auxes, witnesses):
+                all_shares_valid = False
+                # Find which share was invalid and implicate
+                for k in range(secret_count):
+                    if not self.poly_commit.verify_eval(
+                            commitments[k], self.my_id+1, shares[k], auxes[k], witnesses[k]):  # (# noqa: E501)
+                        multicast((HbAVSSMessageType.IMPLICATE, self.private_key, k))
+                        break
+        if all_shares_valid:
+            logger.info(f"OK_timestamp: {time.time()}")
             multicast((HbAVSSMessageType.OK, ""))
 
         ok_set = set()
-        ready_set = set()
+        implicate_set = set()
         r1_set = set()
         r2_set = set()
-        ready_sent = r1_sent = r2_sent = False
+        r1_sent = r2_sent = False
         r1_phi = [None] * self.n
         r2_phi = [None] * self.n
+        output = False
 
         while True:
             # main recv loop for Bracha-style agreement and implicate handling
@@ -361,11 +413,11 @@ class HbAvssBatch():
             # OK
             if avss_msg[0] == HbAVSSMessageType.OK and sender not in ok_set:
                 ok_set.add(sender)
-            # READY
-            if avss_msg[0] == HbAVSSMessageType.READY and sender not in ready_set:
-                ready_set.add(sender)
             # IMPLICATE
-            if avss_msg[0] == HbAVSSMessageType.IMPLICATE:
+            if avss_msg[0] == HbAVSSMessageType.IMPLICATE \
+                    and sender not in implicate_set:
+                implicate_set.add(sender)
+            if avss_msg[0] == HbAVSSMessageType.IMPLICATE and not r1_sent:
                 # validate the implicate
                 if not await self._handle_implication(
                         avid, tag, ephemeral_public_key, commitments,
@@ -374,11 +426,11 @@ class HbAvssBatch():
                 # proceed to share recovery
                 logger.debug("[%d] Share recovery activated by %d", self.my_id, sender)
                 # setup the coordinates for interpolation
-                c_coords = [None] * secret_size
-                phi_coords = [None] * secret_size
-                aux_coords = [None] * secret_size
-                w_coords = [None] * secret_size
-                for i in range(secret_size):
+                c_coords = [None] * secret_count
+                phi_coords = [None] * secret_count
+                aux_coords = [None] * secret_count
+                w_coords = [None] * secret_count
+                for i in range(secret_count):
                     c_coords[i] = (i, commitments[i])
                     phi_coords[i] = (i, shares[i])
                     aux_coords[i] = (i, auxes[i])
@@ -420,39 +472,44 @@ class HbAvssBatch():
                     send(j, (HbAVSSMessageType.RECOVERY2, phi_j_i))
 
             # enough R2 received -> output result
-            # Does this actually do robust interpolation?
-            if len(r2_set) >= 2 * self.t + 1:
-                recovered_result = [None] * secret_size
+            if len(r2_set) >= 2 * self.t + 1 and not all_shares_valid:
                 r2_phi_coords = [(i, r2_phi[i])
                                  for i in range(self.n) if r2_phi[i] is not None]
                 r2_phi_poly = self.poly.interpolate(r2_phi_coords)
-                for k in range(secret_size):
-                    recovered_result[k] = r2_phi_poly(k)
-                if not self.shares_future.done():
-                    self.shares_future.set_result(recovered_result)
+                for k in range(secret_count):
+                    shares[k] = r2_phi_poly(k)
+                int_shares = [int(share) for share in shares]
+                self.output_queue.put_nowait((dealer_id, avss_id, int_shares))
+                output = True
+                all_shares_valid = True
+                multicast((HbAVSSMessageType.OK, ""))
 
-            # if 2t+1 OK or t+1 READY -> send all ready
-            if not ready_sent and \
-                    (len(ok_set) >= 2 * self.t + 1 or len(ready_set) >= self.t + 1):
-                ready_sent = True
-                multicast((HbAVSSMessageType.READY, ""))
-
-            # if 2t+1 ready -> output shares
-            if len(ready_set) >= 2 * self.t + 1:
+            # if 2t+1 okay -> output shares
+            if len(ok_set) >= 2 * self.t + 1:
                 # output result by setting the future value
-                if all_shares_valid and not self.shares_future.done():
-                    self.shares_future.set_result(shares)
+                if all_shares_valid and not output:
+                    int_shares = [int(shares[i]) for i in range(len(shares))]
+                    self.output_queue.put_nowait((dealer_id, avss_id, int_shares))
+                    output = True
+
+            # Conditions where we can terminate
+            if len(ok_set) == self.n or len(implicate_set) >= 2*self.t \
+                    or (len(ok_set) >= 2*self.t + 1 and r2_sent and output):
+                break
 
     def _get_dealer_msg(self, values, n):
         # Sample a random degree-(t,t) bivariate polynomial φ(·,·)
         # such that each φ(0,k) = sk and φ(i,k) is Pi’s share of sk
-        secret_size = len(values)
-        phi = [None] * secret_size
-        commitments = [None] * secret_size
-        aux_poly = [None] * secret_size
+        while len(values) % (self.t + 1) != 0:
+            values.append(0)
+        secret_count = len(values)
+        # batch_count = secret_count/(self.t + 1)
+        phi = [None] * secret_count
+        commitments = [None] * secret_count
+        aux_poly = [None] * secret_count
         # for k ∈ [t+1]
         #   Ck, auxk <- PolyCommit(SP,φ(·,k))
-        for k in range(secret_size):
+        for k in range(secret_count):
             phi[k] = self.poly.random(self.t, values[k])
             commitments[k], aux_poly[k] = self.poly_commit.commit(phi[k])
 
@@ -464,8 +521,8 @@ class HbAvssBatch():
         dispersal_msg_list = [None] * n
         for i in range(n):
             shared_key = pow(self.public_keys[i], ephemeral_secret_key)
-            z = [None] * secret_size
-            for k in range(secret_size):
+            z = [None] * secret_count
+            for k in range(secret_count):
                 witness = self.poly_commit.create_witness(phi[k], aux_poly[k], i+1)
                 z[k] = SymmetricCrypto.encrypt(str(shared_key).encode(),
                                                (phi[k](i+1), aux_poly[k](i+1), witness))
@@ -505,22 +562,37 @@ class HbAvssBatch():
             # dispersal_msg_list: the list of payload z
             broadcast_msg, dispersal_msg_list = self._get_dealer_msg(values, n)
 
-        tag = f"{dealer_id}-{avss_id}-B-AVID"
+        tag = f"{dealer_id}-{avss_id}-B-RBC"
         send, recv = self.get_send(tag), self.subscribe_recv(tag)
 
         logger.debug("[%d] Starting reliable broadcast", self.my_id)
         rbc_msg = await reliablebroadcast(
             tag, self.my_id, n, self.t, dealer_id, broadcast_msg, recv, send)
 
+        tag = f"{dealer_id}-{avss_id}-B-AVID"
+        send, recv = self.get_send(tag), self.subscribe_recv(tag)
+
         logger.debug("[%d] Starting AVID disperse", self.my_id)
         avid = AVID(n, self.t, dealer_id, recv, send, n)
-        # start disperse in the background
-        self.avid_msg_queue.put_nowait((avid, tag, dispersal_msg_list))
 
         if client_mode and self.my_id == dealer_id:
             # In client_mode, the dealer is not supposed to do
             # anything after sending the initial value.
+            await avid.disperse(tag, self.my_id, dispersal_msg_list, client_mode=True)
+            self.shares_future.set_result(True)
             return
+
+        # start disperse in the background
+        self.avid_msg_queue.put_nowait((avid, tag, dispersal_msg_list))
 
         # avss processing
         await self._process_avss_msg(avss_id, dealer_id, rbc_msg, avid)
+
+
+def get_avss_params(n, t):
+    g, h = G1.rand(seed=[0, 0, 0, 1]), G1.rand(seed=[0, 0, 0, 1])
+    public_keys, private_keys = [None]*n, [None]*n
+    for i in range(n):
+        private_keys[i] = ZR.random(0)
+        public_keys[i] = pow(g, private_keys[i])
+    return g, h, public_keys, private_keys

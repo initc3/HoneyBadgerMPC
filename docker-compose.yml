@@ -1,12 +1,11 @@
-version: '3'
+version: '3.4'
 
 services:
   honeybadgermpc:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        BUILD: dev,aws
+      target: dev-release
     volumes:
       - ./apps:/usr/src/HoneyBadgerMPC/apps
       - ./progs:/usr/src/HoneyBadgerMPC/progs

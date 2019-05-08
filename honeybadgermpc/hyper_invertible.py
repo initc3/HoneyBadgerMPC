@@ -1,8 +1,13 @@
+import time
 import asyncio
 import logging
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
+from honeybadgermpc.field import GF
+from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.polynomial import EvalPoint, polynomials_over
-from honeybadgermpc.reed_solomon import Algorithm, EncoderFactory, DecoderFactory
+from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
+from honeybadgermpc.ipc import ProcessProgramRunner
+from honeybadgermpc.config import HbmpcConfig
 from honeybadgermpc.utils import wrap_send
 
 # TODO: refactor this method outside of batch_reconstruction
@@ -24,9 +29,9 @@ async def _recv_loop(n, recv, s=0):
 
 async def generate_double_shares(n, t, my_id, _send, _recv, field):
     poly = polynomials_over(field)
-    eval_point, algorithm = EvalPoint(field, n, use_fft=True), Algorithm.FFT
+    eval_point = EvalPoint(field, n, use_fft=True)
     big_t = n - (2 * t) - 1  # This is same as `T` in the HyperMPC paper.
-    encoder = EncoderFactory.get(eval_point, algorithm)
+    encoder = EncoderFactory.get(eval_point)
 
     # Pick a random element.
     my_random = field.random()
@@ -76,7 +81,7 @@ async def generate_double_shares(n, t, my_id, _send, _recv, field):
         response = HyperInvMessageType.ABORT
 
         def get_degree_and_secret(shares):
-            decoder = DecoderFactory.get(eval_point, algorithm)
+            decoder = DecoderFactory.get(eval_point)
             polynomial = poly(decoder.decode(list(range(n)), shares))
             return len(polynomial.coeffs)-1, polynomial(0)
 
@@ -105,3 +110,19 @@ async def generate_double_shares(n, t, my_id, _send, _recv, field):
         raise HoneyBadgerMPCError("Aborting because the shares were inconsistent.")
 
     return tuple(zip(refined_shares[0][:big_t+1], refined_shares[1][:big_t+1]))
+
+
+async def _run(peers, n, t, my_id):
+    field = GF(Subgroup.BLS12_381)
+    async with ProcessProgramRunner(peers, n, t, my_id) as runner:
+        send, recv = runner.get_send_recv("0")
+        start_time = time.time()
+        await generate_double_shares(n, t, my_id, send, recv, field)
+        end_time = time.time()
+        logging.info("[%d] Finished in %s", my_id, end_time-start_time)
+
+if __name__ == "__main__":
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(_run(HbmpcConfig.peers, HbmpcConfig.N,
+                                 HbmpcConfig.t, HbmpcConfig.my_id))

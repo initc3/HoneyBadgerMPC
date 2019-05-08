@@ -1,4 +1,4 @@
-from honeybadgermpc.betterpairing import ZR, G1, G2
+from honeybadgermpc.betterpairing import ZR, G1, G2, pair
 from honeybadgermpc.polynomial import polynomials_over
 
 
@@ -49,6 +49,23 @@ class PolyCommitConst:
             * self.gg**phi_at_i * self.gh**phi_hat_at_i
         return lhs == rhs
 
+    def batch_verify_eval(self, commits, i, shares, auxes, witnesses):
+        assert len(commits) == len(shares) and len(commits) == len(witnesses) \
+            and len(commits) == len(auxes)
+        commitprod = G1.one()
+        witnessprod = G1.one()
+        sharesum = ZR(0)
+        auxsum = ZR(0)
+        for j in range(len(commits)):
+            commitprod *= commits[j]
+            witnessprod *= witnesses[j]
+            sharesum += shares[j]
+            auxsum += auxes[j]
+        lhs = pair(commitprod, self.ghats[0])
+        rhs = pair(witnessprod, self.ghats[1] * self.ghats[0]**(-i)) \
+            * (self.gg ** sharesum) * (self.gh ** auxsum)
+        return lhs == rhs
+
     def preprocess_verifier(self, level=4):
         self.gg.preprocess(level)
         self.gh.preprocess(level)
@@ -68,13 +85,13 @@ def gen_pc_const_crs(t, alpha=None, g=None, h=None, ghat=None):
     assert type(h) in (G1, nonetype)
     assert type(ghat) in (G2, nonetype)
     if alpha is None:
-        alpha = ZR.random()
+        alpha = ZR.random(0)
     if g is None:
-        g = G1.rand()
+        g = G1.rand([0, 0, 0, 1])
     if h is None:
-        h = G1.rand()
+        h = G1.rand([0, 0, 0, 1])
     if ghat is None:
-        ghat = G2.rand()
+        ghat = G2.rand([0, 0, 0, 1])
     (gs, ghats, hs) = ([], [], [])
     for i in range(t+1):
         gs.append(g**(alpha**i))
