@@ -108,7 +108,7 @@ class AVID:
 
                     return decoded_output
 
-    async def disperse(self, sid, pid, input_list):
+    async def disperse(self, sid, pid, input_list, client_mode=False):
         """ Main information dispersal handling
         :param int sid: e.x. tag to be used
         :param int pid: current member id
@@ -144,6 +144,8 @@ class AVID:
                 # send each person the column of stripes
                 self.send(i, (sid, AVIDMessageType.VAL, roothash_list,
                               branch_list, stripes_list_per_party[i]))
+            if client_mode:
+                return
 
         # counters and variables for msg
         echo_set = set()
