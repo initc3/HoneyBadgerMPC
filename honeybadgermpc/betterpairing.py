@@ -1,6 +1,7 @@
 ﻿from pypairing import PyFq, PyFq2, PyFq12, PyFqRepr, PyG1, PyG2, PyFr
 import random
 import re
+import struct
 
 # Order of BLS group
 bls12_381_r = 52435875175126190479447740508185965837690552500527637822603658699938581184513  # (# noqa: E501)
@@ -41,7 +42,7 @@ class G1:
     def __init__(self, other=None):
         if other is None:
             self.pyg1 = PyG1()
-        if type(other) is list:
+        elif type(other) is list:
             assert len(other) == 2
             assert len(other[0]) == 6
             x = PyFqRepr(other[0][0], other[0][1], other[0][2],
@@ -56,6 +57,8 @@ class G1:
             self.pyg1.load_fq_affine(xq, yq)
         elif type(other) is PyG1:
             self.pyg1 = other
+        else:
+            raise TypeError(str(type(other)))
 
     def __str__(self):
         x = int(self.pyg1.__str__()[4:102], 0)
@@ -149,10 +152,11 @@ class G1:
         for i in range(6):
             xlist[i] = int(xlist[i], 16)
             ylist[i] = int(ylist[i], 16)
-        return [xlist, ylist]
+        return struct.pack('QQQQQQQQQQQQ', *(xlist+ylist))
 
     def __setstate__(self, d):
-        self.__init__(d)
+        xylist = struct.unpack('QQQQQQQQQQQQ', d)
+        self.__init__([xylist[:6], xylist[6:]])
 
     def preprocess(self, level=4):
         assert type(level) is int
