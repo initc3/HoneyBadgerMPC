@@ -108,7 +108,7 @@ class NodeCommunicator(object):
 
 
 class ProcessProgramRunner(object):
-    def __init__(self, peers_config, n, t, my_id, mpc_config={}, linger_timeout=2):
+    def __init__(self, peers_config, n, t, my_id, mpc_config={}, linger_timeout=10):
         self.peers_config = peers_config
         self.n = n
         self.t = t

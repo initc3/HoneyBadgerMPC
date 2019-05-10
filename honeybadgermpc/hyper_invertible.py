@@ -116,7 +116,9 @@ async def _run(peers, n, t, my_id):
     field = GF(Subgroup.BLS12_381)
     logger = logging.LoggerAdapter(logging.getLogger(
         "benchmark_logger"), {"node_id": my_id})
-    async with ProcessProgramRunner(peers, n, t, my_id) as runner:
+    linger_timeout = HbmpcConfig.extras.get("linger_timeout", 10)
+    async with ProcessProgramRunner(
+            peers, n, t, my_id, linger_timeout=linger_timeout) as runner:
         send, recv = runner.get_send_recv("0")
         start_time = time.time()
         await generate_double_shares(n, t, my_id, send, recv, field)
