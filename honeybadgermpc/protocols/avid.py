@@ -51,6 +51,8 @@ class AVID:
         self.retrieval_queue = asyncio.Queue()
         # the future value OK: retrive will be sent until ok is set
         self.ok_future = asyncio.Future()
+        # queue of retrieval requests
+        self.retrieval_requests = []
 
     def broadcast(self, o):
         for i in range(self.n):
@@ -85,6 +87,10 @@ class AVID:
 
                 if sender in response_set:
                     logger.warning("Redundant RESPONSE from %s", sender)
+                    continue
+
+                if not data:
+                    logger.warning("Received invalid RESPONSE from %s", sender)
                     continue
 
                 result[sender] = data
@@ -153,8 +159,8 @@ class AVID:
         ready_sent = False
         from_leader = None
         # internal storage
-        my_stripes = [None] * self.input_size
-        my_roothash_list = [None] * self.input_size
+        my_stripes = None
+        my_roothash_list = None
 
         while True:  # main recv loop
             sender, msg = await self.recv()
@@ -205,8 +211,12 @@ class AVID:
             elif msg[1] == AVIDMessageType.RETRIEVE:
                 _, _, index = msg
                 # send the response sender requested
-                self.send(sender, (sid, AVIDMessageType.RESPONSE, index,
-                                   my_roothash_list[index], my_stripes[index]))
+                if not self.ok_future.done() and my_stripes is not None:
+                    # enqueue a retrieve request
+                    self.retrieval_requests.append((sender, index))
+                else:
+                    self.send(sender, (sid, AVIDMessageType.RESPONSE, index,
+                                       my_roothash_list[index], my_stripes[index]))
 
             elif msg[1] == AVIDMessageType.RESPONSE:
                 # put in the queue for retrieve
@@ -225,3 +235,14 @@ class AVID:
                 # update ok future indicating ready for retrieve
                 if not self.ok_future.done():
                     self.ok_future.set_result(True)
+
+            # Handle deferred requests
+            if self.ok_future.done() and my_stripes is not None:
+                for (sender, index) in self.retrieval_requests:
+                    logging.info("Sending deferred response sender:%s index:%s",
+                                 sender, index)
+                    self.send(sender, (sid, AVIDMessageType.RESPONSE,
+                                       index,
+                                       my_roothash_list[index],
+                                       my_stripes[index]))
+                self.retrieval_requests.clear()
