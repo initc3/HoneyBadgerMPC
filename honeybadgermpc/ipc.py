@@ -51,7 +51,6 @@ class NodeCommunicator(object):
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
-        self.benchmark_logger.info("Total bytes sent out: %d", self.bytes_sent)
         # Add None to the sender queues and drain out all the messages.
         for i in range(len(self._sender_queues)):
             if i != self.my_id:
@@ -61,6 +60,7 @@ class NodeCommunicator(object):
         self._router_task.cancel()
         logging.debug("Router task cancelled.")
         self.zmq_context.destroy(linger=self.linger_timeout*1000)
+        self.benchmark_logger.info("Total bytes sent out: %d", self.bytes_sent)
 
     async def _setup(self):
         # Setup one router for a party, this acts as a
