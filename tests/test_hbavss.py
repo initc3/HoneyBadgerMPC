@@ -543,6 +543,12 @@ async def test_hbavss_batch_encryption_fault(test_router):
 
 @mark.asyncio
 async def test_hbavss_light_client_mode(test_router):
+    def callback(future):
+        if future.done():
+            ex = future.exception()
+            if ex is not None:
+                print('\nException:', ex)
+                raise ex
     t = 2
     n = 3*t + 1
 
@@ -567,6 +573,7 @@ async def test_hbavss_light_client_mode(test_router):
             stack.enter_context(hbavss)
             avss_tasks[i] = asyncio.create_task(
                 hbavss.avss(0, dealer_id=dealer_id, client_mode=True))
+            avss_tasks[i].add_done_callback(callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
         for task in avss_tasks:
@@ -579,6 +586,12 @@ async def test_hbavss_light_client_mode(test_router):
 
 @mark.asyncio
 async def test_hbavss_batch_client_mode(test_router):
+    def callback(future):
+        if future.done():
+            ex = future.exception()
+            if ex is not None:
+                print('\nException:', ex)
+                raise ex
     t = 2
     n = 3*t + 1
 
@@ -603,6 +616,7 @@ async def test_hbavss_batch_client_mode(test_router):
             stack.enter_context(hbavss)
             avss_tasks[i] = asyncio.create_task(
                 hbavss.avss(0, dealer_id=dealer_id, client_mode=True))
+            avss_tasks[i].add_done_callback(callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
         shares = [output[2] for output in outputs]
