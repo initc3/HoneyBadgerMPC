@@ -29,12 +29,10 @@ class HbAVSSMessageType:
 
 
 class HbAvssLight():
-    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv):
+    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None, field=ZR):  # (# noqa: E501)
         self.public_keys, self.private_key = public_keys, private_key
         self.n, self.t, self.my_id = n, t, my_id
         self.g = crs[0]
-        self.poly_commit = PolyCommitLin(crs)
-        self.poly_commit.preprocess(5)
 
         # Create a mechanism to split the `recv` channels based on `tag`
         self.subscribe_recv_task, self.subscribe_recv = subscribe_recv(recv)
@@ -48,8 +46,13 @@ class HbAvssLight():
         # This is especially helpful when running multiple AVSSes in parallel.
         self.output_queue = asyncio.Queue()
 
-        self.field = ZR
+        self.field = field
         self.poly = polynomials_over(self.field)
+        if pc is None:
+            self.poly_commit = PolyCommitLin(crs, field=self.field)
+            self.poly_commit.preprocess(5)
+        else:
+            self.poly_commit = pc
 
     def __enter__(self):
         return self
@@ -62,6 +65,7 @@ class HbAvssLight():
         Handle the implication of AVSS.
         Return True if the implication is valid, False otherwise.
         """
+        print("got implication")
         # discard if PKj ! = g^SKj
         if self.public_keys[j] != pow(self.g, j_sk):
             return False
@@ -257,7 +261,8 @@ class HbAvssLight():
             dealer_id,
             broadcast_msg,
             recv,
-            send
+            send,
+            client_mode=client_mode
         )
 
         if client_mode and self.my_id == dealer_id:
@@ -286,7 +291,7 @@ class HbAvssLight():
 
 
 class HbAvssBatch():
-    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv):
+    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None, field=ZR):  # (# noqa: E501)
         self.public_keys, self.private_key = public_keys, private_key
         self.n, self.t, self.my_id = n, t, my_id
         assert len(crs) == 3
@@ -301,11 +306,14 @@ class HbAvssBatch():
             return wrap_send(tag, send)
         self.get_send = _send
 
-        self.field = ZR
+        self.field = field
         self.poly = polynomials_over(self.field)
-        self.poly_commit = PolyCommitConst(crs)
-        self.poly_commit.preprocess_prover()
-        self.poly_commit.preprocess_verifier()
+        if pc is not None:
+            self.poly_commit = pc
+        else:
+            self.poly_commit = PolyCommitConst(crs, field=self.field)
+            self.poly_commit.preprocess_prover()
+            self.poly_commit.preprocess_verifier()
 
         self.avid_msg_queue = asyncio.Queue()
         self.tasks = []
@@ -555,7 +563,6 @@ class HbAvssBatch():
 
         # In the client_mode, the dealer is the last node
         n = self.n if not client_mode else self.n+1
-
         broadcast_msg = None
         dispersal_msg_list = None
         if self.my_id == dealer_id:
@@ -568,7 +575,7 @@ class HbAvssBatch():
 
         logger.debug("[%d] Starting reliable broadcast", self.my_id)
         rbc_msg = await reliablebroadcast(
-            tag, self.my_id, n, self.t, dealer_id, broadcast_msg, recv, send)
+            tag, self.my_id, n, self.t, dealer_id, broadcast_msg, recv, send, client_mode=client_mode)  # (# noqa: E501)
 
         tag = f"{dealer_id}-{avss_id}-B-AVID"
         send, recv = self.get_send(tag), self.subscribe_recv(tag)
@@ -591,7 +598,7 @@ class HbAvssBatch():
 
 
 def get_avss_params(n, t):
-    g, h = G1.rand(seed=[0, 0, 0, 1]), G1.rand(seed=[0, 0, 0, 1])
+    g, h = G1.rand(), G1.rand()
     public_keys, private_keys = [None]*n, [None]*n
     for i in range(n):
         private_keys[i] = ZR.random(0)

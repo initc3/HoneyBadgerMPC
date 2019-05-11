@@ -27,7 +27,7 @@ def dupe_pyg2(pyg2):
 
 
 def dupe_pyfr(pyfr):
-    out = PyFr("1")
+    out = PyFr(0, 0, 0, 0)
     out.copy(pyfr)
     return out
 
@@ -105,14 +105,16 @@ class G1:
             + str(type(other)))
 
     def __pow__(self, other):
-        if type(other) is int:
-            exponend = ZR(other)
-        elif type(other) is ZR:
+        if type(other) is ZR:
             exponend = other
         else:
-            raise TypeError(
-                'Invalid exponentiation param. Expected ZR or int. Got '
-                + str(type(other)))
+            try:
+                intother = int(other)
+                exponend = ZR(intother)
+            except ValueError:
+                raise TypeError(
+                    'Invalid exponentiation param. Expected ZR or int. Got '
+                    + str(type(other)))
         out = G1(dupe_pyg1(self.pyg1))
         self.pyg1.ppmul(exponend.val, out.pyg1)
         return out
@@ -499,16 +501,25 @@ class GT:
 class ZR:
     def __init__(self, val=None):
         if val is None:
-            self.val = PyFr("0")
+            self.val = PyFr(0, 0, 0, 0)
         elif type(val) is int:
-            self.val = PyFr(str(val % (bls12_381_r)))
+            uint = val % (bls12_381_r)
+            u1 = uint % 2**64
+            u2 = (uint//(2**64)) % 2**64
+            u3 = (uint//(2**128)) % 2**64
+            u4 = (uint//(2**192))
+            self.val = PyFr(u1, u2, u3, u4)
         elif type(val) is str:
             if val[0:2] == '0x':
                 intval = int(val, 0)
-                self.val = PyFr(str(intval % (bls12_381_r)))
             else:
                 intval = int(val)
-                self.val = PyFr(str(intval % (bls12_381_r)))
+            uint = intval % (bls12_381_r)
+            u1 = uint % 2**64
+            u2 = (uint//(2**64)) % 2**64
+            u3 = (uint//(2**128)) % 2**64
+            u4 = (uint//(2**192))
+            self.val = PyFr(u1, u2, u3, u4)
         elif type(val) is PyFr:
             self.val = val
 
@@ -530,13 +541,8 @@ class ZR:
             return ZR(out)
         elif type(other) is int:
             out = dupe_pyfr(self.val)
-            if other < 0:
-                other *= -1
-                addend = PyFr(str(other))
-                addend.negate()
-            else:
-                addend = PyFr(str(other))
-            out.add_assign(addend)
+            zrother = ZR(other)
+            out.add_assign(zrother.val)
             return ZR(out)
         else:
             raise TypeError(
@@ -552,13 +558,8 @@ class ZR:
             self.val.add_assign(other.val)
             return self
         elif type(other) is int:
-            if other < 0:
-                other *= -1
-                addend = PyFr(str(other))
-                addend.negate()
-            else:
-                addend = PyFr(str(other))
-            self.val.add_assign(addend)
+            zrother = ZR(other)
+            self.val.add_assign(zrother.val)
             return self
         else:
             raise TypeError(
@@ -572,13 +573,8 @@ class ZR:
             return ZR(out)
         elif type(other) is int:
             out = dupe_pyfr(self.val)
-            if other < 0:
-                other *= -1
-                subend = PyFr(str(other))
-                subend.negate()
-            else:
-                subend = PyFr(str(other))
-            out.sub_assign(subend)
+            zrother = ZR(other)
+            out.sub_assign(zrother.val)
             return ZR(out)
         else:
             raise TypeError(
@@ -594,13 +590,8 @@ class ZR:
             self.val.sub_assign(other.val)
             return self
         elif type(other) is int:
-            if other < 0:
-                other *= -1
-                subend = PyFr(str(other))
-                subend.negate()
-            else:
-                subend = PyFr(str(other))
-            self.val.sub_assign(subend)
+            zrother = ZR(other)
+            self.val.sub_assign(zrother.val)
             return self
         else:
             raise TypeError(
@@ -614,13 +605,8 @@ class ZR:
             return ZR(out)
         elif type(other) is int:
             out = dupe_pyfr(self.val)
-            if other < 0:
-                other *= -1
-                prodend = PyFr(str(other))
-                prodend.negate()
-            else:
-                prodend = PyFr(str(other))
-            out.mul_assign(prodend)
+            zrother = ZR(other)
+            out.mul_assign(zrother.val)
             return ZR(out)
         else:
             raise TypeError(
@@ -632,13 +618,8 @@ class ZR:
             self.val.mul_assign(other.val)
             return self
         elif type(other) is int:
-            if other < 0:
-                other *= -1
-                prodend = PyFr(str(other))
-                prodend.negate()
-            else:
-                prodend = PyFr(str(other))
-            self.val.mul_assign(prodend)
+            zrother = ZR(other)
+            self.val.mul_assign(zrother.val)
             return self
         else:
             raise TypeError(
@@ -658,14 +639,9 @@ class ZR:
             return ZR(out)
         elif type(other) is int:
             out = dupe_pyfr(self.val)
-            if other < 0:
-                other *= -1
-                prodend = PyFr(str(other))
-                prodend.negate()
-            else:
-                prodend = PyFr(str(other))
-            prodend.inverse()
-            out.mul_assign(prodend)
+            zrother = ZR(other)
+            zrother.val.inverse()
+            out.mul_assign(zrother.val)
             return ZR(out)
         else:
             raise TypeError(
@@ -719,11 +695,11 @@ class ZR:
 
     @staticmethod
     def zero():
-        return ZR(PyFr("0"))
+        return ZR(0)
 
     @staticmethod
     def one():
-        return ZR(PyFr("1"))
+        return ZR(1)
 
 
 def lagrange_at_x(s, j, x):

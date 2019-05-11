@@ -3,17 +3,18 @@ from honeybadgermpc.polynomial import polynomials_over
 
 
 class PolyCommitConst:
-    def __init__(self, pk):
+    def __init__(self, pk, field=ZR):
         assert len(pk) == 3
         (self.gs, self.ghats, self.hs) = pk
         assert len(self.gs) == len(self.hs)
         self.t = len(self.gs) - 1
         self.gg = self.gs[0].pair_with(self.ghats[0])
         self.gh = self.hs[0].pair_with(self.ghats[0])
+        self.field = field
 
     def commit(self, phi):
         c = G1.one()
-        phi_hat = polynomials_over(ZR).random(self.t)
+        phi_hat = polynomials_over(self.field).random(self.t)
         i = 0
         for item in self.gs:
             c *= item ** phi.coeffs[i]
@@ -26,7 +27,7 @@ class PolyCommitConst:
         return c, phi_hat
 
     def create_witness(self, phi, phi_hat, i):
-        poly = polynomials_over(ZR)
+        poly = polynomials_over(self.field)
         div = poly([-1*i, 1])
         psi = (phi - poly([phi(i)])) / div
         psi_hat = (phi_hat - poly([phi_hat(i)])) / div
