@@ -395,14 +395,11 @@ async def test_hbavss_batch_share_fault(test_router):
                 for k in range(secret_size):
                     witness = self.poly_commit.create_witness(phi[k], aux_poly[k], i+1)
                     if (i == fault_n and k == fault_k):
-                        z[k] = SymmetricCrypto.encrypt(
-                            str(shared_key).encode("utf-8"),
-                            (ZR.random(), ZR.random(), witness))
+                        z[k] = (ZR.random(), ZR.random(), witness)
                     else:
-                        z[k] = SymmetricCrypto.encrypt(
-                            str(shared_key).encode("utf-8"),
-                            (phi[k](i+1), aux_poly[k](i+1), witness))
-                dispersal_msg_list[i] = dumps(z)
+                        z[k] = (phi[k](i+1), aux_poly[k](i+1), witness)
+                zz = SymmetricCrypto.encrypt(str(shared_key).encode(), z)
+                dispersal_msg_list[i] = zz
             return dumps((commitments, ephemeral_public_key)), dispersal_msg_list
 
     t = 2
@@ -479,14 +476,11 @@ async def test_hbavss_batch_t_share_faults(test_router):
                 for k in range(secret_size):
                     witness = self.poly_commit.create_witness(phi[k], aux_poly[k], i+1)
                     if (i in fault_n_list):
-                        z[k] = SymmetricCrypto.encrypt(
-                            str(shared_key).encode("utf-8"),
-                            (ZR.random(), ZR.random(), witness))
+                        z[k] = (ZR.random(), ZR.random(), witness)
                     else:
-                        z[k] = SymmetricCrypto.encrypt(
-                            str(shared_key).encode("utf-8"),
-                            (phi[k](i+1), aux_poly[k](i+1), witness))
-                dispersal_msg_list[i] = dumps(z)
+                        z[k] = (phi[k](i+1), aux_poly[k](i+1), witness)
+                zz = SymmetricCrypto.encrypt(str(shared_key).encode(), z)
+                dispersal_msg_list[i] = zz
             return dumps((commitments, ephemeral_public_key)), dispersal_msg_list
 
     t = 2
@@ -559,14 +553,11 @@ async def test_hbavss_batch_encryption_fault(test_router):
                 for k in range(secret_size):
                     witness = self.poly_commit.create_witness(phi[k], aux_poly[k], i+1)
                     if (i == fault_n):
-                        z[k] = SymmetricCrypto.encrypt(
-                            str(ZR.random()).encode("utf-8"),
-                            (ZR.random(), ZR.random(), witness))
+                        z[k] = (ZR.random(), ZR.random(), witness)
                     else:
-                        z[k] = SymmetricCrypto.encrypt(
-                            str(shared_key).encode("utf-8"),
-                            (phi[k](i+1), aux_poly[k](i+1), witness))
-                dispersal_msg_list[i] = dumps(z)
+                        z[k] = (phi[k](i+1), aux_poly[k](i+1), witness)
+                zz = SymmetricCrypto.encrypt(str(shared_key).encode(), z)
+                dispersal_msg_list[i] = zz
             return dumps((commitments, ephemeral_public_key)), dispersal_msg_list
 
     t = 2

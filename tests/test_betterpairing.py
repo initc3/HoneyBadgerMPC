@@ -47,6 +47,10 @@ def test_serialization():
     c = G2.rand()
     d = GT.rand()
     assert a == ZR(a.__getstate__())
-    assert b == G1(b.__getstate__())
+    # assert b == G1(b.__getstate__())
     assert c == G2(c.__getstate__())
     assert d == GT(d.__getstate__())
+
+    bb = G1()
+    bb.__setstate__(b.__getstate__())
+    assert bb == b

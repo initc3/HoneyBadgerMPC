@@ -341,12 +341,12 @@ class HbAvssBatch():
             return False
         # decrypt and verify
         implicate_msg = await avid.retrieve(tag, j)
-        j_z = loads(implicate_msg)
         j_shared_key = pow(ephemeral_public_key, j_pk)
         try:
             j_share, j_aux, j_witnesses = SymmetricCrypto.decrypt(
-                str(j_shared_key).encode(), j_z[j_k])
-        except Exception:
+                str(j_shared_key).encode(), implicate_msg)[j_k]
+        except Exception as e:  # TODO specific exception
+            logger.warn('Implicate confirmed, bad encryption:', e)
             return True
         return not self.poly_commit.verify_eval(
             commitments[j_k], j+1, j_share, j_aux, j_witnesses)
@@ -363,7 +363,6 @@ class HbAvssBatch():
         commitments, ephemeral_public_key = loads(rbc_msg)
         # retrieve the z
         dispersal_msg = await avid.retrieve(tag, self.my_id)
-        encrypted_witnesses = loads(dispersal_msg)
 
         secret_count = len(commitments)
 
@@ -375,14 +374,16 @@ class HbAvssBatch():
         witnesses = [None] * secret_count
         # Decrypt
         all_shares_valid = True
-        for k in range(secret_count):
-            try:
-                shares[k], auxes[k], witnesses[k] = SymmetricCrypto.decrypt(
-                    str(shared_key).encode(), encrypted_witnesses[k])
-            except Exception:
-                all_shares_valid = False
-                multicast((HbAVSSMessageType.IMPLICATE, self.private_key, k))
-                break
+        try:
+            all_wits = SymmetricCrypto.decrypt(str(shared_key).encode(),
+                                               dispersal_msg)
+            for k in range(secret_count):
+                shares[k], auxes[k], witnesses[k] = all_wits[k]
+        except ValueError as e:  # TODO: more specific exception
+            logger.warn(f"Implicate due to failure in decrypting: {e}")
+            all_shares_valid = False
+            multicast((HbAVSSMessageType.IMPLICATE, self.private_key, 0))
+
         # call if decryption was successful
         if all_shares_valid:
             if not self.poly_commit.batch_verify_eval(
@@ -524,9 +525,11 @@ class HbAvssBatch():
             z = [None] * secret_count
             for k in range(secret_count):
                 witness = self.poly_commit.create_witness(phi[k], aux_poly[k], i+1)
-                z[k] = SymmetricCrypto.encrypt(str(shared_key).encode(),
-                                               (phi[k](i+1), aux_poly[k](i+1), witness))
-            dispersal_msg_list[i] = dumps(z)
+                z[k] = (int(phi[k](i+1)),
+                        int(aux_poly[k](i+1)),
+                        witness)
+            zz = SymmetricCrypto.encrypt(str(shared_key).encode(), z)
+            dispersal_msg_list[i] = zz
 
         return dumps((commitments, ephemeral_public_key)), dispersal_msg_list
 
