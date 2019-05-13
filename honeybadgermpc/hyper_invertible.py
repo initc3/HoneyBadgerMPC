@@ -8,7 +8,7 @@ from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
 from honeybadgermpc.ipc import ProcessProgramRunner
 from honeybadgermpc.config import HbmpcConfig
-from honeybadgermpc.utils import wrap_send
+from honeybadgermpc.utils import wrap_send, transpose_lists, flatten_lists
 
 # TODO: refactor this method outside of batch_reconstruction
 from honeybadgermpc.batch_reconstruction import subscribe_recv
@@ -27,19 +27,25 @@ async def _recv_loop(n, recv, s=0):
     return results
 
 
-async def generate_double_shares(n, t, my_id, _send, _recv, field):
+async def generate_double_shares(n, t, my_id, _send, _recv, field, k):
+    """
+    Generates a batch of (n-2t)k secret sharings of random elements
+    """
     poly = polynomials_over(field)
     eval_point = EvalPoint(field, n, use_fft=True)
     big_t = n - (2 * t) - 1  # This is same as `T` in the HyperMPC paper.
     encoder = EncoderFactory.get(eval_point)
 
-    # Pick a random element.
-    my_random = field.random()
-    coeffs_t = tuple(map(int, poly.random(t, my_random).coeffs))
-    coeffs_2t = tuple(map(int, poly.random(2*t, my_random).coeffs))
+    # Pick k random elements
+    def to_int(coeffs):
+        return tuple(map(int, coeffs))
+    my_randoms = [field.random() for _ in range(k)]
 
     # Generate t and 2t shares of the random element.
-    shares_to_send = (encoder.encode(coeffs_t), encoder.encode(coeffs_2t))
+    coeffs_t = [to_int(poly.random(t, r).coeffs) for r in my_randoms]
+    coeffs_2t = [to_int(poly.random(2*t, r).coeffs) for r in my_randoms]
+    unref_t = encoder.encode(coeffs_t)
+    unref_2t = encoder.encode(coeffs_2t)
 
     subscribe_recv_task, subscribe = subscribe_recv(_recv)
 
@@ -51,8 +57,10 @@ async def generate_double_shares(n, t, my_id, _send, _recv, field):
     share_recv_task = asyncio.create_task(_recv_loop(n, recv))
 
     # Send each party their shares.
+    to_send_t = transpose_lists(unref_t)
+    to_send_2t = transpose_lists(unref_2t)
     for i in range(n):
-        send(i, (shares_to_send[0][i], shares_to_send[1][i]))
+        send(i, (to_send_t[i], to_send_2t[i]))
 
     # Wait until all shares are received.
     received_shares = await share_recv_task
@@ -61,18 +69,20 @@ async def generate_double_shares(n, t, my_id, _send, _recv, field):
     # Apply the hyper-invertible matrix.
     # Assume the unrefined shares to be coefficients of a polynomial
     # and then evaluate that polynomial at powers of omega.
-    refined_shares = (encoder.encode(unrefined_t_shares),
-                      encoder.encode(unrefined_2t_shares))
+    ref_t = encoder.encode(transpose_lists(list(unrefined_t_shares)))
+    ref_2t = encoder.encode(transpose_lists(list(unrefined_2t_shares)))
 
     # Parties with id in [N-2t+1, N] need to start
     # listening for shares which they have to check.
     send, recv = _get_send_recv("H2")
+    to_send_t = transpose_lists(ref_t)
+    to_send_2t = transpose_lists(ref_2t)
     if my_id > big_t:
         share_chk_recv_task = asyncio.create_task(_recv_loop(n, recv))
 
     # Send shares of parties with id in [N-2t+1, N] to those parties.
     for i in range(big_t+1, n):
-        send(i, (refined_shares[0][i], refined_shares[1][i]))
+        send(i, (to_send_t[i], to_send_2t[i]))
 
     # Parties with id in [N-2t+1, N] need to verify that the shares are in-fact correct.
     if my_id > big_t:
@@ -80,19 +90,31 @@ async def generate_double_shares(n, t, my_id, _send, _recv, field):
         shares_t, shares_2t = zip(*shares_to_check)
         response = HyperInvMessageType.ABORT
 
+        def get_degree(p):
+            for i in range(len(p))[::-1]:
+                if p[i] != 0:
+                    return i
+            return 0
+
         def get_degree_and_secret(shares):
             decoder = DecoderFactory.get(eval_point)
-            polynomial = poly(decoder.decode(list(range(n)), shares))
-            return len(polynomial.coeffs)-1, polynomial(0)
+            polys = decoder.decode(list(range(n)), transpose_lists(list(shares)))
+            secrets = [p[0] for p in polys]
+            degrees = [get_degree(p) for p in polys]
+            return degrees, secrets
 
         degree_t, secret_t = get_degree_and_secret(shares_t)
         degree_2t, secret_2t = get_degree_and_secret(shares_2t)
         # Verify that the shares are in-fact `t` and `2t` shared.
         # Verify that both `t` and `2t` shares of the same value.
-        if degree_t == t and degree_2t == 2*t and secret_t == secret_2t:
+        if all(deg == t for deg in degree_t) and \
+           all(deg == 2*t for deg in degree_2t) and \
+           secret_t == secret_2t:
             response = HyperInvMessageType.SUCCESS
         logging.debug("[%d] Degree check: %s, Secret Check: %s", my_id,
-                      degree_t == t and degree_2t == 2*t, secret_t == secret_2t)
+                      all(deg == t for deg in degree_t) and
+                      all(deg == 2*t for deg in degree_2t),
+                      secret_t == secret_2t)
 
     # Start listening for the verification response.
     send, recv = _get_send_recv("H3")
@@ -109,7 +131,9 @@ async def generate_double_shares(n, t, my_id, _send, _recv, field):
     if responses.count(HyperInvMessageType.SUCCESS) != n-big_t-1:
         raise HoneyBadgerMPCError("Aborting because the shares were inconsistent.")
 
-    return tuple(zip(refined_shares[0][:big_t+1], refined_shares[1][:big_t+1]))
+    out_t = flatten_lists([s[:big_t+1] for s in ref_t])
+    out_2t = flatten_lists([s[:big_t+1] for s in ref_2t])
+    return tuple(zip(out_t, out_2t))
 
 
 async def _run(peers, n, t, my_id):
