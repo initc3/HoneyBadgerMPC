@@ -1,13 +1,13 @@
 import time
 import asyncio
 import logging
+from honeybadgermpc.config import HbmpcConfig
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
 from honeybadgermpc.field import GF
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
 from honeybadgermpc.ipc import ProcessProgramRunner
-from honeybadgermpc.config import HbmpcConfig
 from honeybadgermpc.utils import wrap_send, transpose_lists, flatten_lists
 
 # TODO: refactor this method outside of batch_reconstruction
@@ -27,7 +27,7 @@ async def _recv_loop(n, recv, s=0):
     return results
 
 
-async def generate_double_shares(n, t, my_id, _send, _recv, field, k):
+async def generate_double_shares(n, t, k, my_id, _send, _recv, field):
     """
     Generates a batch of (n-2t)k secret sharings of random elements
     """
@@ -136,12 +136,12 @@ async def generate_double_shares(n, t, my_id, _send, _recv, field, k):
     return tuple(zip(out_t, out_2t))
 
 
-async def _run(peers, n, t, my_id):
+async def _run(peers, n, t, k, my_id):
     field = GF(Subgroup.BLS12_381)
     async with ProcessProgramRunner(peers, n, t, my_id) as runner:
         send, recv = runner.get_send_recv("0")
         start_time = time.time()
-        await generate_double_shares(n, t, my_id, send, recv, field)
+        await generate_double_shares(n, t, k, my_id, send, recv, field)
         end_time = time.time()
         logging.info("[%d] Finished in %s", my_id, end_time-start_time)
 
@@ -149,4 +149,5 @@ if __name__ == "__main__":
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.run_until_complete(_run(HbmpcConfig.peers, HbmpcConfig.N,
-                                 HbmpcConfig.t, HbmpcConfig.my_id))
+                                 HbmpcConfig.t, HbmpcConfig.extras['k'],
+                                 HbmpcConfig.my_id))

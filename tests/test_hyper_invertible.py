@@ -12,7 +12,7 @@ async def test_generate_double_shares(test_router, polynomial, galois_field, n, 
     t = (n-1)//3
     sends, receives, _ = test_router(n)
     shares_per_party = await asyncio.gather(*[generate_double_shares(
-        n, t, i, sends[i], receives[i], galois_field, k) for i in range(n)])
+        n, t, k, i, sends[i], receives[i], galois_field) for i in range(n)])
     assert len(shares_per_party) == n
     assert all(len(random_shares) == (n-2*t)*k for random_shares in shares_per_party)
     random_values = []
