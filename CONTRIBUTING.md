@@ -1,4 +1,5 @@
 # Contributing to HoneyBadgerMPC
+
 See [Getting Started](docs/development/getting-started.rst) to get setup for
 developing HoneyBadgerMPC.
 

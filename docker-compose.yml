@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: dev-release
+      target: dev-image
     cap_add:
       - NET_ADMIN
     volumes:

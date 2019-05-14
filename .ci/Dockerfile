@@ -1,8 +1,3 @@
-FROM dsluiuc/honeybadgermpc-docker-base AS travis-image
+FROM dsluiuc/honeybadgermpc-test-image
 
-WORKDIR /usr/src/HoneyBadgerMPC
 COPY . /usr/src/HoneyBadgerMPC
-
-RUN pip install -e .["tests,docs"]
-RUN make -C apps/shuffle/cpp -j
-

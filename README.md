@@ -17,16 +17,21 @@ properties:
 * Prevents data breaches even if some nodes are compromised.
 
 ## [HoneyBadgerMPC Subprotocols](docs/subprotocols.rst)
+
 See [docs/subprotocols.rst](docs/subprotocols.rst).
 
 ## [Contributing to HoneyBadgerMPC](CONTRIBUTING.md)
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) to get started!
 
 ## [Roadmap](ROADMAP.md)
+
 See [ROADMAP.md](ROADMAP.md).
 
 ## [Documentation](/docs)
+
 The HoneyBadgerMPC documentation is under the [docs/](docs/) directory.
 
 ## [Changelog](CHANGELOG.md)
+
 See [CHANGELOG.md](CHANGELOG.md).

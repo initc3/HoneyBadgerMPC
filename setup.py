@@ -13,6 +13,7 @@ REQUIRES_PYTHON = '>=3.7.0'
 VERSION = None
 
 REQUIRED = [
+    'cython',
     'gmpy2',
     'zfec',
     'pycrypto',
@@ -21,10 +22,9 @@ REQUIRED = [
     'pyzmq',
 ]
 
-TESTS_REQUIRES = [
-    'flake8',
+
+TEST_REQUIRES = [
     'pep8-naming',
-    'pytest',
     'pytest-asyncio',
     'pytest-mock',
     'pytest-cov',
@@ -32,33 +32,36 @@ TESTS_REQUIRES = [
     'pytest-xdist',
     'pytest-benchmark',
     'pytest-benchmark[histogram]',
-    'pyyaml',
 ]
 
 DEV_REQUIRES = [
     'ipdb',
-    'ipython',
 ]
 
-DOCS_REQUIRE = [
-    'Sphinx',
+DOCS_REQUIRES = [
     'sphinx-autobuild',
     'sphinx_rtd_theme',
     'sphinx_tabs',
     'm2r',
-    'doc8',
+    'doc8'
 ]
 
-ETH_REQUIRES = ['web3', 'ethereum']
+ETH_REQUIRES = [
+    'web3',
+    'ethereum',
+]
 
-AWS_REQUIRES = ['boto3', 'paramiko']
+AWS_REQUIRES = [
+    'boto3',
+    'paramiko',
+]
 
 EXTRAS = {
-    'tests': TESTS_REQUIRES,
-    'dev': DEV_REQUIRES + TESTS_REQUIRES + DOCS_REQUIRE + ETH_REQUIRES,
-    'docs': DOCS_REQUIRE + ETH_REQUIRES,
+    'tests': TEST_REQUIRES,
+    'dev': DEV_REQUIRES + TEST_REQUIRES + DOCS_REQUIRES + ETH_REQUIRES,
+    'docs': DOCS_REQUIRES + ETH_REQUIRES,
     'eth': ETH_REQUIRES,
-    'aws': AWS_REQUIRES,
+    'aws': AWS_REQUIRES
 }
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -99,7 +102,10 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     python_requires=REQUIRES_PYTHON,
-    setup_requires=['cffi>=1.0.0', 'Cython'],
+    setup_requires=[
+        'cffi>=1.0.0',
+        'cython'
+    ],
     install_requires=REQUIRED,
     cffi_modules=['apps/shuffle/solver/solver_build.py:ffibuilder'],
     extras_require=EXTRAS,

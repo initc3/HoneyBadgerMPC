@@ -92,14 +92,16 @@ For the ``docs`` and ``tests`` build jobs (i.e.: ``BUILD=docs`` and
 ``BUILD=tests`` matrix rows), `docker-compose is used
 <using docker in builds>`_. The ``Dockerfile`` used is located under the
 ``.ci/`` directory whereas the ``docker-compose`` file is under the root of
-the project and is named ``.travis.compose.yml``. Both files are similar to
-the ones used for development. One key difference is that only the docs or
-tests requirements are installed, depending on the value of the ``BUILD``
-environment variable.
+the project and is named ``.travis.compose.yml``. This Dockerfile simply pulls
+the last-pushed version of our testing docker-image from Dockerhub, copies over
+cloned code, and then runs the tests. This prevents having to install
+dependencies in travis, which vastly cuts down our CI time.
 
-.. note:: Some work could perhaps be done to limit the duplication accross the
-    two Dockerfiles, by using a base Dockerfile for instance, but this may
-    also complicate things so for now some duplication is tolerated.
+.. note:: In order to achieve this, we utilize dockerhub's `automated builds`_.
+    Whenever we push to the ``dev`` branch, dockerhub will build a new docker image,
+    which then gets pulled down in future travis runs. If you need to rebuild
+    the image used by travis for some reason (say, adding a dependency), use the
+    ``build_dockerhub_image.sh`` script in ``scripts/``
 
 
 Code coverage
@@ -175,3 +177,4 @@ Recommended readings
 .. _coverage configuration: https://docs.codecov.io/docs/coverage-configuration
 .. _Codecov Outside Docker: https://docs.codecov.io/docs/testing-with-docker#section-codecov-outside-docker
 .. _team bot: https://docs.codecov.io/docs/team-bot
+.. _automated builds: https://docs.docker.com/docker-hub/builds/
