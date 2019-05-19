@@ -199,11 +199,11 @@ async def test_mpc_programs(peers, n, t, my_id):
             await wait_for_preprocessing()
 
     async with ProcessProgramRunner(peers, n, t, my_id) as runner:
-        r1 = runner.execute(0, test_prog1)
-        r2 = runner.execute(1, test_prog2)
-        r3 = runner.execute(2, test_batchopening)
-        results = await asyncio.gather(*[r1, r2, r3])
-        logging.info("%s", results)
+        test_prog1  # r1 = runner.execute("0", test_prog1)
+        r2 = runner.execute("1", test_prog2)
+        r3 = runner.execute("2", test_batchopening)
+        results = await asyncio.gather(*[r2, r3])
+        return results
 
 
 if __name__ == "__main__":

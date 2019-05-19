@@ -36,6 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     flex \
     g++ \
     git \
+    iproute2 \
     libflint-dev \
     libgmp-dev \
     libmpc-dev \
