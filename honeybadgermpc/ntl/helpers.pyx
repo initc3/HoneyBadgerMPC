@@ -384,7 +384,7 @@ cpdef int AvailableNTLThreads():
     return AvailableThreads()
 
 cpdef gao_interpolate(x, y, int k, modulus, z=None, omega=None, order=None,
-                      use_fft=False):
+                      use_omega_powers=False):
     cdef vec_ZZ_p x_vec, y_vec, res_vec, err_vec
     cdef ZZ_p zz_omega
     cdef vector[int] z_vec;
@@ -407,7 +407,7 @@ cpdef gao_interpolate(x, y, int k, modulus, z=None, omega=None, order=None,
         x_vec[i] = intToZZp(x[i])
         y_vec[i] = intToZZp(y[i])
 
-    if use_fft is True:
+    if use_omega_powers is True:
         assert z is not None
         assert len(z) is n
         assert omega is not None

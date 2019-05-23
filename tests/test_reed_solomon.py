@@ -21,7 +21,7 @@ def encoding_test_cases(galois_field):
 
 @pytest.fixture
 def fft_encoding_test_cases(galois_field):
-    point = EvalPoint(galois_field, 4, use_fft=True)
+    point = EvalPoint(galois_field, 4, use_omega_powers=True)
     omega = point.omega.value
     p = point.field.modulus
     test_cases = []
@@ -46,7 +46,7 @@ def decoding_test_cases(galois_field):
 
 @pytest.fixture
 def fft_decoding_test_cases(galois_field):
-    point = EvalPoint(galois_field, 4, use_fft=True)
+    point = EvalPoint(galois_field, 4, use_omega_powers=True)
     omega = point.omega.value
     p = galois_field.modulus
     test_cases = []
@@ -61,7 +61,7 @@ def fft_decoding_test_cases(galois_field):
 
 @pytest.fixture
 def robust_decoding_test_cases(galois_field):
-    omega = EvalPoint(galois_field, 4, use_fft=True).omega.value
+    omega = EvalPoint(galois_field, 4, use_omega_powers=True).omega.value
     p = galois_field.modulus
     # Order: Index of parties, Encoded values, Expected decoded values,
     # Expected erroneous parties, t, point
@@ -72,7 +72,7 @@ def robust_decoding_test_cases(galois_field):
         [[0, 1, 2, 3],
          [(2 * pow(omega, 0, p) + 1) % p, (2 * pow(omega, 1, p) + 1) % p,
           0, (2 * pow(omega, 3, p) + 1) % p],
-         [1, 2], [2], 1, EvalPoint(galois_field, 4, use_fft=True)]
+         [1, 2], [2], 1, EvalPoint(galois_field, 4, use_omega_powers=True)]
     ]
 
     return test_cases
@@ -164,36 +164,36 @@ def test_wb_robust_decode(robust_decoding_test_cases):
 
 def test_encoder_selection(galois_field):
     # Very small n < 8. Vandermonde should always be picked
-    point = EvalPoint(galois_field, 4, use_fft=True)
+    point = EvalPoint(galois_field, 4, use_omega_powers=True)
     assert isinstance(EncoderSelector.select(point, 1), VandermondeEncoder)
     assert isinstance(EncoderSelector.select(point, 100000), VandermondeEncoder)
 
     # Intermediate values of n (8 < n < 128
     # Bad n (Nearest power of 2 is much higher) Vandermonde should
     # always be picked
-    point = EvalPoint(galois_field, 65, use_fft=True)
+    point = EvalPoint(galois_field, 65, use_omega_powers=True)
     assert isinstance(EncoderSelector.select(point, 1), VandermondeEncoder)
     assert isinstance(EncoderSelector.select(point, 100000), VandermondeEncoder)
 
-    point = EvalPoint(galois_field, 40, use_fft=True)
+    point = EvalPoint(galois_field, 40, use_omega_powers=True)
     assert isinstance(EncoderSelector.select(point, 1), VandermondeEncoder)
     assert isinstance(EncoderSelector.select(point, 100000), VandermondeEncoder)
 
     # Good n (Nearest power of 2 is close) FFT should be picked
-    point = EvalPoint(galois_field, 120, use_fft=True)
+    point = EvalPoint(galois_field, 120, use_omega_powers=True)
     assert isinstance(EncoderSelector.select(point, 1), FFTEncoder)
     assert isinstance(EncoderSelector.select(point, 100000), FFTEncoder)
 
-    point = EvalPoint(galois_field, 55, use_fft=True)
+    point = EvalPoint(galois_field, 55, use_omega_powers=True)
     assert isinstance(EncoderSelector.select(point, 1), FFTEncoder)
     assert isinstance(EncoderSelector.select(point, 100000), FFTEncoder)
 
     # Large n. Always pick FFT
-    point = EvalPoint(galois_field, 255, use_fft=True)
+    point = EvalPoint(galois_field, 255, use_omega_powers=True)
     assert isinstance(EncoderSelector.select(point, 1), FFTEncoder)
     assert isinstance(EncoderSelector.select(point, 100000), FFTEncoder)
 
-    point = EvalPoint(galois_field, 257, use_fft=True)
+    point = EvalPoint(galois_field, 257, use_omega_powers=True)
     assert isinstance(EncoderSelector.select(point, 1), FFTEncoder)
     assert isinstance(EncoderSelector.select(point, 100000), FFTEncoder)
 
@@ -201,7 +201,7 @@ def test_encoder_selection(galois_field):
 @patch('psutil.cpu_count')
 def test_decoder_selection(mocked_cpu_count, galois_field):
     # Very small n < 8. Vandermonde should always be picked
-    point = EvalPoint(galois_field, 4, use_fft=True)
+    point = EvalPoint(galois_field, 4, use_omega_powers=True)
     for cpu_count in [1, 100]:
         mocked_cpu_count.return_value = cpu_count
         for batch_size in [1, 1000, 100000]:
@@ -210,7 +210,7 @@ def test_decoder_selection(mocked_cpu_count, galois_field):
                               VandermondeDecoder)
 
     # Small batches (~n). Reasonable number of threads. Pick FFT
-    point = EvalPoint(galois_field, 65, use_fft=True)
+    point = EvalPoint(galois_field, 65, use_omega_powers=True)
     for cpu_count in [1, 2, 4, 8]:
         mocked_cpu_count.return_value = cpu_count
         for batch_size in [1, 16, 32]:
@@ -220,7 +220,7 @@ def test_decoder_selection(mocked_cpu_count, galois_field):
 
     # Small n. Reasonable number of threads,
     # Large batch sizes > ~ numthreads * n. Pick Vandermonde
-    point = EvalPoint(galois_field, 65, use_fft=True)
+    point = EvalPoint(galois_field, 65, use_omega_powers=True)
     for cpu_count in [1, 2, 4, 8]:
         mocked_cpu_count.return_value = cpu_count
         for batch_size in [512, 1024, 2048, 4096]:
@@ -229,7 +229,7 @@ def test_decoder_selection(mocked_cpu_count, galois_field):
                               VandermondeDecoder)
 
     # Extremely large n. FFT should ideally be picked at reasonable batch sizes
-    point = EvalPoint(galois_field, 65536, use_fft=True)
+    point = EvalPoint(galois_field, 65536, use_omega_powers=True)
     for cpu_count in [1, 2, 4, 8]:
         mocked_cpu_count.return_value = cpu_count
         for batch_size in [512, 1024, 2048, 4096, 8192]:
@@ -241,7 +241,7 @@ def test_decoder_selection(mocked_cpu_count, galois_field):
     # on the exact approximation formula. Ideally, the cases above should not change
     # over time but the tests below will as the selection algorithm changes
     for n in [32, 64, 128, 256]:
-        point = EvalPoint(galois_field, n, use_fft=True)
+        point = EvalPoint(galois_field, n, use_omega_powers=True)
         for cpu_count in [2 ** i for i in range(5)]:
             mocked_cpu_count.return_value = cpu_count
             for batch_size in [2 ** i for i in range(16)]:

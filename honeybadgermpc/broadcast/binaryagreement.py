@@ -290,7 +290,7 @@ def set_new_estimate(*, values, s, already_decided, decide):
 
 
 async def run_binary_agreement(config, pbk, pvk, n, f, nodeid):
-    from honeybadgermpc.protocols.commoncoin import shared_coin
+    from honeybadgermpc.broadcast.commoncoin import shared_coin
     import random
 
     sid_c = "sid_coin"
@@ -331,8 +331,8 @@ if __name__ == "__main__":
     import base64
     from honeybadgermpc.config import HbmpcConfig
     from honeybadgermpc.ipc import ProcessProgramRunner
-    from honeybadgermpc.protocols.crypto.boldyreva import TBLSPublicKey  # noqa:F401
-    from honeybadgermpc.protocols.crypto.boldyreva import TBLSPrivateKey  # noqa:F401
+    from honeybadgermpc.broadcast.crypto.boldyreva import TBLSPublicKey  # noqa:F401
+    from honeybadgermpc.broadcast.crypto.boldyreva import TBLSPrivateKey  # noqa:F401
 
     pbk = pickle.loads(base64.b64decode(HbmpcConfig.extras["public_key"]))
     pvk = pickle.loads(base64.b64decode(HbmpcConfig.extras["private_key"]))

@@ -3,7 +3,7 @@ import logging
 import math
 import asyncio
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
-from honeybadgermpc.protocols.reliablebroadcast \
+from honeybadgermpc.broadcast.reliablebroadcast \
     import encode, decode, merkle_tree, get_merkle_branch, merkle_verify
 
 logger = logging.getLogger(__name__)

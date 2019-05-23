@@ -3,7 +3,7 @@ from honeybadgermpc.ntl.helpers import vandermonde_batch_evaluate, \
 from honeybadgermpc.ntl.helpers import gao_interpolate
 from honeybadgermpc.ntl.helpers import fft, fft_interpolate, fft_batch_interpolate, \
     fft_batch_evaluate, SetNumThreads, AvailableNTLThreads
-from honeybadgermpc.wb_interpolate import make_wb_encoder_decoder
+from honeybadgermpc.reed_solomon_wb import make_wb_encoder_decoder
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
 import logging
 import psutil
@@ -92,8 +92,9 @@ class VandermondeEncoder(Encoder):
 
 class FFTEncoder(Encoder):
     def __init__(self, point):
-        assert point.use_fft is True, "FFTEncoder only usable with roots of unity " \
-                                      "evaluation points"
+        assert point.use_omega_powers is True, \
+            "FFTEncoder only usable with roots of unity " \
+            "evaluation points"
 
         self.order = point.order
         self.omega = point.omega.value
@@ -124,8 +125,9 @@ class VandermondeDecoder(Decoder):
 
 class FFTDecoder(Decoder):
     def __init__(self, point):
-        assert point.use_fft is True, "FFTEncoder only usable with roots of unity " \
-                                      "evaluation points"
+        assert point.use_omega_powers is True, \
+            "FFTEncoder only usable with roots of unity " \
+            "evaluation points"
         self.order = point.order
         self.omega = point.omega.value
         self.modulus = point.field.modulus
@@ -143,7 +145,7 @@ class GaoRobustDecoder(RobustDecoder):
         self.d = d
         self.point = point
         self.modulus = point.field.modulus
-        self.use_fft = point.use_fft
+        self.use_omega_powers = point.use_omega_powers
 
     # TODO: refactor this using `OptimalEncoder`
     #       see: https://github.com/initc3/HoneyBadgerMPC/pull/268
@@ -151,17 +153,18 @@ class GaoRobustDecoder(RobustDecoder):
         x = [self.point(zi).value for zi in z]
 
         args = [x, encoded, self.d + 1, self.modulus]
-        if self.use_fft:
+        if self.use_omega_powers:
             args += [z, self.point.omega.value, self.point.order]
 
-        decoded, error_poly = gao_interpolate(*args, use_fft=self.use_fft)
+        decoded, error_poly = gao_interpolate(*args,
+                                              use_omega_powers=self.use_omega_powers)
 
         if decoded is None:
             return None, None
 
         errors = []
         if len(error_poly) > 1:
-            if self.use_fft:
+            if self.use_omega_powers:
                 err_eval = fft(error_poly, self.point.omega.value,
                                self.modulus, self.point.order)[:self.point.n]
             else:
@@ -388,7 +391,7 @@ class EncoderSelector(object):
 
     @staticmethod
     def select(point, k):
-        assert point.use_fft is True
+        assert point.use_omega_powers is True
         n = point.n
         if n < EncoderSelector.LOW_VAN_THRESHOLD:
             return VandermondeEncoder(point)
@@ -420,7 +423,7 @@ class DecoderSelector(object):
 
     @staticmethod
     def select(point, k):
-        assert point.use_fft is True
+        assert point.use_omega_powers is True
         n = point.n
         if n < DecoderSelector.LOW_VAN_THRESHOLD:
             return VandermondeDecoder(point)
@@ -436,7 +439,7 @@ class OptimalEncoder(Encoder):
     """A wrapper for EncoderSelector which can directly be used in EncoderFactory"""
 
     def __init__(self, point):
-        assert point.use_fft is True
+        assert point.use_omega_powers is True
         self.point = point
 
     def encode_one(self, data):
@@ -452,7 +455,7 @@ class OptimalDecoder(Decoder):
     """A wrapper for DecoderSelector which can directly be used in DecoderFactory"""
 
     def __init__(self, point):
-        assert point.use_fft is True
+        assert point.use_omega_powers is True
         self.point = point
 
     def decode_one(self, z, data):
@@ -479,7 +482,7 @@ class EncoderFactory:
         elif algorithm == Algorithm.FFT:
             return FFTEncoder(point)
         elif algorithm is None:
-            if point.use_fft:
+            if point.use_omega_powers:
                 return OptimalEncoder(point)
             else:
                 return VandermondeEncoder(point)
@@ -499,7 +502,7 @@ class DecoderFactory:
         elif algorithm == Algorithm.FFT:
             return FFTDecoder(point)
         elif algorithm is None:
-            if point.use_fft:
+            if point.use_omega_powers:
                 return OptimalDecoder(point)
             else:
                 return VandermondeDecoder(point)

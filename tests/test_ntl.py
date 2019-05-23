@@ -268,7 +268,7 @@ def test_gao_interpolate_fft(galois_field, galois_field_roots):
 
     # Check decoding with no errors
     decoded, _ = gao_interpolate(x, encoded, k, p, z=z, omega=omega, order=order,
-                                 use_fft=True)
+                                 use_omega_powers=True)
     # decoded, _ = gao_interpolate(x, encoded, k, p)
     assert (decoded == int_msg)
 
@@ -276,14 +276,14 @@ def test_gao_interpolate_fft(galois_field, galois_field_roots):
     cmax = n - 2 * t - 1
     corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
     coeffs, _ = gao_interpolate(x, corrupted, k, p, z=z, omega=omega, order=order,
-                                use_fft=True)
+                                use_omega_powers=True)
     assert coeffs == int_msg
 
     # Corrupt with maximum number of errors:
     emax = (n - 2 * t - 1) // 2
     corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
     coeffs, _ = gao_interpolate(x, corrupted, k, p, z=z, omega=omega, order=order,
-                                use_fft=True)
+                                use_omega_powers=True)
     assert coeffs == int_msg
 
     # Corrupt with a mixture of errors and erasures
@@ -291,7 +291,7 @@ def test_gao_interpolate_fft(galois_field, galois_field_roots):
     c = cmax // 4
     corrupted = corrupt(encoded, num_errors=e, num_nones=c)
     coeffs, _ = gao_interpolate(x, corrupted, k, p, z=z, omega=omega, order=order,
-                                use_fft=True)
+                                use_omega_powers=True)
     assert coeffs == int_msg
 
 

@@ -377,13 +377,13 @@ class EvalPoint(object):
     i'th point (zero-indexed) = i + 1
     """
 
-    def __init__(self, field, n, use_fft=False):
-        self.use_fft = use_fft
+    def __init__(self, field, n, use_omega_powers=False):
+        self.use_omega_powers = use_omega_powers
         self.field = field
         self.n = n
         # Need an additional point where we evaluate polynomial to get secret
         order = n
-        if use_fft:
+        if use_omega_powers:
             self.order = order if (order & (order - 1) == 0) else 2 ** order.bit_length()
 
             # All parties must use the same omega for FFT to work with batch
@@ -396,7 +396,7 @@ class EvalPoint(object):
             self.omega = None
 
     def __call__(self, i):
-        if self.use_fft:
+        if self.use_omega_powers:
             return self.field(self.omega2.value ** (2 * i))
         else:
             return self.field(i + 1)

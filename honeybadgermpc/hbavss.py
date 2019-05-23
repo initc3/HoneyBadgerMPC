@@ -6,9 +6,9 @@ from honeybadgermpc.polynomial import polynomials_over
 from honeybadgermpc.poly_commit_const import PolyCommitConst
 from honeybadgermpc.poly_commit_lin import PolyCommitLin
 from honeybadgermpc.symmetric_crypto import SymmetricCrypto
-from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
-from honeybadgermpc.protocols.avid import AVID
-from honeybadgermpc.utils import wrap_send
+from honeybadgermpc.broadcast.reliablebroadcast import reliablebroadcast
+from honeybadgermpc.broadcast.avid import AVID
+from honeybadgermpc.utils.misc import wrap_send
 import time
 
 # TODO: Move these to a separate file instead of using it from batch_reconstruction.py

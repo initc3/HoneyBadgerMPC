@@ -8,7 +8,7 @@ import time
 from .reed_solomon import Algorithm, EncoderFactory, DecoderFactory, RobustDecoderFactory
 from .reed_solomon import IncrementalDecoder
 import random
-from honeybadgermpc.utils import chunk_data, flatten_lists, transpose_lists
+from honeybadgermpc.utils.misc import chunk_data, flatten_lists, transpose_lists
 
 
 async def fetch_one(awaitables):
@@ -104,7 +104,7 @@ def recv_each_party(recv, n):
 
 
 async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=None,
-                            use_fft=False, debug=False):
+                            use_omega_powers=False, debug=False):
     """
     args:
       shared_secrets: an array of points representing shared secrets S1 - SB
@@ -148,9 +148,11 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     fp = GF(p)
     decoding_algorithm = Algorithm.GAO if config is None else config.decoding_algorithm
 
-    point = EvalPoint(fp, n, use_fft=use_fft)
-    enc = EncoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
-    dec = DecoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
+    point = EvalPoint(fp, n, use_omega_powers=use_omega_powers)
+    enc = EncoderFactory.get(point, Algorithm.FFT if use_omega_powers
+                             else Algorithm.VANDERMONDE)
+    dec = DecoderFactory.get(point, Algorithm.FFT if use_omega_powers
+                             else Algorithm.VANDERMONDE)
     robust_dec = RobustDecoderFactory.get(t, point, algorithm=decoding_algorithm)
 
     # Prepare data for step 1
