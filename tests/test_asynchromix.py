@@ -2,10 +2,41 @@ from pytest import mark
 
 
 @mark.asyncio
+async def test_butterfly_network(test_preprocessing):
+    import apps.asynchromix.butterfly_network as butterfly
+    from honeybadgermpc.mpc import TaskProgramRunner
+    from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiplyArrays
+    from honeybadgermpc.progs.mixins.constants import MixinConstants
+
+    n, t, k, delta = 3, 1, 32, -9999
+    test_preprocessing.generate("rands", n, t)
+    test_preprocessing.generate("oneminusone", n, t)
+    test_preprocessing.generate("triples", n, t)
+
+    async def verify_output(ctx, **kwargs):
+        k, delta = kwargs['k'], kwargs['delta']
+        inputs = [test_preprocessing.elements.get_rand(ctx) for _ in range(k)]
+        sorted_input = sorted(await ctx.ShareArray(inputs).open(), key=lambda x: x.value)
+
+        share_arr = await butterfly.butterfly_network_helper(ctx, k=k, delta=delta)
+        outputs = await share_arr.open()
+
+        assert len(sorted_input) == len(outputs)
+        sorted_output = sorted(outputs, key=lambda x: x.value)
+        for i, j in zip(sorted_input, sorted_output):
+            assert i == j
+
+    program_runner = TaskProgramRunner(
+        n, t, {MixinConstants.MultiplyShareArray: BeaverMultiplyArrays()})
+    program_runner.add(verify_output,  k=k, delta=delta)
+    await program_runner.join()
+
+
+@mark.asyncio
 async def test_phase1(test_preprocessing, galois_field):
     from honeybadgermpc.mpc import TaskProgramRunner
     from honeybadgermpc.preprocessing import PreProcessingConstants
-    import apps.shuffle.powermixing as pm
+    import apps.asynchromix.powermixing as pm
     from uuid import uuid4
 
     field = galois_field
@@ -37,7 +68,7 @@ async def test_phase1(test_preprocessing, galois_field):
 @mark.asyncio
 async def test_phase2(galois_field):
     from honeybadgermpc.preprocessing import PreProcessingConstants
-    import apps.shuffle.powermixing as pm
+    import apps.asynchromix.powermixing as pm
     import uuid
 
     field = galois_field
@@ -69,7 +100,7 @@ async def test_phase2(galois_field):
 @mark.asyncio
 async def test_asynchronous_mixing(test_preprocessing):
     import asyncio
-    import apps.shuffle.powermixing as pm
+    import apps.asynchromix.powermixing as pm
     from honeybadgermpc.mpc import TaskProgramRunner
 
     n, t, k = 3, 1, 4

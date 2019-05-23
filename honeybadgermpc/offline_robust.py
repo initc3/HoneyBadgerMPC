@@ -2,12 +2,12 @@ import asyncio
 import logging
 from honeybadgermpc.hbavss import HbAvssLight
 from honeybadgermpc.avss_value_processor import AvssValueProcessor
-from honeybadgermpc.protocols.crypto.boldyreva import dealer
+from honeybadgermpc.broadcast.crypto.boldyreva import dealer
 from honeybadgermpc.betterpairing import G1, ZR
 from honeybadgermpc.progs.random_refinement import refine_randoms
 from honeybadgermpc.field import GF
 from honeybadgermpc.elliptic_curve import Subgroup
-from honeybadgermpc.utils import wrap_send
+from honeybadgermpc.utils.misc import wrap_send
 from abc import ABC, abstractmethod
 
 # TODO: refactor subscribe_recv outside of batch_reconstruction

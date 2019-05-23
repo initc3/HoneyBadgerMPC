@@ -3,9 +3,9 @@ from asyncio import Queue, Event
 from asyncio import get_event_loop, create_task, gather
 from pytest import mark, raises
 
-from honeybadgermpc.protocols.commoncoin import shared_coin
-from honeybadgermpc.protocols.binaryagreement import binaryagreement
-from honeybadgermpc.protocols.crypto.boldyreva import dealer
+from honeybadgermpc.broadcast.commoncoin import shared_coin
+from honeybadgermpc.broadcast.binaryagreement import binaryagreement
+from honeybadgermpc.broadcast.crypto.boldyreva import dealer
 from collections import defaultdict
 
 
@@ -230,7 +230,7 @@ async def test_set_next_round_estimate_with_decision(
         expected_est,
         expected_already_decided,
         expected_output):
-    from honeybadgermpc.protocols.binaryagreement import set_new_estimate
+    from honeybadgermpc.broadcast.binaryagreement import set_new_estimate
     decide = Queue()
     updated_est, updated_already_decided = set_new_estimate(
         values=values,
@@ -262,7 +262,7 @@ async def test_set_next_round_estimate_with_decision(
                     ({0, 1}, 1, 1, 1, 1),))
 def test_set_next_round_estimate(values, s, already_decided,
                                  expected_est, expected_already_decided):
-    from honeybadgermpc.protocols.binaryagreement import set_new_estimate
+    from honeybadgermpc.broadcast.binaryagreement import set_new_estimate
     decide = Queue()
     updated_est, updated_already_decided = set_new_estimate(
         values=values,
@@ -280,7 +280,7 @@ def test_set_next_round_estimate(values, s, already_decided,
     ({1}, 1, 1),
 ))
 def test_set_next_round_estimate_raises(values, s, already_decided):
-    from honeybadgermpc.protocols.binaryagreement import set_new_estimate
+    from honeybadgermpc.broadcast.binaryagreement import set_new_estimate
     from honeybadgermpc.exceptions import AbandonedNodeError
     with raises(AbandonedNodeError):
         updated_est, updated_already_decided = set_new_estimate(

@@ -8,7 +8,7 @@ from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
 from honeybadgermpc.ipc import ProcessProgramRunner
-from honeybadgermpc.utils import wrap_send, transpose_lists, flatten_lists
+from honeybadgermpc.utils.misc import wrap_send, transpose_lists, flatten_lists
 
 # TODO: refactor this method outside of batch_reconstruction
 from honeybadgermpc.batch_reconstruction import subscribe_recv
@@ -27,12 +27,12 @@ async def _recv_loop(n, recv, s=0):
     return results
 
 
-async def generate_double_shares(n, t, k, my_id, _send, _recv, field):
+async def randousha(n, t, k, my_id, _send, _recv, field):
     """
     Generates a batch of (n-2t)k secret sharings of random elements
     """
     poly = polynomials_over(field)
-    eval_point = EvalPoint(field, n, use_fft=True)
+    eval_point = EvalPoint(field, n, use_omega_powers=True)
     big_t = n - (2 * t) - 1  # This is same as `T` in the HyperMPC paper.
     encoder = EncoderFactory.get(eval_point)
 
@@ -141,7 +141,7 @@ async def _run(peers, n, t, k, my_id):
     async with ProcessProgramRunner(peers, n, t, my_id) as runner:
         send, recv = runner.get_send_recv("0")
         start_time = time.time()
-        await generate_double_shares(n, t, k, my_id, send, recv, field)
+        await randousha(n, t, k, my_id, send, recv, field)
         end_time = time.time()
         logging.info("[%d] Finished in %s", my_id, end_time-start_time)
 

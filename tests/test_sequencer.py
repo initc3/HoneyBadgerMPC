@@ -1,6 +1,6 @@
 from pytest import mark, raises
 from random import shuffle, randint
-from honeybadgermpc.sequencer import Sequencer
+from honeybadgermpc.utils.sequencer import Sequencer
 
 
 @mark.parametrize("input_values", (

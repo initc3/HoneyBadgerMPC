@@ -8,7 +8,7 @@ from psutil import cpu_count
 
 from honeybadgermpc.mpc import Mpc
 from honeybadgermpc.config import HbmpcConfig, ConfigVars
-from honeybadgermpc.utils import wrap_send
+from honeybadgermpc.utils.misc import wrap_send
 
 # TODO: move this functionality outside of batch_reconstruction
 from honeybadgermpc.batch_reconstruction import subscribe_recv
@@ -119,14 +119,13 @@ class ProcessProgramRunner(object):
         self.node_communicator = NodeCommunicator(peers_config, my_id, linger_timeout)
         self.progs = []
 
-    def execute(self, program_tag, program, **kwargs):
-        send, recv = self.get_send_recv(program_tag)
+    def execute(self, sid, program, **kwargs):
+        send, recv = self.get_send_recv(sid)
         context = Mpc(
-            'sid',
+            sid,
             self.n,
             self.t,
             self.my_id,
-            program_tag,
             send,
             recv,
             program,
