@@ -4,7 +4,7 @@ from honeybadgermpc.reed_solomon import VandermondeEncoder, FFTEncoder, \
 from honeybadgermpc.polynomial import EvalPoint
 from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
 from honeybadgermpc.reed_solomon import EncoderSelector, DecoderSelector
-from honeybadgermpc.ntl.helpers import AvailableNTLThreads
+from honeybadgermpc.ntl import AvailableNTLThreads
 from unittest.mock import patch
 
 

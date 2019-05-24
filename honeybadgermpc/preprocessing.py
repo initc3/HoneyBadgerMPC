@@ -6,7 +6,7 @@ from random import randint
 from os import makedirs
 from .field import GF
 from .polynomial import polynomials_over
-from .ntl.helpers import vandermonde_batch_evaluate
+from .ntl import vandermonde_batch_evaluate
 from .elliptic_curve import Subgroup
 
 

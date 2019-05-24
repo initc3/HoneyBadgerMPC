@@ -1,4 +1,4 @@
-from .ctypes cimport ZZ, mat_ZZ_p, vec_ZZ_p, ZZ_p, ZZ_pX_c
+from .ntlwrapper cimport ZZ, mat_ZZ_p, vec_ZZ_p, ZZ_p, ZZ_pX_c
 from libcpp.vector cimport vector
 from libcpp cimport bool
 

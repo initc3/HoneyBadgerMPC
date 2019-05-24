@@ -3,16 +3,19 @@
 # The data validation and checking must be done in python in all cases!
 # PEP8 standards are observed wherever possible but ignored in cases whether NTL
 # classes are used (like ZZ, mat_ZZ_p, etc) and also for NTL function names
-from .ctypes cimport ZZ, ZZ_p, mat_ZZ_p, vec_ZZ_p, ZZ_pX_c
-from .ctypes cimport mat_ZZ_p_mul
-from .ctypes cimport ZZFromBytes, bytesFromZZ, to_ZZ_p, to_ZZ, ZZNumBytes
-from .objectwrapper cimport ccrepr, ccreadstr
-from .ctypes cimport SetNTLNumThreads_c, AvailableThreads, ZZ_p_init, ZZ_pX_get_coeff, \
-    ZZ_pX_set_coeff, ZZ_pX_eval, SqrRootMod
+from .ntlwrapper cimport ZZ, ZZ_p, mat_ZZ_p, vec_ZZ_p, ZZ_pX_c
+from .ntlwrapper cimport mat_ZZ_p_mul, ZZ_p_init, SqrRootMod
+from .ntlwrapper cimport ZZFromBytes, bytesFromZZ, to_ZZ_p, to_ZZ, ZZNumBytes
+from .ntlwrapper cimport SetNTLNumThreads_c, AvailableThreads
+from .ntlwrapper cimport ZZ_pX_get_coeff, ZZ_pX_set_coeff, ZZ_pX_eval
+from .rsdecode cimport interpolate_c, vandermonde_inverse_c, set_vm_matrix_c, fft_c, fft_partial_c, fnt_decode_step1_c, fnt_decode_step2_c, gao_interpolate_c, gao_interpolate_fft_c
+from .ccobject cimport ccrepr, ccreadstr
 from cpython.int cimport PyInt_AS_LONG
 from cython.parallel import parallel, prange
 from libc.stdlib cimport free
+from libcpp.vector cimport vector
 cimport openmp
+
 
 cdef ZZ intToZZ(x):
     num = (x.bit_length() + 7) // 8

@@ -3,8 +3,8 @@ import operator
 from functools import reduce
 from itertools import zip_longest
 
-from honeybadgermpc.ntl.helpers import fft as fft_cpp
-from honeybadgermpc.ntl.helpers import fft_interpolate as fft_interpolate_cpp
+from honeybadgermpc.ntl import fft as fft_cpp
+from honeybadgermpc.ntl import fft_interpolate as fft_interpolate_cpp
 
 from .betterpairing import ZR
 from .elliptic_curve import Subgroup

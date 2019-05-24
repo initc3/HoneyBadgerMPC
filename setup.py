@@ -84,8 +84,8 @@ extra_link_args = ['-std=c++11', '-O3', '-pthread', '-fopenmp', '-lntl', '-lgmp'
 
 extensions = [
     Extension(
-        name="honeybadgermpc.ntl.helpers",
-        sources=["honeybadgermpc/ntl/helpers.pyx"],
+        name="honeybadgermpc.ntl._hbmpc_ntl_helpers",
+        sources=["honeybadgermpc/ntl/hbmpc_ntl_helpers.pyx"],
         language="c++",
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args
