@@ -1,6 +1,6 @@
 import asyncio
-from honeybadgermpc.ntl.helpers import vandermonde_batch_evaluate
-from honeybadgermpc.ntl.helpers import vandermonde_batch_interpolate
+from honeybadgermpc.ntl import vandermonde_batch_evaluate
+from honeybadgermpc.ntl import vandermonde_batch_interpolate
 
 
 async def batch_beaver(context, a_, b_, x_, y_, z_):

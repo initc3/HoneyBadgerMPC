@@ -1,7 +1,7 @@
-from honeybadgermpc.ntl.helpers import vandermonde_batch_evaluate, \
+from honeybadgermpc.ntl import vandermonde_batch_evaluate, \
     vandermonde_batch_interpolate
-from honeybadgermpc.ntl.helpers import gao_interpolate
-from honeybadgermpc.ntl.helpers import fft, fft_interpolate, fft_batch_interpolate, \
+from honeybadgermpc.ntl import gao_interpolate
+from honeybadgermpc.ntl import fft, fft_interpolate, fft_batch_interpolate, \
     fft_batch_evaluate, SetNumThreads, AvailableNTLThreads
 from honeybadgermpc.reed_solomon_wb import make_wb_encoder_decoder
 from honeybadgermpc.exceptions import HoneyBadgerMPCError

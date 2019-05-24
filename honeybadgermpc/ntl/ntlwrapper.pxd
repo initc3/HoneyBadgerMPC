@@ -1,6 +1,6 @@
 from libcpp.vector cimport vector
 
-cdef extern from "ntlwrapper.h":
+cdef extern from "ntlwrapper_impl.h":
     cdef cppclass ZZ "ZZ":
         ZZ() except +
         pass

@@ -1,4 +1,4 @@
-from honeybadgermpc.ntl.helpers import lagrange_interpolate, \
+from honeybadgermpc.ntl import lagrange_interpolate, \
     vandermonde_batch_interpolate, vandermonde_batch_evaluate, \
     fft, fft_interpolate, fft_batch_interpolate, \
     gao_interpolate, evaluate, sqrt_mod, partial_fft, fft_batch_evaluate
