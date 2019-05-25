@@ -7,6 +7,7 @@ from honeybadgermpc.field import GF
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
+from honeybadgermpc.mpc import Mpc
 from honeybadgermpc.ipc import ProcessProgramRunner
 from honeybadgermpc.utils.misc import wrap_send, transpose_lists, flatten_lists
 
@@ -32,7 +33,7 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
     Generates a batch of (n-2t)k secret sharings of random elements
     """
     poly = polynomials_over(field)
-    eval_point = EvalPoint(field, n, use_omega_powers=True)
+    eval_point = EvalPoint(field, n, use_omega_powers=False)
     big_t = n - (2 * t) - 1  # This is same as `T` in the HyperMPC paper.
     encoder = EncoderFactory.get(eval_point)
 
@@ -135,6 +136,55 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
     out_2t = flatten_lists([s[:big_t+1] for s in ref_2t])
     return tuple(zip(out_t, out_2t))
 
+
+async def generate_triples(n, t, k, my_id, _send, _recv, field):
+    subscribe_recv_task, subscribe = subscribe_recv(_recv)
+
+    def _get_send_recv(tag):
+        return wrap_send(tag, _send), subscribe(tag)
+
+    # Start listening for my share of t and 2t shares from all parties.
+    send, recv = _get_send_recv("randousha")
+    rs_t2t = await randousha(n, t, 3 * k, my_id, send, recv, field)
+
+    as_t2t = rs_t2t[0*k:1*k]
+    bs_t2t = rs_t2t[1*k:2*k]
+    rs_t2t = rs_t2t[2*k:3*k]
+
+    as_t, _ = zip(*as_t2t)
+    bs_t, _ = zip(*bs_t2t)
+    rs_t, rs_2t = zip(*rs_t2t)
+
+    # Config just has to specify mixins used by switching_network
+    config = {}
+
+    # Compute degree reduction to get triples
+    # TODO: Use the mixins and preprocessing system
+    async def prog(ctx):
+        abrs_2t = [a * b + r for a, b, r in zip(as_t, bs_t, rs_2t)]
+        assert len(rs_2t) == len(rs_t) == len(as_t) == len(bs_t)
+        abrs = await ctx.ShareArray(abrs_2t, 2*t).open()
+        # abrs = await ctx.ShareArray(rs_t).open()
+        abs_t = [abr - r for abr, r in zip(abrs, rs_t)]
+        return list(zip(as_t, bs_t, abs_t))
+
+    # TODO: compute triples through degree reduction
+    send, recv = _get_send_recv("opening")
+    ctx = Mpc(f'mpc:opening', n, t, my_id, send, recv, prog, config)
+    result = await ctx._run()
+    # result = list(zip(as_t, bs_t, rs_t))
+    # print(f'[{my_id}] Generate triples complete')
+    subscribe_recv_task.cancel()
+    return result
+
+
+async def generate_bits():
+    raise NotImplementedError
+
+
+########################
+# Process runner
+########################
 
 async def _run(peers, n, t, k, my_id):
     field = GF(Subgroup.BLS12_381)

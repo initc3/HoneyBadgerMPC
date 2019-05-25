@@ -87,7 +87,7 @@ class DoubleSharingMultiplyArrays(AsyncMixin):
         q_t = context.ShareArray(r_t)
         q_2t = context.ShareArray(r_2t, 2*context.t)
         diff = await (x_2t - q_2t).open()
-        return context.ShareArray(await (q_t + diff).open())
+        return q_t + diff
 
     @staticmethod
     @static_type_check(Mpc, 'context.ShareArray', 'context.ShareArray')

@@ -104,7 +104,8 @@ class Mpc(object):
 
         # Choose the shareid based on the order this is called
         shareid = self._get_share_id()
-        t = share.t if share.t is not None else self.t
+        t = self.t
+        degree = t if share.t is None else share.t
 
         # Broadcast share
         for dest in range(self.N):
@@ -126,7 +127,7 @@ class Mpc(object):
 
         # Create polynomial that reconstructs the shared value by evaluating at 0
         reconstruction = asyncio.create_task(robust_reconstruct(
-            share_buffer, self.field, self.N, t, point))
+            share_buffer, self.field, self.N, t, point, degree))
 
         def cb(r):
             p, errors = r.result()
@@ -166,6 +167,8 @@ class Mpc(object):
                 res.set_result(elements)
 
         shareid = self._get_share_id()
+        t = self.t
+        degree = t if sharearray.t is None else sharearray.t
 
         # Creates unique send function based on the share to open
         def _send(dest, o):
@@ -179,13 +182,14 @@ class Mpc(object):
         reconstructed = asyncio.create_task(batch_reconstruct(
             [s.v for s in sharearray._shares],
             self.field.modulus,
-            sharearray.t,
+            t,
             self.N,
             self.myid,
             _send,
             _recv,
             config=self.config.get(ConfigVars.Reconstruction),
-            debug=True))
+            debug=True,
+            degree=degree))
 
         reconstructed.add_done_callback(cb)
 
