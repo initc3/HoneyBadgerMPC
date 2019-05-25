@@ -178,6 +178,7 @@ class ShareArray(ABC):
     def __init__(self, values, t=None):
         # Initialized with a list of share objects
         self.t = self.context.t if t is None else t
+        values = list(values)
 
         for i, value in enumerate(values):
             if isinstance(value, (int, GFElement)):

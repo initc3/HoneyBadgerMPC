@@ -21,7 +21,7 @@ STANDARD_PREPROCESSING = [
 n, t = 3, 1
 
 
-async def run_test_program(prog, test_runner, n=n, t=t, k=10000,
+async def run_test_program(prog, test_runner, n=n, t=t, k=1000,
                            mixins=STANDARD_ARITHMETIC_MIXINS):
 
     return await test_runner(prog, n, t, STANDARD_PREPROCESSING, k, mixins)
@@ -29,7 +29,7 @@ async def run_test_program(prog, test_runner, n=n, t=t, k=10000,
 
 @mark.asyncio
 async def test_degree_reduction_share(galois_field, test_preprocessing, test_runner):
-    n, t = 9, 2
+    n, t = 7, 2
     x_expected = galois_field.random().value
     sid_x_2t = test_preprocessing.generate("share", n, 2*t, x_expected)
 
@@ -44,7 +44,7 @@ async def test_degree_reduction_share(galois_field, test_preprocessing, test_run
 
 @mark.asyncio
 async def test_degree_reduction_share_array(test_preprocessing, test_runner):
-    n, t = 9, 2
+    n, t = 7, 2
     test_preprocessing.generate("rands", n, 2*t)
 
     async def _prog(context):

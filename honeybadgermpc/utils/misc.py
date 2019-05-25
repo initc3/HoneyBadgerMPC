@@ -1,4 +1,7 @@
 from .typecheck import static_type_check
+from collections import defaultdict
+from asyncio import Queue
+import asyncio
 
 
 @static_type_check(str, 'callable(send)')
@@ -52,3 +55,38 @@ def transpose_lists(lists):
     rows = len(lists)
     cols = len(lists[0])
     return [[lists[j][i] for j in range(rows)] for i in range(cols)]
+
+
+def subscribe_recv(recv):
+    """ Given the recv method for this batch reconstruction,
+    create a background loop to put the received events into
+    the appropriate queue for the tag
+
+    Returns _task and subscribe, where _task is to be run in
+    the background to forward events to the associated queue,
+    and subscribe, which is used to register a new tag/queue pair
+
+    TODO: move this out of this file
+    """
+    # Stores the queues for each subscribed tag
+    tag_table = defaultdict(Queue)
+    taken = set()  # Replace this with a bloom filter?
+
+    async def _recv_loop():
+        while True:
+            # Whenever we receive a share array, directly put it in the
+            # appropriate queue for that round
+            j, (tag, o) = await recv()
+            tag_table[tag].put_nowait((j, o))
+
+    def subscribe(tag):
+        # TODO: make this raise an exception
+        # Ensure that this tag has not been subscribed to already
+        assert tag not in taken
+        taken.add(tag)
+
+        # Return the getter of the queue for this tag
+        return tag_table[tag].get
+
+    _task = asyncio.create_task(_recv_loop())
+    return _task, subscribe

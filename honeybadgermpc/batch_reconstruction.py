@@ -29,10 +29,10 @@ async def fetch_one(awaitables):
             yield(mapping[d], await d)
 
 
-async def incremental_decode(receivers, encoder, decoder, robust_decoder, batch_size, t,
-                             n):
+async def incremental_decode(receivers, encoder, decoder, robust_decoder,
+                             batch_size, t, degree, n):
     inc_decoder = IncrementalDecoder(encoder, decoder, robust_decoder,
-                                     degree=t, batch_size=batch_size,
+                                     degree=degree, batch_size=batch_size,
                                      max_errors=t)
 
     async for idx, d in fetch_one(receivers):
@@ -104,14 +104,15 @@ def recv_each_party(recv, n):
 
 
 async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=None,
-                            use_omega_powers=False, debug=False):
+                            use_omega_powers=False, debug=False, degree=None):
     """
     args:
       shared_secrets: an array of points representing shared secrets S1 - SB
       p: field modulus
-      t: degree t polynomial
+      t: faults tolerated
       n: total number of nodes n >= 3t+1
       myid: id of the specific node running batch_reconstruction function
+      degree: degree of polynomial to decode (defaults to t)
 
     output:
       the reconstructed array of B shares
@@ -126,6 +127,8 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
                                          {"node_id": myid})
 
     # (optional) Induce faults
+    if degree is None:
+        degree = t
 
     secret_shares = [v.value for v in secret_shares]
     if config is not None and config.induce_faults:
@@ -156,7 +159,7 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     robust_dec = RobustDecoderFactory.get(t, point, algorithm=decoding_algorithm)
 
     # Prepare data for step 1
-    round1_chunks = chunk_data(secret_shares, t + 1)
+    round1_chunks = chunk_data(secret_shares, degree + 1)
     num_chunks = len(round1_chunks)
 
     # Step 1: Compute the polynomial P1, then send the elements
@@ -174,7 +177,7 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     start_time = time.time()
 
     recons_r2 = await incremental_decode(data_r1, enc, dec, robust_dec,
-                                         num_chunks, t, n)
+                                         num_chunks, t, degree, n)
     if recons_r2 is None:
         logging.error("[BatchReconstruct] P1 reconstruction failed!")
         return None
@@ -196,7 +199,7 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     # Step 4: Attempt to reconstruct R2
     start_time = time.time()
     recons_p = await incremental_decode(data_r2, enc, dec, robust_dec,
-                                        num_chunks, t, n)
+                                        num_chunks, t, degree, n)
     if recons_p is None:
         logging.error("[BatchReconstruct] P2 reconstruction failed!")
         return None
