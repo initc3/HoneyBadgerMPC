@@ -8,6 +8,7 @@ from honeybadgermpc.betterpairing import G1, ZR
 from honeybadgermpc.hbavss import HbAvssLight, HbAvssBatch
 from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.symmetric_crypto import SymmetricCrypto
+from honeybadgermpc.utils.misc import print_exception_callback
 import asyncio
 
 
@@ -22,12 +23,6 @@ def get_avss_params(n, t):
 
 @mark.asyncio
 async def test_hbavss_light(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
     t = 2
     n = 3*t + 1
 
@@ -49,7 +44,7 @@ async def test_hbavss_light(test_router):
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=value))
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
-            avss_tasks[i].add_done_callback(callback)
+            avss_tasks[i].add_done_callback(print_exception_callback)
         # shares = await asyncio.gather(*avss_tasks)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
@@ -63,13 +58,6 @@ async def test_hbavss_light(test_router):
 
 @mark.asyncio
 async def test_hbavss_light_share_fault(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
-
     # Injects one invalid share
     class BadDealer(HbAvssLight):
         def _get_dealer_msg(self, value):
@@ -113,10 +101,10 @@ async def test_hbavss_light_share_fault(test_router):
             stack.enter_context(hbavss)
             if i == dealer_id:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=value))
-                avss_tasks[i].add_done_callback(callback)
+                avss_tasks[i].add_done_callback(print_exception_callback)
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
-                avss_tasks[i].add_done_callback(callback)
+                avss_tasks[i].add_done_callback(print_exception_callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
         for task in avss_tasks:
@@ -129,13 +117,6 @@ async def test_hbavss_light_share_fault(test_router):
 
 @mark.asyncio
 async def test_hbavss_light_encryption_fault(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
-
     # Injects one undecryptable ciphertext
     class BadDealer(HbAvssLight):
         def _get_dealer_msg(self, value):
@@ -179,10 +160,10 @@ async def test_hbavss_light_encryption_fault(test_router):
             stack.enter_context(hbavss)
             if i == dealer_id:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=value))
-                avss_tasks[i].add_done_callback(callback)
+                avss_tasks[i].add_done_callback(print_exception_callback)
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
-                avss_tasks[i].add_done_callback(callback)
+                avss_tasks[i].add_done_callback(print_exception_callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
         for task in avss_tasks:
@@ -195,12 +176,6 @@ async def test_hbavss_light_encryption_fault(test_router):
 
 @mark.asyncio
 async def test_hbavss_light_batch(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
     t = 2
     n = 3*t + 1
     batchsize = 50
@@ -223,7 +198,7 @@ async def test_hbavss_light_batch(test_router):
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=values))
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
-            avss_tasks[i].add_done_callback(callback)
+            avss_tasks[i].add_done_callback(print_exception_callback)
         # shares = await asyncio.gather(*avss_tasks)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
@@ -240,13 +215,6 @@ async def test_hbavss_light_batch(test_router):
 
 @mark.asyncio
 async def test_hbavss_light_batch_share_fault(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
-
     class BadDealer(HbAvssLight):
         def _get_dealer_msg(self, value):
             if type(value) in (list, tuple):
@@ -302,7 +270,7 @@ async def test_hbavss_light_batch_share_fault(test_router):
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, value=values))
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
-            avss_tasks[i].add_done_callback(callback)
+            avss_tasks[i].add_done_callback(print_exception_callback)
         # shares = await asyncio.gather(*avss_tasks)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
@@ -319,13 +287,6 @@ async def test_hbavss_light_batch_share_fault(test_router):
 
 @mark.asyncio
 async def test_hbavss_batch(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
-
     t = 2
     n = 3*t + 1
 
@@ -348,7 +309,7 @@ async def test_hbavss_batch(test_router):
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, values=values))
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
-            avss_tasks[i].add_done_callback(callback)
+            avss_tasks[i].add_done_callback(print_exception_callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
         shares = [output[2] for output in outputs]
@@ -366,13 +327,6 @@ async def test_hbavss_batch(test_router):
 
 @mark.asyncio
 async def test_hbavss_batch_share_fault(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
-
     # Injects one invalid share
     class BadDealer(HbAvssBatch):
         def _get_dealer_msg(self, values, n):
@@ -426,7 +380,7 @@ async def test_hbavss_batch_share_fault(test_router):
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, values=values))
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
-            avss_tasks[i].add_done_callback(callback)
+            avss_tasks[i].add_done_callback(print_exception_callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
         shares = [output[2] for output in outputs]
@@ -444,13 +398,6 @@ async def test_hbavss_batch_share_fault(test_router):
 @mark.asyncio
 # Send t parties entirely faulty messages
 async def test_hbavss_batch_t_share_faults(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
-
     class BadDealer(HbAvssBatch):
         def _get_dealer_msg(self, values, n):
             # return super(BadDealer, self)._get_dealer_msg(values)
@@ -506,7 +453,7 @@ async def test_hbavss_batch_t_share_faults(test_router):
             stack.enter_context(hbavss)
             if i == dealer_id:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, values=values))
-                avss_tasks[i].add_done_callback(callback)
+                avss_tasks[i].add_done_callback(print_exception_callback)
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
         outputs = await asyncio.gather(
@@ -526,13 +473,6 @@ async def test_hbavss_batch_t_share_faults(test_router):
 
 @mark.asyncio
 async def test_hbavss_batch_encryption_fault(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
-
     class BadDealer(HbAvssBatch):
         def _get_dealer_msg(self, values, n):
             fault_n = randint(1, n-1)
@@ -582,10 +522,10 @@ async def test_hbavss_batch_encryption_fault(test_router):
             stack.enter_context(hbavss)
             if i == dealer_id:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, values=values))
-                avss_tasks[i].add_done_callback(callback)
+                avss_tasks[i].add_done_callback(print_exception_callback)
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
-                avss_tasks[i].add_done_callback(callback)
+                avss_tasks[i].add_done_callback(print_exception_callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
         shares = [output[2] for output in outputs]
@@ -720,12 +660,6 @@ async def test_hbavss_light_share_open(test_router):
 
 @mark.asyncio
 async def test_hbavss_light_parallel_share_array_open(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
     t = 2
     n = 3*t + 1
     k = 4
@@ -751,7 +685,7 @@ async def test_hbavss_light_parallel_share_array_open(test_router):
                 v, d = None, dealer_id
 
             avss_tasks[i] = asyncio.create_task(hbavss.avss_parallel(0, k, v, d))
-            avss_tasks[i].add_done_callback(callback)
+            avss_tasks[i].add_done_callback(print_exception_callback)
 
         outputs = [None]*k
         for j in range(k):
@@ -789,13 +723,6 @@ async def test_hbavss_light_parallel_share_array_open(test_router):
 
 @mark.asyncio
 async def test_hbavss_batch_batch(test_router):
-    def callback(future):
-        if future.done():
-            ex = future.exception()
-            if ex is not None:
-                print('\nException:', ex)
-                raise ex
-
     t = 2
     n = 3*t + 1
 
@@ -818,7 +745,7 @@ async def test_hbavss_batch_batch(test_router):
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, values=values))
             else:
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
-            avss_tasks[i].add_done_callback(callback)
+            avss_tasks[i].add_done_callback(print_exception_callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)])
         shares = [output[2] for output in outputs]

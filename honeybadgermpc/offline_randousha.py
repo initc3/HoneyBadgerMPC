@@ -157,10 +157,9 @@ async def generate_triples(n, t, k, my_id, _send, _recv, field):
 
     as_t, _ = zip(*as_t2t)
     bs_t, _ = zip(*bs_t2t)
+    as_t = list(map(field, as_t))
+    bs_t = list(map(field, bs_t))
     rs_t, rs_2t = zip(*rs_t2t)
-
-    # Config just has to specify mixins used by switching_network
-    config = {}
 
     # Compute degree reduction to get triples
     # TODO: Use the mixins and preprocessing system
@@ -174,7 +173,7 @@ async def generate_triples(n, t, k, my_id, _send, _recv, field):
 
     # TODO: compute triples through degree reduction
     send, recv = _get_send_recv("opening")
-    ctx = Mpc(f'mpc:opening', n, t, my_id, send, recv, prog, config)
+    ctx = Mpc(f'mpc:opening', n, t, my_id, send, recv, prog, {})
 
     result = await ctx._run()
     subscribe_recv_task.cancel()
@@ -182,8 +181,45 @@ async def generate_triples(n, t, k, my_id, _send, _recv, field):
     return result
 
 
-async def generate_bits():
-    raise NotImplementedError
+async def generate_bits(n, t, k, my_id, _send, _recv, field):
+    subscribe_recv_task, subscribe = subscribe_recv(_recv)
+
+    def _get_send_recv(tag):
+        return wrap_send(tag, _send), subscribe(tag)
+
+    # Start listening for my share of t and 2t shares from all parties.
+    send, recv = _get_send_recv("randousha")
+    rs_t2t = await randousha(n, t, 2 * k, my_id, send, recv, field)
+
+    # To generate bits, we generate a batch of `t,2t` sharings of
+    # [u]_t, [u]_2t, [r]_t, [r]_2t. The goal is to recontruct `u^2`
+    # so we can return `[u]/sqrt(u^2)`. The [r] sharings are used
+    # for publicly reconstructing:
+    #    u^2 = open([u]_t * [u]_t + [r]_2t) - [r]_t
+    us_t2t = rs_t2t[0:k]
+    rs_t2t = rs_t2t[k:2*k]
+
+    us_t, _ = zip(*us_t2t)
+    us_t = list(map(field, us_t))
+    rs_t, rs_2t = zip(*rs_t2t)
+
+    # Compute degree reduction to get the bit
+    async def prog(ctx):
+        u2rs_2t = [u * u + r for u, r in zip(us_t, rs_2t)]
+        assert len(u2rs_2t) == len(rs_t)
+        u2rs = await ctx.ShareArray(u2rs_2t, 2*t).open()
+        u2s_t = [u2r - r for u2r, r in zip(u2rs, rs_t)]
+        u2s = await ctx.ShareArray(u2s_t).open()
+        bits = [u / u2.sqrt() for u, u2 in zip(us_t, u2s)]
+        return bits
+
+    # TODO: compute triples through degree reduction
+    send, recv = _get_send_recv("opening")
+    ctx = Mpc(f'mpc:opening', n, t, my_id, send, recv, prog, {})
+    result = await ctx._run()
+    # print(f'[{my_id}] Generate triples complete')
+    subscribe_recv_task.cancel()
+    return result
 
 
 ########################
