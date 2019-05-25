@@ -101,7 +101,7 @@ setup(
     python_requires=REQUIRES_PYTHON,
     setup_requires=['cffi>=1.0.0', 'Cython'],
     install_requires=REQUIRED,
-    cffi_modules=['apps/shuffle/solver/solver_build.py:ffibuilder'],
+    cffi_modules=['apps/asynchromix/solver/solver_build.py:ffibuilder'],
     extras_require=EXTRAS,
     ext_modules=cythonize(extensions),
     classifiers=[

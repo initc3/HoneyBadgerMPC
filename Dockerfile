@@ -100,7 +100,7 @@ RUN pip install Cython
 RUN pip install -e .
 RUN pip install pairing/
 
-RUN make -C apps/shuffle/cpp
+RUN make -C apps/asynchromix/cpp
 
 # Installs test dependencies
 # For now, upload this to docker-hub
@@ -117,4 +117,3 @@ FROM test-image as dev-release
 # -e so that it installs locally
 # RUN pip install --user -e .["dev,aws"]
 RUN pip install -e .["dev,aws"]
-
