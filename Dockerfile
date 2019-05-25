@@ -6,6 +6,7 @@
 #   - pbc
 #   - charm
 #   - base pip dependencies (cython & setup.py)
+#   - ethereum
 # 
 # Thereafter, it adds ever increasing levels of dependencies-- 
 #   - Test requirements (including doc requirements)
@@ -87,6 +88,25 @@ RUN git clone https://github.com/JHUISI/charm.git
 WORKDIR /charm/
 RUN git reset --hard be9587ccdd4d61c591fb50728ebf2a4690a2064f
 RUN ./configure.sh
+RUN make install
+WORKDIR /
+
+
+# Ethereum .[eth] extras
+RUN apt-get install -y --no-install-recommends \
+    git cmake g++ \
+    libffi-dev libssl-dev sudo
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash
+RUN apt-get install -y --no-install-recommends nodejs npm
+RUN npm install -g ganache-cli
+RUN git clone --recursive https://github.com/ethereum/solidity.git
+WORKDIR /solidity/
+RUN git checkout v0.4.24 # Old version necessary to work???
+RUN git submodule update --init --recursive
+RUN ./scripts/install_deps.sh
+RUN mkdir build/
+WORKDIR build
+RUN cmake ..
 RUN make install
 WORKDIR /
 

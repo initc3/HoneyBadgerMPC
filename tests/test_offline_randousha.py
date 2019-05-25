@@ -1,7 +1,7 @@
 import asyncio
 from pytest import mark
 from honeybadgermpc.polynomial import EvalPoint
-from honeybadgermpc.offline_randousha import randousha, generate_triples
+from honeybadgermpc.offline_randousha import randousha, generate_triples, generate_bits
 from honeybadgermpc.reed_solomon import Algorithm, DecoderFactory
 
 
@@ -74,5 +74,25 @@ async def test_triples(n, k, polynomial, galois_field, test_router, test_runner)
         abs_t = await context.ShareArray(ab).open()
         abs_expected = [a_ * b_ for a_, b_ in zip(as_t, bs_t)]
         assert abs_expected == abs_t
+
+    await test_runner(_prog, n, t)
+
+
+@mark.asyncio
+@mark.parametrize("n", [4])
+@mark.parametrize("k", [10])
+async def test_bits(n, k, polynomial, galois_field, test_router, test_runner):
+    t = (n-1)//3
+    sends, receives, _ = test_router(n)
+    bits_per_party = await asyncio.gather(*[generate_bits(
+        n, t, k, i, sends[i], receives[i], galois_field) for i in range(n)])
+    assert len(bits_per_party) == n
+
+    async def _prog(context):
+        bits_t = bits_per_party[context.myid]
+        assert len(bits_t) == k
+        bits = await context.ShareArray(bits_t).open()
+        for bit in bits:
+            assert bit in (galois_field(-1), galois_field(1))
 
     await test_runner(_prog, n, t)

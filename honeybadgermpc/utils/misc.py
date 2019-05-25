@@ -3,6 +3,15 @@ from collections import defaultdict
 from asyncio import Queue
 import asyncio
 from typing import Callable
+import logging
+
+
+def print_exception_callback(future):
+    if future.done():
+        ex = future.exception()
+        if ex is not None:
+            logging.critical('\nException:', future, type(ex), ex)
+            raise ex
 
 
 @TypeCheck()

@@ -9,8 +9,9 @@ from time import time
 async def batch_switch(ctx, xs, ys, n):
     pp_elements = PreProcessedElements()
     sbits = [pp_elements.get_one_minus_one_rand(ctx).v for _ in range(n//2)]
-    ns = [1 / ctx.field(2) for _ in range(n)]
+    ns = [1 / ctx.field(2) for _ in range(n//2)]
 
+    assert len(xs) == len(ys) == len(sbits) == n // 2
     xs, ys, sbits = list(map(ctx.ShareArray, [xs, ys, sbits]))
     ms = (await (sbits * (xs - ys)))._shares
 
