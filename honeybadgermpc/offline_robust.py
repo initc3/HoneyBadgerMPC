@@ -7,11 +7,8 @@ from honeybadgermpc.betterpairing import G1, ZR
 from honeybadgermpc.progs.random_refinement import refine_randoms
 from honeybadgermpc.field import GF
 from honeybadgermpc.elliptic_curve import Subgroup
-from honeybadgermpc.utils.misc import wrap_send
+from honeybadgermpc.utils.misc import wrap_send, subscribe_recv
 from abc import ABC, abstractmethod
-
-# TODO: refactor subscribe_recv outside of batch_reconstruction
-from honeybadgermpc.batch_reconstruction import subscribe_recv
 
 
 def get_avss_params(n, t, my_id):
