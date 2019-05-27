@@ -2,13 +2,13 @@ import asyncio
 from .field import GF
 from .polynomial import EvalPoint
 import logging
-from collections import defaultdict
 from asyncio import Queue
 import time
 from .reed_solomon import Algorithm, EncoderFactory, DecoderFactory, RobustDecoderFactory
 from .reed_solomon import IncrementalDecoder
 import random
-from honeybadgermpc.utils.misc import chunk_data, flatten_lists, transpose_lists
+from honeybadgermpc.utils.misc import (
+    chunk_data, flatten_lists, transpose_lists, subscribe_recv)
 
 
 async def fetch_one(awaitables):
@@ -42,41 +42,6 @@ async def incremental_decode(receivers, encoder, decoder, robust_decoder,
             return result
 
     return None
-
-
-def subscribe_recv(recv):
-    """ Given the recv method for this batch reconstruction,
-    create a background loop to put the received events into
-    the appropriate queue for the tag
-
-    Returns _task and subscribe, where _task is to be run in
-    the background to forward events to the associated queue,
-    and subscribe, which is used to register a new tag/queue pair
-
-    TODO: move this out of this file
-    """
-    # Stores the queues for each subscribed tag
-    tag_table = defaultdict(Queue)
-    taken = set()  # Replace this with a bloom filter?
-
-    async def _recv_loop():
-        while True:
-            # Whenever we receive a share array, directly put it in the
-            # appropriate queue for that round
-            j, (tag, o) = await recv()
-            tag_table[tag].put_nowait((j, o))
-
-    def subscribe(tag):
-        # TODO: make this raise an exception
-        # Ensure that this tag has not been subscribed to already
-        assert tag not in taken
-        taken.add(tag)
-
-        # Return the getter of the queue for this tag
-        return tag_table[tag].get
-
-    _task = asyncio.create_task(_recv_loop())
-    return _task, subscribe
 
 
 def recv_each_party(recv, n):
@@ -126,17 +91,17 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),
                                          {"node_id": myid})
 
-    # (optional) Induce faults
     if degree is None:
         degree = t
 
     secret_shares = [v.value for v in secret_shares]
+
+    # (optional) Induce faults
     if config is not None and config.induce_faults:
         logging.debug("[FAULT][BatchReconstruction] Sending random shares.")
         secret_shares = [random.randint(0, p - 1) for _ in range(len(secret_shares))]
 
     # Prepare recv loops for this batch reconstruction
-
     subscribe_task, subscribe = subscribe_recv(recv)
     del recv  # ILC enforces this in type system, no duplication of reads
 

@@ -65,8 +65,6 @@ def subscribe_recv(recv):
     Returns _task and subscribe, where _task is to be run in
     the background to forward events to the associated queue,
     and subscribe, which is used to register a new tag/queue pair
-
-    TODO: move this out of this file
     """
     # Stores the queues for each subscribed tag
     tag_table = defaultdict(Queue)

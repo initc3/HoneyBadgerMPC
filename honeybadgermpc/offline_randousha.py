@@ -9,10 +9,8 @@ from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
 from honeybadgermpc.mpc import Mpc
 from honeybadgermpc.ipc import ProcessProgramRunner
-from honeybadgermpc.utils.misc import wrap_send, transpose_lists, flatten_lists
-
-# TODO: refactor this method outside of batch_reconstruction
-from honeybadgermpc.batch_reconstruction import subscribe_recv
+from honeybadgermpc.utils.misc import (
+    wrap_send, transpose_lists, flatten_lists, subscribe_recv)
 
 
 class HyperInvMessageType(object):
@@ -40,6 +38,7 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
     # Pick k random elements
     def to_int(coeffs):
         return tuple(map(int, coeffs))
+
     my_randoms = [field.random() for _ in range(k)]
 
     # Generate t and 2t shares of the random element.
@@ -78,6 +77,7 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
     send, recv = _get_send_recv("H2")
     to_send_t = transpose_lists(ref_t)
     to_send_2t = transpose_lists(ref_2t)
+
     if my_id > big_t:
         share_chk_recv_task = asyncio.create_task(_recv_loop(n, recv))
 
@@ -106,12 +106,14 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
 
         degree_t, secret_t = get_degree_and_secret(shares_t)
         degree_2t, secret_2t = get_degree_and_secret(shares_2t)
+
         # Verify that the shares are in-fact `t` and `2t` shared.
         # Verify that both `t` and `2t` shares of the same value.
         if all(deg == t for deg in degree_t) and \
            all(deg == 2*t for deg in degree_2t) and \
            secret_t == secret_2t:
             response = HyperInvMessageType.SUCCESS
+
         logging.debug("[%d] Degree check: %s, Secret Check: %s", my_id,
                       all(deg == t for deg in degree_t) and
                       all(deg == 2*t for deg in degree_2t),
@@ -128,12 +130,14 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
 
     responses = await response_recv_task
     subscribe_recv_task.cancel()
+
     # If any of [T+1, N] parties say that the shares are inconsistent then abort.
     if responses.count(HyperInvMessageType.SUCCESS) != n-big_t-1:
         raise HoneyBadgerMPCError("Aborting because the shares were inconsistent.")
 
     out_t = flatten_lists([s[:big_t+1] for s in ref_t])
     out_2t = flatten_lists([s[:big_t+1] for s in ref_2t])
+
     return tuple(zip(out_t, out_2t))
 
 
@@ -161,20 +165,20 @@ async def generate_triples(n, t, k, my_id, _send, _recv, field):
     # Compute degree reduction to get triples
     # TODO: Use the mixins and preprocessing system
     async def prog(ctx):
-        abrs_2t = [a * b + r for a, b, r in zip(as_t, bs_t, rs_2t)]
         assert len(rs_2t) == len(rs_t) == len(as_t) == len(bs_t)
+
+        abrs_2t = [a * b + r for a, b, r in zip(as_t, bs_t, rs_2t)]
         abrs = await ctx.ShareArray(abrs_2t, 2*t).open()
-        # abrs = await ctx.ShareArray(rs_t).open()
         abs_t = [abr - r for abr, r in zip(abrs, rs_t)]
         return list(zip(as_t, bs_t, abs_t))
 
     # TODO: compute triples through degree reduction
     send, recv = _get_send_recv("opening")
     ctx = Mpc(f'mpc:opening', n, t, my_id, send, recv, prog, config)
+
     result = await ctx._run()
-    # result = list(zip(as_t, bs_t, rs_t))
-    # print(f'[{my_id}] Generate triples complete')
     subscribe_recv_task.cancel()
+
     return result
 
 

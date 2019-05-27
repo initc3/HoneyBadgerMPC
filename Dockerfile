@@ -68,8 +68,8 @@ ENV PATH "/root/.cargo/bin:${PATH}"
 RUN curl -so - https://www.shoup.net/ntl/ntl-11.3.2.tar.gz | tar xzvf -
 WORKDIR /ntl-11.3.2/src  
 RUN ./configure CXXFLAGS="-g -O2 -fPIC -march=native -pthread -std=c++11" 
-RUN make -j 
-RUN make install -j
+RUN make 
+RUN make install
 WORKDIR /
 
 
@@ -77,8 +77,8 @@ WORKDIR /
 RUN curl -so - https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz | tar xzvf - 
 WORKDIR /pbc-0.5.14/
 RUN ./configure
-RUN make -j
-RUN make install -j
+RUN make
+RUN make install
 WORKDIR /
 
 
@@ -87,7 +87,7 @@ RUN git clone https://github.com/JHUISI/charm.git
 WORKDIR /charm/
 RUN git reset --hard be9587ccdd4d61c591fb50728ebf2a4690a2064f
 RUN ./configure.sh
-RUN make install -j
+RUN make install
 WORKDIR /
 
 
