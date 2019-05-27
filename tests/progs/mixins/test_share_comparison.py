@@ -67,5 +67,3 @@ async def test_equality(test_preprocessing, test_runner):
         assert not await (share1 == share2).open()
 
     await test_runner(_prog, n, t, PREPROCESSING, k, STANDARD_ARITHMETIC_MIXINS)
-    # results = await run_test_program(_prog, test_runner)
-    # assert len(results) == n

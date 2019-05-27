@@ -2,7 +2,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from honeybadgermpc.field import GFElement
 from honeybadgermpc.progs.mixins.constants import MixinConstants
-from honeybadgermpc.utils.typecheck import type_check
+from honeybadgermpc.utils.typecheck import TypeCheck
 
 
 class GFElementFuture(ABC, asyncio.Future):
@@ -12,10 +12,10 @@ class GFElementFuture(ABC, asyncio.Future):
     def context(cls):
         return NotImplementedError
 
-    @type_check((int, GFElement, 'GFElementFuture'))
-    def __binop_field(self, other, op):
-        assert callable(op)
-
+    @TypeCheck(arithmetic=True)
+    def __binop_field(self,
+                      other: (int, GFElement, 'GFElementFuture'),
+                      op: 'callable(op)'):  # noqa: F821
         if isinstance(other, int):
             other = self.context.field(other)
 
@@ -79,11 +79,10 @@ class Share(ABC):
         return res
 
     # Linear combinations of shares can be computed directly
-    def __add__(self, other):
+    @TypeCheck(arithmetic=True)
+    def __add__(self, other: (GFElement, 'Share')):
         if isinstance(other, GFElement):
             return self.context.Share(self.v + other, self.t)
-        elif not isinstance(other, Share):
-            return NotImplemented
         elif self.t != other.t:
             raise ValueError(
                 f"Shares can't be added to other shares with differing t \
@@ -96,11 +95,10 @@ class Share(ABC):
     def __neg__(self):
         return self.context.Share(-self.v), self.t
 
-    def __sub__(self, other):
+    @TypeCheck(arithmetic=True)
+    def __sub__(self, other: (GFElement, 'Share')):
         if isinstance(other, GFElement):
             return self.context.Share(self.v - other, self.t)
-        elif not isinstance(other, Share):
-            return NotImplemented
         elif self.t != other.t:
             raise ValueError(
                 f"Shares must have same t value to subtract: \
@@ -108,17 +106,14 @@ class Share(ABC):
 
         return self.context.Share(self.v - other.v, self.t)
 
-    def __rsub__(self, other):
-        if isinstance(other, GFElement):
-            return self.context.Share(-self.v + other, self.t)
+    @TypeCheck(arithmetic=True)
+    def __rsub__(self, other: GFElement):
+        return self.context.Share(-self.v + other, self.t)
 
-        return NotImplemented
-
-    def __mul__(self, other):
+    @TypeCheck(arithmetic=True)
+    def __mul__(self, other: (int, GFElement, 'Share')):
         if isinstance(other, (int, GFElement)):
             return self.context.Share(self.v * other, self.t)
-        elif not isinstance(other, Share):
-            return NotImplemented
         elif self.t != other.t:
             raise ValueError(
                 f"Shares with differing t values cannot be multiplied \
@@ -131,16 +126,13 @@ class Share(ABC):
 
         return res
 
-    def __rmul__(self, other):
-        if isinstance(other, (int, GFElement)):
-            return self.context.Share(self.v * other, self.t)
+    @TypeCheck(arithmetic=True)
+    def __rmul__(self, other: (int, GFElement)):
+        return self.context.Share(self.v * other, self.t)
 
-        return NotImplemented
-
-    def __div__(self, other):
-        if not isinstance(other, Share):
-            return NotImplemented
-        elif self.t != other.t:
+    @TypeCheck(arithmetic=True)
+    def __div__(self, other: 'Share'):
+        if self.t != other.t:
             raise ValueError(
                 f"Cannot divide shares with differing t values ({self.t} {other.t})")
 
@@ -153,10 +145,8 @@ class Share(ABC):
 
     __truediv__ = __floordiv__ = __div__
 
-    def __eq__(self, other):
-        if not isinstance(other, self.context.Share):
-            return NotImplemented
-
+    @TypeCheck(arithmetic=True)
+    def __eq__(self, other: 'Share'):
         res = self.context.ShareFuture()
 
         eq = self.context.call_mixin(MixinConstants.ShareEquality, self, other)
@@ -164,10 +154,8 @@ class Share(ABC):
 
         return res
 
-    def __lt__(self, other):
-        if not isinstance(other, self.context.Share):
-            return NotImplemented
-
+    @TypeCheck(arithmetic=True)
+    def __lt__(self, other: 'Share'):
         res = self.context.ShareFuture()
 
         lt = self.context.call_mixin(MixinConstants.ShareLessThan, self, other)
@@ -201,17 +189,15 @@ class ShareArray(ABC):
 
     def open(self):
         # TODO: make a list of GFElementFutures?
-
         return self.context.open_share_array(self)
 
     def __len__(self):
         return len(self._shares)
 
-    def __add__(self, other):
+    @TypeCheck(arithmetic=True)
+    def __add__(self, other: ('ShareArray', list)):
         if isinstance(other, list):
             other = self.context.ShareArray(other, self.t)
-        elif not isinstance(other, self.context.ShareArray):
-            return NotImplemented
 
         assert self.t == other.t
         assert len(self) == len(other)
@@ -219,11 +205,10 @@ class ShareArray(ABC):
         result = [a+b for (a, b) in zip(self._shares, other._shares)]
         return self.context.ShareArray(result, self.t)
 
-    def __sub__(self, other):
+    @TypeCheck(arithmetic=True)
+    def __sub__(self, other: ('ShareArray', list)):
         if isinstance(other, list):
             other = self.context.ShareArray(other, self.t)
-        elif not isinstance(other, self.context.ShareArray):
-            return NotImplemented
 
         assert self.t == other.t
         assert len(self) == len(other)
@@ -231,15 +216,18 @@ class ShareArray(ABC):
         result = [a-b for (a, b) in zip(self._shares, other._shares)]
         return self.context.ShareArray(result, self.t)
 
-    def __mul__(self, other):
+    @TypeCheck(arithmetic=True)
+    def __mul__(self, other: 'ShareArray'):
         return self.context.call_mixin(MixinConstants.MultiplyShareArray, self, other)
 
-    def __div__(self, other):
+    @TypeCheck(arithmetic=True)
+    def __div__(self, other: 'ShareArray'):
         return self.context.call_mixin(MixinConstants.DivideShareArray, self, other)
 
     __truediv__ = __floordiv__ = __div__
 
-    async def _tree_fold(self, op):
+    @TypeCheck()
+    async def _tree_fold(self, op: 'callable(op)'):  # noqa: F821
         """ Apply a provided operation in a 'tree'-like fashion--
         Instead of folding sequentially across the shares of the array which
         creates a linked-list like chain of operations as shares resolve, this
@@ -299,12 +287,14 @@ class ShareFuture(ABC, asyncio.Future):
     def context(cls):
         return NotImplementedError
 
-    @type_check((int,
-                 GFElement,
-                 'self.context.Share',
-                 'self.context.ShareFuture',
-                 'self.context.GFElementFuture'))
-    def __binop_share(self, other, op):
+    @TypeCheck(arithmetic=True)
+    def __binop_share(self,
+                      other: (int,
+                              GFElement,
+                              Share,
+                              'ShareFuture',
+                              GFElementFuture),
+                      op: 'callable(op)'):  # noqa: F821
         """Stacks the application of a function to the resolved value
         of this future with another value, which may or may not be a
         future as well.
@@ -333,12 +323,10 @@ class ShareFuture(ABC, asyncio.Future):
             else:
                 res.set_result(op_res)
 
-        if isinstance(other, (ShareFuture, GFElementFuture)):
+        if isinstance(other, asyncio.Future):
             asyncio.gather(self, other).add_done_callback(cb)
-        elif isinstance(other, (Share, GFElement)):
-            self.add_done_callback(cb)
         else:
-            return NotImplementedError
+            self.add_done_callback(cb)
 
         return res
 

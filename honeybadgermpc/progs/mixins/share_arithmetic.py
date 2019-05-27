@@ -1,6 +1,8 @@
 from honeybadgermpc.progs.mixins.base import MixinBase, AsyncMixin
 from honeybadgermpc.progs.mixins.constants import MixinConstants
-from honeybadgermpc.utils.typecheck import static_type_check
+from honeybadgermpc.utils.typecheck import TypeCheck
+from honeybadgermpc.progs.mixins.dataflow import Share, ShareArray
+from honeybadgermpc.field import GFElement
 
 from asyncio import gather
 
@@ -11,8 +13,8 @@ class BeaverMultiply(AsyncMixin):
     name = MixinConstants.MultiplyShare
 
     @staticmethod
-    @static_type_check(Mpc, 'context.Share', 'context.Share')
-    async def _prog(context, x, y):
+    @TypeCheck()
+    async def _prog(context: Mpc, x: Share, y: Share):
         a, b, ab = MixinBase.pp_elements.get_triple(context)
 
         d, e = await gather(*[(x - a).open(), (y - b).open()])
@@ -21,13 +23,13 @@ class BeaverMultiply(AsyncMixin):
 
 
 class BeaverMultiplyArrays(AsyncMixin):
-    from honeybadgermpc.mpc import Mpc, ShareArray
+    from honeybadgermpc.mpc import Mpc
 
     name = MixinConstants.MultiplyShareArray
 
     @staticmethod
-    @static_type_check(Mpc, 'context.ShareArray', 'context.ShareArray')
-    async def _prog(context, j, k):
+    @TypeCheck()
+    async def _prog(context: Mpc, j: ShareArray, k: ShareArray):
         assert len(j) == len(k)
 
         a, b, ab = [], [], []
@@ -45,13 +47,13 @@ class BeaverMultiplyArrays(AsyncMixin):
 
 
 class DoubleSharingMultiply(AsyncMixin):
-    from honeybadgermpc.mpc import Mpc, Share
+    from honeybadgermpc.mpc import Mpc
 
     name = MixinConstants.MultiplyShare
 
     @staticmethod
-    @static_type_check(Mpc, 'context.Share')
-    async def reduce_degree_share(context, x_2t):
+    @TypeCheck()
+    async def reduce_degree_share(context: Mpc, x_2t: Share):
         assert x_2t.t == context.t*2
 
         r_t, r_2t = MixinBase.pp_elements.get_double_share(context)
@@ -60,22 +62,21 @@ class DoubleSharingMultiply(AsyncMixin):
         return r_t + diff
 
     @staticmethod
-    @static_type_check(Mpc, 'context.Share', 'context.Share')
-    async def _prog(context, x, y):
-
+    @TypeCheck()
+    async def _prog(context: Mpc, x: Share, y: Share):
         xy_2t = context.Share(x.v * y.v, context.t*2)
         xy_t = await DoubleSharingMultiply.reduce_degree_share(context, xy_2t)
         return xy_t
 
 
 class DoubleSharingMultiplyArrays(AsyncMixin):
-    from honeybadgermpc.mpc import Mpc, ShareArray
+    from honeybadgermpc.mpc import Mpc
 
     name = MixinConstants.MultiplyShareArray
 
     @staticmethod
-    @static_type_check(Mpc, 'context.ShareArray')
-    async def reduce_degree_share_array(context, x_2t):
+    @TypeCheck()
+    async def reduce_degree_share_array(context: Mpc, x_2t: ShareArray):
         assert x_2t.t == context.t*2
 
         r_t, r_2t = [], []
@@ -90,8 +91,8 @@ class DoubleSharingMultiplyArrays(AsyncMixin):
         return q_t + diff
 
     @staticmethod
-    @static_type_check(Mpc, 'context.ShareArray', 'context.ShareArray')
-    async def _prog(context, x, y):
+    @TypeCheck()
+    async def _prog(context: Mpc, x: ShareArray, y: ShareArray):
         assert len(x) == len(y)
 
         xy_2t = context.ShareArray(
@@ -102,13 +103,13 @@ class DoubleSharingMultiplyArrays(AsyncMixin):
 
 
 class InvertShare(AsyncMixin):
-    from honeybadgermpc.mpc import Mpc, Share
+    from honeybadgermpc.mpc import Mpc
 
     name = MixinConstants.InvertShare
 
     @staticmethod
-    @static_type_check(Mpc, 'context.Share')
-    async def _prog(context, x):
+    @TypeCheck()
+    async def _prog(context: Mpc, x: Share):
         r = MixinBase.pp_elements.get_rand(context)
         sig = await (x*r).open()
 
@@ -116,13 +117,13 @@ class InvertShare(AsyncMixin):
 
 
 class InvertShareArray(AsyncMixin):
-    from honeybadgermpc.mpc import Mpc, ShareArray
+    from honeybadgermpc.mpc import Mpc
 
     name = MixinConstants.InvertShareArray
 
     @staticmethod
-    @static_type_check(Mpc, 'context.ShareArray')
-    async def _prog(context, xs):
+    @TypeCheck()
+    async def _prog(context: Mpc, xs: ShareArray):
         rs = context.ShareArray([MixinBase.pp_elements.get_rand(context)
                                  for _ in range(len(xs))])
 
@@ -133,26 +134,94 @@ class InvertShareArray(AsyncMixin):
 
 
 class DivideShares(AsyncMixin):
-    from honeybadgermpc.mpc import Mpc, Share
+    from honeybadgermpc.mpc import Mpc
 
     name = MixinConstants.DivideShare
     dependencies = [MixinConstants.InvertShare]
 
     @staticmethod
-    @static_type_check(Mpc, 'context.Share', 'context.Share')
-    async def _prog(context, x, y):
+    @TypeCheck()
+    async def _prog(context: Mpc, x: Share, y: Share):
         y_inv = await context.config[MixinConstants.InvertShare](context, y)
         return await (x * y_inv)
 
 
 class DivideShareArrays(AsyncMixin):
-    from honeybadgermpc.mpc import Mpc, ShareArray
+    from honeybadgermpc.mpc import Mpc
 
     name = MixinConstants.DivideShareArray
     dependencies = [MixinConstants.InvertShareArray]
 
     @staticmethod
-    @static_type_check(Mpc, 'context.ShareArray', 'context.ShareArray')
-    async def _prog(context, xs, ys):
+    @TypeCheck()
+    async def _prog(context: Mpc, xs: ShareArray, ys: ShareArray):
         y_invs = await context.config[MixinConstants.InvertShareArray](context, ys)
         return await (xs * y_invs)
+
+
+class Equality(AsyncMixin):
+    from honeybadgermpc.mpc import Mpc
+
+    name = MixinConstants.ShareEquality
+
+    @staticmethod
+    @TypeCheck()
+    def legendre_mod_p(a: GFElement):
+        """Return the legendre symbol ``legendre(a, p)`` where *p* is the
+        order of the field of *a*.
+        """
+        assert a.modulus % 2 == 1
+
+        b = a ** ((a.modulus - 1)//2)
+        if b == 1:
+            return 1
+        elif b == a.modulus-1:
+            return -1
+        return 0
+
+    @staticmethod
+    @TypeCheck()
+    async def _gen_test_bit(context: Mpc, diff: Share):
+        # # b \in {0, 1}
+        b = MixinBase.pp_elements.get_bit(context)
+
+        # # _b \in {5, 1}, for p = 1 mod 8, s.t. (5/p) = -1
+        # # so _b = -4 * b + 5
+        _b = (-4 * b) + context.Share(5)
+
+        _r = MixinBase.pp_elements.get_rand(context)
+        _rp = MixinBase.pp_elements.get_rand(context)
+
+        # c = a * r + b * rp * rp
+        # If b_i == 1, c_i is guaranteed to be a square modulo p if a is zero
+        # and with probability 1/2 otherwise (except if rp == 0).
+        # If b_i == -1 it will be non-square.
+        c = await ((diff * _r) + (_b * _rp * _rp)).open()
+
+        return c, _b
+
+    @staticmethod
+    @TypeCheck
+    async def gen_test_bit(context: Mpc, diff: Share):
+        cj, bj = await Equality._gen_test_bit(context, diff)
+        while cj == 0:
+            cj, bj = await Equality._gen_test_bit(context, diff)
+
+        legendre = Equality.legendre_mod_p(cj)
+        if legendre == 0:
+            return Equality.gen_test_bit(context, diff)
+
+        return (legendre / context.field(2)) * (bj + context.Share(legendre))
+
+    @staticmethod
+    @TypeCheck()
+    async def _prog(context: Mpc,
+                    p_share: Share,
+                    q_share: Share,
+                    security_parameter: int = 32):
+        diff = p_share - q_share
+
+        x = context.ShareArray(await gather(*[Equality.gen_test_bit(context, diff)
+                                              for _ in range(security_parameter)]))
+
+        return await x.multiplicative_product()

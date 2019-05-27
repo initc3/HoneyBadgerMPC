@@ -1,11 +1,11 @@
-from .typecheck import static_type_check
+from .typecheck import TypeCheck
 from collections import defaultdict
 from asyncio import Queue
 import asyncio
 
 
-@static_type_check(str, 'callable(send)')
-def wrap_send(tag, send):
+@TypeCheck()
+def wrap_send(tag: str, send: 'callable(send)'):  # noqa: F821
     """Given a `send` function which takes a destination and message,
     this returns a modified function which sends the tag with the object.
     """
@@ -15,8 +15,8 @@ def wrap_send(tag, send):
     return _send
 
 
-@static_type_check(list, int)
-def chunk_data(data, chunk_size, default=0):
+@TypeCheck()
+def chunk_data(data: list, chunk_size: int, default: int = 0):
     """ Break data into chunks of size `chunk_size`
     Last chunk is padded with the default value to have `chunk_size` length
     If an empty list is provided, this will return a single chunk of default values
@@ -35,8 +35,8 @@ def chunk_data(data, chunk_size, default=0):
     return res
 
 
-@static_type_check(list)
-def flatten_lists(lists):
+@TypeCheck()
+def flatten_lists(lists: list):
     """ Given a 2d list, return a flattened 1d list
     e.g. [[1,2,3],[4,5,6],[7,8,9]] => [1,2,3,4,5,6,7,8,9]
     """
@@ -47,8 +47,8 @@ def flatten_lists(lists):
     return res
 
 
-@static_type_check(list)
-def transpose_lists(lists):
+@TypeCheck()
+def transpose_lists(lists: list):
     """ Given a 2d list, return the transpose of the list
     e.g. [[1,2,3],[4,5,6],[7,8,9]] => [[1,4,7],[2,5,8],[3,6,9]]
     """
