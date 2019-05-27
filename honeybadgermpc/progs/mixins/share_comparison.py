@@ -1,6 +1,7 @@
 from honeybadgermpc.progs.mixins.base import AsyncMixin
 from honeybadgermpc.progs.mixins.constants import MixinConstants
-from honeybadgermpc.utils.typecheck import static_type_check
+from honeybadgermpc.utils.typecheck import TypeCheck
+from honeybadgermpc.progs.mixins.dataflow import Share
 
 from asyncio import gather
 
@@ -11,8 +12,8 @@ class Equality(AsyncMixin):
     name = MixinConstants.ShareEquality
 
     @staticmethod
-    @static_type_check(GFElement)
-    def legendre_mod_p(a):
+    @TypeCheck()
+    def legendre_mod_p(a: GFElement):
         """Return the legendre symbol ``legendre(a, p)`` where *p* is the
         order of the field of *a*.
         """
@@ -26,8 +27,8 @@ class Equality(AsyncMixin):
         return 0
 
     @staticmethod
-    @static_type_check(Mpc, 'context.Share')
-    async def _gen_test_bit(context, diff):
+    @TypeCheck()
+    async def _gen_test_bit(context: Mpc, diff: Share):
         # # b \in {0, 1}
         b = Equality.pp_elements.get_bit(context)
 
@@ -47,8 +48,8 @@ class Equality(AsyncMixin):
         return c, _b
 
     @staticmethod
-    @static_type_check(Mpc, 'context.Share')
-    async def gen_test_bit(context, diff):
+    @TypeCheck()
+    async def gen_test_bit(context: Mpc, diff: Share):
         cj, bj = await Equality._gen_test_bit(context, diff)
         while cj == 0:
             cj, bj = await Equality._gen_test_bit(context, diff)
@@ -60,8 +61,11 @@ class Equality(AsyncMixin):
         return (legendre / context.field(2)) * (bj + context.Share(legendre))
 
     @staticmethod
-    @static_type_check(Mpc, 'context.Share', 'context.Share', int)
-    async def _prog(context, p_share, q_share, security_parameter=32):
+    @TypeCheck()
+    async def _prog(context: Mpc,
+                    p_share: Share,
+                    q_share: Share,
+                    security_parameter: int = 32):
         diff = p_share - q_share
 
         x = context.ShareArray(await gather(*[Equality.gen_test_bit(context, diff)
@@ -103,7 +107,10 @@ class LessThan(AsyncMixin):
         return a + b - 2 * a * b
 
     @staticmethod
-    async def _transform_comparison(context, a_share, b_share):
+    @TypeCheck()
+    async def _transform_comparison(context: Mpc,
+                                    a_share: Share,
+                                    b_share: Share):
         """ Section 5.1 First Transformation
         Compute [r]_B and [c]_B, which are bitwise sharings of a random share [r] and
         [c] = 2([a] - [b]) + [r]
@@ -122,8 +129,8 @@ class LessThan(AsyncMixin):
         return r_bits, c_bits
 
     @staticmethod
-    @static_type_check(Mpc, list, list)
-    def _compute_x(context, r_bits, c_bits):
+    @TypeCheck()
+    def _compute_x(context: Mpc, r_bits: list, c_bits: list):
         """ Section 5.2 Computing X
         Computes [x] from equation 7
 
@@ -150,14 +157,16 @@ class LessThan(AsyncMixin):
         return x
 
     @staticmethod
-    async def _extract_lsb(context, x):
+    @TypeCheck()
+    async def _extract_lsb(context: Mpc, x: (Share, 'context.ShareFuture')):
         """ Section 5.3 Extracting the Least Significant Bit
         Returns a future to [x_0], which represents [r]_B > c
         """
         bit_length = context.field.modulus.bit_length()
 
         s_b, s_bits = LessThan.pp_elements.get_share_bits(context)
-        d = await (s_b + x).open()
+        d_ = s_b + x
+        d = await d_.open()
 
         # msb
         s_0 = s_bits[0]
@@ -181,13 +190,11 @@ class LessThan(AsyncMixin):
             + (s_prod * d_xor_12)
 
         # [x0] = [s0] ^ [d0], equal to [r]_B > c
-        x_0 = LessThan._xor_bits(s_0, d_0)
-
-        return x_0
+        return LessThan._xor_bits(s_0, d_0)
 
     @staticmethod
-    @static_type_check(Mpc, 'context.Share', 'context.Share')
-    async def _prog(context, a_share, b_share):
+    @TypeCheck()
+    async def _prog(context: Mpc, a_share: Share, b_share: Share):
         r_bits, c_bits = await LessThan._transform_comparison(context, a_share, b_share)
         x = LessThan._compute_x(context, r_bits, c_bits)
         x_0 = await LessThan._extract_lsb(context, x)

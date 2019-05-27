@@ -1,143 +1,272 @@
 import functools
 import inspect
+from inspect import Parameter, Signature
+import os
 
 
-def check_types(func, types, kwtypes, args, kwargs):
-    spec = inspect.getfullargspec(func)
+class TypeCheck(object):
+    """Class-based decorator to optionally check types of functions
+    based on their annotations. When this decorates a function, it adds
+    assertions that run before invoking the function to check the types.
+    First, this checks the default arguments.
+    Then, this will check the passed arguments to the function.
+    Finally, this will check the return value of the function.
 
-    # Mapping param name => default value for arguments with defaults
-    default_dict = {}
+    There are some nuances to this--
+    When python is invoked with -O, none these checks will not run by default.
+    This can be overridden by passing in force=True to the constructor of the
+    decorator to force that function to be type checked.
 
-    # Mapping param name => received value
-    passed_dict = {}
+    This also supports arithmetic functions by passing in arithmetic=True.
+    This will cause the function to return NotImplemented if the type signature
+    of the passed arguments is incorrect instead of raising an exception. This
+    should be used on functions such as __add__. This will also force type checking.
 
-    # Mapping param name => type signature
-    type_dict = {}
+    Finally, this supports several types of annotations--
+    - types
+    - strings
+        - When evaluating a string constraint, it will evaluate the string
+          as if it were code at the beginning of the function (i.e. it has
+          access to the locals and globals of the function). This means it
+          essentially has access to global values from where the function is
+          defined, as well as the arguments of the function. It must evaluate
+          to either a boolean, or a type. When it evaluates to a boolean, the
+          success of the check is eqaul to the boolean value. If it evaluates
+          to a type, the value of that argument will be checked to see if it's
+          an instance of that type.
+    - tuples of types and strings
 
-    # Build mapping of default arguments to their values
-    if spec.defaults is not None:
-        default_args = list(reversed(spec.args))
-        default_values = list(reversed(spec.defaults))
-        for (k, v) in zip(default_args, default_values):
-            default_dict[k] = v
+    Please note:
+    - Adding annotations to *args and **kwargs arguments will result
+      in undefined behavior as of now, as well as keyword only arguments.
+    - If a class is defined inside of a function, currently, we do not
+      support using that class (even in string form) as a type constraint.
+    - Normally, typechecking is performed on all decorated functions if
+      __debug__ is True. This can be turned off by defining the environment
+      variable DISABLE_TYPECHECKING
 
-    # Build mapping of argument names to passed arguments
-    for (k, v) in zip(spec.args, args):
-        passed_dict[k] = v
+    For sample usage, please see tests/utils/test_typecheck.py
 
-    for (k, v) in kwargs.items():
-        passed_dict[k] = v
-
-    # Build mapping of argument names to specified types
-    for (k, t) in [*kwtypes.items(), *zip(spec.args, types)]:
-        if k in type_dict:
-            raise ValueError(
-                f"Type constraint for `{k}` of type `{t}` specified, "
-                f"but type constraint already found ({type_dict[k]})")
-
-        # Turn type into array of types
-        if isinstance(t, (str, type)):
-            t_arr = [t]
-        elif isinstance(t, (tuple, list)):
-            t_arr = [*t]
-        else:
-            raise ValueError(f"Type constraint for `{k}` of type `{t}` specified, "
-                             f"which in not supported. Valid types are `str`, `list`, "
-                             f"`tuple`, and `type`")
-
-        # Process the types
-        for idx, t_ in enumerate(t_arr):
-            # If the type is a string evaluate it as if it were in the method body
-            if isinstance(t_, str):
-                try:
-                    t_eval = eval(t_, func.__globals__, passed_dict)
-                except Exception as e:
-                    raise ValueError(f'Type constraint for `{k}` specified "{t_}", '
-                                     f'which raised:\n{e}')
-
-                if isinstance(t_eval, bool):
-                    if not t_eval:
-                        del t_arr[idx]
-                    else:
-                        # This will always pass an isinstance check
-                        t_arr[idx] = object
-                elif isinstance(t_eval, type):
-                    t_arr[idx] = t_eval
-                else:
-                    raise ValueError(f"Type constraint for {k} provided type constraint"
-                                     f"{t_}, which evaluates to {t_eval}. String type "
-                                     f"constraints must evaluate to a bool or a type")
-            elif not isinstance(t_, type):
-                raise ValueError(f"Type constraint for {k} provided type constraint "
-                                 f"{t_}, which is neither a type nor a string.")
-
-        type_dict[k] = tuple(t_arr)
-
-    # Typically occurs when extra un-named type constraints specified
-    if len(type_dict.keys()) < (len(types) + len(kwtypes.keys())):
-        raise TypeError(f"Extra type constraints received!")
-
-    # Check all passed and default values for type constraints
-    for (k, t) in type_dict.items():
-        if (k not in default_dict) and (k not in passed_dict):
-            raise TypeError(
-                f"Type constraint for `{k}` of type `{t}` specified, "
-                f"but no argument found for {k}.")
-        elif (k in default_dict) and not isinstance(default_dict[k], t):
-            raise TypeError(
-                f"Type constraint for `{k}` of type `{t}` specified, "
-                f"but incorrect default type provided ({type(default_dict[k])})")
-        elif (k in passed_dict) and not isinstance(passed_dict[k], t):
-            raise TypeError(
-                f"Type constraint for `{k}` of type `{t}` specified, "
-                f"but incorrect type passed in ({type(passed_dict[k])})")
-
-
-def static_type_check(*types, **kwtypes):
-    """Use this as a property on methods to get convenient type-checking.
-    Example usage:
-    @static_type_check(int, (int, str))
-    def func(a, b):
-        return a + b
-
-    This would roughly be equivalent to:
-    def func(a, b):
-        if not isinstance(a, int):
-            raise TypeError(f"Expected: {int}; Received: {type(a)})
-        if not isinstance(b, (int, str)):
-            raise TypeError(f"Expected: {int}; Received: {type(b)})
-
-        return a + b
-
-    You can also provide keyword arguments to this decorator--
-    This ensures that the method is always invoked with those named
-    arguments, and with the types specified
-
-    TODO: better documentation
+    TODO: support typechecking args, kwargs, and keyword only arguments
     """
-    def checked_decorator(func):
+
+    def __init__(self, force=False, arithmetic=False):
+        """ Constructor of the typecheck decorator.
+        args:
+            force (boolean): Force this function to be typechecked even if
+                python was not run in debug mode.
+            arithmetic (boolean): Instead of raising an assertion, if the
+                type-checking fails, return NotImplemented. This overrides
+                the value of force if True.
+        """
+        self._arithmetic = arithmetic
+
+        # If the environment variable DISABLE_TYPECHECKING exists, then
+        # only perform typechecking if required.
+        self._check_types = force or arithmetic
+        if 'DISABLE_TYPECHECKING' not in os.environ:
+            self._check_types = self._check_types or __debug__
+
+    def _check_complex_annotation(self, value, annotation, local_dict):
+        """ Given a string type constraint, evaluate the constraint as
+        if it were in the function body being type checked. If the string
+        evaluates to a boolean value, the result of the check is that value.
+        If it evaluates to a type, the result of the check is if the value is
+        an instance of that type. Anything else and the check is failed.
+
+        args:
+            value (object): Value being typechecked
+            annotation (object): Annotation in the type signature for the given
+                value
+            local_dict (dict): Mapping of parameter names to values to use when
+                evaluating the constraint.
+
+        outputs:
+            Returns a boolean value representing the result of this check.
+        """
+        assert isinstance(annotation, str)
+        try:
+            t_eval = eval(annotation, self._func.__globals__, local_dict)
+        except Exception as e:
+            raise AssertionError(
+                f"Evaluating string annotation {{{annotation}}} "
+                f"raised the exception: {e}")
+
+        if isinstance(t_eval, bool):
+            return t_eval
+        elif isinstance(t_eval, type):
+            return isinstance(value, t_eval)
+        else:
+            # TODO: consider raising exception here instead of silently failing
+            return False
+
+    def _validate_argument(self, name, value, annotation, local_dict={}):
+        """ Validate the type constraint for a single name, value, annotation pair.
+        Raise an assertion if the argument fails validation.
+
+        args:
+            name (str): Name of the parameter being validated
+            value (object): Value of the parameter being validated
+            annotation (object): Annotation of the parameter being validated
+            local_dict (dict): Mapping of argument names to values to use when
+                evaluating string annotations.
+        """
+        if annotation in (Parameter.empty, Signature.empty):
+            return
+
+        if isinstance(annotation, tuple):
+            simple_annotations = tuple(a for a in annotation if isinstance(a, type))
+            complex_annotations = [a for a in annotation if not isinstance(a, type)]
+        elif isinstance(annotation, type):
+            simple_annotations = (annotation)
+            complex_annotations = []
+        else:
+            simple_annotations = tuple()
+            complex_annotations = [annotation]
+
+        simple_valid = isinstance(value, simple_annotations)
+        complex_valid = any([self._check_complex_annotation(value, c, local_dict)
+                             for c in complex_annotations])
+
+        assert (simple_valid or complex_valid), \
+            f"Expected {name} to be of type {annotation}, "\
+            f"but found ({value}) of type ({type(value)})"
+
+    def _validate_defaults(self):
+        """ Ensures default values match their type signatures
+        An assertion will be raised if not.
+        """
+        for parameter_name in self._signature.parameters:
+            parameter = self._signature.parameters[parameter_name]
+            if Parameter.empty in (parameter.default, parameter.annotation):
+                continue
+
+            self._validate_argument(
+                parameter_name,
+                parameter.default,
+                parameter.annotation,
+                self._default_signature.arguments)
+
+    def _validate_annotation(self, annotation):
+        """ Validates a single type annotation. This ensures that the annotation is
+        either a type, a string, nonexistent, or a tuple of types and strings.
+
+        args:
+            annotation (object): Annotation from function signature
+
+        outputs:
+            Returns True if the annotation is either:
+                - nonexistant
+                - type
+                - string
+                - tuple of strings or types
+        """
+        if annotation in (Parameter.empty, Signature.empty):
+            return True
+        elif isinstance(annotation, (type, str)):
+            return True
+        elif isinstance(annotation, tuple):
+            return all([self._validate_annotation(a) for a in annotation])
+        else:
+            return False
+
+    def _validate_annotations(self):
+        """ Ensure that type annotations for arguments and return values are
+        valid annotations.
+        An assertion will be raised if not.
+        """
+        for parameter_name in self._signature.parameters:
+            parameter = self._signature.parameters[parameter_name]
+            assert self._validate_annotation(parameter.annotation), \
+                f"Type annotation for {parameter_name} must be a string, type, " \
+                f"or a tuple of strings and types ({parameter})"
+
+        assert self._validate_annotation(self._signature.return_annotation), \
+            f"Return type annotations must be strings, types, or tuples " \
+            f"of strings or types ({self._signature.return_annotation})"
+
+        self._validate_defaults()
+
+    def _check_function_args(self, args, kwargs):
+        """Checks that the passed arguments match the correct type signature
+        An assertion will be raised if not.
+
+        args:
+            args (tuple): Arguments passed into the function
+            kwargs (dict): Keyword-only arguments passed into the function
+
+        TODO: support args, kwargs
+        """
+        for arg_name in self._bound_signature.arguments:
+            arg_value = self._bound_signature.arguments[arg_name]
+            arg_annotation = self._signature.parameters[arg_name].annotation
+
+            self._validate_argument(
+                arg_name,
+                arg_value,
+                arg_annotation,
+                self._called_signature.arguments)
+
+    def _check_return_value(self, return_value):
+        """ Checks the correctness of the return value of the function being typechecked.
+        An assertion is raised if it is incorrect.
+
+        args:
+            return_value (object): Value returned by the function invocation.
+        """
+        return_annotation = self._signature.return_annotation
+        self._validate_argument('return value', return_value, return_annotation)
+
+    def _wrap_func(self, func):
+        """ Given a function, add typechecking to the function as specified in the class
+        documentation. This will also set various instance variables for later use in
+        the typechecking of the function.
+
+        args:
+            func (callable): Function to type check
+
+        outputs:
+            checked_wrapper, which is essentially just the function with typechecking
+            enabled.
+        """
+        self._func = func
+        self._signature = inspect.signature(func)
+
+        self._default_signature = self._signature.bind_partial()
+        self._default_signature.apply_defaults()
+
         @functools.wraps(func)
         def checked_wrapper(*args, **kwargs):
-            check_types(func, types, kwtypes, args, kwargs)
+            self._bound_signature = self._signature.bind(*args, **kwargs)
+            self._called_signature = self._signature.bind(*args, **kwargs)
+            self._called_signature.apply_defaults()
 
-            return func(*args, **kwargs)
+            self._validate_annotations()
+
+            try:
+                self._check_function_args(args, kwargs)
+            except AssertionError as e:
+                if self._arithmetic:
+                    return NotImplemented
+                raise e
+
+            return_value = self._func(*args, **kwargs)
+            self._check_return_value(return_value)
+
+            return return_value
+
         return checked_wrapper
-    return checked_decorator
 
+    def __call__(self, func):
+        """ Add type checking to the function if enabled.
 
-def class_type_check(*types, **kwtypes):
-    """Utility decorator to check types on classmethods without worrying about cls
-    Equivalent of calling
-    @static_type_check(type, *types, **kwtypes)
-    """
+        args:
+            func (callable): Function to typecheck
 
-    return static_type_check(type, *types, **kwtypes)
+        outputs:
+            Returns a version of the passed function with type checking if enabled.
+        """
+        if self._check_types:
+            return self._wrap_func(func)
 
-
-def type_check(*types, **kwtypes):
-    """Utility decorator to check types on instance methods without worrying about self
-    Equivalent of calling
-    @static_type_check(object, *types, **kwtypes)
-    """
-
-    return static_type_check(object, *types, **kwtypes)
+        return func
