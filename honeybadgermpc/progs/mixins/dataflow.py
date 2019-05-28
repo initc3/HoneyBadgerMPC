@@ -228,6 +228,58 @@ class ShareArray(ABC):
 
     __truediv__ = __floordiv__ = __div__
 
+    async def _tree_fold(self, op):
+        """ Apply a provided operation in a 'tree'-like fashion--
+        Instead of folding sequentially across the shares of the array which
+        creates a linked-list like chain of operations as shares resolve, this
+        applies them in a tree-like fashion, which involves only log(n) levels of
+        application. This requires the array to be non-empty.
+
+        example:
+            A regular reduce would proceed as follows:
+                sum([1,2,3,4,5]) => 1 + 2 + 3 + 4 + 5
+            Instead, this will proceed as follows:
+                sum([1,2,3,4,5]) => ((1+2) + (3+4)) + 5
+
+        args:
+            op (function): A binary function that takes two shares and returns a share
+                or sharefuture. This is required to be commutative. For this to be
+                useful, it should also be non-strict / lazy (i.e. the result arrives
+                asynchronously)
+
+        returns:
+            A Share or ShareFuture representing the iterated binary operation of op on
+            the shares of this array
+        """
+        shares = self._shares
+        assert len(shares) > 0
+
+        while len(shares) > 1:
+            left, right = shares[::2], shares[1::2]
+            extra = None
+            if len(left) > len(right):
+                extra = left[-1]
+                left = left[:-1]
+
+            results = (await op(self.context.ShareArray(left),
+                                self.context.ShareArray(right)))._shares
+
+            if extra is not None:
+                results.append(extra)
+
+            shares = results
+
+        return shares[0]
+
+    async def multiplicative_product(self):
+        """ Compute the product sum of values in this array such that this takes log(n)
+        rounds
+        """
+        if len(self._shares) == 0:
+            return self.context.Share(1)
+
+        return await self._tree_fold(ShareArray.__mul__)
+
 
 class ShareFuture(ABC, asyncio.Future):
     @property
