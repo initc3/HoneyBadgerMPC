@@ -1,5 +1,4 @@
 import random
-import pytest
 from honeybadgermpc.reed_solomon_wb import make_wb_encoder_decoder
 
 
@@ -49,16 +48,14 @@ def test_decoding_all_zeros():
 
     # Check decoding with no errors
     # https://github.com/initc3/HoneyBadgerMPC/issues/143
-    with pytest.raises(IndexError):
-        # If this error is not raised then the bug has been fixed :D
-        _ = dec(encoded, debug=False)
+    # If an error is raised then the bug has not been fixed D:
+    _ = dec(encoded, debug=False)
 
     # Corrupt with maximum number of erasures:
     cmax = n - 2 * t - 1
 
     corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
-    with pytest.raises(IndexError):
-        _ = dec(corrupted, debug=False)
+    _ = dec(corrupted, debug=False)
 
     # Corrupt with maximum number of errors:
     emax = (n - 2 * t - 1) // 2
