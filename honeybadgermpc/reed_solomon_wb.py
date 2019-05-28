@@ -213,7 +213,7 @@ def no_solution(a):
 # and return the row index of the 1 if it exists
 def is_pivot_column(a, j):
     i = 0
-    while a[i][j] == 0 and i < len(a):
+    while i < len(a) and a[i][j] == 0:
         i += 1
 
     if i == len(a):
