@@ -1,5 +1,6 @@
 from pytest import mark, raises
 from asyncio import gather
+from random import randint
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
     DivideShareArrays, Equality, DoubleSharingMultiply, DoubleSharingMultiplyArrays)
@@ -258,10 +259,6 @@ async def test_share_division_needs_mixins(test_preprocessing, test_runner):
 
 @mark.asyncio
 async def test_share_array_division(test_preprocessing, test_runner):
-    n, t = 3, 1
-    test_preprocessing.generate("triples", n, t)
-    test_preprocessing.generate("rands", n, t)
-
     async def _prog(context):
         shares = context.ShareArray(
             [test_preprocessing.elements.get_rand(context) for _ in range(20)])
@@ -269,6 +266,26 @@ async def test_share_array_division(test_preprocessing, test_runner):
         result = await(shares / shares)
         for e in await(result).open():
             assert e == 1
+
+    results = await run_test_program(_prog, test_runner)
+    assert len(results) == n
+
+
+@mark.asyncio
+@mark.parametrize("length", [0, 1, 4, 5])
+async def test_share_array_multiplicative_product(length, test_runner):
+    values = [randint(0, 100) for _ in range(length)]
+
+    async def _prog(context):
+        elements = [context.field(v) for v in values]
+        product = context.field(1)
+        for e in elements:
+            product *= e
+
+        array = context.ShareArray(elements)
+        share_product = await array.multiplicative_product()
+
+        assert (await share_product.open()).value == product.value
 
     results = await run_test_program(_prog, test_runner)
     assert len(results) == n

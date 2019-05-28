@@ -217,17 +217,7 @@ class Equality(AsyncMixin):
     async def _prog(context, p_share, q_share, security_parameter=32):
         diff = p_share - q_share
 
-        x = await gather(*[Equality.gen_test_bit(context, diff)
-                           for _ in range(security_parameter)])
+        x = context.ShareArray(await gather(*[Equality.gen_test_bit(context, diff)
+                                              for _ in range(security_parameter)]))
 
-        # Take the product (this is here the same as the "and") of all
-        # the x'es
-        while len(x) > 1:
-            # Repeatedly split the shares in half and element-wise multiply the halves
-            # until there's only one left.
-            # TODO: Use a future version of this computation
-            x_first, x_left = context.ShareArray(x[::2]), context.ShareArray(x[1::2])
-            x = (await (x_first * x_left))._shares
-
-        # Returns share, this will be equal to 0 only if the shares are equal
-        return x[0]
+        return await x.multiplicative_product()
