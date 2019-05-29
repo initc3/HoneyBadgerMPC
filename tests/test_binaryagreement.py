@@ -70,6 +70,7 @@ def dummy_coin(sid, n, f):
         return hash((sid, round)) % 2
     return get_coin
 
+
 # Test binary agreement with a dummy coin
 @mark.asyncio
 async def test_binaryagreement_dummy(test_router):
@@ -90,8 +91,7 @@ async def test_binaryagreement_dummy(test_router):
         outputs.append(Queue())
 
         t = create_task(
-            binaryagreement(
-                            sid, i, n, f, coin, inputs[i].get, outputs[i].put_nowait,
+            binaryagreement(sid, i, n, f, coin, inputs[i].get, outputs[i].put_nowait,
                             sends[i], recvs[i]))
         threads.append(t)
 
@@ -123,8 +123,7 @@ async def test_binaryagreement_dummy_with_redundant_messages(byznode, msg_type):
     for i in range(n):
         inputs.append(Queue())
         outputs.append(Queue())
-        t = create_task(
-                        binaryagreement(sid, i, n, f, coin, inputs[i].get,
+        t = create_task(binaryagreement(sid, i, n, f, coin, inputs[i].get,
                                         outputs[i].put_nowait, sends[i], recvs[i]))
         threads.append(t)
 
@@ -154,8 +153,7 @@ async def test_binaryagreement_dummy_with_byz_message_type(byznode):
     for i in range(n):
         inputs.append(Queue())
         outputs.append(Queue())
-        t = create_task(
-                        binaryagreement(sid, i, n, f, coin, inputs[i].get,
+        t = create_task(binaryagreement(sid, i, n, f, coin, inputs[i].get,
                                         outputs[i].put_nowait, sends[i], recvs[i]))
         threads.append(t)
 
@@ -165,6 +163,7 @@ async def test_binaryagreement_dummy_with_byz_message_type(byznode):
     outs = await gather(*[outputs[i].get() for i in range(n) if i != byznode])
     assert all(v in (0, 1) and v == outs[0] for v in outs)
     await gather(*[threads[i] for i in range(len(threads)) if i != byznode])
+    threads[byznode].cancel()
 
 
 # Test binary agreement with boldyreva coin
@@ -203,8 +202,7 @@ async def test_binaryagreement(seed, test_router):
         inputs.append(Queue())
         outputs.append(Queue())
 
-        t = create_task(
-                        binaryagreement(sid, i, n, f, coins[i], inputs[i].get,
+        t = create_task(binaryagreement(sid, i, n, f, coins[i], inputs[i].get,
                                         outputs[i].put_nowait, sends[i], recvs[i]))
         threads.append(t)
 
