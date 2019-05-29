@@ -69,7 +69,7 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
     :param f: the number of byzantine parties
     :param coin: a ``common coin(r)`` is called to block until receiving a bit
     :param input: ``input()`` is called to receive an input
-    :param decide: ``decide(0)`` or ``output(1)`` is eventually called
+    :param decide: ``decide(0)`` or ``decide(1)`` is eventually called
     :param broadcast: broadcast channel
     :param receive: receive channel
     :return: blocks until
@@ -165,106 +165,103 @@ async def binaryagreement(sid, pid, n, f, coin, input_msg, decide, broadcast, re
 
     # Run the receive loop in the background
     _thread_recv = asyncio.create_task(_recv())
+    try:
+        # Block waiting for the input
+        vi = await input_msg()
+        assert vi in (0, 1)
+        est = vi
+        r = 0
+        already_decided = None
+        while True:  # Unbounded number of rounds
+            logger.debug(f'[{pid}] Starting with est = {est}',
+                         extra={'nodeid': pid, 'epoch': r})
 
-    # Block waiting for the input
-    vi = await input_msg()
-    assert vi in (0, 1)
-    est = vi
-    r = 0
-    already_decided = None
-    while True:  # Unbounded number of rounds
-        logger.debug(f'[{pid}] Starting with est = {est}',
-                     extra={'nodeid': pid, 'epoch': r})
+            if not est_sent[r][est]:
+                est_sent[r][est] = True
+                broadcast(('EST', r, est))
 
-        if not est_sent[r][est]:
-            est_sent[r][est] = True
-            broadcast(('EST', r, est))
+            while len(bin_values[r]) == 0:
+                # Block until a value is output
+                bv_signal.clear()
+                await bv_signal.wait()
 
-        while len(bin_values[r]) == 0:
-            # Block until a value is output
-            bv_signal.clear()
-            await bv_signal.wait()
+            w = next(iter(bin_values[r]))  # take an element
+            logger.debug(f"[{pid}] broadcast {('AUX', r, w)}",
+                         extra={'nodeid': pid, 'epoch': r})
+            broadcast(('AUX', r, w))
 
-        w = next(iter(bin_values[r]))  # take an element
-        logger.debug(f"[{pid}] broadcast {('AUX', r, w)}",
-                     extra={'nodeid': pid, 'epoch': r})
-        broadcast(('AUX', r, w))
-
-        values = None
-        logger.debug(
-                      f'block until at least N-f ({n-f}) AUX values are received',
-                      extra={'nodeid': pid, 'epoch': r})
-        while True:
+            values = None
             logger.debug(
-                f'[{pid}] bin_values[{r}]: {bin_values[r]}',
+                f'block until at least N-f ({n-f}) AUX values are received',
                 extra={'nodeid': pid, 'epoch': r})
-            logger.debug(
-                f'[{pid}] aux_values[{r}]: {aux_values[r]}',
-                extra={'nodeid': pid, 'epoch': r})
-            # Block until at least N-f AUX values are received
-            if 1 in bin_values[r] and len(aux_values[r][1]) >= n - f:
-                values = set((1,))
-                # print('[sid:%s] [pid:%d] VALUES 1 %d' % (sid, pid, r))
-                break
-            if 0 in bin_values[r] and len(aux_values[r][0]) >= n - f:
-                values = set((0,))
-                # print('[sid:%s] [pid:%d] VALUES 0 %d' % (sid, pid, r))
-                break
-            if sum(len(aux_values[r][v]) for v in bin_values[r]) >= n - f:
-                values = set((0, 1))
-                # print('[sid:%s] [pid:%d] VALUES BOTH %d' % (sid, pid, r))
-                break
-            bv_signal.clear()
-            await bv_signal.wait()
+            while True:
+                logger.debug(
+                    f'[{pid}] bin_values[{r}]: {bin_values[r]}',
+                    extra={'nodeid': pid, 'epoch': r})
+                logger.debug(
+                    f'[{pid}] aux_values[{r}]: {aux_values[r]}',
+                    extra={'nodeid': pid, 'epoch': r})
+                # Block until at least N-f AUX values are received
+                if 1 in bin_values[r] and len(aux_values[r][1]) >= n - f:
+                    values = set((1,))
+                    # print('[sid:%s] [pid:%d] VALUES 1 %d' % (sid, pid, r))
+                    break
+                if 0 in bin_values[r] and len(aux_values[r][0]) >= n - f:
+                    values = set((0,))
+                    # print('[sid:%s] [pid:%d] VALUES 0 %d' % (sid, pid, r))
+                    break
+                if sum(len(aux_values[r][v]) for v in bin_values[r]) >= n - f:
+                    values = set((0, 1))
+                    # print('[sid:%s] [pid:%d] VALUES BOTH %d' % (sid, pid, r))
+                    break
+                bv_signal.clear()
+                await bv_signal.wait()
 
-        logger.debug(
-                      f'[{pid}] Completed AUX phase with values = {values}',
-                      extra={'nodeid': pid, 'epoch': r})
+            logger.debug(f'[{pid}] Completed AUX phase with values = {values}',
+                         extra={'nodeid': pid, 'epoch': r})
 
-        # CONF phase
-        logger.debug(
-                      f'[{pid}] block until at least N-f ({n-f}) CONF values\
-                    are received', extra={'nodeid': pid, 'epoch': r})
-        if not conf_sent[r][tuple(values)]:
-            values = await wait_for_conf_values(
-                pid=pid,
-                n=n,
-                f=f,
-                epoch=r,
-                conf_sent=conf_sent,
-                bin_values=bin_values,
-                values=values,
-                conf_values=conf_values,
-                bv_signal=bv_signal,
-                broadcast=broadcast,
-            )
-        logger.debug(
-                      f'[{pid}] Completed CONF phase with values = {values}',
-                      extra={'nodeid': pid, 'epoch': r})
+            # CONF phase
+            logger.debug(f'[{pid}] block until at least N-f ({n-f}) CONF values\
+                are received', extra={'nodeid': pid, 'epoch': r})
+            if not conf_sent[r][tuple(values)]:
+                values = await wait_for_conf_values(
+                    pid=pid,
+                    n=n,
+                    f=f,
+                    epoch=r,
+                    conf_sent=conf_sent,
+                    bin_values=bin_values,
+                    values=values,
+                    conf_values=conf_values,
+                    bv_signal=bv_signal,
+                    broadcast=broadcast,
+                )
+            logger.debug(f'[{pid}] Completed CONF phase with values = {values}',
+                         extra={'nodeid': pid, 'epoch': r})
 
-        logger.debug(
-            f'[{pid}] Block until receiving the common coin value',
-            extra={'nodeid': pid, 'epoch': r},
-        )
-        # Block until receiving the common coin value
-        s = await coin(r)
-        logger.debug(
-            f'[{pid}] Received coin with value = {s}', extra={'nodeid': pid, 'epoch': r})
+            logger.debug(f'[{pid}] Block until receiving the common coin value',
+                         extra={'nodeid': pid, 'epoch': r})
+            # Block until receiving the common coin value
+            s = await coin(r)
+            logger.debug(f'[{pid}] Received coin with value = {s}',
+                         extra={'nodeid': pid, 'epoch': r})
 
-        try:
-            est, already_decided = set_new_estimate(
-                values=values,
-                s=s,
-                already_decided=already_decided,
-                decide=decide,
-            )
-        except AbandonedNodeError:
-            # print('[sid:%s] [pid:%d] QUITTING in round %d' % (sid,pid,r))
-            logger.debug(f'[{pid}] QUIT!', extra={'nodeid': pid, 'epoch': r})
+            try:
+                est, already_decided = set_new_estimate(
+                    values=values,
+                    s=s,
+                    already_decided=already_decided,
+                    decide=decide,
+                )
+            except AbandonedNodeError:
+                # print('[sid:%s] [pid:%d] QUITTING in round %d' % (sid,pid,r))
+                logger.debug(f'[{pid}] QUIT!', extra={'nodeid': pid, 'epoch': r})
+                return
+
+            r += 1
+    finally:
+        if asyncio.get_event_loop().is_running():
             _thread_recv.cancel()
-            return
-
-        r += 1
 
 
 def set_new_estimate(*, values, s, already_decided, decide):

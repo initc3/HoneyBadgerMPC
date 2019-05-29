@@ -140,9 +140,14 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
 
     # Step 2: Attempt to reconstruct P1
     start_time = time.time()
+    try:
+        recons_r2 = await incremental_decode(data_r1, enc, dec, robust_dec,
+                                             num_chunks, t, degree, n)
+    except asyncio.CancelledError:
+        # Cancel all created tasks
+        for task in [task_r1, task_r2, subscribe_task, *data_r1, *data_r2]:
+            task.cancel()
 
-    recons_r2 = await incremental_decode(data_r1, enc, dec, robust_dec,
-                                         num_chunks, t, degree, n)
     if recons_r2 is None:
         logging.error("[BatchReconstruct] P1 reconstruction failed!")
         return None
@@ -163,8 +168,14 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
 
     # Step 4: Attempt to reconstruct R2
     start_time = time.time()
-    recons_p = await incremental_decode(data_r2, enc, dec, robust_dec,
-                                        num_chunks, t, degree, n)
+    try:
+        recons_p = await incremental_decode(data_r2, enc, dec, robust_dec,
+                                            num_chunks, t, degree, n)
+    except asyncio.CancelledError:
+        # Cancel all created tasks
+        for task in [task_r1, task_r2, subscribe_task, *data_r1, *data_r2]:
+            task.cancel()
+
     if recons_p is None:
         logging.error("[BatchReconstruct] P2 reconstruction failed!")
         return None
