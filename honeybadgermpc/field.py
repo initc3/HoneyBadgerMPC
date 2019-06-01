@@ -1,3 +1,9 @@
+# Copyright 2019 Decentralized Systems Lab
+#
+# This file (field.py) began as a modification of a file from
+# Viff, the copyright notice for which is posted below.
+# See https://viff.dk/
+#
 # Copyright 2007, 2008 VIFF Development Team.
 #
 # This file is part of VIFF, the Virtual Ideal Functionality Framework.
@@ -14,65 +20,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with VIFF. If not, see <http://www.gnu.org/licenses/>.
-
-"""Modeling of Galois (finite) fields. The GF function creates classes
-which implements Galois (finite) fields of prime order
-
-All fields work the same: instantiate an object from a field to get
-hold of an element of that field. Elements implement the normal
-arithmetic one would expect: addition, multiplication, etc.
-
-Defining a field:
-
->>> Zp = GF(19)
-
-Defining field elements:
-
->>> x = Zp(10)
->>> y = Zp(15)
->>> z = Zp(1)
-
-Addition and subtraction (with modulo reduction):
-
->>> x + y
-{6}
->>> x - y
-{14}
-
-Bitwise xor for field elements:
-
->>> z ^ z
-{0}
->>> z ^ 0
-{1}
->>> 1 ^ z
-{0}
-
-Exponentiation:
-
->>> x**3
-{12}
-
-Square roots can be found for elements based on GF fields with a Blum
-prime modulus (see :func:`GF` for more information):
-
->>> x.sqrt()
-{3}
-
-Field elements from different fields cannot be mixed, you will get a
-type error if you try:
-
->>> Zq = GF(17)
->>> z = Zq(2)
->>> x + z
-Traceback (most recent call last):
-    ...
-TypeError: unsupported operand type(s) for +: 'GFElement' and 'GFElement'
-
-The reason for the slightly confusing error message is that ``x`` and
-``z`` are instances of two *different* classes called ``GFElement``.
-"""
-
 from gmpy2 import is_prime, mpz
 from random import Random
 
@@ -85,11 +32,6 @@ class FieldElement(object):
     """Common base class for elements."""
 
     def __int__(self):
-        """Extract integer value from the field element.
-
-        >>> int(GF256(10))
-        10
-        """
         return self.value
 
     __long__ = __int__
@@ -159,21 +101,6 @@ class GFElement(FieldElement):
     def __rsub__(self, other):
         """Subtraction (reflected argument version)."""
         return GFElement(other - self.value, self.field)
-
-    def __xor__(self, other):
-        """Xor for bitvalues."""
-        if not isinstance(other, (GFElement, int)):
-            return NotImplemented
-        try:
-            if self.field is not other.field:
-                raise FieldsNotIdentical
-            return GFElement(self.value ^ other.value, self.field)
-        except AttributeError:
-            return GFElement(self.value ^ other, self.field)
-
-    def __rxor__(self, other):
-        """Xor for bitvalues (reflected argument version)."""
-        return GFElement(other ^ self.value, self.field)
 
     def __mul__(self, other):
         """Multiplication."""

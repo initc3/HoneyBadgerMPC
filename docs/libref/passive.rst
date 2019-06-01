@@ -1,3 +1,0 @@
-passive
-=======
-.. automodule:: honeybadgermpc.passive
