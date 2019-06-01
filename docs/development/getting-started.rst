@@ -80,7 +80,7 @@ If the above went all well, you should be setup for developing
 
     .. code-block:: shell-session
 
-        $ docker-compose run --rm honeybadgermpc sh
+        $ docker-compose run --rm honeybadgermpc bash
 
     Once in the session (container) you can execute commands just as you would
     in a non-container session.
@@ -93,19 +93,19 @@ Run a shell session in a container:
 
 .. code-block:: shell-session
 
-    $ docker-compose run --rm honeybadgermpc sh
+    $ docker-compose run --rm honeybadgermpc bash
 
 Run the test:
 
 .. code-block:: shell-session
 
-    $ pytest -v tests/test_passive.py -s
+    $ pytest -vs tests/test_mpc.py
 
 or
 
 .. code-block:: shell-session
 
-    $ python -m honeybadgermpc.passive
+    $ python -m honeybadgermpc.mpc
 
 .. rubric:: About code changes and building the image
 
@@ -193,7 +193,7 @@ Running a specific test:
 
 .. code-block:: shell-session
 
-    $ pytest -v tests/test_passive.py::test_open_share
+    $ pytest -v tests/test_mpc.py::test_open_shares
 
 When debugging, i.e. if one has put breakpoints in the code, use the ``-s``
 option (or its equivalent ``--capture=no``):
