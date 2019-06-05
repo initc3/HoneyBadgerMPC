@@ -2,10 +2,11 @@ from .typecheck import TypeCheck
 from collections import defaultdict
 from asyncio import Queue
 import asyncio
+from typing import Callable
 
 
 @TypeCheck()
-def wrap_send(tag: str, send: 'callable(send)'):  # noqa: F821
+def wrap_send(tag: str, send: Callable):  # noqa: F821
     """Given a `send` function which takes a destination and message,
     this returns a modified function which sends the tag with the object.
     """

@@ -1,8 +1,10 @@
+from __future__ import annotations  # noqa: F407
 import asyncio
 from abc import ABC, abstractmethod
 from honeybadgermpc.field import GFElement
 from honeybadgermpc.progs.mixins.constants import MixinConstants
 from honeybadgermpc.utils.typecheck import TypeCheck
+from typing import Callable
 
 
 class GFElementFuture(ABC, asyncio.Future):
@@ -14,8 +16,8 @@ class GFElementFuture(ABC, asyncio.Future):
 
     @TypeCheck(arithmetic=True)
     def __binop_field(self,
-                      other: (int, GFElement, 'GFElementFuture'),
-                      op: 'callable(op)'):  # noqa: F821
+                      other: (int, GFElement, GFElementFuture),
+                      op: Callable):
         if isinstance(other, int):
             other = self.context.field(other)
 
@@ -80,7 +82,7 @@ class Share(ABC):
 
     # Linear combinations of shares can be computed directly
     @TypeCheck(arithmetic=True)
-    def __add__(self, other: (GFElement, 'Share')):
+    def __add__(self, other: (GFElement, Share)):
         if isinstance(other, GFElement):
             return self.context.Share(self.v + other, self.t)
         elif self.t != other.t:
@@ -96,7 +98,7 @@ class Share(ABC):
         return self.context.Share(-self.v), self.t
 
     @TypeCheck(arithmetic=True)
-    def __sub__(self, other: (GFElement, 'Share')):
+    def __sub__(self, other: (GFElement, Share)):
         if isinstance(other, GFElement):
             return self.context.Share(self.v - other, self.t)
         elif self.t != other.t:
@@ -111,7 +113,7 @@ class Share(ABC):
         return self.context.Share(-self.v + other, self.t)
 
     @TypeCheck(arithmetic=True)
-    def __mul__(self, other: (int, GFElement, 'Share')):
+    def __mul__(self, other: (int, GFElement, Share)):
         if isinstance(other, (int, GFElement)):
             return self.context.Share(self.v * other, self.t)
         elif self.t != other.t:
@@ -131,7 +133,7 @@ class Share(ABC):
         return self.context.Share(self.v * other, self.t)
 
     @TypeCheck(arithmetic=True)
-    def __div__(self, other: 'Share'):
+    def __div__(self, other: Share):
         if self.t != other.t:
             raise ValueError(
                 f"Cannot divide shares with differing t values ({self.t} {other.t})")
@@ -146,7 +148,7 @@ class Share(ABC):
     __truediv__ = __floordiv__ = __div__
 
     @TypeCheck(arithmetic=True)
-    def __eq__(self, other: 'Share'):
+    def __eq__(self, other: Share):
         res = self.context.ShareFuture()
 
         eq = self.context.call_mixin(MixinConstants.ShareEquality, self, other)
@@ -155,7 +157,7 @@ class Share(ABC):
         return res
 
     @TypeCheck(arithmetic=True)
-    def __lt__(self, other: 'Share'):
+    def __lt__(self, other: Share):
         res = self.context.ShareFuture()
 
         lt = self.context.call_mixin(MixinConstants.ShareLessThan, self, other)
@@ -195,7 +197,7 @@ class ShareArray(ABC):
         return len(self._shares)
 
     @TypeCheck(arithmetic=True)
-    def __add__(self, other: ('ShareArray', list)):
+    def __add__(self, other: (ShareArray, list)):
         if isinstance(other, list):
             other = self.context.ShareArray(other, self.t)
 
@@ -206,7 +208,7 @@ class ShareArray(ABC):
         return self.context.ShareArray(result, self.t)
 
     @TypeCheck(arithmetic=True)
-    def __sub__(self, other: ('ShareArray', list)):
+    def __sub__(self, other: (ShareArray, list)):
         if isinstance(other, list):
             other = self.context.ShareArray(other, self.t)
 
@@ -217,17 +219,17 @@ class ShareArray(ABC):
         return self.context.ShareArray(result, self.t)
 
     @TypeCheck(arithmetic=True)
-    def __mul__(self, other: 'ShareArray'):
+    def __mul__(self, other: ShareArray):
         return self.context.call_mixin(MixinConstants.MultiplyShareArray, self, other)
 
     @TypeCheck(arithmetic=True)
-    def __div__(self, other: 'ShareArray'):
+    def __div__(self, other: ShareArray):
         return self.context.call_mixin(MixinConstants.DivideShareArray, self, other)
 
     __truediv__ = __floordiv__ = __div__
 
     @TypeCheck()
-    async def _tree_fold(self, op: 'callable(op)'):  # noqa: F821
+    async def _tree_fold(self, op: Callable):
         """ Apply a provided operation in a 'tree'-like fashion--
         Instead of folding sequentially across the shares of the array which
         creates a linked-list like chain of operations as shares resolve, this
@@ -292,9 +294,9 @@ class ShareFuture(ABC, asyncio.Future):
                       other: (int,
                               GFElement,
                               Share,
-                              'ShareFuture',
+                              ShareFuture,
                               GFElementFuture),
-                      op: 'callable(op)'):  # noqa: F821
+                      op: Callable):
         """Stacks the application of a function to the resolved value
         of this future with another value, which may or may not be a
         future as well.
