@@ -479,7 +479,7 @@ def run_and_terminate_process(*args, **kwargs):
         p = subprocess.Popen(*args, **kwargs)
         yield p
     finally:
-        logging.info("Killing ganache-cli", p.pid)
+        logging.info(f"Killing ganache-cli {p.pid}")
         p.terminate()  # send sigterm, or ...
         p.kill()      # send sigkill
         p.wait()
@@ -507,7 +507,7 @@ def test_asynchromix():
     # with run_and_terminate_process(cmd, shell=True,
     # stdout=sys.stdout, stderr=sys.stderr) as proc:
     cmd = "ganache-cli -p 8545 -a 50 -b 1 > acctKeys.json 2>&1"
-    logging.info("Running", cmd)
+    logging.info(f"Running {cmd}")
     with run_and_terminate_process(cmd, shell=True):
         time.sleep(5)
         run_eth()

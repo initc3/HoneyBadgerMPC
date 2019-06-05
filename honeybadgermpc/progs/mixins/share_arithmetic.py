@@ -181,40 +181,6 @@ class Equality(AsyncMixin):
 
     @staticmethod
     @TypeCheck()
-    async def _gen_test_bit(context: Mpc, diff: Share):
-        # # b \in {0, 1}
-        b = MixinBase.pp_elements.get_bit(context)
-
-        # # _b \in {5, 1}, for p = 1 mod 8, s.t. (5/p) = -1
-        # # so _b = -4 * b + 5
-        _b = (-4 * b) + context.Share(5)
-
-        _r = MixinBase.pp_elements.get_rand(context)
-        _rp = MixinBase.pp_elements.get_rand(context)
-
-        # c = a * r + b * rp * rp
-        # If b_i == 1, c_i is guaranteed to be a square modulo p if a is zero
-        # and with probability 1/2 otherwise (except if rp == 0).
-        # If b_i == -1 it will be non-square.
-        c = await ((diff * _r) + (_b * _rp * _rp)).open()
-
-        return c, _b
-
-    @staticmethod
-    @TypeCheck
-    async def gen_test_bit(context: Mpc, diff: Share):
-        cj, bj = await Equality._gen_test_bit(context, diff)
-        while cj == 0:
-            cj, bj = await Equality._gen_test_bit(context, diff)
-
-        legendre = Equality.legendre_mod_p(cj)
-        if legendre == 0:
-            return Equality.gen_test_bit(context, diff)
-
-        return (legendre / context.field(2)) * (bj + context.Share(legendre))
-
-    @staticmethod
-    @TypeCheck()
     async def _prog(context: Mpc,
                     p_share: Share,
                     q_share: Share,
