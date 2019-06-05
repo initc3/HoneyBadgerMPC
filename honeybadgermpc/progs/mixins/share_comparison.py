@@ -1,7 +1,7 @@
 from honeybadgermpc.progs.mixins.base import AsyncMixin
 from honeybadgermpc.progs.mixins.constants import MixinConstants
 from honeybadgermpc.utils.typecheck import TypeCheck
-from honeybadgermpc.progs.mixins.dataflow import Share
+from honeybadgermpc.progs.mixins.dataflow import Share, ShareFuture
 
 from asyncio import gather
 
@@ -158,7 +158,7 @@ class LessThan(AsyncMixin):
 
     @staticmethod
     @TypeCheck()
-    async def _extract_lsb(context: Mpc, x: (Share, 'context.ShareFuture')):
+    async def _extract_lsb(context: Mpc, x: (Share, ShareFuture)):
         """ Section 5.3 Extracting the Least Significant Bit
         Returns a future to [x_0], which represents [r]_B > c
         """

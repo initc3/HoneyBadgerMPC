@@ -1,5 +1,6 @@
 from honeybadgermpc.utils.typecheck import TypeCheck
 from pytest import raises
+from typing import Callable
 
 
 def test_type_check_callable():
@@ -19,10 +20,16 @@ def test_type_check_callable():
 
     func_with_callable('hello', lambda w: 'world', func_with_callable)
 
+    @TypeCheck()
+    def func_with_callable_2(func: Callable):
+        pass
+
+    func_with_callable_2(lambda a: a)
+
 
 def test_type_check_multiple_constraints():
     @TypeCheck()
-    def func_with_tuple_types(a: str, b: ('str', 'callable(b)')):
+    def func_with_tuple_types(a: str, b: ('str', Callable)):
         pass
 
     func_with_tuple_types('hello', lambda w: 'world')

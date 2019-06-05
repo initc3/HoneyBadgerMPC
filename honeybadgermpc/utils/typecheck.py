@@ -2,6 +2,7 @@ import functools
 import inspect
 from inspect import Parameter, Signature
 import os
+from typing import _Final
 
 
 class TypeCheck(object):
@@ -67,7 +68,7 @@ class TypeCheck(object):
         if 'DISABLE_TYPECHECKING' not in os.environ:
             self._check_types = self._check_types or __debug__
 
-    def _check_complex_annotation(self, value, annotation, local_dict):
+    def _check_complex_annotation(self, name, value, annotation, local_dict):
         """ Given a string type constraint, evaluate the constraint as
         if it were in the function body being type checked. If the string
         evaluates to a boolean value, the result of the check is that value.
@@ -97,8 +98,7 @@ class TypeCheck(object):
         elif isinstance(t_eval, type):
             return isinstance(value, t_eval)
         else:
-            # TODO: consider raising exception here instead of silently failing
-            return False
+            return self._validate_argument(name, value, t_eval, local_dict)
 
     def _validate_argument(self, name, value, annotation, local_dict={}):
         """ Validate the type constraint for a single name, value, annotation pair.
@@ -112,12 +112,14 @@ class TypeCheck(object):
                 evaluating string annotations.
         """
         if annotation in (Parameter.empty, Signature.empty):
-            return
+            return True
 
         if isinstance(annotation, tuple):
-            simple_annotations = tuple(a for a in annotation if isinstance(a, type))
-            complex_annotations = [a for a in annotation if not isinstance(a, type)]
-        elif isinstance(annotation, type):
+            simple_annotations = tuple(
+                a for a in annotation if isinstance(a, (type, _Final)))
+            complex_annotations = [
+                a for a in annotation if not isinstance(a, (type, _Final))]
+        elif isinstance(annotation, (type, _Final)):
             simple_annotations = (annotation)
             complex_annotations = []
         else:
@@ -125,12 +127,14 @@ class TypeCheck(object):
             complex_annotations = [annotation]
 
         simple_valid = isinstance(value, simple_annotations)
-        complex_valid = any([self._check_complex_annotation(value, c, local_dict)
+        complex_valid = any([self._check_complex_annotation(name, value, c, local_dict)
                              for c in complex_annotations])
 
         assert (simple_valid or complex_valid), \
             f"Expected {name} to be of type {annotation}, "\
             f"but found ({value}) of type ({type(value)})"
+
+        return True
 
     def _validate_defaults(self):
         """ Ensures default values match their type signatures
@@ -163,7 +167,7 @@ class TypeCheck(object):
         """
         if annotation in (Parameter.empty, Signature.empty):
             return True
-        elif isinstance(annotation, (type, str)):
+        elif isinstance(annotation, (type, str, _Final)):
             return True
         elif isinstance(annotation, tuple):
             return all([self._validate_annotation(a) for a in annotation])
