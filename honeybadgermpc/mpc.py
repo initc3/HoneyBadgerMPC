@@ -6,24 +6,36 @@ from honeybadgermpc.progs.mixins.dataflow import (
 )
 import asyncio
 import logging
-from collections import defaultdict
 from .polynomial import polynomials_over
-from .field import GF, GFElement
-from .polynomial import EvalPoint
+from .field import GF
 from .router import SimpleRouter
 from .program_runner import ProgramRunner
-from .robust_reconstruction import robust_reconstruct
-from .batch_reconstruction import batch_reconstruct
 from .elliptic_curve import Subgroup
 from .preprocessing import PreProcessedElements
 from .config import ConfigVars
 from .exceptions import HoneyBadgerMPCError
+
+from .progs.mixins.share_manager import SingleShareManager
 
 
 class Mpc(object):
     def __init__(
         self, sid, n, t, myid, send, recv, prog, config, preproc=None, **prog_args
     ):
+        """ Initialization for MPC context
+        args:
+            sid (str): Identifier of this MPC context
+            n (int): Number of nodes used to run program
+            t (int): Number of faults tolerable in MPC program
+            myid (int): Id of this instance of the MPC program to run prog
+            send (function): Send function to send a message to another node
+            recv (function): Receive function to receive a share
+            prog (function): MPC program to run
+            config (object): MPC Configuration
+            preproc (PreProcessedElements): Preprocessing used in running MPC Program
+            prog_args (dict): Arguments to pass to MPC program
+        """
+
         # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(n) is int and type(t) is int
@@ -49,35 +61,19 @@ class Mpc(object):
         self.prog = prog
         self.prog_args = prog_args
 
-        # Counter that increments by 1 every time you access it
-        # This will be used to assign ids to shares.
-        self._share_id = 0
-
-        # Store opened shares until ready to reconstruct
-        # playerid => { [shareid => Future share] }
-        self._share_buffers = tuple(defaultdict(asyncio.Future) for _ in range(n))
-
-        # Batch reconstruction is handled slightly differently,
-        # We'll create a separate queue for received values
-        # { shareid => Queue() }
-        self._sharearray_buffers = defaultdict(asyncio.Queue)
-
-        # Dynamically create concrete subclasses of the classes using ourself as
-        # their context property
-        self.Share = type("Share", (Share,), {"context": self})
-        self.ShareFuture = type("ShareFuture", (ShareFuture,), {"context": self})
-        self.ShareArray = type("ShareArray", (ShareArray,), {"context": self})
-        self.GFElementFuture = type(
-            "GFElementFuture", (GFElementFuture,), {"context": self}
+        induce_faults = (
+            ConfigVars.Reconstruction in config
+            and config[ConfigVars.Reconstruction].induce_faults
         )
+        self._share_manager = SingleShareManager(self, induce_faults=induce_faults)
 
-    def _get_share_id(self):
-        """Returns a monotonically increasing int value
-        each time this is called
-        """
-        share_id = self._share_id
-        self._share_id += 1
-        return share_id
+        self.Share = self._inject_context(Share)
+        self.ShareFuture = self._inject_context(ShareFuture)
+        self.ShareArray = self._inject_context(ShareArray)
+        self.GFElementFuture = self._inject_context(GFElementFuture)
+
+    def _inject_context(self, cls):
+        return type(cls.__name__, (cls,), {"context": self})
 
     def call_mixin(self, name, *args, **kwargs):
         """Convenience method to check if a mixin is present, and call it if so
@@ -104,60 +100,11 @@ class Mpc(object):
             share (Share): Secret shared value to open
 
         outputs:
-            Future that resolves to the plaintext value of the share.
+            Future that resolves to GFElement value of the share.
         """
+        return self._share_manager.open_share(share)
 
-        res = asyncio.Future()
-
-        # Choose the shareid based on the order this is called
-        shareid = self._get_share_id()
-        t = self.t
-        degree = t if share.t is None else share.t
-
-        # Broadcast share
-        for dest in range(self.N):
-            value_to_share = share.v
-
-            # Send random data if meant to induce faults
-            if (
-                ConfigVars.Reconstruction in self.config
-                and self.config[ConfigVars.Reconstruction].induce_faults
-            ):
-                logging.debug("[FAULT][RobustReconstruct] Sending random share.")
-                value_to_share = self.field.random()
-
-            # 'S' is for single shares
-            self.send(dest, ("S", shareid, value_to_share))
-
-        # Set up the buffer of received shares
-        share_buffer = [self._share_buffers[i][shareid] for i in range(self.N)]
-
-        point = EvalPoint(self.field, self.N, use_omega_powers=False)
-
-        # Create polynomial that reconstructs the shared value by evaluating at 0
-        reconstruction = asyncio.create_task(
-            robust_reconstruct(share_buffer, self.field, self.N, t, point, degree)
-        )
-
-        def cb(r):
-            p, errors = r.result()
-            if p is None:
-                logging.error(
-                    f"Robust reconstruction for share (id: {shareid}) "
-                    f"failed with errors: {errors}!"
-                )
-                res.set_exception(
-                    HoneyBadgerMPCError(f"Failed to open share with id {shareid}!")
-                )
-            else:
-                res.set_result(p(self.field(0)))
-
-        reconstruction.add_done_callback(cb)
-
-        # Return future that will resolve to reconstructed point
-        return res
-
-    def open_share_array(self, sharearray):
+    def open_share_array(self, share_array):
         """ Given array of secret shares, opens them in a batch
         and returns their plaintext values.
 
@@ -167,57 +114,12 @@ class Mpc(object):
         outputs:
             Future, which will resolve to an array of GFElements
         """
-        res = asyncio.Future()
-        if not sharearray._shares:
-            res.set_result([])
-            return res
-
-        def cb(r):
-            elements = r.result()
-            if elements is None:
-                logging.error(
-                    f"Batch reconstruction for share_array (id: {shareid}) failed!"
-                )
-                res.set_exception(HoneyBadgerMPCError("Batch reconstruction failed!"))
-            else:
-                res.set_result(elements)
-
-        shareid = self._get_share_id()
-        t = self.t
-        degree = t if sharearray.t is None else sharearray.t
-
-        # Creates unique send function based on the share to open
-        def _send(dest, o):
-            (tag, share) = o
-            self.send(dest, (tag, shareid, share))
-
-        # Receive function from the respective queue for this node
-        _recv = self._sharearray_buffers[shareid].get
-
-        # Generate reconstructed array of shares
-        reconstructed = asyncio.create_task(
-            batch_reconstruct(
-                [s.v for s in sharearray._shares],
-                self.field.modulus,
-                t,
-                self.N,
-                self.myid,
-                _send,
-                _recv,
-                config=self.config.get(ConfigVars.Reconstruction),
-                debug=True,
-                degree=degree,
-            )
-        )
-
-        reconstructed.add_done_callback(cb)
-
-        return res
+        return self._share_manager.open_share_array(share_array)
 
     async def _run(self):
         # Run receive loop as background task, until self.prog finishes
         # Cancel the background task, even if there's an exception
-        bgtask = asyncio.create_task(self._recvloop())
+        bgtask = asyncio.create_task(self._share_manager.receive_loop())
         result = asyncio.create_task(self.prog(self, **self.prog_args))
         await asyncio.wait((bgtask, result), return_when=asyncio.FIRST_COMPLETED)
 
@@ -236,41 +138,6 @@ class Mpc(object):
 
         bgtask.cancel()
         return result.result()
-
-    async def _recvloop(self):
-        """Background task to continually receive incoming shares, and
-        put the received share in the appropriate buffer. In the case
-        of a single share this puts it into self._share_buffers, otherwise,
-        it gets enqueued in the appropriate self._sharearray_buffers.
-        """
-        while True:
-            (j, (tag, shareid, share)) = await self.recv()
-
-            # Sort into single or batch
-            if tag == "S":
-                assert type(share) is GFElement, "?"
-                buf = self._share_buffers[j]
-
-                # Assert there is not an R1 or R2 value either
-                assert shareid not in self._sharearray_buffers
-
-                # Assert that there is not an element already
-                if buf[shareid].done():
-                    logging.info(f"redundant share: {j} {(tag, shareid)}")
-                    raise AssertionError(f"Received a redundant share: {shareid}")
-
-                buf[shareid].set_result(share)
-
-            elif tag in ("R1", "R2"):
-                assert type(share) is list
-
-                # Assert there is not an 'S' value here
-                assert shareid not in self._share_buffers[j]
-
-                # Forward to the right queue
-                self._sharearray_buffers[shareid].put_nowait((j, (tag, share)))
-
-        return True
 
 
 class TaskProgramRunner(ProgramRunner):
