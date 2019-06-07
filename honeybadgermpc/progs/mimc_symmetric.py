@@ -1,9 +1,8 @@
 import asyncio
 from honeybadgermpc.field import GF
-from honeybadgermpc.mpc import PreProcessedElements, Subgroup
+from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.progs.mimc import mimc_mpc, mimc_plain
 
-pp_elements = PreProcessedElements()
 field = GF(Subgroup.BLS12_381)
 
 

@@ -8,9 +8,14 @@ import logging
 from contextlib import contextmanager
 import subprocess
 from honeybadgermpc.router import SimpleRouter
-from honeybadgermpc.utils.misc import subscribe_recv, wrap_send
-from honeybadgermpc.utils.misc import print_exception_callback
+from honeybadgermpc.utils.misc import (
+    subscribe_recv,
+    wrap_send,
+    print_exception_callback,
+    flatten_lists,
+)
 from honeybadgermpc.field import GF
+from honeybadgermpc.preprocessing import PreProcessedElements
 from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.offline_randousha import randousha
@@ -19,15 +24,11 @@ from honeybadgermpc.offline_randousha import generate_bits
 from honeybadgermpc.mpc import Mpc
 from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiplyArrays
 from honeybadgermpc.progs.mixins.constants import MixinConstants
-from honeybadgermpc.progs.mixins.base import MixinBase
 from butterfly_network import iterated_butterfly_network
 from ethereum.tools._solidity import compile_code as compile_source
 from web3.contract import ConciseContract
 import os
 
-
-# For fake preprocessing
-from honeybadgermpc.preprocessing import PreProcessedElements, clear_preprocessing
 
 field = GF(Subgroup.BLS12_381)
 
@@ -301,6 +302,7 @@ class AsynchromixServer(object):
     async def _mixing_loop(self):
         # Task 3. Participating in mixing epochs
         contract_concise = ConciseContract(self.contract)
+        pp_elements = PreProcessedElements()
         n = contract_concise.n()
         t = contract_concise.t()
         K = contract_concise.K()  # noqa: N806
@@ -336,26 +338,42 @@ class AsynchromixServer(object):
 
             # Hack explanation... the relevant mixins are in triples
             key = (self.myid, n, t)
-            if key in MixinBase.pp_elements._triples:
-                del MixinBase.pp_elements._triples[key]
-            if key in MixinBase.pp_elements._bits:
-                del MixinBase.pp_elements._bits[key]
+            for mixin in (pp_elements._triples, pp_elements._one_minus_ones):
+                if key in mixin.cache:
+                    del mixin.cache[key]
+                    del mixin.count[key]
 
             # 3.d. Call the MPC program
             async def prog(ctx):
-                # Overwrite the triples
-                MixinBase.pp_elements.write_triples(ctx, triples)
-                MixinBase.pp_elements.write_one_minus_one(ctx, bits)
+                pp_elements._init_data_dir()
+
+                # Overwrite triples and one_minus_ones
+                for kind, elems in zip(("triples", "one_minus_one"), (triples, bits)):
+                    if kind == "triples":
+                        elems = flatten_lists(elems)
+                    elems = [e.value for e in elems]
+
+                    mixin = pp_elements.mixins[kind]
+                    mixin_filename = mixin.build_filename(ctx.N, ctx.t, ctx.myid)
+                    mixin._write_preprocessing_file(
+                        mixin_filename, ctx.t, ctx.myid, elems, append=False
+                    )
+
+                pp_elements._init_mixins()
+
                 logging.info(f"[{ctx.myid}] Running permutation network")
                 inps = list(map(ctx.Share, inputs))
                 assert len(inps) == K
+
                 shuffled = await iterated_butterfly_network(ctx, inps, K)
                 shuffled_shares = ctx.ShareArray(list(map(ctx.Share, shuffled)))
+
                 opened_values = await shuffled_shares.open()
                 msgs = [
                     m.value.to_bytes(32, "big").decode().strip("\x00")
                     for m in opened_values
                 ]
+
                 return msgs
 
             send, recv = self.get_send_recv(f"mpc:{epoch}")
@@ -421,10 +439,9 @@ class AsynchromixServer(object):
 
 
 async def main_loop(w3):
-
+    pp_elements = PreProcessedElements()
     # deletes sharedata/ if present
-    clear_preprocessing()
-    PreProcessedElements()._create_sharedata_dir_if_not_exists()
+    pp_elements.clear_preprocessing()
 
     # Step 1.
     # Create the coordinator contract and web3 interface to it

@@ -1,5 +1,4 @@
 from pytest import mark
-from random import randint
 import asyncio
 from honeybadgermpc.field import GF
 from honeybadgermpc.mpc import Subgroup
@@ -30,15 +29,15 @@ STANDARD_ARITHMETIC_MIXINS = [
 
 PREPROCESSING = ["rands", "triples", "zeros", "cubes", "bits"]
 n, t = 4, 1
-k = 10000
+k = 1000
 
 
 @mark.asyncio
-async def test_mimc_jubjub_pkc(test_preprocessing, test_runner):
+async def test_mimc_jubjub_pkc(test_runner):
 
     field = GF(Subgroup.BLS12_381)
-    plaintext = [randint(0, field.modulus)]
-    seed = randint(0, field.modulus)
+    plaintext = [field.random().value]
+    seed = field.random().value
 
     async def _prog(context):
         # Key Generation

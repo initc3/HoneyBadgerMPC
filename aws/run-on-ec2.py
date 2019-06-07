@@ -55,29 +55,30 @@ def run_commands_on_instances(
 
 
 def get_ipc_setup_commands(s3manager, instance_ids):
-    from honeybadgermpc.preprocessing import (
-        PreProcessedElements,
-        PreProcessingConstants,
-    )
+    from honeybadgermpc.preprocessing import PreProcessedElements
+    from honeybadgermpc.preprocessing import PreProcessingConstants as Constants
 
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
 
     num_triples = AwsConfig.MPC_CONFIG.NUM_TRIPLES
     pp_elements = PreProcessedElements()
+
     pp_elements.generate_zeros(num_triples, n, t)
     pp_elements.generate_triples(num_triples, n, t)
+
     triple_urls = s3manager.upload_files(
         [
-            f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}_{n}_{t}-{i}.share"
+            pp_elements.mixins[Constants.TRIPLES]._build_file_name(n, t, i)
             for i in range(n)
         ]
     )
     zero_urls = s3manager.upload_files(
         [
-            f"{PreProcessingConstants.ZEROS_FILE_NAME_PREFIX}_{n}_{t}-{i}.share"
+            pp_elements.mixins[Constants.ZEROS]._build_file_name(n, t, i)
             for i in range(n)
         ]
     )
+
     setup_commands = [
         [
             instance_id,
@@ -111,10 +112,8 @@ def get_hbavss_setup_commands(s3manager, instance_ids):
 
 
 def get_butterfly_network_setup_commands(max_k, s3manager, instance_ids):
-    from honeybadgermpc.preprocessing import (
-        PreProcessedElements,
-        PreProcessingConstants,
-    )
+    from honeybadgermpc.preprocessing import PreProcessedElements
+    from honeybadgermpc.preprocessing import PreProcessingConstants as Constants
 
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     k = max_k if max_k else AwsConfig.MPC_CONFIG.K
@@ -124,7 +123,7 @@ def get_butterfly_network_setup_commands(max_k, s3manager, instance_ids):
     num_switches = k * int(log(k, 2)) ** 2
     pp_elements = PreProcessedElements()
     pp_elements.generate_triples(2 * num_switches, n, t)
-    pp_elements.generate_one_minus_one_rands(num_switches, n, t)
+    pp_elements.generate_one_minus_ones(num_switches, n, t)
     pp_elements.generate_rands(k, n, t)
     logging.info(f"Preprocessing files created in {time()-stime}")
 
@@ -132,19 +131,19 @@ def get_butterfly_network_setup_commands(max_k, s3manager, instance_ids):
     stime = time()
     triple_urls = s3manager.upload_files(
         [
-            f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}_{n}_{t}-{i}.share"
+            pp_elements.mixins[Constants.TRIPLES]._build_file_name(n, t, i)
             for i in range(n)
         ]
     )
     input_urls = s3manager.upload_files(
         [
-            f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}_{n}_{t}-{i}.share"
+            pp_elements.mixins[Constants.RANDS]._build_file_name(n, t, i)
             for i in range(n)
         ]
     )
     rand_share_urls = s3manager.upload_files(
         [
-            f"{PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX}_{n}_{t}-{i}.share"
+            pp_elements.mixins[Constants.ONE_MINUS_ONE]._build_file_name(n, t, i)
             for i in range(n)
         ]
     )
@@ -169,10 +168,8 @@ def get_butterfly_network_setup_commands(max_k, s3manager, instance_ids):
 
 
 def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
-    from honeybadgermpc.preprocessing import (
-        PreProcessedElements,
-        PreProcessingConstants,
-    )
+    from honeybadgermpc.preprocessing import PreProcessedElements
+    from honeybadgermpc.preprocessing import PreProcessingConstants as Constants
 
     n, t = AwsConfig.TOTAL_VM_COUNT, AwsConfig.MPC_CONFIG.T
     k = max_k if max_k else AwsConfig.MPC_CONFIG.K
@@ -200,10 +197,16 @@ def get_powermixing_setup_commands(max_k, runid, s3manager, instance_ids):
         ]
         file_names = []
         for j in range(k):
-            prefix1 = f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{j}_{n}_{t}"
-            file_names.append(f"{prefix1}-{i}.share")
-            prefix2 = f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}_{n}_{t}"
-            file_names.append(f"{prefix2}-{i}.share")
+            prefix1 = f"{pp_elements.mixins[Constants.POWERS].file_prefix}_{j}"
+            file_names.append(
+                pp_elements.mixins[Constants.POWERS].build_filename(
+                    n, t, i, prefix=prefix1
+                )
+            )
+
+            file_names.append(
+                pp_elements.mixins[Constants.RANDS].build_filename(n, t, i)
+            )
 
         stime = time()
         urls = s3manager.upload_files(file_names)

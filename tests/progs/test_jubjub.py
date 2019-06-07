@@ -48,11 +48,11 @@ STANDARD_ARITHMETIC_MIXINS = [
 
 STANDARD_PREPROCESSING = ["rands", "triples", "bits"]
 
-n, t = 4, 1
+n, t = 3, 1
 
 
 async def run_test_program(
-    prog, test_runner, n=n, t=t, k=10000, mixins=STANDARD_ARITHMETIC_MIXINS
+    prog, test_runner, n=n, t=t, k=1000, mixins=STANDARD_ARITHMETIC_MIXINS
 ):
 
     return await test_runner(prog, n, t, STANDARD_PREPROCESSING, k, mixins)
@@ -90,7 +90,7 @@ def test_basic_point_functionality():
 
 
 @mark.asyncio
-async def test_shared_point_equals(test_preprocessing, test_runner):
+async def test_shared_point_equals(test_runner):
     async def _prog(context):
         p1 = SharedPoint.from_point(context, TEST_POINTS[0])
         p2 = SharedPoint.from_point(context, TEST_POINTS[1])
@@ -117,7 +117,7 @@ async def test_shared_point_equals(test_preprocessing, test_runner):
 
 
 @mark.asyncio
-async def test_shared_point_creation_from_point(test_preprocessing, test_runner):
+async def test_shared_point_creation_from_point(test_runner):
     async def _prog(context):
         p1 = Point(0, 1)
         p1s = SharedPoint.from_point(context, p1)
@@ -127,7 +127,7 @@ async def test_shared_point_creation_from_point(test_preprocessing, test_runner)
 
 
 @mark.asyncio
-async def test_shared_point_double(test_preprocessing, test_runner):
+async def test_shared_point_double(test_runner):
     async def _prog(context):
         shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS]
         actual_doubled = [
@@ -145,7 +145,7 @@ async def test_shared_point_double(test_preprocessing, test_runner):
 
 
 @mark.asyncio
-async def test_shared_point_neg(test_preprocessing, test_runner):
+async def test_shared_point_neg(test_runner):
     async def _prog(context):
         shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS]
         actual_negated = [SharedPoint.from_point(context, -p) for p in TEST_POINTS]
@@ -161,7 +161,7 @@ async def test_shared_point_neg(test_preprocessing, test_runner):
 
 
 @mark.asyncio
-async def test_shared_point_add(test_preprocessing, test_runner):
+async def test_shared_point_add(test_runner):
     async def _prog(context):
         ideal = SharedIdeal(TEST_CURVE)
 
@@ -183,7 +183,7 @@ async def test_shared_point_add(test_preprocessing, test_runner):
 
 
 @mark.asyncio
-async def test_shared_point_sub(test_preprocessing, test_runner):
+async def test_shared_point_sub(test_runner):
     async def _prog(context):
         shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS]
         actual_negated = [SharedPoint.from_point(context, -p) for p in TEST_POINTS]
@@ -202,7 +202,7 @@ async def test_shared_point_sub(test_preprocessing, test_runner):
 
 
 @mark.asyncio
-async def test_shared_point_mul(test_preprocessing, test_runner):
+async def test_shared_point_mul(test_runner):
     async def _prog(context):
         p1 = SharedPoint.from_point(context, TEST_POINTS[1])
         p1_double = p1.double()
@@ -218,7 +218,7 @@ async def test_shared_point_mul(test_preprocessing, test_runner):
 
 
 @mark.asyncio
-async def test_shared_point_montgomery_mul(test_preprocessing, test_runner):
+async def test_shared_point_montgomery_mul(test_runner):
     async def _prog(context):
         p1 = SharedPoint.from_point(context, TEST_POINTS[1])
         p1_double = p1.double()
@@ -232,16 +232,14 @@ async def test_shared_point_montgomery_mul(test_preprocessing, test_runner):
 
 
 @mark.asyncio
-async def test_share_mul(test_preprocessing, test_runner):
-    bit_length = 80  # Short key for testing
+async def test_share_mul(test_runner):
+    bit_length = 40  # Short key for testing
 
     async def _prog(context):
         p = TEST_POINTS[1]
 
         multiplier_ = Jubjub.Field(0)
-        m_bits = [
-            test_preprocessing.elements.get_bit(context) for i in range(bit_length)
-        ]
+        m_bits = [context.preproc.get_bit(context) for i in range(bit_length)]
 
         for idx, m in enumerate(m_bits):
             multiplier_ += (2 ** idx) * m

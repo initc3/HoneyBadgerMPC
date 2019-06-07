@@ -33,9 +33,9 @@ TEST_KEY = TEST_FIELD(randint(0, TEST_FIELD.modulus))
 
 # All iterations take around 30min total.
 @mark.parametrize("batch_size", [10 ** i for i in range(4)])
-def test_benchmark_mimc_mpc_batch(batch_size, test_preprocessing, benchmark_runner):
+def test_benchmark_mimc_mpc_batch(batch_size, benchmark_runner):
     async def _prog(context):
-        xs = [test_preprocessing.elements.get_rand(context) for _ in range(batch_size)]
+        xs = [context.preproc.get_rand(context) for _ in range(batch_size)]
         await mimc_mpc_batch(context, xs, TEST_KEY)
 
     benchmark_runner(_prog, n, t, PREPROCESSING, k)

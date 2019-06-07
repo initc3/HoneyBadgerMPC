@@ -30,14 +30,14 @@ class Equality(AsyncMixin):
     @TypeCheck()
     async def _gen_test_bit(context: Mpc, diff: Share):
         # # b \in {0, 1}
-        b = Equality.pp_elements.get_bit(context)
+        b = context.preproc.get_bit(context)
 
         # # _b \in {5, 1}, for p = 1 mod 8, s.t. (5/p) = -1
         # # so _b = -4 * b + 5
         _b = (-4 * b) + context.Share(5)
 
-        _r = Equality.pp_elements.get_rand(context)
-        _rp = Equality.pp_elements.get_rand(context)
+        _r = context.preproc.get_rand(context)
+        _rp = context.preproc.get_rand(context)
 
         # c = a * r + b * rp * rp
         # If b_i == 1, c_i is guaranteed to be a square modulo p if a is zero
@@ -121,7 +121,7 @@ class LessThan(AsyncMixin):
         """
         z = a_share - b_share
 
-        r_b, r_bits = LessThan.pp_elements.get_share_bits(context)
+        r_b, r_bits = context.preproc.get_share_bits(context)
 
         # [c] = 2[z] + [r]_B = 2([a]-[b]) + [r]_B
         c = await (2 * z + r_b).open()
@@ -170,7 +170,7 @@ class LessThan(AsyncMixin):
         """
         bit_length = context.field.modulus.bit_length()
 
-        s_b, s_bits = LessThan.pp_elements.get_share_bits(context)
+        s_b, s_bits = context.preproc.get_share_bits(context)
         d_ = s_b + x
         d = await d_.open()
 
