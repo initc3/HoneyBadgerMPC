@@ -15,7 +15,7 @@ class BeaverMultiply(AsyncMixin):
     @staticmethod
     @TypeCheck()
     async def _prog(context: Mpc, x: Share, y: Share):
-        a, b, ab = MixinBase.pp_elements.get_triple(context)
+        a, b, ab = MixinBase.pp_elements.get_triples(context)
 
         d, e = await gather(*[(x - a).open(), (y - b).open()])
         xy = d*e + d*b + e*a + ab
@@ -34,7 +34,7 @@ class BeaverMultiplyArrays(AsyncMixin):
 
         a, b, ab = [], [], []
         for _ in range(len(j)):
-            p, q, pq = MixinBase.pp_elements.get_triple(context)
+            p, q, pq = MixinBase.pp_elements.get_triples(context)
             a.append(p)
             b.append(q)
             ab.append(pq)
@@ -56,7 +56,7 @@ class DoubleSharingMultiply(AsyncMixin):
     async def reduce_degree_share(context: Mpc, x_2t: Share):
         assert x_2t.t == context.t*2
 
-        r_t, r_2t = MixinBase.pp_elements.get_double_share(context)
+        r_t, r_2t = MixinBase.pp_elements.get_double_shares(context)
         diff = await (x_2t - r_2t).open()
 
         return r_t + diff
@@ -81,7 +81,7 @@ class DoubleSharingMultiplyArrays(AsyncMixin):
 
         r_t, r_2t = [], []
         for _ in range(len(x_2t)):
-            r_t_, r_2t_ = MixinBase.pp_elements.get_double_share(context)
+            r_t_, r_2t_ = MixinBase.pp_elements.get_double_shares(context)
             r_t.append(r_t_)
             r_2t.append(r_2t_)
 
@@ -178,6 +178,40 @@ class Equality(AsyncMixin):
         elif b == a.modulus-1:
             return -1
         return 0
+
+    @staticmethod
+    @TypeCheck()
+    async def _gen_test_bit(context: Mpc, diff: Share):
+        # # b \in {0, 1}
+        b = MixinBase.pp_elements.get_bit(context)
+
+        # # _b \in {5, 1}, for p = 1 mod 8, s.t. (5/p) = -1
+        # # so _b = -4 * b + 5
+        _b = (-4 * b) + context.Share(5)
+
+        _r = MixinBase.pp_elements.get_rand(context)
+        _rp = MixinBase.pp_elements.get_rand(context)
+
+        # c = a * r + b * rp * rp
+        # If b_i == 1, c_i is guaranteed to be a square modulo p if a is zero
+        # and with probability 1/2 otherwise (except if rp == 0).
+        # If b_i == -1 it will be non-square.
+        c = await ((diff * _r) + (_b * _rp * _rp)).open()
+
+        return c, _b
+
+    @staticmethod
+    @TypeCheck
+    async def gen_test_bit(context: Mpc, diff: Share):
+        cj, bj = await Equality._gen_test_bit(context, diff)
+        while cj == 0:
+            cj, bj = await Equality._gen_test_bit(context, diff)
+
+        legendre = Equality.legendre_mod_p(cj)
+        if legendre == 0:
+            return Equality.gen_test_bit(context, diff)
+
+        return (legendre / context.field(2)) * (bj + context.Share(legendre))
 
     @staticmethod
     @TypeCheck()

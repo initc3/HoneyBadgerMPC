@@ -1,21 +1,24 @@
 from pytest import mark
+from honeybadgermpc.preprocessing import PreProcessedElements
+import apps.asynchromix.butterfly_network as butterfly
+from honeybadgermpc.mpc import TaskProgramRunner
+from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiplyArrays
+from honeybadgermpc.progs.mixins.constants import MixinConstants
+import apps.asynchromix.powermixing as pm
+from uuid import uuid4
 
 
 @mark.asyncio
-async def test_butterfly_network(test_preprocessing):
-    import apps.asynchromix.butterfly_network as butterfly
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiplyArrays
-    from honeybadgermpc.progs.mixins.constants import MixinConstants
-
+async def test_butterfly_network():
     n, t, k, delta = 3, 1, 32, -9999
-    test_preprocessing.generate("rands", n, t)
-    test_preprocessing.generate("oneminusone", n, t)
-    test_preprocessing.generate("triples", n, t)
+    pp_elements = PreProcessedElements()
+    pp_elements.generate("rands", n, t)
+    pp_elements.generate("one_minus_one", n, t)
+    pp_elements.generate("triples", n, t, k=1500)
 
     async def verify_output(ctx, **kwargs):
         k, delta = kwargs['k'], kwargs['delta']
-        inputs = [test_preprocessing.elements.get_rand(ctx) for _ in range(k)]
+        inputs = [pp_elements.get_rand(ctx) for _ in range(k)]
         sorted_input = sorted(await ctx.ShareArray(inputs).open(), key=lambda x: x.value)
 
         share_arr = await butterfly.butterfly_network_helper(ctx, k=k, delta=delta)
@@ -33,24 +36,20 @@ async def test_butterfly_network(test_preprocessing):
 
 
 @mark.asyncio
-async def test_phase1(test_preprocessing, galois_field):
-    from honeybadgermpc.mpc import TaskProgramRunner
-    from honeybadgermpc.preprocessing import PreProcessingConstants
-    import apps.asynchromix.powermixing as pm
-    from uuid import uuid4
-
+async def test_phase1(galois_field):
     field = galois_field
     n, t, k = 5, 2, 1
-    test_preprocessing.generate("powers", n, t, k, 1)
-    test_preprocessing.generate("rands", n, t)
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_powers(k, n,  t, 1)
+    pp_elements.generate("rands", n, t, k=k)
 
     async def verify_phase1(context, **kwargs):
         k_ = kwargs['k']
-        b_ = await test_preprocessing.elements.get_powers(context, 0)[0].open()
+        b_ = await pp_elements.get_powers(context, 0)[0].open()
         file_prefixes = [uuid4().hex]
         await pm.all_secrets_phase1(context, k=k, file_prefixes=file_prefixes)
         file_name = f"{file_prefixes[0]}-{context.myid}.input"
-        file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
+        file_path = f"{pp_elements.data_directory}{file_name}"
         with open(file_path, "r") as f:
             assert int(f.readline()) == field.modulus
             # next line is a random share, which should open successfully
@@ -67,19 +66,16 @@ async def test_phase1(test_preprocessing, galois_field):
 
 @mark.asyncio
 async def test_phase2(galois_field):
-    from honeybadgermpc.preprocessing import PreProcessingConstants
-    import apps.asynchromix.powermixing as pm
-    import uuid
 
     field = galois_field
     a = field.random()
     b = field.random()
     k = 8
-    share_id, run_id, node_id = uuid.uuid4().hex, uuid.uuid4().hex, "1"
+    share_id, run_id, node_id = uuid4().hex, uuid4().hex, "1"
 
     for j in range(1, k):
         file_name = f"{share_id}-{node_id}.input"
-        with open(f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}", "w") as f:
+        with open(f"{PreProcessedElements.DEFAULT_DIRECTORY}{file_name}", "w") as f:
             print(field.modulus, file=f)
             print(a.value, file=f)
             print((a-b).value, file=f)
@@ -90,7 +86,7 @@ async def test_phase2(galois_field):
         await pm.phase2(node_id, run_id, share_id)
 
         file_name = f"power-{run_id}_{node_id}.sums"
-        with open(f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}", "r") as f:
+        with open(f"{PreProcessedElements.DEFAULT_DIRECTORY}{file_name}", "r") as f:
             assert int(f.readline()) == field.modulus
             assert int(f.readline()) == k
             for i, p in enumerate(f.read().splitlines()[:k]):
@@ -98,14 +94,15 @@ async def test_phase2(galois_field):
 
 
 @mark.asyncio
-async def test_asynchronous_mixing(test_preprocessing):
+async def test_asynchronous_mixing():
     import asyncio
     import apps.asynchromix.powermixing as pm
     from honeybadgermpc.mpc import TaskProgramRunner
 
     n, t, k = 3, 1, 4
-    test_preprocessing.generate("powers", n, t, k, k)
-    test_preprocessing.generate("rands", n, t)
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_powers(k, n,  t, k)
+    pp_elements.generate("rands", n, t)
 
     async def verify_output(context, **kwargs):
         result, input_shares = kwargs['result'], kwargs['input_shares']

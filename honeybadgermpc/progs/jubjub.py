@@ -51,9 +51,6 @@ class SharedPoint(object):
 
         return res
 
-        # x, y = await asyncio.gather(self.xs.open(), self.ys.open())
-        # return Point(x, y, self.curve)
-
     def equals(self, other):
         """Returns a future that evaluates to the result of the equality check
         """

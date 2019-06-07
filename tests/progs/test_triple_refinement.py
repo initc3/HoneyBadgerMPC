@@ -1,16 +1,19 @@
 import asyncio
 from pytest import mark
 from honeybadgermpc.progs.triple_refinement import refine_triples
+from honeybadgermpc.preprocessing import PreProcessedElements
 
 
 @mark.asyncio
 @mark.parametrize("n, t, k", [(4, 1, 3), (4, 1, 4), (7, 2, 5), (7, 2, 7)])
-async def test_triple_refinement(n, t, k, test_preprocessing, test_runner):
+async def test_triple_refinement(n, t, k, test_runner):
+    pp_elements = PreProcessedElements()
+
     async def _prog(context):
         _a, _b, _c = [], [], []
         # Every party needs its share of all the `N` triples' shares
         for _ in range(k):
-            p, q, pq = test_preprocessing.elements.get_triple(context)
+            p, q, pq = pp_elements.get_triples(context)
             _a.append(p.v.value), _b.append(q.v.value), _c.append(pq.v.value)
         p, q, pq = await refine_triples(context, _a, _b, _c)
         async def _open(x): return await context.ShareArray(x).open()

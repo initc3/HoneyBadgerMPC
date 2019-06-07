@@ -143,4 +143,4 @@ async def test_get_triples(test_router, rust_field, n, t, b):
     assert triples.count(triples[0]) == n
     for i in range(0, len(triples[0]), 3):
         p, q, pq = triples[0][i:i+3]
-        assert p*q == p*q
+        assert p*q == p * q

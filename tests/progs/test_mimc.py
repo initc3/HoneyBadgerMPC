@@ -4,18 +4,20 @@ from honeybadgermpc.field import GF
 from honeybadgermpc.mpc import Subgroup
 from honeybadgermpc.progs.mimc import mimc_mpc, mimc_plain, mimc_mpc_batch
 from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiply
+from honeybadgermpc.preprocessing import PreProcessedElements
 
 MIXINS = [BeaverMultiply()]
 PREPROCESSING = ['rands', 'triples', 'zeros', 'cubes']
-n, t = 3, 1
-k = 10000
+n, t = 4, 1
+k = 3500
 
 
 @mark.asyncio
-async def test_mimc(test_preprocessing, test_runner):
+async def test_mimc(test_runner):
+    pp_elements = PreProcessedElements()
 
     async def _prog(context):
-        x = test_preprocessing.elements.get_zero(context)
+        x = pp_elements.get_zero(context)
         field = GF(Subgroup.BLS12_381)
         key = field(15)
 
@@ -34,12 +36,14 @@ async def test_mimc(test_preprocessing, test_runner):
 
 
 @mark.asyncio
-async def test_mimc_mpc_batch(test_preprocessing, test_runner):
+async def test_mimc_mpc_batch(test_runner):
     field = GF(Subgroup.BLS12_381)
     key = field(randint(0, field.modulus))
 
+    pp_elements = PreProcessedElements()
+
     async def _prog(context):
-        xs = [test_preprocessing.elements.get_rand(context) for _ in range(20)]
+        xs = [pp_elements.get_rand(context) for _ in range(20)]
 
         # Compute F_MiMC_mpc, mm - mimc_mpc
         mm = await mimc_mpc_batch(context, xs, key)

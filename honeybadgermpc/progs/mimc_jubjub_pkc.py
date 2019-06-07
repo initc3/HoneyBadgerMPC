@@ -1,5 +1,4 @@
 import asyncio
-from random import randint
 from honeybadgermpc.mpc import PreProcessedElements
 from honeybadgermpc.elliptic_curve import Point, Jubjub
 from honeybadgermpc.progs.jubjub import share_mul
@@ -43,7 +42,7 @@ def mimc_encrypt(pub_key, ms, seed=None):
     """
 
     # Randomly generated variable hold only by the dealer
-    a = randint(0, Jubjub.Field.modulus) if seed is None else seed
+    a = Jubjub.Field.random() if seed is None else seed
     # Auxiliary variable needed for decryption
     a_ = a * GP
 
@@ -74,6 +73,7 @@ async def mimc_decrypt(context, priv_key, ciphertext):
 
     mpcs = await asyncio.gather(*[mimc_mpc(context, context.field(i), k_share)
                                   for i in range(len(cs))])
+
     decrypted = [c - m for (c, m) in zip(cs, mpcs)]
 
     return decrypted

@@ -1,9 +1,8 @@
 import asyncio
 from honeybadgermpc.field import GF
-from honeybadgermpc.mpc import PreProcessedElements, Subgroup
+from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.progs.mimc import mimc_mpc, mimc_plain
 
-pp_elements = PreProcessedElements()
 field = GF(Subgroup.BLS12_381)
 
 
@@ -21,7 +20,7 @@ async def mimc_decrypt(context, key, cs):
     plaintext <- F_MiMC(counter, key) - ciphertext
     """
     mpcs = await asyncio.gather(*[mimc_mpc(context, context.field(i), key)
-                                for i in range(len(cs))])
+                                  for i in range(len(cs))])
     decrypted = [c - m for (c, m) in zip(cs, mpcs)]
 
     return decrypted

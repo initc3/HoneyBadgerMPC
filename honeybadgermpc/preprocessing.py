@@ -1,356 +1,688 @@
 import logging
 import asyncio
+import re
 import os
+from os import makedirs, listdir
+from os.path import isfile, join
 from uuid import uuid4
 from random import randint
-from os import makedirs
+from collections import defaultdict
+from itertools import chain
+from enum import Enum
+from abc import ABC, abstractmethod
+from shutil import rmtree
+
 from .field import GF
 from .polynomial import polynomials_over
 from .ntl import vandermonde_batch_evaluate
 from .elliptic_curve import Subgroup
 
 
-class PreProcessingConstants(object):
+class PreProcessingConstants(Enum):
     SHARED_DATA_DIR = "sharedata/"
-    TRIPLES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}triples"
-    CUBES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}cubes"
-    ZEROS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}zeros"
-    RANDS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}rands"
-    BITS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}bits"
-    POWERS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}powers"
-    SHARES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}specific_share"
-    ONE_MINUS_ONE_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}one_minus_one"
-    DOUBLE_SHARES_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}double_shares"
     READY_FILE_NAME = f"{SHARED_DATA_DIR}READY"
-    SHARE_BITS_FILE_NAME_PREFIX = f"{SHARED_DATA_DIR}share_bits"
+    TRIPLES = "triples"
+    CUBES = "cubes"
+    ZEROS = "zeros"
+    RANDS = "rands"
+    BITS = "bits"
+    POWERS = "powers"
+    SHARES = "share"
+    ONE_MINUS_ONE = "one_minus_one"
+    DOUBLE_SHARES = "double_shares"
+    SHARE_BITS = "share_bits"
+
+    def __str__(self):
+        return self.value
 
 
-async def wait_for_preprocessing():
-    while not os.path.exists(f"{PreProcessingConstants.SHARED_DATA_DIR}READY"):
-        logging.info(
-            f"waiting for preprocessing {PreProcessingConstants.READY_FILE_NAME}")
-        await asyncio.sleep(1)
+class PreProcessingMixin(ABC):
+    """ Abstract base class of preprocessing mixins.
+    The interface exposed is composed of a few parts:
+    - metadata:
+        - _preprocessing_stride dictates how many values are needed per element
+          when retrieving preprocessing
+        - preprocessing_name dictates the type of preprocessing-- e.g. "rands",
+          "triples", etc.
+            - file_prefix uses this to determine the filename to store preprocessed
+              values in.
+        - min_count returns the minimal amount of preprocessing remaining for a
+          given n, t combination.
+    - generation:
+        - generate_values is the public interface to generate preprocessing values from
+          the mixin
+        - _generate_polys is the private interface for doing the same thing, which is
+          what is overridden by subclasses.
+    - retrieval:
+        - get_value is the public interface to retrieve a value from preprocessing
+        - _get_value is the private interface for doing the same thing, which is what is
+          overridden by subclasses
+    """
 
+    def __init__(self, field, poly, data_dir):
+        self.field = field
+        self.poly = poly
+        self.cache = defaultdict(chain)
+        self.count = defaultdict(int)
+        self.data_dir = data_dir
+        self._refresh_cache()
 
-def clear_preprocessing():
-    import shutil
-    try:
-        shutil.rmtree(f"{PreProcessingConstants.SHARED_DATA_DIR}")
-    except FileNotFoundError:
-        pass  # not a problem
+    @property
+    def file_prefix(self):
+        """ Beginning prefix of filenames storing preprocessing values for this mixin
+        """
+        return f"{self.data_dir}{self.preprocessing_name}"
 
+    def min_count(self, n, t):
+        """ Returns the minimum number of preprocessing stored in the cache across all
+        of the keys with the given n, t values.
+        """
+        counts = []
+        for (id_, n_, t_) in self.count:
+            if (n_, t_) == (n, t):
+                counts.append(self.count[id_, n_, t_])
 
-def preprocessing_done():
-    os.mknod(PreProcessingConstants.READY_FILE_NAME)
+        if len(counts) == 0:
+            return 0
 
+        return min(counts) // self._preprocessing_stride
 
-class PreProcessedElements(object):
-    def __init__(self):
-        self.field = GF(Subgroup.BLS12_381)
-        self.poly = polynomials_over(self.field)
-        self._bit_length = self.field.modulus.bit_length()
-        self._triples = {}
-        self._cubes = {}
-        self._zeros = {}
-        self._rands = {}
-        self._bits = {}
-        self._share_bits = {}
-        self._one_minus_one_rands = {}
-        self._double_shares = {}
-
-    def _read_share_values_from_file(self, file_name):
-        with open(file_name, "r") as f:
-            lines = iter(f)
-
-            # first line: field modulus
-            modulus = int(next(lines))
-            assert self.field.modulus == modulus
-
-            # skip 2nd and 3rd line - share degree and id
-            next(lines), next(lines)
-
-            # remaining lines: shared values
-            return [int(line) for line in lines]
-
-    def _read_share_bit_values_from_file(self, file_name):
-        """ Given a file written using _write_share_bits_to_file, read the
-        file and return a list of tuples of shares with a list of their bit-sharings.
+    def get_value(self, context, *args, **kwargs):
+        """ Given an MPC context, retrieve one preprocessing value.
 
         args:
-            file_name (str): filename to read from
+            context: MPC context to use when fetching the value
+
+        outputs:
+            Preprocessing value for this mixin
+        """
+        key = (context.myid, context.N, context.t)
+
+        to_return, used = self._get_value(context, key, *args, **kwargs)
+        self.count[key] -= used
+
+        return to_return
+
+    def _read_preprocessing_file(self, file_name):
+        """ Given the filename of the preprocessing file to read, fetch all of the
+        values stored in the preprocessing file.
+        """
+        with open(file_name, 'r') as f:
+            lines = f.read().splitlines()
+            values = list(map(int, lines))
+            assert len(values) >= 3
+
+            modulus = values[0]
+            assert modulus == self.field.modulus, f"Expected file " \
+                f"to have modulus {self.field.modulus}, but found {modulus}"
+
+            # The second and third lines of the file contain the degree and context id
+            # correspondingly.
+            return values[3:]
+
+    def _write_preprocessing_file(
+            self, file_name, degree, context_id, values, append=False):
+        """ Write the values to the preprocessing file given by the filename.
+        When append is true, this will append to an existing file, otherwise, it will
+        overwrite.
+        """
+        if not os.path.isfile(file_name):
+            append = False
+
+        if append:
+            with open(file_name, 'r') as f:
+                meta = tuple(int(f.readline()) for _ in range(3))
+                expected_meta = (self.field.modulus, degree, context_id)
+                assert meta == expected_meta, f"File {file_name} " \
+                    f"expected to have metadata {expected_meta}, but had {meta}"
+
+            f = open(file_name, 'a')
+        else:
+            f = open(file_name, 'w')
+            print(self.field.modulus, degree, context_id, file=f, sep='\n')
+
+        print(*values, file=f, sep='\n')
+        f.close()
+
+    def build_filename(self, n, t, context_id, prefix=None):
+        """ Given a file prefix, and metadata, return the filename to put
+        the shares in.
+
+        args:
+            n: Value of n used in preprocessing
+            t: Value of t used in preprocessing
+            context_id: myid of the mpc context we're preprocessing for.
+            prefix: filename prefix, e.g. "sharedata/triples".
+                Defaults to self.file_prefix
 
         output:
-            Returns a list of tuples, where the first element of each tuple is
-            the value of a share, and the second element is a list of values of
-            the shares that compose the bitwise sharing of the share.
-            Note: bits are given LSB first
+            Filename to use
         """
-        values = self._read_share_values_from_file(file_name)
-        assert len(values) % (self._bit_length + 1) == 0
+        if prefix is None:
+            prefix = self.file_prefix
 
-        stride = self._bit_length + 1
-        share_bits = [(values[i * stride], values[i * stride + 1: (i+1) * stride])
-                      for i in range(len(values) // stride)]
+        return f"{prefix}_{n}_{t}-{context_id}.share"
 
-        return share_bits
+    def _parse_file_name(self, file_name):
+        """ Given a potential filename, return (n, t, context_id) of the
+        file if it's a valid file, otherwise, return None
+        """
+        if not file_name.startswith(self.file_prefix):
+            return None
 
-    def _write_shares_to_file(self, f, degree, myid, shares):
-        """ Given a list of field elements representing shares,
-        write their values to file f.
+        reg = re.compile(f"{self.file_prefix}_(\\d+)_(\\d+)-(\\d+).share")
+        res = reg.search(file_name)
+        if res is None:
+            return None
+
+        if len(res.groups()) != 3:
+            return None
+
+        return tuple(map(int, res.groups()))
+
+    def _refresh_cache(self):
+        """ Refreshes the cache by reading in sharedata files, and
+        updating the cache values and count variables.
+        """
+        self.cache = defaultdict(chain)
+        self.count = defaultdict(int)
+
+        for f in listdir(self.data_dir):
+            file_name = join(self.data_dir, f)
+            if not isfile(file_name):
+                continue
+
+            groups = self._parse_file_name(file_name)
+            if groups is None:
+                continue
+
+            (n, t, context_id) = groups
+            key = (context_id, n, t)
+            values = self._read_preprocessing_file(file_name)
+
+            self.cache[key] = chain(values)
+            self.count[key] = len(values)
+
+    def _write_polys(self, n, t, polys, append=False, prefix=None):
+        """ Given a file prefix, a list of polynomials, and associated n, t values,
+        write the preprocessing for the share values represented by the polnomials.
 
         args:
-            f (file): file to write shares to
-            degree (int): degree of polynomial used to generate shares
-            myid (int): id the shares belong to
-            shares (list): list of GFElements representing share values
+            prefix: prefix to use when writing the file
+            n: number of nodes this is preprocessing for
+            t: number of faults tolerated by this preprocessing
+            polys: polynomials corresponding to secret share values to write
+            append: Whether or not to append shares to an existing file, or to overwrite.
         """
-        content = f"{self.field.modulus}\n{degree}\n{myid}\n"
-        for share in shares:
-            content += f"{share.value}\n"
-
-        f.write(content)
-
-    def _create_sharedata_dir_if_not_exists(self):
-        makedirs(PreProcessingConstants.SHARED_DATA_DIR, exist_ok=True)
-
-    ##############################
-    # MPC program access to shares
-    ##############################
-
-    def get_triple(self, ctx):
-        key = (ctx.myid, ctx.N, ctx.t)
-        if key not in self._triples:
-            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-            file_path = f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}{file_suffix}"
-            self._triples[key] = iter(self._read_share_values_from_file(file_path))
-        try:
-            a = ctx.Share(next(self._triples[key]))
-            b = ctx.Share(next(self._triples[key]))
-            ab = ctx.Share(next(self._triples[key]))
-            return a, b, ab
-        except StopIteration:
-            print('STOP ITERATION TRIPLES')
-            raise StopIteration(f"preprocess underrun: TRIPLES")
-
-    def get_cube(self, ctx):
-        key = (ctx.myid, ctx.N, ctx.t)
-        if key not in self._cubes:
-            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-            file_path = f"{PreProcessingConstants.CUBES_FILE_NAME_PREFIX}{file_suffix}"
-            self._cubes[key] = iter(self._read_share_values_from_file(file_path))
-        a1 = ctx.Share(next(self._cubes[key]))
-        a2 = ctx.Share(next(self._cubes[key]))
-        a3 = ctx.Share(next(self._cubes[key]))
-        return a1, a2, a3
-
-    def get_zero(self, ctx):
-        key = (ctx.myid, ctx.N, ctx.t)
-        if key not in self._zeros:
-            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-            file_path = f"{PreProcessingConstants.ZEROS_FILE_NAME_PREFIX}{file_suffix}"
-            self._zeros[key] = iter(self._read_share_values_from_file(file_path))
-        return ctx.Share(next(self._zeros[key]))
-
-    def get_rand(self, ctx, t=None):
-        t = t if t is not None else ctx.t
-        key = (ctx.myid, ctx.N, t)
-        if key not in self._rands:
-            file_suffix = f"_{ctx.N}_{t}-{ctx.myid}.share"
-            file_path = f"{PreProcessingConstants.RANDS_FILE_NAME_PREFIX}{file_suffix}"
-            self._rands[key] = iter(self._read_share_values_from_file(file_path))
-        return ctx.Share(next(self._rands[key]), t)
-
-    def get_bit(self, ctx):
-        key = (ctx.myid, ctx.N, ctx.t)
-        if key not in self._bits:
-            file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-            file_path = f"{PreProcessingConstants.BITS_FILE_NAME_PREFIX}{file_suffix}"
-            self._bits[key] = iter(self._read_share_values_from_file(file_path))
-        return ctx.Share(next(self._bits[key]))
-
-    def get_one_minus_one_rand(self, ctx):
-        file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-        fpath = f"{PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX}{file_suffix}"
-        key = (ctx.myid, ctx.N, ctx.t)
-        if key not in self._one_minus_one_rands:
-            self._one_minus_one_rands[key] = iter(
-                self._read_share_values_from_file(fpath))
-        try:
-            return ctx.Share(next(self._one_minus_one_rands[key]))
-        except StopIteration:
-            print('STOP ITERATION ONE_MINUS_ONE')
-            raise StopIteration(f"preprocess underrun: ONE_MINUS_ONE")
-
-    def get_powers(self, ctx, pid):
-        file_suffix = f"_{pid}_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-        return list(map(ctx.Share, self._read_share_values_from_file(
-            f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}{file_suffix}")))
-
-    def get_share(self, ctx, sid, t=None):
-        if t is None:
-            t = ctx.t
-        file_suffix = f"_{sid}_{ctx.N}_{t}-{ctx.myid}.share"
-        share_values = self._read_share_values_from_file(
-            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}{file_suffix}")
-        return ctx.Share(share_values[0], t)
-
-    def get_double_share(self, ctx):
-        key = (ctx.myid, ctx.N, ctx.t)
-        if key not in self._double_shares:
-            suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-            path = f"{PreProcessingConstants.DOUBLE_SHARES_FILE_NAME_PREFIX}{suffix}"
-            self._double_shares[key] = iter(self._read_share_values_from_file(path))
-        r_t = ctx.Share(next(self._double_shares[key]))
-        r_2t = ctx.Share(next(self._double_shares[key]), 2*ctx.t)
-        return r_t, r_2t
-
-    def get_share_bits(self, ctx):
-        key = (ctx.myid, ctx.N, ctx.t)
-        if key not in self._share_bits:
-            suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-            path = f"{PreProcessingConstants.SHARE_BITS_FILE_NAME_PREFIX}{suffix}"
-            self._share_bits[key] = iter(self._read_share_bit_values_from_file(path))
-
-        share_val, bit_vals = next(self._share_bits[key])
-        share = ctx.Share(share_val)
-        bits = [ctx.Share(val) for val in bit_vals]
-
-        return share, bits
-
-    #########################
-    # Store the Preprocessing
-    #########################
-
-    def write_shares(self, ctx, file_name_prefix, degree, shares):
-        with open('%s_%d_%d-%d.share' % (file_name_prefix,
-                                         ctx.N, ctx.t, ctx.myid), 'w') as f:
-            self._write_shares_to_file(f, degree, ctx.myid, shares)
-
-    def write_triples(self, ctx, triples):
-        trips = []
-        for a, b, ab in triples:
-            trips += (a, b, ab)
-        prefix = PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX
-        self.write_shares(ctx, prefix, ctx.t, trips)
-
-    def write_one_minus_one(self, ctx, shares):
-        prefix = PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX
-        self.write_shares(ctx, prefix, ctx.t, shares)
-
-    ####################
-    # Fake Preprocessing
-    ####################
-    """
-    Only use generate_{preproctype} to create fake preprocessing,
-    useful for local experiments for just the online phase.
-    """
-
-    def _write_polys(self, file_name_prefix, n, t, polys):
         polys = [[coeff.value for coeff in poly.coeffs] for poly in polys]
-        all_shares = vandermonde_batch_evaluate(
+        all_values = vandermonde_batch_evaluate(
             list(range(1, n+1)), polys, self.field.modulus)
+
         for i in range(n):
-            shares = [self.field(s[i]) for s in all_shares]
-            # with open(f'{file_name_prefix}_{n}_{t}_{i}.share', 'w') as f:
-            with open('%s_%d_%d-%d.share' % (file_name_prefix, n, t, i), 'w') as f:
-                self._write_shares_to_file(f, t, i, shares)
+            values = [v[i] for v in all_values]
+            file_name = self.build_filename(n, t, i, prefix=prefix)
+            self._write_preprocessing_file(file_name, t, i, values, append=append)
 
-    def generate_triples(self, k, n, t):
-        self._create_sharedata_dir_if_not_exists()
+            key = (i, n, t)
+            if append:
+                self.cache[key] = chain(self.cache[key], values)
+                self.count[key] += len(values)
+            else:
+                self.cache[key] = chain(values)
+                self.count[key] = len(values)
+
+    def generate_values(self, k, n, t, *args, append=False, **kwargs):
+        """ Given some n, t, generate k values and write them to disk.
+        If append is true, this will add on to existing preprocessing. Otherwise,
+        this will overwrite existing preprocessing.
+
+        args:
+            k: number of values to generate
+            n: number of nodes to generate for
+            t: number of faults that should be tolerated in generation
+            append: set to true if this should append, or false to overwrite.
+        """
+        polys = self._generate_polys(k, n, t, *args, **kwargs)
+        self._write_polys(n, t, polys, append=append)
+
+    @property
+    @staticmethod
+    @abstractmethod
+    def preprocessing_name():
+        """ String representation of the type of preprocessing done by this mixin
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def _preprocessing_stride(self):
+        """ Mixins should override this to return the number of values required from the
+        preprocessing file in order to fetch one preprocessing element.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _generate_polys(self, k, n, t):
+        """ Private helper method to generate polynomials for use in preprocessing.
+
+        args:
+            k: number of elements to generate
+            n: number of nodes to generate for
+            t: number of faults that should be tolerated by preprocessing
+
+        outputs: A list of polynomials corresponding to share values
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _get_value(self, context, key, *args, **kwargs):
+        """ Private helper method to retrieve a value from the cache for
+        this mixin.
+
+        args:
+            context: MPC context to retrieve the value for
+            key: tuple of (n, t, i) used to index the cache
+
+        outputs:
+            Preprocessing value for this mixin
+        """
+        raise NotImplementedError
+
+
+class ShareBitsPreProcessing(PreProcessingMixin):
+    preprocessing_name = PreProcessingConstants.SHARE_BITS.value
+
+    @property
+    def _preprocessing_stride(self):
+        return self.field.modulus.bit_length() + 1
+
+    def _generate_polys(self, k, n, t):
+        bit_length = self.field.modulus.bit_length()
         polys = []
         for _ in range(k):
-            a = self.field.random()
-            b = self.field.random()
-            c = a*b
-            polys.append(self.poly.random(t, a))
-            polys.append(self.poly.random(t, b))
-            polys.append(self.poly.random(t, c))
-        self._write_polys(PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX, n, t, polys)
+            r = self.field.random()
+            r_bits = [self.field(b) for b in map(
+                int, reversed(f'{{0:0{bit_length}b}}'.format(r.value)))]
 
-    def generate_cubes(self, k, n, t):
-        self._create_sharedata_dir_if_not_exists()
-        polys = []
-        for _ in range(k):
-            a1 = self.field.random()
-            a2 = a1*a1
-            a3 = a1*a2
-            polys.append(self.poly.random(t, a1))
-            polys.append(self.poly.random(t, a2))
-            polys.append(self.poly.random(t, a3))
-        self._write_polys(PreProcessingConstants.CUBES_FILE_NAME_PREFIX, n, t, polys)
+            polys.append(self.poly.random(t, r))
+            polys += [self.poly.random(t, b) for b in r_bits]
 
-    def generate_zeros(self, k, n, t):
-        self._create_sharedata_dir_if_not_exists()
-        polys = [self.poly.random(t, 0) for _ in range(k)]
-        self._write_polys(PreProcessingConstants.ZEROS_FILE_NAME_PREFIX, n, t, polys)
+        return polys
 
-    def generate_rands(self, k, n, t):
-        self._create_sharedata_dir_if_not_exists()
-        polys = [self.poly.random(t) for _ in range(k)]
-        self._write_polys(PreProcessingConstants.RANDS_FILE_NAME_PREFIX, n, t, polys)
+    def _get_value(self, context, key):
+        bit_length = self.field.modulus.bit_length()
+        assert self.count[key] >= 1
 
-    def generate_bits(self, k, n, t):
-        self._create_sharedata_dir_if_not_exists()
-        polys = [self.poly.random(t, randint(0, 1)) for _ in range(k)]
-        self._write_polys(PreProcessingConstants.BITS_FILE_NAME_PREFIX, n, t, polys)
+        share = context.Share(next(self.cache[key]))
+        bits = [context.Share(next(self.cache[key])) for _ in range(bit_length)]
+        return (share, bits), self._preprocessing_stride
 
-    def generate_one_minus_one_rands(self, k, n, t):
-        self._create_sharedata_dir_if_not_exists()
-        polys = [self.poly.random(t, randint(0, 1)*2 - 1) for _ in range(k)]
-        self._write_polys(
-            PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX, n, t, polys)
 
-    def generate_powers(self, k, n, t, z):
-        self._create_sharedata_dir_if_not_exists()
-        b = self.field.random().value
+class DoubleSharingPreProcessing(PreProcessingMixin):
+    preprocessing_name = PreProcessingConstants.DOUBLE_SHARES.value
+    _preprocessing_stride = 2
 
-        # Since we need all powers, multiplication
-        # is faster than using the pow() function.
-        powers = [None] * k
-        powers[0] = b
-        for i in range(1, k):
-            powers[i] = powers[i-1] * b
-        for i in range(z):
-            polys = [self.poly.random(t, power) for power in powers]
-            self._write_polys(
-                f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{i}", n, t, polys)
-
-    def generate_double_shares(self, k, n, t):
-        self._create_sharedata_dir_if_not_exists()
+    def _generate_polys(self, k, n, t):
         polys = []
         for _ in range(k):
             r = self.field.random()
             polys.append(self.poly.random(t, r))
             polys.append(self.poly.random(2*t, r))
-        self._write_polys(
-            PreProcessingConstants.DOUBLE_SHARES_FILE_NAME_PREFIX, n, t, polys)
 
-    def generate_share(self, x, n, t):
-        self._create_sharedata_dir_if_not_exists()
+        return polys
+
+    def _get_value(self, context, key):
+        assert self.count[key] >= 2
+        r_t = context.Share(next(self.cache[key]))
+        r_2t = context.Share(next(self.cache[key]), 2*context.t)
+        return (r_t, r_2t), self._preprocessing_stride
+
+
+class PowersPreProcessing(PreProcessingMixin):
+    preprocessing_name = PreProcessingConstants.POWERS.value
+    _preprocessing_stride = 1
+
+    def generate_values(self, k, n, t, z, append=False):
+        polys_arr = self._generate_polys(k, n, t, z)
+        for i, polys in enumerate(polys_arr):
+            self._write_polys(n, t, polys, append=False,
+                              prefix=f"{self.file_prefix}_{i}")
+
+    def _generate_polys(self, k, n, t, z):
+        b = self.field.random().value
+        powers = [b]
+        for _ in range(1, k):
+            powers.append(powers[-1] * b)
+
+        return [[self.poly.random(t, power) for power in powers] for _ in range(z)]
+
+    def _get_value(self, context, key, pid):
+        file_name = f"{self.file_prefix}_{pid}_{context.N}_{context.t}-{context.myid}" \
+                    f".share"
+        return list(map(context.Share, self._read_preprocessing_file(file_name))), 0
+
+    def _refresh_cache(self):
+        pass
+
+
+class SharePreProcessing(PreProcessingMixin):
+    preprocessing_name = PreProcessingConstants.SHARES.value
+    _preprocessing_stride = 1
+
+    def generate_values(self, k, n, t, x, append=False):
         sid = uuid4().hex
-        polys = [self.poly.random(t, x)]
-        self._write_polys(
-            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}_{sid}", n, t, polys)
+        polys = self._generate_polys(x, n, t)
+        self._write_polys(n, t, polys, prefix=f"{self.file_prefix}_{sid}")
         return sid
 
-    def generate_share_bits(self, k, n, t):
-        """ Generates random shares, alongside their bitwise sharings.
+    def _generate_polys(self, x, n, t):
+        return [self.poly.random(t, x)]
 
-        args:
-            k (int): number of shares to generate
-            n (int): number of parties to generate shares for
-            t (int): degree of polynomial to use when generating shares
-        """
-        self._create_sharedata_dir_if_not_exists()
+    def _get_value(self, context, key, sid, t=None):
+        if t is None:
+            t = context.t
+        file_name = self.build_filename(
+            context.N, t, context.myid, prefix=f"{self.file_prefix}_{sid}")
+        values = self._read_preprocessing_file(file_name)
+        return context.Share(values[0], t), 0
+
+    def _refresh_cache(self):
+        pass
+
+
+class RandomPreProcessing(PreProcessingMixin):
+    preprocessing_name = PreProcessingConstants.RANDS.value
+    _preprocessing_stride = 1
+
+    def _generate_polys(self, k, n, t):
+        return [self.poly.random(t) for _ in range(k)]
+
+    def _get_value(self, context, key, t=None):
+        t = t if t is not None else context.t
+        assert self.count[key] >= 1
+        return context.Share(next(self.cache[key]), t), 1
+
+
+class SimplePreProcessing(PreProcessingMixin):
+    """ Subclass of PreProcessingMixin to be used in the trivial case
+    where the only thing required to get a value is to read _preprocessing_stride
+    values, turn them in to shares, and return a tuple of them.
+
+    Subclasses of this class must only overwrite _generate_polys
+    """
+
+    def _get_value(self, context, key):
+        assert self.count[key] >= self._preprocessing_stride, f"Expected " \
+            f"{self._preprocessing_stride} elements of {self.preprocessing_name}, " \
+            f"but found only {self.count[key]}"
+
+        values = tuple(
+            context.Share(next(self.cache[key]))
+            for _ in range(self._preprocessing_stride))
+
+        if len(values) == 1:
+            values = values[0]
+
+        return values, self._preprocessing_stride
+
+
+class CubePreProcessing(SimplePreProcessing):
+    preprocessing_name = PreProcessingConstants.CUBES.value
+    _preprocessing_stride = 3
+
+    def _generate_polys(self, k, n, t):
         polys = []
         for _ in range(k):
-            r = self.field.random()
-            r_bits = [self.field(b) for b in map(
-                int, reversed(f'{{0:0{self._bit_length}b}}'.format(r.value)))]
+            a = self.field.random()
+            b = a * a
+            c = a * b
+            polys += [self.poly.random(t, v) for v in (a, b, c)]
 
-            polys.append(self.poly.random(t, r))
-            for b in r_bits:
-                polys.append(self.poly.random(t, b))
+        return polys
 
-        self._write_polys(
-            PreProcessingConstants.SHARE_BITS_FILE_NAME_PREFIX, n, t, polys)
+
+class TriplePreProcessing(SimplePreProcessing):
+    preprocessing_name = PreProcessingConstants.TRIPLES.value
+    _preprocessing_stride = 3
+
+    def _generate_polys(self, k, n, t):
+        polys = []
+        for _ in range(k):
+            a = self.field.random()
+            b = self.field.random()
+            c = a * b
+            polys += [self.poly.random(t, v) for v in (a, b, c)]
+
+        return polys
+
+
+class ZeroPreProcessing(SimplePreProcessing):
+    preprocessing_name = PreProcessingConstants.ZEROS.value
+    _preprocessing_stride = 1
+
+    def _generate_polys(self, k, n, t):
+        return [self.poly.random(t, 0) for _ in range(k)]
+
+
+class BitPreProcessing(SimplePreProcessing):
+    preprocessing_name = PreProcessingConstants.BITS.value
+    _preprocessing_stride = 1
+
+    def _generate_polys(self, k, n, t):
+        return [self.poly.random(t, randint(0, 1)) for _ in range(k)]
+
+
+class SignedBitPreProcessing(SimplePreProcessing):
+    preprocessing_name = PreProcessingConstants.ONE_MINUS_ONE.value
+    _preprocessing_stride = 1
+
+    def _generate_polys(self, k, n, t):
+        return [self.poly.random(t, randint(0, 1) * 2 - 1) for _ in range(k)]
+
+
+class PreProcessedElements:
+    """ Main accessor of preprocessing
+    This class is a singleton, that only has one object per field being
+    preprocessed for.
+    """
+    DEFAULT_DIRECTORY = PreProcessingConstants.SHARED_DATA_DIR.value
+    DEFAULT_FIELD = GF(Subgroup.BLS12_381)
+
+    _cached_elements = {}
+
+    def __new__(
+            cls,
+            append=True,
+            data_directory=None,
+            field=None):
+        """ Called when a new PreProcessedElements is created.
+        This creates a multiton based on the field used in preprocessing
+        """
+        if data_directory is None:
+            data_directory = cls.DEFAULT_DIRECTORY
+
+        return PreProcessedElements._cached_elements.setdefault(
+            data_directory,
+            super(PreProcessedElements, cls).__new__(cls))
+
+    def __init__(
+            self,
+            append=True,
+            data_directory=None,
+            field=None):
+        """
+        args:
+            field: GF to use when generating preprocessing
+            append: whether or not we should append to existing preprocessing when
+                generating, or if we should overwrite existing preprocessing.
+            data_dir_name: directory name to write preprocessing to.
+        """
+        if data_directory is None:
+            data_directory = PreProcessedElements.DEFAULT_DIRECTORY
+
+        if field is None:
+            field = PreProcessedElements.DEFAULT_FIELD
+
+        self.field = field
+        self.poly = polynomials_over(field)
+
+        self.data_directory = data_directory
+        self._init_data_dir()
+
+        self._ready_file = f"{self.data_directory}" \
+            f"{PreProcessingConstants.READY_FILE_NAME}"
+
+        self._append = append
+        self.mixins = self._init_mixins()
+
+    @classmethod
+    def reset_cache(cls):
+        """ Reset the class-wide cache of PreProcessedElements objects
+        """
+        cls._cached_elements = {}
+
+    def _init_mixins(self):
+        """ Initialize preprocessing mixins.
+        """
+        mixins = {}
+        for mixin in PreProcessingMixins:
+            m = mixin.value
+            assert m.preprocessing_name not in mixins, f"Multiple mixins found with " \
+                f"name {m.preprocessing_name}"
+
+            mixins[m.preprocessing_name] = m(self.field, self.poly, self.data_directory)
+
+        return mixins
+
+    def _init_data_dir(self):
+        """ Ensures that the data directory exists.
+        """
+        makedirs(self.data_directory, exist_ok=True)
+
+    def clear_preprocessing(self):
+        """ Delete all things from the preprocessing folder
+        """
+
+        rmtree(
+            self.data_directory,
+            onerror=lambda f, p, e: logging.debug(
+                f"Error deleting data directory: {e}"))
+
+        self._init_data_dir()
+
+    async def wait_for_preprocessing(self, timeout=1):
+        """ Block until the ready file is created
+        """
+        while not os.path.exists(self._ready_file):
+            logging.info(
+                f"waiting for preprocessing {self._ready_file}")
+            await asyncio.sleep(timeout)
+
+    def preprocessing_done(self):
+        """ Create a ready file. This unblocks any calls to wait_for_preprocessing
+        """
+        os.mknod(self._ready_file)
+
+    def generate(self, kind, n, t, *args, k=1000, **kwargs):
+        """ Generate k elements with given n, t values for the given kind of
+        preprocessing.
+        If we already have preprocessing for that kind, we only generate enough
+        such that we have k elements cached.
+        """
+        assert kind in self.mixins
+
+        if self._append:
+            k -= self.mixins[kind].min_count(n, t)
+
+        if k > 0:
+            return self.mixins[kind].generate_values(
+                k, n, t, *args, append=self._append, **kwargs)
+
+    def generate_triples(self, k, n, t):
+        return self.generate(PreProcessingConstants.TRIPLES.value, n, t, k=k)
+
+    def generate_cubes(self, k, n, t):
+        return self.generate(PreProcessingConstants.CUBES.value, n, t, k=k)
+
+    def generate_zeros(self, k, n, t):
+        return self.generate(PreProcessingConstants.ZEROS.value, n, t, k=k)
+
+    def generate_rands(self, k, n, t):
+        return self.generate(PreProcessingConstants.RANDS.value, n, t, k=k)
+
+    def generate_bits(self, k, n, t):
+        return self.generate(PreProcessingConstants.BITS.value, n, t, k=k)
+
+    def generate_powers(self, k, n, t, z):
+        return self.generate(PreProcessingConstants.POWERS.value, n, t, z, k=k)
+
+    def generate_share(self, k, n, t, *args, **kwargs):
+        return self.generate(
+            PreProcessingConstants.SHARES.value, n, t, *args, k=k, **kwargs)
+
+    def generate_one_minus_one_rands(self, k, n, t):
+        return self.generate(PreProcessingConstants.ONE_MINUS_ONE.value, n, t, k=k)
+
+    def generate_double_shares(self, k, n, t):
+        return self.generate(PreProcessingConstants.DOUBLE_SHARES.value, n, t, k=k)
+
+    def generate_share_bits(self, k, n, t):
+        return self.generate(PreProcessingConstants.SHARE_BITS.value, n, t, k=k)
+
+    def _get(self, context, kind, *args, **kwargs):
+        """ Accessor method to get a value from a mixin.
+        """
+        assert kind in self.mixins, f"No preprocessing generated for {kind}"
+        return self.mixins[kind].get_value(context, *args, **kwargs)
+
+    def get_triples(self, context):
+        return self._get(context, PreProcessingConstants.TRIPLES.value)
+
+    def get_cubes(self, context):
+        return self._get(context, PreProcessingConstants.CUBES.value)
+
+    def get_zero(self, context):
+        return self._get(context, PreProcessingConstants.ZEROS.value)
+
+    def get_rand(self, context, t=None):
+        return self._get(context, PreProcessingConstants.RANDS.value, t)
+
+    def get_bit(self, context):
+        return self._get(context, PreProcessingConstants.BITS.value)
+
+    def get_powers(self, context, z):
+        return self._get(context, PreProcessingConstants.POWERS.value, z)
+
+    def get_share(self, context, sid, t=None):
+        return self._get(context, PreProcessingConstants.SHARES.value, sid, t)
+
+    def get_one_minus_one(self, context):
+        return self._get(context, PreProcessingConstants.ONE_MINUS_ONE.value)
+
+    def get_double_shares(self, context):
+        return self._get(context, PreProcessingConstants.DOUBLE_SHARES.value)
+
+    def get_share_bits(self, context):
+        return self._get(context, PreProcessingConstants.SHARE_BITS.value)
+
+
+class PreProcessingMixins(Enum):
+    TRIPLES = TriplePreProcessing
+    CUBES = CubePreProcessing
+    ZEROS = ZeroPreProcessing
+    RANDS = RandomPreProcessing
+    BITS = BitPreProcessing
+    POWERS = PowersPreProcessing
+    SHARES = SharePreProcessing
+    ONE_MINUS_ONE = SignedBitPreProcessing
+    DOUBLE_SHARES = DoubleSharingPreProcessing
+    SHARE_BITS = ShareBitsPreProcessing
+
+    @classmethod
+    def from_str(cls, s):
+        for processing in cls:
+            print(processing, processing.value.preprocessing_name)
+            if s == processing.value.preprocessing_name:
+                return processing.value
+
+        return None

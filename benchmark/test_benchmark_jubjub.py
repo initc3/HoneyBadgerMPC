@@ -3,6 +3,7 @@ from honeybadgermpc.progs.jubjub import SharedPoint, share_mul
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
     DivideShareArrays, Equality)
+from honeybadgermpc.preprocessing import PreProcessedElements
 from honeybadgermpc.elliptic_curve import Jubjub, Point
 
 
@@ -78,11 +79,12 @@ def test_benchmark_shared_point_montgomery_mul(
 
 
 @mark.parametrize("bit_length", list(range(64, 257, 64)))
-def test_benchmark_share_mul(bit_length, test_preprocessing, benchmark_runner):
+def test_benchmark_share_mul(bit_length, benchmark_runner):
+    pp_elements = PreProcessedElements()
     p = TEST_POINT
 
     async def _prog(context):
-        m_bits = [test_preprocessing.elements.get_bit(context)
+        m_bits = [pp_elements.get_bit(context)
                   for i in range(bit_length)]
 
         multiplier_ = Jubjub.Field(0)

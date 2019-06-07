@@ -1,5 +1,6 @@
 from math import log, ceil
-from honeybadgermpc.mpc import PreProcessedElements, Subgroup
+from honeybadgermpc.elliptic_curve import Subgroup
+from honeybadgermpc.mpc import PreProcessedElements
 
 # ROUND: iteration time of MiMC encryption function,
 # In BLS12_381, r = ceil(log(p, 3)) = 161
@@ -24,7 +25,7 @@ async def mimc_mpc(context, x, k):
 
     # def cubing_share(): [x] -> [x^3]
     async def cubing_share(x):
-        r1, r2, r3 = pp_elements.get_cube(context)
+        r1, r2, r3 = pp_elements.get_cubes(context)
         y = await (x - r1).open()
         # [x^3] = 3y[r^2] + 3y^2[r] + y^3 + [r^3]
         x3 = 3*y*r2 + 3*(y**2)*r1 + y**3 + r3
@@ -33,7 +34,7 @@ async def mimc_mpc(context, x, k):
     # iterating the round function ROUND times
     inp = x
     for ctr in range(ROUND):
-        inp = await cubing_share((k + context.field(ctr)) + inp)
+        inp = await cubing_share(k + (context.field(ctr) + inp))
 
     return inp + k
 
@@ -47,22 +48,12 @@ async def mimc_mpc_batch(context, xs, k):
 
     # def cubing_share_array(): [x1,..., xK] -> [x1^3,..., xK^3]
     async def cubing_share_array(xs):
-        rs, rs_sq, rs_cube = [], [], []
-        x3s = []
-
-        for x in xs:
-            r1, r2, r3 = pp_elements.get_cube(context)
-            y = await (x - r1).open()
-            rs.append(r1)
-            rs_sq.append(r2)
-            rs_cube.append(r3)
+        rs, rs_sq, rs_cube = zip(*[pp_elements.get_cubes(context)
+                                   for _ in range(len(xs))])
 
         ys = await (context.ShareArray(xs) - context.ShareArray(rs)).open()
-        for i, y in enumerate(ys):
-            # [x^3] = 3y[r^2] + 3y^2[r] + y^3 + [r^3]
-            x3s.append(3*y*rs_sq[i] + 3*(y**2)*rs[i] + y**3 + rs_cube[i])
-
-        return x3s
+        return [3*y*rs_sq[i] + 3*(y**2)*rs[i] + y**3 + rs_cube[i]
+                for i, y in enumerate(ys)]
 
     # iterating the round function ROUND times
     inp_array = xs

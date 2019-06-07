@@ -307,7 +307,7 @@ async def test_prog1(context):
     y = pp_elements.get_zero(context) + context.Share(15)
     # y = context.Share(15)
 
-    a, b, ab = pp_elements.get_triple(context)
+    a, b, ab = pp_elements.get_triples(context)
     # assert await a.open() * await b.open() == await ab.open()
 
     d = (x - a).open()
