@@ -3,8 +3,11 @@
 [![Travis branch](https://img.shields.io/travis/initc3/HoneyBadgerMPC/dev.svg)](https://travis-ci.org/initc3/HoneyBadgerMPC)
 [![Codecov branch](https://img.shields.io/codecov/c/github/initc3/honeybadgermpc/dev.svg)](https://codecov.io/github/initc3/honeybadgermpc?branch=dev)
 
-HoneyBadgerMPC is an MPC-based confidentiality layer for blockchains.
-Compared to other blockchain privacy techniques, like zero knowledge proofs, the main appeal of HoneyBadgerMPC is that it is much more flexible --- MPC can be used to write smart contracts that can perform arbitrary computations on any of the secret data. While there are many MPC implementations, HoneyBadgerMPC is uniquely suited for blockchain integration because of its focus on robustness --- it is the first MPC toolkit to provide guaranteed output in spite of Byzantine faults.
+HoneyBadgerMPC is a robust MPC-based confidentiality layer for blockchains.
+
+<img width=200 src="http://i.imgur.com/wqzdYl4.png"/>
+
+Compared to other blockchain privacy techniques, like zero knowledge proofs, the main appeal of HoneyBadgerMPC is that it is much more flexible --- MPC can be used to write arbitrary smart contracts that compute on secret data, while providing availability, integrity, and confidentiality guarantees. While there are many MPC implementations, HoneyBadgerMPC is uniquely suited for blockchain integration because of its focus on robustness --- it is the first MPC toolkit to provide guaranteed output in spite of Byzantine faults.
 
 ## How to use HoneyBadgerMPC
 HoneyBadgerMPC is a research prototype, and is best used for prototyping, proofs of concept, and benchmarking experiments. As a library, HoneyBadgerMPC provides a python-based programming environment for writing custom MPC programs. The programs can be run in several ways:
