@@ -9,6 +9,7 @@ from honeybadgermpc.preprocessing import PreProcessedElements
 ])
 def test_benchmark_generate_rands(benchmark, n, t, k):
     pp_elements = PreProcessedElements()
+    pp_elements.clear_preprocessing()
     benchmark(pp_elements.generate_rands, k, n, t)
 
 
@@ -19,4 +20,5 @@ def test_benchmark_generate_rands(benchmark, n, t, k):
 ])
 def test_benchmark_generate_powers(benchmark, n, t, k, z):
     pp_elements = PreProcessedElements()
+    pp_elements.clear_preprocessing()
     benchmark(pp_elements.generate_powers, k, n, t, z)

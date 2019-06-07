@@ -10,8 +10,7 @@ if [ "${BUILD}" == "tests" ]; then
         --cov-report=term-missing \
         --cov-report=xml \
         -Wignore::DeprecationWarning \
-        -nauto \
-        --dist=loadfile
+        -nauto 
 
     IMAGE_NAME=$(docker ps -alq --format "{{.Names}}")
     docker cp $IMAGE_NAME:/usr/src/HoneyBadgerMPC/coverage.xml .

@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from honeybadgermpc.preprocessing import PreProcessedElements
 from honeybadgermpc.utils.typecheck import TypeCheck
 
 
@@ -7,8 +6,6 @@ class MixinBase(ABC):
     """Abstract base class for all Mixin objects
     These will work like drag-and-drop functors to load in some mpc applications
     """
-    pp_elements = PreProcessedElements()
-
     @abstractmethod
     def __call__(self, *args, **kwargs):
         """Subclasses of MixinBase most override this method, as this is

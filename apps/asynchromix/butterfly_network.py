@@ -1,14 +1,12 @@
 import asyncio
 import logging
 from math import log
-from honeybadgermpc.preprocessing import (
-    PreProcessedElements, wait_for_preprocessing, preprocessing_done)
+from honeybadgermpc.preprocessing import PreProcessedElements
 from time import time
 
 
 async def batch_switch(ctx, xs, ys, n):
-    pp_elements = PreProcessedElements()
-    sbits = [pp_elements.get_one_minus_one_rand(ctx).v for _ in range(n//2)]
+    sbits = [ctx.preproc.get_one_minus_one(ctx).v for _ in range(n//2)]
     ns = [1 / ctx.field(2) for _ in range(n//2)]
 
     assert len(xs) == len(ys) == len(sbits) == n // 2
@@ -55,8 +53,11 @@ async def iterated_butterfly_network(ctx, inputs, k):
 
 async def butterfly_network_helper(ctx, **kwargs):
     k = kwargs['k']
-    pp_elements = PreProcessedElements()
-    inputs = [pp_elements.get_rand(ctx).v for _ in range(k)]
+
+    inputs = kwargs['inputs']
+    if inputs is None:
+        inputs = [ctx.preproc.get_rand(ctx).v for _ in range(k)]
+
     logging.info(f"[{ctx.myid}] Running permutation network.")
     shuffled = await iterated_butterfly_network(ctx, inputs, k)
     if shuffled is not None:
@@ -82,6 +83,9 @@ if __name__ == "__main__":
 
     k = int(HbmpcConfig.extras["k"])
 
+    pp_elements = PreProcessedElements()
+    pp_elements.clear_preprocessing()
+
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
@@ -89,17 +93,17 @@ if __name__ == "__main__":
         if not HbmpcConfig.skip_preprocessing:
             if HbmpcConfig.my_id == 0:
                 NUM_SWITCHES = k * int(log(k, 2)) ** 2
-                pp_elements = PreProcessedElements()
                 pp_elements.generate_one_minus_one_rands(
                     NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t)
                 pp_elements.generate_triples(
                     2 * NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t)
                 pp_elements.generate_rands(k, HbmpcConfig.N, HbmpcConfig.t)
-                preprocessing_done()
+                pp_elements.preprocessing_done()
             else:
-                loop.run_until_complete(wait_for_preprocessing())
+                loop.run_until_complete(pp_elements.wait_for_preprocessing())
 
         loop.run_until_complete(
             _run(HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))
     finally:
         loop.close()
+        pp_elements.clear_preprocessing()

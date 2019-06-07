@@ -3,8 +3,7 @@ hbMPC tutorial 1. Running sample MPC programs in the testing simulator
 """
 import asyncio
 from honeybadgermpc.mpc import TaskProgramRunner
-from honeybadgermpc.progs.mixins.dataflow import (
-    Share, ShareArray, ShareFuture, GFElementFuture)
+from honeybadgermpc.progs.mixins.dataflow import Share
 from honeybadgermpc.preprocessing import (
     PreProcessedElements as FakePreProcessedElements)
 from honeybadgermpc.utils.typecheck import TypeCheck
@@ -74,7 +73,6 @@ def dot_product(ctx, x_shares, y_shares):
 
 async def prog(ctx):
     # Test with random sharings of hardcoded values
-    ctx.preproc = FakePreProcessedElements()
     x = ctx.Share(5) + ctx.preproc.get_zero(ctx)
     y = ctx.Share(7) + ctx.preproc.get_zero(ctx)
     xy = await beaver_multiply(ctx, x, y)

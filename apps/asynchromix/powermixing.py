@@ -4,8 +4,7 @@ from time import time
 from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.field import GF
 from honeybadgermpc.elliptic_curve import Subgroup
-from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
-from honeybadgermpc.preprocessing import wait_for_preprocessing, preprocessing_done
+from honeybadgermpc.preprocessing import PreProcessedElements
 import logging
 
 
@@ -13,12 +12,10 @@ async def all_secrets_phase1(context, **kwargs):
     k, file_prefixes = kwargs['k'], kwargs['file_prefixes']
     as_, a_minus_b_shares, all_powers = [], [], []
 
-    pp_elements = PreProcessedElements()
-
     stime = time()
     for i in range(k):
-        a = pp_elements.get_rand(context)
-        powers = pp_elements.get_powers(context, i)
+        a = context.preproc.get_rand(context)
+        powers = context.preproc.get_powers(context, i)
         a_minus_b_shares.append(a - powers[0])
         as_.append(a)
         all_powers.append(powers)
@@ -34,7 +31,7 @@ async def all_secrets_phase1(context, **kwargs):
     stime = time()
     for i in range(k):
         file_name = f"{file_prefixes[i]}-{context.myid}.input"
-        file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}"
+        file_path = f"{context.preproc.data_directory}{file_name}"
         with open(file_path, "w") as f:
             print(context.field.modulus, file=f)
             print(as_[i].v.value, file=f)
@@ -48,9 +45,9 @@ async def all_secrets_phase1(context, **kwargs):
 
 async def phase2(node_id, run_id, file_prefix):
     input_file_name = f"{file_prefix}-{node_id}.input"
-    input_file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{input_file_name}"
+    input_file_path = f"{PreProcessedElements.DEFAULT_DIRECTORY}{input_file_name}"
     sum_file_name = f"power-{run_id}_{node_id}.sums"
-    sum_file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{sum_file_name}"
+    sum_file_path = f"{PreProcessedElements.DEFAULT_DIRECTORY}{sum_file_name}"
 
     # NOTE The binary `compute-power-sums` is generated via the command
     # make -C apps/shuffle/cpp
@@ -76,7 +73,7 @@ async def run_command_sync(command):
 async def phase3(context, **kwargs):
     k, run_id = kwargs['k'], kwargs['run_id']
     sum_file_name = f"power-{run_id}_{context.myid}.sums"
-    sum_file_path = f"{PreProcessingConstants.SHARED_DATA_DIR}{sum_file_name}"
+    sum_file_path = f"{context.preproc.data_directory}{sum_file_name}"
     sum_shares = []
 
     bench_logger = logging.LoggerAdapter(
@@ -166,8 +163,13 @@ async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
 if __name__ == "__main__":
     from honeybadgermpc.config import HbmpcConfig
 
+    HbmpcConfig.load_config()
+
     run_id = HbmpcConfig.extras["run_id"]
     k = int(HbmpcConfig.extras["k"])
+
+    pp_elements = PreProcessedElements()
+    pp_elements.clear_preprocessing()
 
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
@@ -178,13 +180,12 @@ if __name__ == "__main__":
             field = GF(Subgroup.BLS12_381)
             a_s = [field(i) for i in range(1000+k, 1000, -1)]
 
-            pp_elements = PreProcessedElements()
             if HbmpcConfig.my_id == 0:
                 pp_elements.generate_rands(k, HbmpcConfig.N, HbmpcConfig.t)
                 pp_elements.generate_powers(k, HbmpcConfig.N, HbmpcConfig.t, k)
-                preprocessing_done()
+                pp_elements.preprocessing_done()
             else:
-                loop.run_until_complete(wait_for_preprocessing())
+                loop.run_until_complete(pp_elements.wait_for_preprocessing())
 
         loop.run_until_complete(
             async_mixing_in_processes(
