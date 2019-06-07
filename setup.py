@@ -15,7 +15,6 @@ VERSION = None
 REQUIRED = ["gmpy2", "zfec", "pycrypto", "cffi", "psutil", "pyzmq"]
 
 TESTS_REQUIRES = [
-    "black",
     "flake8",
     "pep8-naming",
     "pytest",

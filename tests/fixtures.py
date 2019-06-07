@@ -2,7 +2,9 @@ from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.router import SimpleRouter
 import asyncio
 import random
+from tempfile import mkdtemp
 from pytest import fixture
+from os import makedirs
 
 
 @fixture
@@ -83,50 +85,28 @@ def triples_polys(request, triples_fields, polynomial):
 
 
 class TestPreProcessing:
+    """ This class, when initialized, creates a temporary data directory.
+    It then creates a PreProcessedElements object using that directory,
+    and sets it as the singleton for the testing field.
+    Thus, as the fixture has autouse=True, anytime code calls PreProcessedElements(),
+    it will return this created object.
+    """
+
     def __init__(self):
         from honeybadgermpc.preprocessing import PreProcessedElements
+        from honeybadgermpc.preprocessing import PreProcessingConstants as Constants
+        from honeybadgermpc.progs.mixins.base import MixinBase
 
-        self.cache = {}
-        self.elements = PreProcessedElements()
+        makedirs(Constants.SHARED_DATA_DIR.value, exist_ok=True)
+        self.test_data_dir = f"{mkdtemp(dir=Constants.SHARED_DATA_DIR.value)}/"
+        PreProcessedElements.DEFAULT_DIRECTORY = self.test_data_dir
 
-    def generate(self, kind, n, t, arg1=None, arg2=None, k=1000):
-        if kind in [
-            "zeros",
-            "triples",
-            "cubes",
-            "rands",
-            "bits",
-            "oneminusone",
-            "double_shares",
-            "powers",
-            "share_bits",
-        ]:
-            if (kind, n, t) in self.cache:
-                return
-            self.cache[(kind, n, t)] = True
-            if kind == "zeros":
-                self.elements.generate_zeros(k, n, t)
-            elif kind == "triples":
-                self.elements.generate_triples(k, n, t)
-            elif kind == "cubes":
-                self.elements.generate_cubes(k, n, t)
-            elif kind == "rands":
-                self.elements.generate_rands(k, n, t)
-            elif kind == "bits":
-                self.elements.generate_bits(k, n, t)
-            elif kind == "oneminusone":
-                self.elements.generate_one_minus_one_rands(k, n, t)
-            elif kind == "double_shares":
-                self.elements.generate_double_shares(k, n, t)
-            elif kind == "powers":
-                self.elements.generate_powers(arg1, n, t, arg2)
-            elif kind == "share_bits":
-                self.elements.generate_share_bits(k, n, t)
-        elif kind == "share":
-            return self.elements.generate_share(arg1, n, t)
+        PreProcessedElements.reset_cache()
+        self.elements = PreProcessedElements(data_directory=self.test_data_dir)
+        MixinBase.pp_elements = self.elements
 
 
-@fixture(scope="session")
+@fixture(scope="session", autouse=True)
 def test_preprocessing():
     return TestPreProcessing()
 
@@ -159,9 +139,29 @@ def test_router():
     return _test_router
 
 
-def _preprocess(test_preprocessing, n, t, k, to_generate):
+def _preprocess(n, t, k, to_generate):
+    from honeybadgermpc.preprocessing import PreProcessedElements
+
+    pp_elements = PreProcessedElements()
     for kind in to_generate:
-        test_preprocessing.generate(kind, n, t, k=k)
+        if kind == "triples":
+            pp_elements.generate_triples(k, n, t)
+        elif kind == "cubes":
+            pp_elements.generate_cubes(k, n, t)
+        elif kind == "zeros":
+            pp_elements.generate_zeros(k, n, t)
+        elif kind == "rands":
+            pp_elements.generate_rands(k, n, t)
+        elif kind == "bits":
+            pp_elements.generate_bits(k, n, t)
+        elif kind == "one_minus_one":
+            pp_elements.generate_one_minus_ones(k, n, t)
+        elif kind == "double_shares":
+            pp_elements.generate_double_shares(k, n, t)
+        elif kind == "share_bits":
+            pp_elements.generate_share_bits(k, n, t)
+        else:
+            raise ValueError(f"{kind} must be manually preprocessed")
 
 
 def _build_config(mixins=[]):
@@ -177,9 +177,9 @@ def _build_config(mixins=[]):
 
 
 @fixture
-def test_runner(test_preprocessing):
+def test_runner():
     async def _test_runner(prog, n=4, t=1, to_generate=[], k=1000, mixins=[]):
-        _preprocess(test_preprocessing, n, t, k, to_generate)
+        _preprocess(n, t, k, to_generate)
 
         config = _build_config(mixins)
         program_runner = TaskProgramRunner(n, t, config)
@@ -191,10 +191,12 @@ def test_runner(test_preprocessing):
 
 
 @fixture
-def benchmark_runner(benchmark, test_preprocessing):
-    def _benchmark_runner(prog, n=4, t=1, to_generate=[], k=1000, mixins=[]):
+def benchmark_runner(benchmark):
+    from honeybadgermpc.preprocessing import PreProcessedElements
 
-        _preprocess(test_preprocessing, n, t, k, to_generate)
+    def _benchmark_runner(prog, n=4, t=1, to_generate=[], k=1000, mixins=[]):
+        pp_elements = PreProcessedElements()
+        _preprocess(pp_elements, n, t, k, to_generate)
 
         config = _build_config(mixins)
         program_runner = TaskProgramRunner(n, t, config)
