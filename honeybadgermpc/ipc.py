@@ -9,6 +9,7 @@ from psutil import cpu_count
 from honeybadgermpc.mpc import Mpc
 from honeybadgermpc.config import HbmpcConfig, ConfigVars
 from honeybadgermpc.utils.misc import wrap_send, subscribe_recv
+from honeybadgermpc.utils.misc import print_exception_callback
 
 
 class NodeCommunicator(object):
@@ -66,6 +67,7 @@ class NodeCommunicator(object):
         router.bind(f"tcp://*:{self.peers_config[self.my_id].port}")
         # Start a task to receive messages on this node.
         self._router_task = asyncio.create_task(self._recv_loop(router))
+        self._router_task.add_done_callback(print_exception_callback)
 
         # Setup one dealer per receving party. This is used
         # as a client to send messages to other parties.
@@ -80,10 +82,10 @@ class NodeCommunicator(object):
                     f"tcp://{self.peers_config[i].ip}:{self.peers_config[i].port}")
                 # Setup a task which reads messages intended for this
                 # party from a queue and then sends them to this node.
-                self._dealer_tasks.append(
-                    asyncio.create_task(
-                        self._process_node_messages(
-                            i, self._sender_queues[i], dealer.send_multipart)))
+                task = asyncio.create_task(
+                    self._process_node_messages(
+                        i, self._sender_queues[i], dealer.send_multipart))
+                self._dealer_tasks.append(task)
 
     async def _recv_loop(self, router):
         while True:
@@ -133,6 +135,7 @@ class ProcessProgramRunner(object):
         def callback(future): program_result.set_result(future.result())
         task = asyncio.create_task(context._run())
         task.add_done_callback(callback)
+        task.add_done_callback(print_exception_callback)
         self.progs.append(task)
         return program_result
 
