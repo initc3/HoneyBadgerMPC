@@ -52,7 +52,7 @@ if __name__ == "__main__":
     import sys
     import os
     if not HbmpcConfig.peers:
-        print(f'WARNING: the $CONFIG_PATH environment variable wasn\'t set. Please run this file with `scripts/launch_tmuxlocal.sh apps/tutorial/hbmpc-tutorial-2.py conf/local/mpc`')
+        print(f'WARNING: the $CONFIG_PATH environment variable wasn\'t set. Please run this file with `scripts/launch-tmuxlocal.sh apps/tutorial/hbmpc-tutorial-2.py conf/mpc/local`')
         sys.exit(1)
 
     asyncio.set_event_loop(asyncio.new_event_loop())

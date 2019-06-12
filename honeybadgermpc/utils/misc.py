@@ -10,7 +10,7 @@ def print_exception_callback(future):
     if future.done():
         ex = future.exception()
         if ex is not None:
-            logging.critical('\nException:', future, type(ex), ex)
+            logging.critical(f'\nException: \n{future} \n{type(ex)} \n{ex}')
             raise ex
 
 
