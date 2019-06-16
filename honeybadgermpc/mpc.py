@@ -156,6 +156,9 @@ class Mpc(object):
             Future, which will resolve to an array of GFElements
         """
         res = asyncio.Future()
+        if not sharearray._shares:
+            res.set_result([])
+            return res
 
         def cb(r):
             elements = r.result()
