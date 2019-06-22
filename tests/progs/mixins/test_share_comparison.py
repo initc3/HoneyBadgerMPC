@@ -56,13 +56,12 @@ async def test_less_than(begin, end, test_runner):
 @mark.asyncio
 async def test_equality(test_runner):
     equality = Equality()
-    pp_elements = PreProcessedElements()
 
     async def _prog(context):
-        share0 = pp_elements.get_zero(context)
-        share1 = pp_elements.get_rand(context)
+        share0 = context.preproc.get_zero(context)
+        share1 = context.preproc.get_rand(context)
         share1_ = share0 + share1
-        share2 = pp_elements.get_rand(context)
+        share2 = context.preproc.get_rand(context)
 
         assert await (await equality(context, share1, share1_)).open()
         assert await (share1 == share1_).open()

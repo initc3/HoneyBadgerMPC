@@ -6,8 +6,7 @@ from time import time
 
 
 async def batch_switch(ctx, xs, ys, n):
-    pp_elements = PreProcessedElements()
-    sbits = [pp_elements.get_one_minus_one(ctx).v for _ in range(n//2)]
+    sbits = [ctx.preproc.get_one_minus_one(ctx).v for _ in range(n//2)]
     ns = [1 / ctx.field(2) for _ in range(n//2)]
 
     assert len(xs) == len(ys) == len(sbits) == n // 2
@@ -54,8 +53,11 @@ async def iterated_butterfly_network(ctx, inputs, k):
 
 async def butterfly_network_helper(ctx, **kwargs):
     k = kwargs['k']
-    pp_elements = PreProcessedElements()
-    inputs = [pp_elements.get_rand(ctx).v for _ in range(k)]
+
+    inputs = kwargs['inputs']
+    if inputs is None:
+        inputs = [ctx.preproc.get_rand(ctx).v for _ in range(k)]
+
     logging.info(f"[{ctx.myid}] Running permutation network.")
     shuffled = await iterated_butterfly_network(ctx, inputs, k)
     if shuffled is not None:

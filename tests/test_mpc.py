@@ -16,7 +16,7 @@ async def test_open_shares():
     async def _prog(context):
         secrets = []
         for _ in range(number_of_secrets):
-            s = await pp_elements.get_zero(context).open()
+            s = await context.preproc.get_zero(context).open()
             assert s == 0
             secrets.append(s)
         print('[%d] Finished' % (context.myid,))
@@ -39,7 +39,7 @@ async def test_open_future_shares():
 
     async def _prog(context):
         e1_, e2_ = [
-            pp_elements.get_rand(context) for _ in range(2)]
+            context.preproc.get_rand(context) for _ in range(2)]
         e1, e2 = await asyncio.gather(*[e1_.open(), e2_.open()], return_exceptions=True)
 
         s_prod_f = e1_ * e2_

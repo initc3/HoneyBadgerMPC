@@ -12,12 +12,10 @@ async def all_secrets_phase1(context, **kwargs):
     k, file_prefixes = kwargs['k'], kwargs['file_prefixes']
     as_, a_minus_b_shares, all_powers = [], [], []
 
-    pp_elements = PreProcessedElements()
-
     stime = time()
     for i in range(k):
-        a = pp_elements.get_rand(context)
-        powers = pp_elements.get_powers(context, i)
+        a = context.preproc.get_rand(context)
+        powers = context.preproc.get_powers(context, i)
         a_minus_b_shares.append(a - powers[0])
         as_.append(a)
         all_powers.append(powers)
@@ -33,7 +31,7 @@ async def all_secrets_phase1(context, **kwargs):
     stime = time()
     for i in range(k):
         file_name = f"{file_prefixes[i]}-{context.myid}.input"
-        file_path = f"{pp_elements.data_directory}{file_name}"
+        file_path = f"{context.preproc.data_directory}{file_name}"
         with open(file_path, "w") as f:
             print(context.field.modulus, file=f)
             print(as_[i].v.value, file=f)
@@ -75,7 +73,7 @@ async def run_command_sync(command):
 async def phase3(context, **kwargs):
     k, run_id = kwargs['k'], kwargs['run_id']
     sum_file_name = f"power-{run_id}_{context.myid}.sums"
-    sum_file_path = f"{PreProcessedElements.DEFAULT_DIRECTORY}{sum_file_name}"
+    sum_file_path = f"{context.preproc.data_directory}{sum_file_name}"
     sum_shares = []
 
     bench_logger = logging.LoggerAdapter(

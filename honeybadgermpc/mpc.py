@@ -17,7 +17,8 @@ from .exceptions import HoneyBadgerMPCError
 
 
 class Mpc(object):
-    def __init__(self, sid, n, t, myid, send, recv, prog, config, **prog_args):
+    def __init__(self, sid, n, t, myid, send, recv, prog, config,
+                 preproc=None, **prog_args):
         # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(n) is int and type(t) is int
@@ -29,6 +30,7 @@ class Mpc(object):
         self.field = GF(Subgroup.BLS12_381)
         self.poly = polynomials_over(self.field)
         self.config = config
+        self.preproc = preproc if preproc is not None else PreProcessedElements()
 
         # send(j, o): sends object o to party j with (current sid)
         # recv(): returns (j, o) from party j
@@ -288,9 +290,8 @@ class TaskProgramRunner(ProgramRunner):
 ###############
 
 async def test_batchopening(context):
-    pp_elements = PreProcessedElements()
     # Demonstrates use of ShareArray batch interface
-    xs = [pp_elements.get_zero(context) + context.Share(i) for i in range(100)]
+    xs = [context.preproc.get_zero(context) + context.Share(i) for i in range(100)]
     xs = context.ShareArray(xs)
     xs_ = await xs.open()
     for i, x in enumerate(xs_):
@@ -300,14 +301,13 @@ async def test_batchopening(context):
 
 
 async def test_prog1(context):
-    pp_elements = PreProcessedElements()
     # Example of Beaver multiplication
-    x = pp_elements.get_zero(context) + context.Share(10)
+    x = context.preproc.get_zero(context) + context.Share(10)
     # x = context.Share(10)
-    y = pp_elements.get_zero(context) + context.Share(15)
+    y = context.preproc.get_zero(context) + context.Share(15)
     # y = context.Share(15)
 
-    a, b, ab = pp_elements.get_triples(context)
+    a, b, ab = context.preproc.get_triples(context)
     # assert await a.open() * await b.open() == await ab.open()
 
     d = (x - a).open()
@@ -330,8 +330,7 @@ async def test_prog1(context):
 
 
 async def test_prog2(context):
-    pp_elements = PreProcessedElements()
-    shares = [pp_elements.get_zero(context) for _ in range(1000)]
+    shares = [context.preproc.get_zero(context) for _ in range(1000)]
     for share in shares[:100]:
         s = await share.open()
         assert s == 0

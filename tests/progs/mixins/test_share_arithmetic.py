@@ -38,7 +38,7 @@ async def test_degree_reduction_share(galois_field, test_runner):
     sid_x_2t = pp_elements.generate('share', n, 2*t, x_expected)
 
     async def _prog(context):
-        sh_x_2t = pp_elements.get_share(context, sid_x_2t, 2*t)
+        sh_x_2t = context.preproc.get_share(context, sid_x_2t, 2*t)
         x_actual = await (
             await DoubleSharingMultiply.reduce_degree_share(context, sh_x_2t)).open()
         assert x_expected == x_actual
@@ -54,7 +54,7 @@ async def test_degree_reduction_share_array(test_runner):
     pp_elements.generate("double_shares", n, t)
 
     async def _prog(context):
-        shares = [pp_elements.get_rand(
+        shares = [context.preproc.get_rand(
             context, 2*t) for _ in range(10)]
         sh_x_2t = context.ShareArray(shares, 2*t)
         x_actual = await (
@@ -72,11 +72,10 @@ async def test_degree_reduction_share_array(test_runner):
 async def test_multiplication_using_double_sharing(galois_field,
                                                    test_runner):
     n, t = 9, 2
-    pp_elements = PreProcessedElements()
 
     async def _prog(context):
-        sh_a = pp_elements.get_rand(context)
-        sh_b = pp_elements.get_rand(context)
+        sh_a = context.preproc.get_rand(context)
+        sh_b = context.preproc.get_rand(context)
         ab_expected = await sh_a.open() * await sh_b.open()
 
         ab_actual = await(await (sh_a * sh_b)).open()
@@ -89,10 +88,9 @@ async def test_multiplication_using_double_sharing(galois_field,
 async def test_batch_double_sharing_multiply(galois_field,
                                              test_runner):
     n, t = 9, 2
-    pp_elements = PreProcessedElements()
 
     async def _prog(context):
-        shares = [pp_elements.get_rand(context) for _ in range(20)]
+        shares = [context.preproc.get_rand(context) for _ in range(20)]
         p = context.ShareArray(shares[:10])
         q = context.ShareArray(shares[10:])
 
@@ -139,13 +137,12 @@ async def test_cant_multiply_shares_from_different_contexts():
 
 @mark.asyncio
 async def test_beaver_mul_with_zeros(test_runner):
-    pp_elements = PreProcessedElements()
     x_secret, y_secret = 10, 15
 
     async def _prog(context):
         # Example of Beaver multiplication
-        x = pp_elements.get_zero(context) + context.Share(x_secret)
-        y = pp_elements.get_zero(context) + context.Share(y_secret)
+        x = context.preproc.get_zero(context) + context.Share(x_secret)
+        y = context.preproc.get_zero(context) + context.Share(y_secret)
 
         xy = await (x*y)
 
@@ -162,12 +159,10 @@ async def test_beaver_mul_with_zeros(test_runner):
 
 @mark.asyncio
 async def test_beaver_mul(test_runner):
-    pp_elements = PreProcessedElements()
-
     async def _prog(context):
         # Example of Beaver multiplication
-        x = pp_elements.get_rand(context)
-        y = pp_elements.get_rand(context)
+        x = context.preproc.get_rand(context)
+        y = context.preproc.get_rand(context)
 
         xy = await (x*y)
 
@@ -183,10 +178,8 @@ async def test_beaver_mul(test_runner):
 
 @mark.asyncio
 async def test_batch_beaver_multiply(test_runner):
-    pp_elements = PreProcessedElements()
-
     async def _prog(context):
-        shares = [pp_elements.get_rand(context) for _ in range(20)]
+        shares = [context.preproc.get_rand(context) for _ in range(20)]
         p = context.ShareArray(shares[:10])
         q = context.ShareArray(shares[10:])
 
@@ -201,11 +194,10 @@ async def test_batch_beaver_multiply(test_runner):
 
 @mark.asyncio
 async def test_invert_share(test_runner):
-    pp_elements = PreProcessedElements()
     inverter = InvertShare()
 
     async def _prog(context):
-        share = pp_elements.get_rand(context)
+        share = context.preproc.get_rand(context)
         # assert 1/x * x == 1
         inverted = await inverter(context, share)
         assert await (inverted * share).open() == 1
@@ -216,12 +208,11 @@ async def test_invert_share(test_runner):
 
 @mark.asyncio
 async def test_invert_share_array(test_runner):
-    pp_elements = PreProcessedElements()
     inverter = InvertShareArray()
 
     async def _prog(context):
         shares = context.ShareArray(
-            [pp_elements.get_rand(context) for _ in range(20)])
+            [context.preproc.get_rand(context) for _ in range(20)])
         inverted_shares = await(inverter(context, shares))
 
         product = await(shares * inverted_shares)
@@ -234,10 +225,8 @@ async def test_invert_share_array(test_runner):
 
 @mark.asyncio
 async def test_share_division(test_runner):
-    pp_elements = PreProcessedElements()
-
     async def _prog(context):
-        r1 = pp_elements.get_rand(context)
+        r1 = context.preproc.get_rand(context)
         assert await(await(r1 / r1)).open() == 1
 
     results = await run_test_program(_prog, test_runner)
@@ -246,10 +235,8 @@ async def test_share_division(test_runner):
 
 @mark.asyncio
 async def test_share_division_needs_mixins(test_runner):
-    pp_elements = PreProcessedElements()
-
     async def _prog(context):
-        r1 = pp_elements.get_rand(context)
+        r1 = context.preproc.get_rand(context)
         with raises(NotImplementedError):
             assert await(await(r1 / r1)).open() == 1
 
@@ -259,11 +246,9 @@ async def test_share_division_needs_mixins(test_runner):
 
 @mark.asyncio
 async def test_share_array_division(test_runner):
-    pp_elements = PreProcessedElements()
-
     async def _prog(context):
         shares = context.ShareArray(
-            [pp_elements.get_rand(context) for _ in range(20)])
+            [context.preproc.get_rand(context) for _ in range(20)])
 
         result = await(shares / shares)
         for e in await(result).open():

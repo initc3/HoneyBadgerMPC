@@ -5,7 +5,6 @@ from honeybadgermpc.progs.mimc import mimc_mpc_batch
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
     DivideShareArrays, Equality)
-from honeybadgermpc.preprocessing import PreProcessedElements
 
 CONFIG = {
     BeaverMultiply.name: BeaverMultiply(),
@@ -29,10 +28,8 @@ TEST_KEY = TEST_FIELD(randint(0, TEST_FIELD.modulus))
 # All iterations take around 30min total.
 @mark.parametrize("batch_size", [10**i for i in range(4)])
 def test_benchmark_mimc_mpc_batch(batch_size, benchmark_runner):
-    pp_elements = PreProcessedElements()
-
     async def _prog(context):
-        xs = [pp_elements.get_rand(context)
+        xs = [context.preproc.get_rand(context)
               for _ in range(batch_size)]
         await mimc_mpc_batch(context, xs, TEST_KEY)
 

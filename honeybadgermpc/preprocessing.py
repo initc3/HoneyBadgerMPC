@@ -496,7 +496,7 @@ class PreProcessedElements:
             data_directory=None,
             field=None):
         """ Called when a new PreProcessedElements is created.
-        This creates a multiton based on the field used in preprocessing
+        This creates a multiton based on the directory used in preprocessing
         """
         if data_directory is None:
             data_directory = cls.DEFAULT_DIRECTORY

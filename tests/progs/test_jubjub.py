@@ -7,7 +7,6 @@ from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
     DivideShareArrays)
 from honeybadgermpc.progs.mixins.share_comparison import Equality
-from honeybadgermpc.preprocessing import PreProcessedElements
 
 TEST_CURVE = Jubjub()
 
@@ -210,13 +209,12 @@ async def test_shared_point_montgomery_mul(test_runner):
 @mark.asyncio
 async def test_share_mul(test_runner):
     bit_length = 40  # Short key for testing
-    pp_elements = PreProcessedElements()
 
     async def _prog(context):
         p = TEST_POINTS[1]
 
         multiplier_ = Jubjub.Field(0)
-        m_bits = [pp_elements.get_bit(context)
+        m_bits = [context.preproc.get_bit(context)
                   for i in range(bit_length)]
 
         for idx, m in enumerate(m_bits):

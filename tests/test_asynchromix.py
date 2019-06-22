@@ -18,10 +18,11 @@ async def test_butterfly_network():
 
     async def verify_output(ctx, **kwargs):
         k, delta = kwargs['k'], kwargs['delta']
-        inputs = [pp_elements.get_rand(ctx) for _ in range(k)]
+        inputs = [ctx.preproc.get_rand(ctx) for _ in range(k)]
         sorted_input = sorted(await ctx.ShareArray(inputs).open(), key=lambda x: x.value)
 
-        share_arr = await butterfly.butterfly_network_helper(ctx, k=k, delta=delta)
+        share_arr = await butterfly.butterfly_network_helper(
+            ctx, k=k, delta=delta, inputs=inputs)
         outputs = await share_arr.open()
 
         assert len(sorted_input) == len(outputs)
@@ -43,21 +44,21 @@ async def test_phase1(galois_field):
     pp_elements.generate_powers(k, n,  t, 1)
     pp_elements.generate("rands", n, t, k=k)
 
-    async def verify_phase1(context, **kwargs):
+    async def verify_phase1(ctx, **kwargs):
         k_ = kwargs['k']
-        b_ = await pp_elements.get_powers(context, 0)[0].open()
+        b_ = await ctx.preproc.get_powers(ctx, 0)[0].open()
         file_prefixes = [uuid4().hex]
-        await pm.all_secrets_phase1(context, k=k, file_prefixes=file_prefixes)
-        file_name = f"{file_prefixes[0]}-{context.myid}.input"
+        await pm.all_secrets_phase1(ctx, k=k, file_prefixes=file_prefixes)
+        file_name = f"{file_prefixes[0]}-{ctx.myid}.input"
         file_path = f"{pp_elements.data_directory}{file_name}"
         with open(file_path, "r") as f:
             assert int(f.readline()) == field.modulus
             # next line is a random share, which should open successfully
-            a_ = await context.Share(int(f.readline())).open()
+            a_ = await ctx.Share(int(f.readline())).open()
             assert int(f.readline()) == (a_ - b_).value
             assert int(f.readline()) == k_
             for i in range(1, k_+1):
-                assert (await context.Share(int(f.readline())).open()).value == b_**(i)
+                assert (await ctx.Share(int(f.readline())).open()).value == b_**(i)
 
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(verify_phase1, k=k)

@@ -4,7 +4,6 @@ from honeybadgermpc.field import GF
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiply
 from honeybadgermpc.progs.mimc_symmetric import mimc_encrypt, mimc_decrypt
-from honeybadgermpc.preprocessing import PreProcessedElements
 
 MIXINS = [BeaverMultiply()]
 PREPROCESSING = ['rands', 'triples', 'zeros', 'cubes', 'bits']
@@ -17,10 +16,9 @@ async def test_mimc_symmetric(test_runner):
     field = GF(Subgroup.BLS12_381)
     plaintext = [randint(0, field.modulus)]
     key_ = field(randint(0, field.modulus))
-    pp_elements = PreProcessedElements()
 
     async def _prog(context):
-        key = pp_elements.get_zero(context) + key_
+        key = context.preproc.get_zero(context) + key_
 
         cipher = mimc_encrypt(key_, plaintext)
         decrypted_value = await mimc_decrypt(context, key, cipher)
