@@ -255,3 +255,20 @@ class SingleShareManager(ShareManager):
 
     def force_opening(self) -> bool:
         return True
+
+
+class BatchedShareManager(ShareManager):
+
+    @TypeCheck()
+    def open_share(self, share: (Share, ShareFuture)) -> asyncio.Future:
+        return asyncio.Future()
+
+    @TypeCheck()
+    def open_share_array(self, share_array: ShareArray) -> asyncio.Future:
+        return asyncio.Future()
+
+    async def _loop_once(self):
+        pass
+
+    def force_opening(self) -> bool:
+        return True
