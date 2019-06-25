@@ -17,6 +17,20 @@ from .progs.mixins.share_manager import SingleShareManager
 class Mpc(object):
     def __init__(self, sid, n, t, myid, send, recv, prog, config,
                  preproc=None, **prog_args):
+        """ Initialization for MPC context
+        args:
+            sid (str): Identifier of this MPC context
+            n (int): Number of nodes used to run program
+            t (int): Number of faults tolerable in MPC program
+            myid (int): Id of this instance of the MPC program to run prog
+            send (function): Send function to send a message to another node
+            recv (function): Receive function to receive a share
+            prog (function): MPC program to run
+            config (object): MPC Configuration
+            preproc (PreProcessedElements): Preprocessing used in running MPC Program
+            prog_args (dict): Arguments to pass to MPC program
+        """
+
         # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(n) is int and type(t) is int
@@ -79,7 +93,7 @@ class Mpc(object):
             share (Share): Secret shared value to open
 
         outputs:
-            Future that resolves to the plaintext value of the share.
+            Future that resolves to GFElement value of the share.
         """
         return self._share_manager.open_share(share)
 

@@ -85,6 +85,8 @@ class ShareManager(ABC):
 
 
 class SingleShareManager(ShareManager):
+    # TODO: take in reconstruction config directly instead of induced_faults
+    # TODO: simply take in context metadata instead of context.
     def __init__(self, context: 'Mpc', induce_faults: bool = False):  # noqa: F821
         self._share_id = 0
         self._context = context
@@ -124,7 +126,7 @@ class SingleShareManager(ShareManager):
             share (Share): Secret shared value to open
 
         outputs:
-            Future that resolves to the plaintext value of the share.
+            Future that resolves to the GFElement value of the share.
         """
         result = asyncio.Future()
         n, t = self.n, self.t
@@ -258,6 +260,14 @@ class SingleShareManager(ShareManager):
 
 
 class BatchedShareManager(ShareManager):
+    def __init__(self, contexts: list, induce_faults: bool = False):
+        self._contexts = contexts
+        self._induce_faults = induce_faults
+
+        self._share_buffers = [defaultdict(asyncio.Future) for _ in range()]
+
+    def add_context(self, context):
+        self._contexts.append(context)
 
     @TypeCheck()
     def open_share(self, share: (Share, ShareFuture)) -> asyncio.Future:
