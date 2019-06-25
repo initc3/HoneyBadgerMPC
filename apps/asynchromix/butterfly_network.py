@@ -54,8 +54,9 @@ async def iterated_butterfly_network(ctx, inputs, k):
 async def butterfly_network_helper(ctx, **kwargs):
     k = kwargs['k']
 
-    inputs = kwargs['inputs']
-    if inputs is None:
+    if 'inputs' in kwargs:
+        inputs = kwargs['inputs']
+    else:
         inputs = [ctx.preproc.get_rand(ctx).v for _ in range(k)]
 
     logging.info(f"[{ctx.myid}] Running permutation network.")

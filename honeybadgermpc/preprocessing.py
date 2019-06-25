@@ -20,7 +20,7 @@ from .elliptic_curve import Subgroup
 
 class PreProcessingConstants(Enum):
     SHARED_DATA_DIR = "sharedata/"
-    READY_FILE_NAME = f"{SHARED_DATA_DIR}READY"
+    READY_FILE_NAME = "READY"
     TRIPLES = "triples"
     CUBES = "cubes"
     ZEROS = "zeros"
@@ -552,6 +552,8 @@ class PreProcessedElements:
     def _init_mixins(self):
         """ Initialize preprocessing mixins.
         """
+        self._init_data_dir()
+
         mixins = {}
         for mixin in PreProcessingMixins:
             m = mixin.value
@@ -589,6 +591,7 @@ class PreProcessedElements:
     def preprocessing_done(self):
         """ Create a ready file. This unblocks any calls to wait_for_preprocessing
         """
+        self._init_data_dir()
         os.mknod(self._ready_file)
 
     def generate(self, kind, n, t, *args, k=1000, **kwargs):
