@@ -541,6 +541,14 @@ class PreProcessedElements:
         """
         cls._cached_elements = {}
 
+    def refresh_preprocessing(self):
+        """ Reset cached elements on mixins
+        """
+        self._init_data_dir()
+
+        for kind in self.mixins:
+            self.mixins[kind]._refresh_cache()
+
     def _init_mixins(self):
         """ Initialize preprocessing mixins.
         """

@@ -91,7 +91,6 @@ class TestPreProcessing():
     def __init__(self):
         from honeybadgermpc.preprocessing import PreProcessedElements
         from honeybadgermpc.preprocessing import PreProcessingConstants as Constants
-        from honeybadgermpc.progs.mixins.base import MixinBase
 
         makedirs(Constants.SHARED_DATA_DIR.value, exist_ok=True)
         self.test_data_dir = f"{mkdtemp(dir=Constants.SHARED_DATA_DIR.value)}/"
@@ -99,7 +98,6 @@ class TestPreProcessing():
 
         PreProcessedElements.reset_cache()
         self.elements = PreProcessedElements(data_directory=self.test_data_dir)
-        MixinBase.pp_elements = self.elements
 
 
 @fixture(scope="session", autouse=True)
