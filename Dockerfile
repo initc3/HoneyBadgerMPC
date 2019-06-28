@@ -110,6 +110,10 @@ RUN ./configure CXXFLAGS="-g -O2 -fPIC -march=native -pthread -std=c++11"
 RUN make 
 RUN make install
 
+# Clone HPS - A C++11 High Performance Serialization Library.
+WORKDIR /
+RUN git clone https://github.com/jl2922/hps.git
+
 # Install better pairing
 # Creates dependencies in /usr/local/include/pbc and /usr/local/lib
 WORKDIR /

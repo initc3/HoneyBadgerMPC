@@ -1,7 +1,10 @@
 from pytest import mark
 from random import randint
 from honeybadgermpc.polynomial import get_omega
-from honeybadgermpc.ntl.helpers import lagrange_interpolate, fft_interpolate
+from honeybadgermpc.ntl import (
+    lagrange_interpolate,
+    fft_interpolate,
+)
 
 cache = {}
 

@@ -26,7 +26,6 @@ cdef extern from "ntlwrapper_impl.h":
         vec_ZZ_p& operator[](size_t)
         void kill()
 
-
     void ZZ_p_init "ZZ_p::init"(ZZ x) nogil
     void SetNTLNumThreads_c "SetNumThreads"(int n)
     void mat_ZZ_p_mul "mul"(mat_ZZ_p x, mat_ZZ_p a, mat_ZZ_p b)
