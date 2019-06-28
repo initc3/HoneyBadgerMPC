@@ -11,6 +11,8 @@ from honeybadgermpc.ntl import (
     partial_fft,
     fft_batch_evaluate,
 )
+from honeybadgermpc.ntl import py_matrix_to_ZZ_matrix, ZZ_matrix_to_py_matrix, ZZ_list_to_py_list, py_list_to_ZZ_list
+from honeybadgermpc.ntl import OpaqueZZpToPyInt, PyIntToOpaqueZZp, init
 import random
 
 
@@ -30,33 +32,33 @@ def test_interpolate(galois_field):
 def test_batch_vandermonde_interpolate(galois_field):
     # Given
     x = [1, 2]
-    y = [[1, 2], [3, 5]]
     p = galois_field.modulus
-
+    y = py_matrix_to_ZZ_matrix([[1, 2], [3, 5]], p)
+    
     # When
     polynomials = vandermonde_batch_interpolate(x, y, p)
 
     # Then
-    assert polynomials == [[0, 1], [1, 2]]
+    assert ZZ_matrix_to_py_matrix(polynomials) == [[0, 1], [1, 2]]
 
 
 def test_batch_vandermonde_evaluate(galois_field):
     # Given
     x = [1, 2]
-    polynomials = [[0, 1], [1, 2]]
     p = galois_field.modulus
+    polynomials = py_matrix_to_ZZ_matrix([[0, 1], [1, 2]], p)
 
     # When
     y = vandermonde_batch_evaluate(x, polynomials, p)
 
     # Then
-    assert y == [[1, 2], [3, 5]]
+    assert ZZ_matrix_to_py_matrix(y) == [[1, 2], [3, 5]]
 
 
 def test_fft():
     # Given
-    coeffs = [0, 1]
     p = 13
+    coeffs = py_list_to_ZZ_list([0,1], p)
     omega = 5
     n = 4
 
@@ -64,7 +66,7 @@ def test_fft():
     fft_rep = fft(coeffs, omega, p, n)
 
     # Then
-    assert fft_rep == [1, 5, 12, 8]
+    assert ZZ_list_to_py_list(fft_rep) == [1, 5, 12, 8]
 
 
 def test_fft_big(galois_field, galois_field_roots):
@@ -75,15 +77,16 @@ def test_fft_big(galois_field, galois_field_roots):
     n = 2 ** r
     omega = galois_field_roots[r]
     coeffs = [galois_field.random().value for _ in range(d)]
+    coeffs_ntl = py_list_to_ZZ_list(coeffs, p)
 
     # When
-    fft_rep = fft(coeffs, omega, p, n)
+    fft_rep = fft(coeffs_ntl, omega, p, n)
 
     # Then
     assert len(fft_rep) == n
     for i in range(n):
         x = pow(omega, i, p)
-        assert fft_rep[i] == sum(coeffs[j] * pow(x, j, p) for j in range(d)) % p
+        assert OpaqueZZpToPyInt(fft_rep[i]) == sum(coeffs[j] * pow(x, j, p) for j in range(d)) % p
 
 
 def test_fft_batch_evaluate_big(galois_field, galois_field_roots):
@@ -99,9 +102,9 @@ def test_fft_batch_evaluate_big(galois_field, galois_field_roots):
     coeffs = [
         [galois_field.random().value for _ in range(d)] for _ in range(batch_size)
     ]
-
+    coeffs_ntl = py_matrix_to_ZZ_matrix(coeffs, p)
     # When
-    fft_rep = fft_batch_evaluate(coeffs, omega, p, n, k)
+    fft_rep = fft_batch_evaluate(coeffs_ntl, omega, p, n, k)
 
     # Then
     assert len(fft_rep) == batch_size
@@ -110,7 +113,7 @@ def test_fft_batch_evaluate_big(galois_field, galois_field_roots):
         for j in range(k):
             x = pow(omega, j, p)
             assert (
-                fft_rep[i][j] == sum(coeffs[i][l] * pow(x, l, p) for l in range(d)) % p
+                OpaqueZZpToPyInt(fft_rep[i][j]) == sum(coeffs[i][l] * pow(x, l, p) for l in range(d)) % p
             )
 
 
@@ -122,16 +125,17 @@ def test_partial_fft_big(galois_field, galois_field_roots):
     n = 2 ** r
     omega = galois_field_roots[r]
     coeffs = [galois_field.random().value for _ in range(d)]
+    coeffs_ntl = py_list_to_ZZ_list(coeffs, p)
     k = 25
 
     # When
-    fft_rep = partial_fft(coeffs, omega, p, n, k)
+    fft_rep = partial_fft(coeffs_ntl, omega, p, n, k)
 
     # Then
     assert len(fft_rep) == k
     for i in range(k):
         x = pow(omega, i, p)
-        assert fft_rep[i] == sum(coeffs[j] * pow(x, j, p) for j in range(d)) % p
+        assert OpaqueZZpToPyInt(fft_rep[i]) == sum(coeffs[j] * pow(x, j, p) for j in range(d)) % p
 
 
 def test_fft_interpolate(galois_field, galois_field_roots):
@@ -145,13 +149,14 @@ def test_fft_interpolate(galois_field, galois_field_roots):
     # Polynomial = 2x + 1
     poly = [1, 2]
     ys = [sum(poly[i] * pow(x, i, p) for i in range(len(poly))) % p for x in xs]
+    ys_ntl = py_list_to_ZZ_list(ys, p)
     p = galois_field.modulus
 
     # When
-    interp_poly = fft_interpolate(zs, ys, omega, p, n)
+    interp_poly = fft_interpolate(zs, ys_ntl, omega, p, n)
 
     # Then
-    assert interp_poly == poly
+    assert ZZ_list_to_py_list(interp_poly) == poly
 
 
 def test_fft_batch_interpolate(galois_field, galois_field_roots):
@@ -168,13 +173,14 @@ def test_fft_batch_interpolate(galois_field, galois_field_roots):
         [sum(poly[i] * pow(x, i, p) for i in range(len(poly))) % p for x in xs]
         for poly in polys
     ]
+    ys_ntl = py_matrix_to_ZZ_matrix(ys, p)
     p = galois_field.modulus
 
     # When
-    interp_polys = fft_batch_interpolate(zs, ys, omega, p, n)
+    interp_polys = fft_batch_interpolate(zs, ys_ntl, omega, p, n)
 
     # Then
-    assert interp_polys == polys
+    assert ZZ_matrix_to_py_matrix(interp_polys) == polys
 
 
 def test_evaluate(galois_field, polynomial):
@@ -202,29 +208,29 @@ def test_gao_interpolate():
     encoded = [
         sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p for i in range(n)
     ]
-
+    encoded_ntl = py_list_to_ZZ_list(encoded, p)
     # Check decoding with no errors
-    decoded, _ = gao_interpolate(x, encoded, k, p)
-    assert decoded == int_msg
+    decoded, _ = gao_interpolate(x, encoded_ntl, k, p)
+    assert ZZ_list_to_py_list(decoded) == int_msg
 
     # Corrupt with maximum number of erasures:
     cmax = n - 2 * t - 1
     corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
-    coeffs, _ = gao_interpolate(x, corrupted, k, p)
-    assert coeffs == int_msg
+    coeffs, _ = gao_interpolate(x, py_list_to_ZZ_list(corrupted, p), k, p)
+    assert ZZ_list_to_py_list(coeffs) == int_msg
 
     # Corrupt with maximum number of errors:
     emax = (n - 2 * t - 1) // 2
     corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
-    coeffs, _ = gao_interpolate(x, corrupted, k, p)
-    assert coeffs == int_msg
+    coeffs, _ = gao_interpolate(x, py_list_to_ZZ_list(corrupted, p), k, p)
+    assert ZZ_list_to_py_list(coeffs) == int_msg
 
     # Corrupt with a mixture of errors and erasures
     e = emax // 2
     c = cmax // 4
     corrupted = corrupt(encoded, num_errors=e, num_nones=c)
-    coeffs, _ = gao_interpolate(x, corrupted, k, p)
-    assert coeffs == int_msg
+    coeffs, _ = gao_interpolate(x, py_list_to_ZZ_list(corrupted, p), k, p)
+    assert ZZ_list_to_py_list(coeffs) == int_msg
 
 
 def test_gao_interpolate_all_zeros():
@@ -240,27 +246,27 @@ def test_gao_interpolate_all_zeros():
     ]
 
     # Check decoding with no errors
-    decoded, _ = gao_interpolate(x, encoded, k, p)
-    assert decoded == int_msg
+    decoded, _ = gao_interpolate(x, py_list_to_ZZ_list(encoded, p), k, p)
+    assert ZZ_list_to_py_list(decoded) == int_msg
 
     # Corrupt with maximum number of erasures:
     cmax = n - 2 * t - 1
     corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
-    coeffs, _ = gao_interpolate(x, corrupted, k, p)
-    assert coeffs == int_msg
+    coeffs, _ = gao_interpolate(x, py_list_to_ZZ_list(corrupted, p), k, p)
+    assert ZZ_list_to_py_list(coeffs) == int_msg
 
     # Corrupt with maximum number of errors:
     emax = (n - 2 * t - 1) // 2
     corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
-    coeffs, _ = gao_interpolate(x, corrupted, k, p)
-    assert coeffs == int_msg
+    coeffs, _ = gao_interpolate(x, py_list_to_ZZ_list(corrupted, p), k, p)
+    assert ZZ_list_to_py_list(coeffs) == int_msg
 
     # Corrupt with a mixture of errors and erasures
     e = emax // 2
     c = cmax // 4
     corrupted = corrupt(encoded, num_errors=e, num_nones=c)
-    coeffs, _ = gao_interpolate(x, corrupted, k, p)
-    assert coeffs == int_msg
+    coeffs, _ = gao_interpolate(x, py_list_to_ZZ_list(corrupted, p), k, p)
+    assert ZZ_list_to_py_list(coeffs) == int_msg
 
 
 def test_gao_interpolate_fft(galois_field, galois_field_roots):
@@ -281,35 +287,35 @@ def test_gao_interpolate_fft(galois_field, galois_field_roots):
 
     # Check decoding with no errors
     decoded, _ = gao_interpolate(
-        x, encoded, k, p, z=z, omega=omega, order=order, use_omega_powers=True
+        x, py_list_to_ZZ_list(encoded, p), k, p, z=z, omega=omega, order=order, use_omega_powers=True
     )
     # decoded, _ = gao_interpolate(x, encoded, k, p)
-    assert decoded == int_msg
+    assert ZZ_list_to_py_list(decoded) == int_msg
 
     # Corrupt with maximum number of erasures:
     cmax = n - 2 * t - 1
     corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
     coeffs, _ = gao_interpolate(
-        x, corrupted, k, p, z=z, omega=omega, order=order, use_omega_powers=True
+        x, py_list_to_ZZ_list(corrupted, p), k, p, z=z, omega=omega, order=order, use_omega_powers=True
     )
-    assert coeffs == int_msg
+    assert ZZ_list_to_py_list(coeffs) == int_msg
 
     # Corrupt with maximum number of errors:
     emax = (n - 2 * t - 1) // 2
     corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
     coeffs, _ = gao_interpolate(
-        x, corrupted, k, p, z=z, omega=omega, order=order, use_omega_powers=True
+        x, py_list_to_ZZ_list(corrupted, p), k, p, z=z, omega=omega, order=order, use_omega_powers=True
     )
-    assert coeffs == int_msg
+    assert ZZ_list_to_py_list(coeffs) == int_msg
 
     # Corrupt with a mixture of errors and erasures
     e = emax // 2
     c = cmax // 4
     corrupted = corrupt(encoded, num_errors=e, num_nones=c)
     coeffs, _ = gao_interpolate(
-        x, corrupted, k, p, z=z, omega=omega, order=order, use_omega_powers=True
+        x, py_list_to_ZZ_list(corrupted, p), k, p, z=z, omega=omega, order=order, use_omega_powers=True
     )
-    assert coeffs == int_msg
+    assert ZZ_list_to_py_list(coeffs) == int_msg
 
 
 def corrupt(message, num_errors, num_nones, min_val=0, max_val=131):
