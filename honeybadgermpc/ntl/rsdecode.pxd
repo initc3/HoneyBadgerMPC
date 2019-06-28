@@ -31,6 +31,7 @@ cdef extern from "rsdecode_impl.h":
                                                           ZZ_p omega,
                                                           int k, int n, int order)
     
+<<<<<<< HEAD
     ctypedef string OpaqueZZp
 
     cdef void mat_mul_serialize "mat_mul_serialize"(vector[vector[OpaqueZZp]] x,  mat_ZZ_p a, mat_ZZ_p b) 
@@ -40,3 +41,16 @@ cdef extern from "rsdecode_impl.h":
     cdef void vec_ZZ_pToVecOpaqueZZp(vector[OpaqueZZp] &VecLimbs, vec_ZZ_p &row)
     cdef void VecOpaqueZZpToVec_ZZ_p(vec_ZZ_p &veczzp, vector[OpaqueZZp] &serializedRow)
     cdef void mat_ZZ_pToVecVecOpaqueZZp(vector[vector[OpaqueZZp]] &vecveclimbs, mat_ZZ_p &a)
+=======
+    ctypedef vector[ZZ_limb_t] ZZ_limbs
+
+    cdef void mat_mul_serialize "mat_mul_serialize"(vector[vector[ZZ_limbs]] x,  mat_ZZ_p a, mat_ZZ_p b) 
+
+    cdef ZZ_limbs ZZ_pToLimbs(ZZ_p x)
+    cdef ZZ_p LimbsToZZ_p(ZZ_limbs r)
+    cdef vector[ZZ_limbs] vec_ZZ_pToVecLimbs(vec_ZZ_p row)
+    cdef vec_ZZ_p VecLimbsToVec_ZZ_p(vector[ZZ_limbs] serializedRow)
+    cdef vector[vector[ZZ_limbs]] mat_ZZ_pToVecVecLimbs(mat_ZZ_p a)
+    cdef mat_ZZ_p VecVecLimbsToMat_ZZ_p(vector[vector[ZZ_limbs]] serializedRows)
+    cdef mat_ZZ_p mat_ZZ_pTranspose(mat_ZZ_p x)
+>>>>>>> f717a33... Encode/Decode On Limbs instead of PyInts
