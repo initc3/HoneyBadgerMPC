@@ -1,4 +1,4 @@
-from .ntlwrapper cimport ZZ, mat_ZZ_p, vec_ZZ_p, ZZ_p, ZZ_pX_c
+from .ntlwrapper cimport ZZ, mat_ZZ_p, vec_ZZ_p, ZZ_p, ZZ_pX_c, ZZ_limb_t
 from libcpp.vector cimport vector
 from libcpp cimport bool
 
@@ -30,3 +30,15 @@ cdef extern from "rsdecode_impl.h":
                                                           vec_ZZ_p y_vec,
                                                           ZZ_p omega,
                                                           int k, int n, int order)
+    
+    ctypedef vector[ZZ_limb_t] ZZ_limbs
+
+    cdef void mat_mul_serialize "mat_mul_serialize"(vector[vector[ZZ_limbs]] x,  mat_ZZ_p a, mat_ZZ_p b) 
+
+    cdef ZZ_limbs ZZ_pToLimbs(ZZ_p x)
+    cdef ZZ_p LimbsToZZ_p(ZZ_limbs r)
+    cdef vector[ZZ_limbs] vec_ZZ_pToVecLimbs(vec_ZZ_p row)
+    cdef vec_ZZ_p VecLimbsToVec_ZZ_p(vector[ZZ_limbs] serializedRow)
+    cdef vector[vector[ZZ_limbs]] mat_ZZ_pToVecVecLimbs(mat_ZZ_p a)
+    cdef mat_ZZ_p VecVecLimbsToMat_ZZ_p(vector[vector[ZZ_limbs]] serializedRows)
+    cdef mat_ZZ_p mat_ZZ_pTranspose(mat_ZZ_p x)

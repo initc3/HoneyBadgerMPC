@@ -8,7 +8,10 @@ from .ntlwrapper cimport mat_ZZ_p_mul, ZZ_p_init, SqrRootMod
 from .ntlwrapper cimport ZZFromBytes, bytesFromZZ, to_ZZ_p, to_ZZ, ZZNumBytes
 from .ntlwrapper cimport SetNTLNumThreads_c, AvailableThreads
 from .ntlwrapper cimport ZZ_pX_get_coeff, ZZ_pX_set_coeff, ZZ_pX_eval
+from .rsdecode cimport ZZ_limbs
 from .rsdecode cimport interpolate_c, vandermonde_inverse_c, set_vm_matrix_c, fft_c, fft_partial_c, fnt_decode_step1_c, fnt_decode_step2_c, gao_interpolate_c, gao_interpolate_fft_c
+from .rsdecode cimport mat_mul_serialize
+from .rsdecode cimport ZZ_pToLimbs, LimbsToZZ_p, vec_ZZ_pToVecLimbs, VecLimbsToVec_ZZ_p, mat_ZZ_pToVecVecLimbs, VecVecLimbsToMat_ZZ_p, mat_ZZ_pTranspose
 from .ccobject cimport ccrepr, ccreadstr
 from cpython.int cimport PyInt_AS_LONG
 from cython.parallel import parallel, prange
@@ -30,6 +33,18 @@ cdef ZZToInt(ZZ X):
 
 cdef ZZ_p intToZZp(x):
     return to_ZZ_p(intToZZ(x))
+
+cpdef intToZZptoInt(c):
+    return ZZpToInt(intToZZp(c))
+
+cpdef PyIntToZZpLimbs(x):
+    return ZZ_pToLimbs(intToZZp(x))
+
+cpdef init(modulus):
+    ZZ_p_init(py_obj_to_ZZ(modulus))
+
+cpdef LimbsToPyInt(x):
+    return ZZpToInt(LimbsToZZ_p(x))
 
 cdef ZZpToInt(ZZ_p X):
     return ZZToInt(to_ZZ(X))
@@ -69,6 +84,15 @@ cdef vec_ZZ_p py_list_to_vec_ZZ_p(object v):
 
 cdef str ZZ_to_str(ZZ x):
     return ccrepr(x)
+
+cpdef py_matrix_to_ZZ_matrix(x, modulus):
+    cdef ZZ zz_modulus = py_obj_to_ZZ(modulus)
+    ZZ_p_init(zz_modulus)
+    x_matrix = [list(map(PyIntToZZpLimbs, row)) for row in x]    
+    return x_matrix
+
+cpdef ZZ_matrix_to_py_matrix(x):
+    return [[LimbsToPyInt(c) for c in row] for row in x]
 
 cpdef lagrange_interpolate(x, y, modulus):
     """Interpolate polynomial P s.t. P(x[i]) = y[i]
@@ -176,34 +200,23 @@ cpdef vandermonde_batch_interpolate(x, data_list, modulus):
     for i in range(n_chunks):
         l = len(data_list[i])
         for j in range(l):
-            m[j][i] = intToZZp(data_list[i][j])
+            m[j][i] = LimbsToZZ_p(data_list[i][j])
         for j in range(l, k):
             m[j][i] = intToZZp(0)
-    cdef mat_ZZ_p reconstructions
-    mat_ZZ_p_mul(reconstructions, r, m)
-
-    polynomials = [[None] * k for _ in range(n_chunks)]
-
-    for i in range(n_chunks):
-        for j in range(k):
-            polynomials[i][j] = 0
-
-    for i in range(n_chunks):
-        for j in range(k):
-            polynomials[i][j] = ZZpToInt(reconstructions[j][i])
-    reconstructions.kill()
+            
+    cdef vector[vector[ZZ_limbs]] res_vectors
+    mat_mul_serialize(res_vectors, r, m)
     m.kill()
     r.kill()
-    return polynomials
+    return res_vectors
 
 cpdef vandermonde_batch_evaluate(x, polynomials, modulus):
     """Evaluate polynomials at given points x using vandermonde matrices
-
     :param x: evaluation points
     :type x: list of integers
     :param polynomials: polynomial coefficients. polynomials[i] = coefficients of the
         i'th polynomial
-    :type x: list of list of integers
+    :type polynomials: list of list of integers
     :param modulus: field modulus
     :type modulus: integer
     :return:
@@ -228,20 +241,28 @@ cpdef vandermonde_batch_evaluate(x, polynomials, modulus):
     for i in range(k):
         l = len(polynomials[i])
         for j in range(l):
-            poly_matrix[j][i] = intToZZp(polynomials[i][j])
+            poly_matrix[j][i] = LimbsToZZ_p(polynomials[i][j])
         for j in range(l, d):
             poly_matrix[j][i] = intToZZp(0)
-
+    
     # Finally multiply matrices. This gives evaluation of polynomials at
     # all points chosen
-    mat_ZZ_p_mul(res_matrix, vm_matrix, poly_matrix)
+    #mat_ZZ_p_mul(res_matrix, vm_matrix, poly_matrix)
 
     # Convert back to python friendly formats
-    result = [[None] * n for _ in range(k)]
-    for i in range(n):
-        for j in range(k):
-            result[j][i] = ZZpToInt(res_matrix[i][j])
-    return result
+    #result = [[None] * n for _ in range(k)]
+    #for i in range(n):
+    #    for j in range(k):
+    #        result[j][i] = ZZpToInt(res_matrix[i][j])
+
+    cdef vector[vector[ZZ_limbs]] res_vectors
+    mat_mul_serialize(res_vectors, vm_matrix, poly_matrix)
+
+    # result = []
+    # for i in range(k):
+    #    result+=[res_vectors[i]]
+
+    return res_vectors
 
 cpdef fft(coeffs, omega, modulus, int n):
     cdef int i, d;
@@ -250,16 +271,12 @@ cpdef fft(coeffs, omega, modulus, int n):
     ZZ_p_init(intToZZ(modulus))
 
     d = len(coeffs)
-    coeffs_vec.SetLength(d)
-    for i in range(d):
-        coeffs_vec[i] = intToZZp(coeffs[i])
+    coeffs_vec = VecLimbsToVec_ZZ_p(coeffs)
 
     cdef ZZ_p zz_omega = intToZZp(omega)
     fft_c(result_vec, coeffs_vec, zz_omega, n)
 
-    result = [None] * n
-    for i in range(n):
-        result[i] = ZZpToInt(result_vec[i])
+    result = vec_ZZ_pToVecLimbs(result_vec)
 
     return result
 
@@ -296,22 +313,17 @@ cpdef fft_batch_evaluate(coeffs, omega, modulus, int n, int k):
 
     coeffs_vec_list.resize(batch_size)
     result_vec_list.resize(batch_size)
-
     for i in range(batch_size):
-        coeffs_vec_list[i].SetLength(d)
-        for j in range(d):
-            coeffs_vec_list[i][j] = intToZZp(coeffs[i][j])
-
+        coeffs_vec_list[i] = VecLimbsToVec_ZZ_p(coeffs[i])
+        
+    
     cdef ZZ_p zz_omega = intToZZp(omega)
     with nogil, parallel():
         ZZ_p_init(zz_modulus)
         for i in prange(batch_size):
             fft_partial_c(result_vec_list[i], coeffs_vec_list[i], zz_omega, n, k)
 
-    result = [[None] * k for _ in range(batch_size)]
-    for i in range(batch_size):
-        for j in range(k):
-            result[i][j] = ZZpToInt(result_vec_list[i][j])
+    result = [vec_ZZ_pToVecLimbs(result_vec_list[i]) for i in range(batch_size)]
 
     return result
 
@@ -362,9 +374,7 @@ def fft_batch_interpolate(zs, ys_list, omega, modulus, int n):
     result_vec_list.resize(n_chunks)
 
     for i in range(n_chunks):
-        y_vec_list[i].SetLength(k)
-        for j in range(k):
-            y_vec_list[i][j] = intToZZp(ys_list[i][j])
+        y_vec_list[i] = VecLimbsToVec_ZZ_p(ys_list[i])
 
     with nogil, parallel():
 
@@ -372,11 +382,8 @@ def fft_batch_interpolate(zs, ys_list, omega, modulus, int n):
         for i in prange(n_chunks):
             fnt_decode_step2_c(result_vec_list[i], A, Ad_evals_vec, z_vec, y_vec_list[i],
                                zz_omega, n)
-
-    result = [[None] * k for _ in range(n_chunks)]
-    for i in range(n_chunks):
-        for j in range(k):
-            result[i][j] = ZZpToInt(result_vec_list[i][j])
+    result = [vec_ZZ_pToVecLimbs(result_vec_list[i]) for i in range(n_chunks)]
+    
 
     return result
 
@@ -408,7 +415,7 @@ cpdef gao_interpolate(x, y, int k, modulus, z=None, omega=None, order=None,
 
     for i in range(n):
         x_vec[i] = intToZZp(x[i])
-        y_vec[i] = intToZZp(y[i])
+    y_vec = VecLimbsToVec_ZZ_p(y)
 
     if use_omega_powers is True:
         assert z is not None
@@ -434,7 +441,7 @@ cpdef gao_interpolate(x, y, int k, modulus, z=None, omega=None, order=None,
             result[i] = int(ccrepr(res_vec[i]))
         for i in range(err_vec.length()):
             error_poly[i] = int(ccrepr(err_vec[i]))
-        return result, error_poly
+        return vec_ZZ_pToVecLimbs(res_vec), vec_ZZ_pToVecLimbs(err_vec)
 
     return None, None
 
@@ -453,3 +460,4 @@ cpdef SetNumThreads(int n):
 
 cpdef GetMaxThreads():
     return openmp.omp_get_max_threads()
+    
