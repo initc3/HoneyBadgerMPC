@@ -1,7 +1,7 @@
 from pytest import mark
 from random import randint
 from honeybadgermpc.polynomial import get_omega
-from honeybadgermpc.ntl.helpers import (
+from honeybadgermpc.ntl import (
     lagrange_interpolate,
     fft_interpolate,
 )

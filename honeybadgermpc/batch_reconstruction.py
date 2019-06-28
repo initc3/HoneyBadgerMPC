@@ -8,8 +8,12 @@ from .reed_solomon import Algorithm, EncoderFactory, DecoderFactory, RobustDecod
 from .reed_solomon import IncrementalDecoder
 import random
 from honeybadgermpc.utils.misc import (
-    chunk_data, flatten_lists, transpose_lists, subscribe_recv)
-
+    chunk_data,
+    flatten_lists,
+    transpose_lists,
+    subscribe_recv,
+)
+from honeybadgermpc.ntl import py_matrix_to_ZZ_matrix, ZZ_matrix_to_py_matrix
 
 async def fetch_one(awaitables):
     """ Given a list of awaitables, run them concurrently and
@@ -87,7 +91,7 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
       up to one of each for each party
 
     Reconstruction takes places in chunks of t+1 values
-    """
+    """    
     bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),
                                          {"node_id": myid})
 
@@ -129,7 +133,7 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
 
     # Step 1: Compute the polynomial P1, then send the elements
     start_time = time.time()
-
+    round1_chunks = py_matrix_to_ZZ_matrix(round1_chunks, point.field.modulus)
     encoded = enc.encode(round1_chunks)
     to_send = transpose_lists(encoded)
     for dest, message in enumerate(to_send):
@@ -142,7 +146,7 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     start_time = time.time()
     try:
         recons_r2 = await incremental_decode(data_r1, enc, dec, robust_dec,
-                                             num_chunks, t, degree, n)
+                                             num_chunks, t, degree, n)                                             
     except asyncio.CancelledError:
         # Cancel all created tasks
         for task in [task_r1, task_r2, subscribe_task, *data_r1, *data_r2]:
@@ -169,8 +173,10 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     # Step 4: Attempt to reconstruct R2
     start_time = time.time()
     try:
-        recons_p = await incremental_decode(data_r2, enc, dec, robust_dec,
-                                            num_chunks, t, degree, n)
+        recons_p = await incremental_decode(
+            data_r2, enc, dec, robust_dec, num_chunks, t, degree, n
+        )
+        recons_p = ZZ_matrix_to_py_matrix(recons_p)
     except asyncio.CancelledError:
         # Cancel all created tasks
         for task in [task_r1, task_r2, subscribe_task, *data_r1, *data_r2]:
