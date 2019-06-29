@@ -4,14 +4,25 @@ hbMPC tutorial 1. Running sample MPC programs in the testing simulator
 import asyncio
 from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.progs.mixins.dataflow import (
-    Share, ShareArray, ShareFuture, GFElementFuture)
+    Share,
+    ShareArray,
+    ShareFuture,
+    GFElementFuture,
+)
 from honeybadgermpc.preprocessing import (
-    PreProcessedElements as FakePreProcessedElements)
+    PreProcessedElements as FakePreProcessedElements,
+)
 from honeybadgermpc.utils.typecheck import TypeCheck
 from honeybadgermpc.progs.mixins.share_arithmetic import (
-    MixinConstants, BeaverMultiply, BeaverMultiplyArrays)
-config = {MixinConstants.MultiplyShareArray: BeaverMultiplyArrays(),
-          MixinConstants.MultiplyShare: BeaverMultiply(), }
+    MixinConstants,
+    BeaverMultiply,
+    BeaverMultiplyArrays,
+)
+
+config = {
+    MixinConstants.MultiplyShareArray: BeaverMultiplyArrays(),
+    MixinConstants.MultiplyShare: BeaverMultiply(),
+}
 
 
 @TypeCheck()
@@ -84,7 +95,7 @@ async def prog(ctx):
     Y = await y.open()
     XY = await xy.open()
     assert XY == X * Y
-    print(f'[{ctx.myid}] Beaver Multiplication OK')
+    print(f"[{ctx.myid}] Beaver Multiplication OK")
     # print(f'x:{y} y:{x}: xy:{xy}')
     # print(f'x.open(): {X} y.open(): {Y} xy.open(): {XY}')
 
@@ -97,7 +108,7 @@ async def prog(ctx):
     res = dot_product(ctx, (a, b), (c, d))
     res_ = await res.open()
     assert res_ == res
-    print(f'[{ctx.myid}] Dot Product OK')
+    print(f"[{ctx.myid}] Dot Product OK")
 
     # Randomly permute (x,y) or (y,x)
     o1, o2 = await random_permute_pair(ctx, x, y)
@@ -106,7 +117,7 @@ async def prog(ctx):
     O2 = await o2.open()
     # print(f'O1:{O1} O2:{O2}')
     assert O1 in (X, Y) and O2 in (X, Y)
-    print(f'[{ctx.myid}] Permute Pair OK')
+    print(f"[{ctx.myid}] Permute Pair OK")
 
 
 async def tutorial_1():
@@ -130,6 +141,6 @@ def main():
     # loop.run_until_complete(tutorial_2())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
     print("Tutorial 1 ran successfully")

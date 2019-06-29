@@ -2,14 +2,17 @@ import asyncio
 import logging
 from math import log
 from honeybadgermpc.preprocessing import (
-    PreProcessedElements, wait_for_preprocessing, preprocessing_done)
+    PreProcessedElements,
+    wait_for_preprocessing,
+    preprocessing_done,
+)
 from time import time
 
 
 async def batch_switch(ctx, xs, ys, n):
     pp_elements = PreProcessedElements()
-    sbits = [pp_elements.get_one_minus_one_rand(ctx).v for _ in range(n//2)]
-    ns = [1 / ctx.field(2) for _ in range(n//2)]
+    sbits = [pp_elements.get_one_minus_one_rand(ctx).v for _ in range(n // 2)]
+    ns = [1 / ctx.field(2) for _ in range(n // 2)]
 
     assert len(xs) == len(ys) == len(sbits) == n // 2
     xs, ys, sbits = list(map(ctx.ShareArray, [xs, ys, sbits]))
@@ -25,9 +28,10 @@ async def iterated_butterfly_network(ctx, inputs, k):
     # each of which has log k elements. The total number of switches is
     # k (log k)^2
     assert k == len(inputs)
-    assert k & (k-1) == 0, "Size of input must be a power of 2"
+    assert k & (k - 1) == 0, "Size of input must be a power of 2"
     bench_logger = logging.LoggerAdapter(
-        logging.getLogger("benchmark_logger"), {"node_id": ctx.myid})
+        logging.getLogger("benchmark_logger"), {"node_id": ctx.myid}
+    )
     iteration = 0
     num_iterations = int(log(k, 2))
     for _ in range(num_iterations):
@@ -54,7 +58,7 @@ async def iterated_butterfly_network(ctx, inputs, k):
 
 
 async def butterfly_network_helper(ctx, **kwargs):
-    k = kwargs['k']
+    k = kwargs["k"]
     pp_elements = PreProcessedElements()
     inputs = [pp_elements.get_rand(ctx).v for _ in range(k)]
     logging.info(f"[{ctx.myid}] Running permutation network.")
@@ -70,11 +74,13 @@ async def butterfly_network_helper(ctx, **kwargs):
 async def _run(peers, n, t, my_id):
     from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.progs.mixins.share_arithmetic import (
-        MixinConstants, BeaverMultiplyArrays)
+        MixinConstants,
+        BeaverMultiplyArrays,
+    )
 
     mpc_config = {MixinConstants.MultiplyShareArray: BeaverMultiplyArrays()}
     async with ProcessProgramRunner(peers, n, t, my_id, mpc_config) as runner:
-        runner.execute('0', butterfly_network_helper, k=k)
+        runner.execute("0", butterfly_network_helper, k=k)
 
 
 if __name__ == "__main__":
@@ -91,15 +97,18 @@ if __name__ == "__main__":
                 NUM_SWITCHES = k * int(log(k, 2)) ** 2
                 pp_elements = PreProcessedElements()
                 pp_elements.generate_one_minus_one_rands(
-                    NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t)
+                    NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t
+                )
                 pp_elements.generate_triples(
-                    2 * NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t)
+                    2 * NUM_SWITCHES, HbmpcConfig.N, HbmpcConfig.t
+                )
                 pp_elements.generate_rands(k, HbmpcConfig.N, HbmpcConfig.t)
                 preprocessing_done()
             else:
                 loop.run_until_complete(wait_for_preprocessing())
 
         loop.run_until_complete(
-            _run(HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))
+            _run(HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id)
+        )
     finally:
         loop.close()

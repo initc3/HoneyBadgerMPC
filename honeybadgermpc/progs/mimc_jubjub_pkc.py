@@ -7,8 +7,9 @@ from honeybadgermpc.progs.mimc import mimc_mpc, mimc_plain
 
 # TODO: Move into jubjub class
 # GP: The generator of Jubjub curve, hardcode here
-GP = Point(5,
-           6846412461894745224441235558443359243034138132682534265960483512729196124138)
+GP = Point(
+    5, 6846412461894745224441235558443359243034138132682534265960483512729196124138
+)
 
 
 async def key_generation(context, key_length=32):
@@ -72,8 +73,9 @@ async def mimc_decrypt(context, priv_key, ciphertext):
     # secret share of the secret key k, [k] <- [x]A).x
     k_share = (await share_mul(context, priv_key, a_)).xs
 
-    mpcs = await asyncio.gather(*[mimc_mpc(context, context.field(i), k_share)
-                                  for i in range(len(cs))])
+    mpcs = await asyncio.gather(
+        *[mimc_mpc(context, context.field(i), k_share) for i in range(len(cs))]
+    )
     decrypted = [c - m for (c, m) in zip(cs, mpcs)]
 
     return decrypted

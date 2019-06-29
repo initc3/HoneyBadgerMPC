@@ -1,7 +1,16 @@
-from honeybadgermpc.ntl import lagrange_interpolate, \
-    vandermonde_batch_interpolate, vandermonde_batch_evaluate, \
-    fft, fft_interpolate, fft_batch_interpolate, \
-    gao_interpolate, evaluate, sqrt_mod, partial_fft, fft_batch_evaluate
+from honeybadgermpc.ntl import (
+    lagrange_interpolate,
+    vandermonde_batch_interpolate,
+    vandermonde_batch_evaluate,
+    fft,
+    fft_interpolate,
+    fft_batch_interpolate,
+    gao_interpolate,
+    evaluate,
+    sqrt_mod,
+    partial_fft,
+    fft_batch_evaluate,
+)
 import random
 
 
@@ -87,8 +96,9 @@ def test_fft_batch_evaluate_big(galois_field, galois_field_roots):
     n = 2 ** r
     batch_size = 64
     omega = galois_field_roots[r]
-    coeffs = [[galois_field.random().value for _ in range(d)]
-              for _ in range(batch_size)]
+    coeffs = [
+        [galois_field.random().value for _ in range(d)] for _ in range(batch_size)
+    ]
 
     # When
     fft_rep = fft_batch_evaluate(coeffs, omega, p, n, k)
@@ -99,8 +109,9 @@ def test_fft_batch_evaluate_big(galois_field, galois_field_roots):
         assert len(fft_rep[i]) == k
         for j in range(k):
             x = pow(omega, j, p)
-            assert fft_rep[i][j] == sum(coeffs[i][l] * pow(x, l, p)
-                                        for l in range(d)) % p
+            assert (
+                fft_rep[i][j] == sum(coeffs[i][l] * pow(x, l, p) for l in range(d)) % p
+            )
 
 
 def test_partial_fft_big(galois_field, galois_field_roots):
@@ -133,8 +144,7 @@ def test_fft_interpolate(galois_field, galois_field_roots):
     xs = [pow(omega, z, p) for z in zs]
     # Polynomial = 2x + 1
     poly = [1, 2]
-    ys = [sum(poly[i] * pow(x, i, p) for i in range(len(poly))) % p
-          for x in xs]
+    ys = [sum(poly[i] * pow(x, i, p) for i in range(len(poly))) % p for x in xs]
     p = galois_field.modulus
 
     # When
@@ -153,11 +163,11 @@ def test_fft_batch_interpolate(galois_field, galois_field_roots):
     zs = [3, 0, 5]
     xs = [pow(omega, z, p) for z in zs]
     # Polynomials = 2x + 1, x^2 + 2x + 3, 2x^2 + 4x + 3
-    polys = [[1, 2, 0],
-             [3, 2, 1],
-             [3, 4, 2]]
-    ys = [[sum(poly[i] * pow(x, i, p) for i in range(len(poly))) % p
-           for x in xs] for poly in polys]
+    polys = [[1, 2, 0], [3, 2, 1], [3, 4, 2]]
+    ys = [
+        [sum(poly[i] * pow(x, i, p) for i in range(len(poly))) % p for x in xs]
+        for poly in polys
+    ]
     p = galois_field.modulus
 
     # When
@@ -189,12 +199,13 @@ def test_gao_interpolate():
     t = k - 1  # degree of polynomial
 
     x = list(range(n))
-    encoded = [sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p
-               for i in range(n)]
+    encoded = [
+        sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p for i in range(n)
+    ]
 
     # Check decoding with no errors
     decoded, _ = gao_interpolate(x, encoded, k, p)
-    assert (decoded == int_msg)
+    assert decoded == int_msg
 
     # Corrupt with maximum number of erasures:
     cmax = n - 2 * t - 1
@@ -224,12 +235,13 @@ def test_gao_interpolate_all_zeros():
     t = k - 1  # degree of polynomial
 
     x = list(range(n))
-    encoded = [sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p
-               for i in range(n)]
+    encoded = [
+        sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p for i in range(n)
+    ]
 
     # Check decoding with no errors
     decoded, _ = gao_interpolate(x, encoded, k, p)
-    assert (decoded == int_msg)
+    assert decoded == int_msg
 
     # Corrupt with maximum number of erasures:
     cmax = n - 2 * t - 1
@@ -263,35 +275,40 @@ def test_gao_interpolate_fft(galois_field, galois_field_roots):
 
     z = list(range(n))
     x = [pow(omega, zi, p) for zi in z]
-    encoded = [sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p
-               for i in range(n)]
+    encoded = [
+        sum(int_msg[j] * pow(x[i], j, p) for j in range(k)) % p for i in range(n)
+    ]
 
     # Check decoding with no errors
-    decoded, _ = gao_interpolate(x, encoded, k, p, z=z, omega=omega, order=order,
-                                 use_omega_powers=True)
+    decoded, _ = gao_interpolate(
+        x, encoded, k, p, z=z, omega=omega, order=order, use_omega_powers=True
+    )
     # decoded, _ = gao_interpolate(x, encoded, k, p)
-    assert (decoded == int_msg)
+    assert decoded == int_msg
 
     # Corrupt with maximum number of erasures:
     cmax = n - 2 * t - 1
     corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
-    coeffs, _ = gao_interpolate(x, corrupted, k, p, z=z, omega=omega, order=order,
-                                use_omega_powers=True)
+    coeffs, _ = gao_interpolate(
+        x, corrupted, k, p, z=z, omega=omega, order=order, use_omega_powers=True
+    )
     assert coeffs == int_msg
 
     # Corrupt with maximum number of errors:
     emax = (n - 2 * t - 1) // 2
     corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
-    coeffs, _ = gao_interpolate(x, corrupted, k, p, z=z, omega=omega, order=order,
-                                use_omega_powers=True)
+    coeffs, _ = gao_interpolate(
+        x, corrupted, k, p, z=z, omega=omega, order=order, use_omega_powers=True
+    )
     assert coeffs == int_msg
 
     # Corrupt with a mixture of errors and erasures
     e = emax // 2
     c = cmax // 4
     corrupted = corrupt(encoded, num_errors=e, num_nones=c)
-    coeffs, _ = gao_interpolate(x, corrupted, k, p, z=z, omega=omega, order=order,
-                                use_omega_powers=True)
+    coeffs, _ = gao_interpolate(
+        x, corrupted, k, p, z=z, omega=omega, order=order, use_omega_powers=True
+    )
     assert coeffs == int_msg
 
 
@@ -300,8 +317,7 @@ def corrupt(message, num_errors, num_nones, min_val=0, max_val=131):
     Inserts random corrupted values
     """
     message = list.copy(message)
-    assert (len(message) >= num_errors +
-            num_nones), "too much errors and none elements!"
+    assert len(message) >= num_errors + num_nones, "too much errors and none elements!"
     indices = random.sample(list(range(len(message))), num_errors + num_nones)
     for i in range(0, num_errors):
         message[indices[i]] = random.randint(min_val, max_val)

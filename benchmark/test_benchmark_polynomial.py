@@ -1,10 +1,7 @@
 from pytest import mark
 from random import randint
 from honeybadgermpc.polynomial import get_omega
-from honeybadgermpc.ntl.helpers import (
-    lagrange_interpolate,
-    fft_interpolate,
-)
+from honeybadgermpc.ntl.helpers import lagrange_interpolate, fft_interpolate
 
 cache = {}
 
@@ -21,9 +18,7 @@ def get_points(n, galois_field):
 
 
 @mark.parametrize("n", [2 ** i for i in range(4, 11, 2)])
-def test_benchmark_lagrange_interpolate_python(
-    benchmark, n, galois_field, polynomial
-):
+def test_benchmark_lagrange_interpolate_python(benchmark, n, galois_field, polynomial):
     _, _, points, _ = get_points(n, galois_field)
     benchmark(polynomial.interpolate, points)
 
@@ -36,17 +31,13 @@ def test_benchmark_lagrange_interpolate_cpp(benchmark, n, galois_field):
 
 
 @mark.parametrize("n", [2 ** i for i in range(4, 21, 4)])
-def test_benchmark_fft_interpolate_python(
-    benchmark, n, galois_field, polynomial
-):
+def test_benchmark_fft_interpolate_python(benchmark, n, galois_field, polynomial):
     _, y, _, omega = get_points(n, galois_field)
     benchmark(polynomial.interpolate_fft, y, omega)
 
 
 @mark.parametrize("n", [2 ** i for i in range(4, 21, 4)])
-def test_benchmark_fft_interpolate_cpp(
-    benchmark, n, galois_field, polynomial
-):
+def test_benchmark_fft_interpolate_cpp(benchmark, n, galois_field, polynomial):
     _, y, _, omega = get_points(n, galois_field)
     n = len(y)
     omega = omega.value

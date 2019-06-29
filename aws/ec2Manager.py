@@ -12,11 +12,12 @@ class EC2Manager:
     def __init__(self):
         self.ec2Resources = {
             region: boto3.resource(
-                'ec2',
+                "ec2",
                 aws_access_key_id=AwsConfig.ACCESS_KEY_ID,
                 aws_secret_access_key=AwsConfig.SECRET_ACCESS_KEY,
-                region_name=region
-            ) for region in AwsConfig.REGION.keys()
+                region_name=region,
+            )
+            for region in AwsConfig.REGION.keys()
         }
         self.screenLock = Semaphore(value=1)
         self.instanceIdRegion = {}
@@ -55,16 +56,11 @@ class EC2Manager:
                     InstanceType=AwsConfig.INSTANCE_TYPE,
                     TagSpecifications=[
                         {
-                            'ResourceType': 'instance',
-                            'Tags': [
-                                {
-                                    'Key': 'Name',
-                                    'Value': AwsConfig.VM_NAME
-                                },
-                            ]
-                        },
+                            "ResourceType": "instance",
+                            "Tags": [{"Key": "Name", "Value": AwsConfig.VM_NAME}],
+                        }
                     ],
-                    UserData=self.get_setup_commands()
+                    UserData=self.get_setup_commands(),
                 )
 
                 region_instance_ids = []
@@ -81,14 +77,12 @@ class EC2Manager:
                     ec2_resource.Instance(id=instance_id).wait_until_running()
 
                 ec2_client = boto3.client(
-                    'ec2',
+                    "ec2",
                     aws_access_key_id=AwsConfig.ACCESS_KEY_ID,
                     aws_secret_access_key=AwsConfig.SECRET_ACCESS_KEY,
-                    region_name=region
+                    region_name=region,
                 )
-                ec2_client.get_waiter('instance_status_ok').wait(
-                    InstanceIds=ids
-                )
+                ec2_client.get_waiter("instance_status_ok").wait(InstanceIds=ids)
 
             with open(EC2Manager.current_vms_file_name, "w") as file_handle:
                 file_handle.write(",".join(all_instance_ids))
@@ -110,11 +104,7 @@ class EC2Manager:
         return ec2_resource.Instance(id=instance_id).public_ip_address
 
     def execute_command_on_instance(
-        self,
-        instance_id,
-        commands,
-        verbose=False,
-        output_file_prefix=None
+        self, instance_id, commands, verbose=False, output_file_prefix=None
     ):
 
         region_config = AwsConfig.REGION[self.instanceIdRegion[instance_id]]
@@ -125,15 +115,14 @@ class EC2Manager:
 
         try:
             ssh_client.connect(
-                    hostname=ip,
-                    username=AwsConfig.INSTANCE_USER_NAME,
-                    pkey=key)
+                hostname=ip, username=AwsConfig.INSTANCE_USER_NAME, pkey=key
+            )
             for command in commands:
                 _, stdout, stderr = ssh_client.exec_command(command)
                 self.screenLock.acquire()
                 output = stdout.read()
                 if len(output) != 0:
-                    output = output.decode('utf-8')
+                    output = output.decode("utf-8")
                     if verbose:
                         print()
                         print(
@@ -143,19 +132,17 @@ class EC2Manager:
                         print("#" * 30)
                     if output_file_prefix:
                         with open(
-                                    f"{output_file_prefix}_" +
-                                    f"{self.instanceIdToNodeIdMap[instance_id]}.log",
-                                    "w"
-                                ) as output_file:
+                            f"{output_file_prefix}_"
+                            + f"{self.instanceIdToNodeIdMap[instance_id]}.log",
+                            "w",
+                        ) as output_file:
                             output_file.write(output)
 
                 err = stderr.read()
                 if len(err) != 0:
                     print()
-                    print(
-                            f"{'#'*10} ERROR FROM {ip} | Command: {command} {'#'*10}"
-                        )
-                    print(err.decode('utf-8'))
+                    print(f"{'#'*10} ERROR FROM {ip} | Command: {command} {'#'*10}")
+                    print(err.decode("utf-8"))
                     print("~" * 30)
                 self.screenLock.release()
             ssh_client.close()

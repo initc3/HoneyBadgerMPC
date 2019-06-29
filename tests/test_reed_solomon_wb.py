@@ -14,7 +14,7 @@ def test_decoding():
 
     # Check decoding with no errors
     decoded = dec(encoded, debug=False)
-    assert (decoded == int_msg)
+    assert decoded == int_msg
 
     # Corrupt with maximum number of erasures:
     cmax = n - 2 * t - 1
@@ -79,8 +79,7 @@ def corrupt(message, num_errors, num_nones, min_val=0, max_val=131):
     Inserts random corrupted values
     """
     message = list.copy(message)
-    assert (len(message) >= num_errors +
-            num_nones), "too much errors and none elements!"
+    assert len(message) >= num_errors + num_nones, "too much errors and none elements!"
     indices = random.sample(list(range(len(message))), num_errors + num_nones)
     for i in range(0, num_errors):
         message[indices[i]] = random.randint(min_val, max_val)

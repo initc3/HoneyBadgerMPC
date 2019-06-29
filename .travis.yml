@@ -10,6 +10,7 @@ services:
 matrix:
   include:
     - env: BUILD=tests
+    - env: BUILD=black
     - env: BUILD=flake8
     - env: BUILD=docs
 

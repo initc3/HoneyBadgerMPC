@@ -1,5 +1,9 @@
 from honeybadgermpc.progs.mixins.dataflow import (
-    Share, ShareArray, ShareFuture, GFElementFuture)
+    Share,
+    ShareArray,
+    ShareFuture,
+    GFElementFuture,
+)
 import asyncio
 import logging
 from collections import defaultdict
@@ -48,8 +52,7 @@ class Mpc(object):
 
         # Store opened shares until ready to reconstruct
         # playerid => { [shareid => Future share] }
-        self._share_buffers = tuple(defaultdict(asyncio.Future)
-                                    for _ in range(n))
+        self._share_buffers = tuple(defaultdict(asyncio.Future) for _ in range(n))
 
         # Batch reconstruction is handled slightly differently,
         # We'll create a separate queue for received values
@@ -58,11 +61,12 @@ class Mpc(object):
 
         # Dynamically create concrete subclasses of the classes using ourself as
         # their context property
-        self.Share = type('Share', (Share,), {'context': self})
-        self.ShareFuture = type('ShareFuture', (ShareFuture,), {'context': self})
-        self.ShareArray = type('ShareArray', (ShareArray,), {'context': self})
+        self.Share = type("Share", (Share,), {"context": self})
+        self.ShareFuture = type("ShareFuture", (ShareFuture,), {"context": self})
+        self.ShareArray = type("ShareArray", (ShareArray,), {"context": self})
         self.GFElementFuture = type(
-            'GFElementFuture', (GFElementFuture,), {'context': self})
+            "GFElementFuture", (GFElementFuture,), {"context": self}
+        )
 
     def _get_share_id(self):
         """Returns a monotonically increasing int value
@@ -112,13 +116,15 @@ class Mpc(object):
             value_to_share = share.v
 
             # Send random data if meant to induce faults
-            if (ConfigVars.Reconstruction in self.config
-                    and self.config[ConfigVars.Reconstruction].induce_faults):
+            if (
+                ConfigVars.Reconstruction in self.config
+                and self.config[ConfigVars.Reconstruction].induce_faults
+            ):
                 logging.debug("[FAULT][RobustReconstruct] Sending random share.")
                 value_to_share = self.field.random()
 
             # 'S' is for single shares
-            self.send(dest, ('S', shareid, value_to_share))
+            self.send(dest, ("S", shareid, value_to_share))
 
         # Set up the buffer of received shares
         share_buffer = [self._share_buffers[i][shareid] for i in range(self.N)]
@@ -126,17 +132,20 @@ class Mpc(object):
         point = EvalPoint(self.field, self.N, use_omega_powers=False)
 
         # Create polynomial that reconstructs the shared value by evaluating at 0
-        reconstruction = asyncio.create_task(robust_reconstruct(
-            share_buffer, self.field, self.N, t, point, degree))
+        reconstruction = asyncio.create_task(
+            robust_reconstruct(share_buffer, self.field, self.N, t, point, degree)
+        )
 
         def cb(r):
             p, errors = r.result()
             if p is None:
                 logging.error(
                     f"Robust reconstruction for share (id: {shareid}) "
-                    f"failed with errors: {errors}!")
-                res.set_exception(HoneyBadgerMPCError(
-                    f"Failed to open share with id {shareid}!"))
+                    f"failed with errors: {errors}!"
+                )
+                res.set_exception(
+                    HoneyBadgerMPCError(f"Failed to open share with id {shareid}!")
+                )
             else:
                 res.set_result(p(self.field(0)))
 
@@ -164,7 +173,8 @@ class Mpc(object):
             elements = r.result()
             if elements is None:
                 logging.error(
-                    f"Batch reconstruction for share_array (id: {shareid}) failed!")
+                    f"Batch reconstruction for share_array (id: {shareid}) failed!"
+                )
                 res.set_exception(HoneyBadgerMPCError("Batch reconstruction failed!"))
             else:
                 res.set_result(elements)
@@ -182,17 +192,20 @@ class Mpc(object):
         _recv = self._sharearray_buffers[shareid].get
 
         # Generate reconstructed array of shares
-        reconstructed = asyncio.create_task(batch_reconstruct(
-            [s.v for s in sharearray._shares],
-            self.field.modulus,
-            t,
-            self.N,
-            self.myid,
-            _send,
-            _recv,
-            config=self.config.get(ConfigVars.Reconstruction),
-            debug=True,
-            degree=degree))
+        reconstructed = asyncio.create_task(
+            batch_reconstruct(
+                [s.v for s in sharearray._shares],
+                self.field.modulus,
+                t,
+                self.N,
+                self.myid,
+                _send,
+                _recv,
+                config=self.config.get(ConfigVars.Reconstruction),
+                debug=True,
+                degree=degree,
+            )
+        )
 
         reconstructed.add_done_callback(cb)
 
@@ -207,14 +220,14 @@ class Mpc(object):
 
         # bgtask should not exit early-- this should correspond to an error
         if bgtask.done():
-            logging.error('Background task finished before prog')
+            logging.error("Background task finished before prog")
 
             bg_exception = bgtask.exception()
             if not result.done():
                 result.cancel()
 
             if bg_exception is None:
-                raise HoneyBadgerMPCError('background task finished before prog!')
+                raise HoneyBadgerMPCError("background task finished before prog!")
             else:
                 raise bg_exception
 
@@ -231,7 +244,7 @@ class Mpc(object):
             (j, (tag, shareid, share)) = await self.recv()
 
             # Sort into single or batch
-            if tag == 'S':
+            if tag == "S":
                 assert type(share) is GFElement, "?"
                 buf = self._share_buffers[j]
 
@@ -240,12 +253,12 @@ class Mpc(object):
 
                 # Assert that there is not an element already
                 if buf[shareid].done():
-                    logging.info(f'redundant share: {j} {(tag, shareid)}')
+                    logging.info(f"redundant share: {j} {(tag, shareid)}")
                     raise AssertionError(f"Received a redundant share: {shareid}")
 
                 buf[shareid].set_result(share)
 
-            elif tag in ('R1', 'R2'):
+            elif tag in ("R1", "R2"):
                 assert type(share) is list
 
                 # Assert there is not an 'S' value here
@@ -269,7 +282,7 @@ class TaskProgramRunner(ProgramRunner):
     def add(self, program, **kwargs):
         for i in range(self.N):
             context = Mpc(
-                'mpc:%d' % (self.counter,),
+                "mpc:%d" % (self.counter,),
                 self.N,
                 self.t,
                 i,
@@ -289,6 +302,7 @@ class TaskProgramRunner(ProgramRunner):
 ###############
 # Test programs
 ###############
+
 
 async def test_batchopening(context):
     pp_elements = PreProcessedElements()
@@ -319,13 +333,13 @@ async def test_prog1(context):
     await e
 
     # This is a random share of x*y
-    logging.info(f'type(d): {type(d)}')
-    logging.info(f'type(b): {type(b)}')
-    xy = d*e + d*b + e*a + ab
+    logging.info(f"type(d): {type(d)}")
+    logging.info(f"type(b): {type(b)}")
+    xy = d * e + d * b + e * a + ab
 
-    logging.info(f'type(x): {type(x)}')
-    logging.info(f'type(y): {type(y)}')
-    logging.info(f'type(xy): {type(xy)}')
+    logging.info(f"type(x): {type(x)}")
+    logging.info(f"type(y): {type(y)}")
+    logging.info(f"type(xy): {type(xy)}")
     x_, y_, xy_ = await x.open(), await y.open(), await xy.open()
     assert x_ * y_ == xy_
 
@@ -338,27 +352,27 @@ async def test_prog2(context):
     for share in shares[:100]:
         s = await share.open()
         assert s == 0
-    logging.info('[%d] Finished' % (context.myid,))
+    logging.info("[%d] Finished" % (context.myid,))
 
     # Batch version
     arr = context.ShareArray(shares[:100])
     for s in await arr.open():
         assert s == 0, s
-    logging.info('[%d] Finished batch' % (context.myid,))
+    logging.info("[%d] Finished batch" % (context.myid,))
 
 
 def handle_async_exception(loop, ctx):
-    logging.info(f'handle_async_exception: {ctx}')
+    logging.info(f"handle_async_exception: {ctx}")
 
 
 # Run some test cases
-if __name__ == '__main__':
+if __name__ == "__main__":
     pp_elements = PreProcessedElements()
-    logging.info('Generating random shares of zero in sharedata/')
+    logging.info("Generating random shares of zero in sharedata/")
     pp_elements.generate_zeros(1000, 3, 1)
-    logging.info('Generating random shares in sharedata/')
+    logging.info("Generating random shares in sharedata/")
     pp_elements.generate_rands(1000, 3, 1)
-    logging.info('Generating random shares of triples in sharedata/')
+    logging.info("Generating random shares of triples in sharedata/")
     pp_elements.generate_triples(1000, 3, 1)
 
     asyncio.set_event_loop(asyncio.new_event_loop())

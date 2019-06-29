@@ -27,8 +27,9 @@ class SharedPoint(object):
         if not isinstance(p, Point):
             raise Exception(f"Could not create shared point-- p ({p}) is not a Point!")
 
-        return SharedPoint(context, context.Share(p.x),
-                           context.Share(p.y), curve=p.curve)
+        return SharedPoint(
+            context, context.Share(p.x), context.Share(p.y), curve=p.curve
+        )
 
     def __str__(self) -> str:
         return f"({self.xs}, {self.ys})"
@@ -67,8 +68,8 @@ class SharedPoint(object):
             res.set_result(False)
         else:
             opening = asyncio.gather(
-                (self.xs == other.xs).open(),
-                (self.ys == other.ys).open())
+                (self.xs == other.xs).open(), (self.ys == other.ys).open()
+            )
 
             def cb(r):
                 x_equal, y_equal = r.result()
@@ -79,17 +80,15 @@ class SharedPoint(object):
         return res
 
     def neg(self):
-        return SharedPoint(self.context,
-                           -1 * self.xs,
-                           self.ys,
-                           self.curve)
+        return SharedPoint(self.context, -1 * self.xs, self.ys, self.curve)
 
     def add(self, other: SharedPoint) -> SharedPoint:
         if isinstance(other, SharedIdeal):
             return self
         elif not isinstance(other, SharedPoint):
             raise Exception(
-                "Could not add other point-- not an instance of SharedPoint")
+                "Could not add other point-- not an instance of SharedPoint"
+            )
         elif self.curve != other.curve:
             raise Exception("Can't add points on different curves!")
         elif self.context != other.context:
@@ -98,7 +97,7 @@ class SharedPoint(object):
         x1, y1, x2, y2 = self.xs, self.ys, other.xs, other.ys
         one = self.context.field(1)
 
-        x_prod, y_prod = x1*x2, y1*y2
+        x_prod, y_prod = x1 * x2, y1 * y2
 
         # d_prod = d*x1*x2*y1*y2
         d_prod = self.curve.d * x_prod * y_prod
@@ -118,7 +117,9 @@ class SharedPoint(object):
         # Using the Double-and-Add algorithm
         # https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
         if not isinstance(n, int):
-            raise Exception("Can't scale a SharedPoint by something which isn't an int!")
+            raise Exception(
+                "Can't scale a SharedPoint by something which isn't an int!"
+            )
 
         if n < 0:
             return self.neg().mul(-n)
@@ -142,7 +143,9 @@ class SharedPoint(object):
         # Using the Montgomery Ladder algorithm
         # https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
         if not isinstance(n, int):
-            raise Exception("Can't scale a SharedPoint by something which isn't an int!")
+            raise Exception(
+                "Can't scale a SharedPoint by something which isn't an int!"
+            )
 
         if n < 0:
             negated = self.neg()
@@ -169,7 +172,7 @@ class SharedPoint(object):
     def double(self) -> SharedPoint:
         # Uses the optimized implementation from wikipedia
         x_, y_ = self.xs, self.ys
-        x_sq, y_sq = (x_*x_), (y_*y_)
+        x_sq, y_sq = (x_ * x_), (y_ * y_)
 
         ax_sq = self.curve.a * x_sq
         x_denom = ax_sq + y_sq
@@ -197,7 +200,8 @@ class SharedIdeal(SharedPoint):
     def add(self, other):
         if not isinstance(other, SharedPoint):
             raise Exception(
-                "Can't add a shared point with something which isn't a shared point")
+                "Can't add a shared point with something which isn't a shared point"
+            )
         elif self.curve != other.curve:
             raise Exception("Can't add points on different curves")
 
@@ -206,7 +210,8 @@ class SharedIdeal(SharedPoint):
     def sub(self, other):
         if not isinstance(other, SharedPoint):
             raise Exception(
-                "Can't subtract a shared point by something which isn't a shared point")
+                "Can't subtract a shared point by something which isn't a shared point"
+            )
         elif self.curve != other.curve:
             raise Exception("Can't add points on different curves")
 

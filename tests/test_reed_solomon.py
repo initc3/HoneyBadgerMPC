@@ -1,6 +1,12 @@
 import pytest
-from honeybadgermpc.reed_solomon import VandermondeEncoder, FFTEncoder, \
-    VandermondeDecoder, FFTDecoder, GaoRobustDecoder, WelchBerlekampRobustDecoder
+from honeybadgermpc.reed_solomon import (
+    VandermondeEncoder,
+    FFTEncoder,
+    VandermondeDecoder,
+    FFTDecoder,
+    GaoRobustDecoder,
+    WelchBerlekampRobustDecoder,
+)
 from honeybadgermpc.polynomial import EvalPoint
 from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
 from honeybadgermpc.reed_solomon import EncoderSelector, DecoderSelector
@@ -12,9 +18,7 @@ from unittest.mock import patch
 def encoding_test_cases(galois_field):
     test_cases = [
         [[1, 2], [3, 5, 7, 9], EvalPoint(galois_field, 4)],
-        [[[1, 2], [2, 3]],
-         [[3, 5, 7, 9], [5, 8, 11, 14]],
-         EvalPoint(galois_field, 4)]
+        [[[1, 2], [2, 3]], [[3, 5, 7, 9], [5, 8, 11, 14]], EvalPoint(galois_field, 4)],
     ]
     return test_cases
 
@@ -25,12 +29,18 @@ def fft_encoding_test_cases(galois_field):
     omega = point.omega.value
     p = point.field.modulus
     test_cases = []
-    test_cases.append([
-        [1, 2],
-        [(2 * pow(omega, 0, p) + 1) % p, (2 * pow(omega, 1, p) + 1) % p,
-         (2 * pow(omega, 2, p) + 1) % p, (2 * pow(omega, 3, p) + 1) % p],
-        point
-    ])
+    test_cases.append(
+        [
+            [1, 2],
+            [
+                (2 * pow(omega, 0, p) + 1) % p,
+                (2 * pow(omega, 1, p) + 1) % p,
+                (2 * pow(omega, 2, p) + 1) % p,
+                (2 * pow(omega, 3, p) + 1) % p,
+            ],
+            point,
+        ]
+    )
     return test_cases
 
 
@@ -38,8 +48,7 @@ def fft_encoding_test_cases(galois_field):
 def decoding_test_cases(galois_field):
     test_cases = [
         [[1, 3], [5, 9], [1, 2], EvalPoint(galois_field, 4)],
-        [[1, 3], [[5, 9], [8, 14]],
-         [[1, 2], [2, 3]], EvalPoint(galois_field, 4)]
+        [[1, 3], [[5, 9], [8, 14]], [[1, 2], [2, 3]], EvalPoint(galois_field, 4)],
     ]
     return test_cases
 
@@ -50,12 +59,14 @@ def fft_decoding_test_cases(galois_field):
     omega = point.omega.value
     p = galois_field.modulus
     test_cases = []
-    test_cases.append([
-        [1, 3],
-        [(2 * pow(omega, 1, p) + 1) % p, (2 * pow(omega, 3, p) + 1) % p],
-        [1, 2],
-        point
-    ])
+    test_cases.append(
+        [
+            [1, 3],
+            [(2 * pow(omega, 1, p) + 1) % p, (2 * pow(omega, 3, p) + 1) % p],
+            [1, 2],
+            point,
+        ]
+    )
     return test_cases
 
 
@@ -67,12 +78,20 @@ def robust_decoding_test_cases(galois_field):
     # Expected erroneous parties, t, point
     test_cases = [
         # Correct array would be [3, 5, 7, 9]
-        [[0, 1, 2, 3], [3, 5, 0, 9],
-         [1, 2], [2], 1, EvalPoint(galois_field, 4)],
-        [[0, 1, 2, 3],
-         [(2 * pow(omega, 0, p) + 1) % p, (2 * pow(omega, 1, p) + 1) % p,
-          0, (2 * pow(omega, 3, p) + 1) % p],
-         [1, 2], [2], 1, EvalPoint(galois_field, 4, use_omega_powers=True)]
+        [[0, 1, 2, 3], [3, 5, 0, 9], [1, 2], [2], 1, EvalPoint(galois_field, 4)],
+        [
+            [0, 1, 2, 3],
+            [
+                (2 * pow(omega, 0, p) + 1) % p,
+                (2 * pow(omega, 1, p) + 1) % p,
+                0,
+                (2 * pow(omega, 3, p) + 1) % p,
+            ],
+            [1, 2],
+            [2],
+            1,
+            EvalPoint(galois_field, 4, use_omega_powers=True),
+        ],
     ]
 
     return test_cases
@@ -198,7 +217,7 @@ def test_encoder_selection(galois_field):
     assert isinstance(EncoderSelector.select(point, 100000), FFTEncoder)
 
 
-@patch('psutil.cpu_count')
+@patch("psutil.cpu_count")
 def test_decoder_selection(mocked_cpu_count, galois_field):
     # Very small n < 8. Vandermonde should always be picked
     point = EvalPoint(galois_field, 4, use_omega_powers=True)
@@ -206,8 +225,9 @@ def test_decoder_selection(mocked_cpu_count, galois_field):
         mocked_cpu_count.return_value = cpu_count
         for batch_size in [1, 1000, 100000]:
             DecoderSelector.set_optimal_thread_count(batch_size)
-            assert isinstance(DecoderSelector.select(point, batch_size),
-                              VandermondeDecoder)
+            assert isinstance(
+                DecoderSelector.select(point, batch_size), VandermondeDecoder
+            )
 
     # Small batches (~n). Reasonable number of threads. Pick FFT
     point = EvalPoint(galois_field, 65, use_omega_powers=True)
@@ -215,8 +235,7 @@ def test_decoder_selection(mocked_cpu_count, galois_field):
         mocked_cpu_count.return_value = cpu_count
         for batch_size in [1, 16, 32]:
             DecoderSelector.set_optimal_thread_count(batch_size)
-            assert isinstance(DecoderSelector.select(point, batch_size),
-                              FFTDecoder)
+            assert isinstance(DecoderSelector.select(point, batch_size), FFTDecoder)
 
     # Small n. Reasonable number of threads,
     # Large batch sizes > ~ numthreads * n. Pick Vandermonde
@@ -225,8 +244,9 @@ def test_decoder_selection(mocked_cpu_count, galois_field):
         mocked_cpu_count.return_value = cpu_count
         for batch_size in [512, 1024, 2048, 4096]:
             DecoderSelector.set_optimal_thread_count(batch_size)
-            assert isinstance(DecoderSelector.select(point, batch_size),
-                              VandermondeDecoder)
+            assert isinstance(
+                DecoderSelector.select(point, batch_size), VandermondeDecoder
+            )
 
     # Extremely large n. FFT should ideally be picked at reasonable batch sizes
     point = EvalPoint(galois_field, 65536, use_omega_powers=True)
@@ -234,8 +254,7 @@ def test_decoder_selection(mocked_cpu_count, galois_field):
         mocked_cpu_count.return_value = cpu_count
         for batch_size in [512, 1024, 2048, 4096, 8192]:
             DecoderSelector.set_optimal_thread_count(batch_size)
-            assert isinstance(DecoderSelector.select(point, batch_size),
-                              FFTDecoder)
+            assert isinstance(DecoderSelector.select(point, batch_size), FFTDecoder)
 
     # The scenarios above checked extreme cases. Below we check more rigorously based
     # on the exact approximation formula. Ideally, the cases above should not change
@@ -247,8 +266,10 @@ def test_decoder_selection(mocked_cpu_count, galois_field):
             for batch_size in [2 ** i for i in range(16)]:
                 DecoderSelector.set_optimal_thread_count(batch_size)
                 if batch_size > 0.5 * n * min(batch_size, AvailableNTLThreads()):
-                    assert isinstance(DecoderSelector.select(point, batch_size),
-                                      VandermondeDecoder)
+                    assert isinstance(
+                        DecoderSelector.select(point, batch_size), VandermondeDecoder
+                    )
                 else:
-                    assert isinstance(DecoderSelector.select(point, batch_size),
-                                      FFTDecoder)
+                    assert isinstance(
+                        DecoderSelector.select(point, batch_size), FFTDecoder
+                    )

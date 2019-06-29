@@ -13,7 +13,7 @@ async def test_get_triple(test_preprocessing):
         for _ in range(num_triples):
             a_sh, b_sh, ab_sh = test_preprocessing.elements.get_triple(ctx)
             a, b, ab = await a_sh.open(), await b_sh.open(), await ab_sh.open()
-            assert a*b == ab
+            assert a * b == ab
 
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(_prog)
@@ -30,8 +30,8 @@ async def test_get_cube(test_preprocessing):
         for _ in range(num_cubes):
             a1_sh, a2_sh, a3_sh = test_preprocessing.elements.get_cube(ctx)
             a1, a2, a3 = await a1_sh.open(), await a2_sh.open(), await a3_sh.open()
-            assert a1*a1 == a2
-            assert a1*a2 == a3
+            assert a1 * a1 == a2
+            assert a1 * a2 == a3
 
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(_prog)
@@ -101,7 +101,7 @@ async def test_get_powers(test_preprocessing):
             powers = test_preprocessing.elements.get_powers(ctx, i)
             x = await powers[0].open()
             for i, power in enumerate(powers[1:]):
-                assert await power.open() == pow(x, i+2)
+                assert await power.open() == pow(x, i + 2)
 
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(_prog)
@@ -131,7 +131,7 @@ async def test_get_double_share(test_preprocessing):
     async def _prog(ctx):
         r_t_sh, r_2t_sh = test_preprocessing.elements.get_double_share(ctx)
         assert r_t_sh.t == ctx.t
-        assert r_2t_sh.t == ctx.t*2
+        assert r_2t_sh.t == ctx.t * 2
         await r_t_sh.open()
         await r_2t_sh.open()
         assert await r_t_sh.open() == await r_2t_sh.open()
@@ -150,7 +150,7 @@ async def test_get_share_bits(test_preprocessing):
         share, bits = test_preprocessing.elements.get_share_bits(ctx)
         opened_share = await share.open()
         opened_bits = await asyncio.gather(*[b.open() for b in bits])
-        bit_value = int(''.join([str(b.value) for b in reversed(opened_bits)]), 2)
+        bit_value = int("".join([str(b.value) for b in reversed(opened_bits)]), 2)
         assert bit_value == opened_share.value
 
     program_runner = TaskProgramRunner(n, t)

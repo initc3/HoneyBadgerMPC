@@ -19,10 +19,10 @@ class Equality(AsyncMixin):
         """
         assert a.modulus % 2 == 1
 
-        b = a ** ((a.modulus - 1)//2)
+        b = a ** ((a.modulus - 1) // 2)
         if b == 1:
             return 1
-        elif b == a.modulus-1:
+        elif b == a.modulus - 1:
             return -1
         return 0
 
@@ -62,14 +62,19 @@ class Equality(AsyncMixin):
 
     @staticmethod
     @TypeCheck()
-    async def _prog(context: Mpc,
-                    p_share: Share,
-                    q_share: Share,
-                    security_parameter: int = 32):
+    async def _prog(
+        context: Mpc, p_share: Share, q_share: Share, security_parameter: int = 32
+    ):
         diff = p_share - q_share
 
-        x = context.ShareArray(await gather(*[Equality.gen_test_bit(context, diff)
-                                              for _ in range(security_parameter)]))
+        x = context.ShareArray(
+            await gather(
+                *[
+                    Equality.gen_test_bit(context, diff)
+                    for _ in range(security_parameter)
+                ]
+            )
+        )
 
         # Take the product (this is here the same as the "and") of all
         return await x.multiplicative_product()
@@ -96,6 +101,7 @@ class LessThan(AsyncMixin):
     TODO:   Currently, this fails every so often (~1/20 times experimentally).
             Investigate this / add assertions to detect this.
     """
+
     from honeybadgermpc.mpc import Mpc
 
     name = MixinConstants.ShareLessThan
@@ -108,9 +114,7 @@ class LessThan(AsyncMixin):
 
     @staticmethod
     @TypeCheck()
-    async def _transform_comparison(context: Mpc,
-                                    a_share: Share,
-                                    b_share: Share):
+    async def _transform_comparison(context: Mpc, a_share: Share, b_share: Share):
         """ Section 5.1 First Transformation
         Compute [r]_B and [c]_B, which are bitwise sharings of a random share [r] and
         [c] = 2([a] - [b]) + [r]
@@ -121,7 +125,7 @@ class LessThan(AsyncMixin):
 
         # [c] = 2[z] + [r]_B = 2([a]-[b]) + [r]_B
         c = await (2 * z + r_b).open()
-        c_bits = [context.field(x) for x in map(int, '{0:0255b}'.format(c.value))]
+        c_bits = [context.field(x) for x in map(int, "{0:0255b}".format(c.value))]
 
         # LSB first
         c_bits.reverse()
@@ -142,8 +146,10 @@ class LessThan(AsyncMixin):
               Compute PRODUCT(1 + c_j) without MPC
               See final further work points in paper section 6
         """
-        power_bits = [context.field(1) + LessThan._xor_bits(r, c)
-                      for r, c in zip(r_bits[1:], c_bits[1:])]
+        power_bits = [
+            context.field(1) + LessThan._xor_bits(r, c)
+            for r, c in zip(r_bits[1:], c_bits[1:])
+        ]
 
         powers = [context.Share(1)]
         for b in reversed(power_bits):
@@ -172,8 +178,8 @@ class LessThan(AsyncMixin):
         s_0 = s_bits[0]
 
         # lsb
-        s_1 = s_bits[bit_length - 1]        # [s_{bit_length-1}]
-        s_2 = s_bits[bit_length - 2]        # [s_{bit_length-2}]
+        s_1 = s_bits[bit_length - 1]  # [s_{bit_length-1}]
+        s_2 = s_bits[bit_length - 2]  # [s_{bit_length-2}]
         s_prod = s_1 * s_2
 
         # lsb
@@ -182,12 +188,15 @@ class LessThan(AsyncMixin):
         d_xor_1 = context.field(d0 ^ (d.value < (1 << (bit_length - 1))))
         d_xor_2 = context.field(d0 ^ (d.value < (1 << (bit_length - 2))))
         d_xor_12 = context.field(
-            d0 ^ (d.value < ((1 << (bit_length - 1)) + (1 << (bit_length - 2)))))
+            d0 ^ (d.value < ((1 << (bit_length - 1)) + (1 << (bit_length - 2))))
+        )
 
-        d_0 = (context.field(1) - s_1 - s_2 + s_prod) * d0 \
-            + ((s_2 - s_prod) * d_xor_2) \
-            + ((s_1 - s_prod) * d_xor_1) \
+        d_0 = (
+            (context.field(1) - s_1 - s_2 + s_prod) * d0
+            + ((s_2 - s_prod) * d_xor_2)
+            + ((s_1 - s_prod) * d_xor_1)
             + (s_prod * d_xor_12)
+        )
 
         # [x0] = [s0] ^ [d0], equal to [r]_B > c
         return LessThan._xor_bits(s_0, d_0)

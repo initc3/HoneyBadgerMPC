@@ -4,7 +4,7 @@ import logging
 
 
 def int2hexbytes(n):
-    return bytes(hex(n), 'ascii')[2:]
+    return bytes(hex(n), "ascii")[2:]
 
 
 P = Subgroup.BLS12_381
@@ -31,9 +31,9 @@ def solve(dc_sums):
     or if my_message is not a solution.
     """
 
-    ffi_sums = [ffi.new('char[]', int2hexbytes(s)) for s in dc_sums]
+    ffi_sums = [ffi.new("char[]", int2hexbytes(s)) for s in dc_sums]
     # Allocate result buffers (size of P in hex + 1 null char)
-    ffi_messages = [ffi.new('char[]', len(_HEX_P) + 1) for _ in dc_sums]
+    ffi_messages = [ffi.new("char[]", len(_HEX_P) + 1) for _ in dc_sums]
 
     res = lib.solve(ffi_messages, _HEX_P, ffi_sums, len(dc_sums))
 

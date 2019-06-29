@@ -14,9 +14,11 @@ async def test_butterfly_network(test_preprocessing):
     test_preprocessing.generate("triples", n, t)
 
     async def verify_output(ctx, **kwargs):
-        k, delta = kwargs['k'], kwargs['delta']
+        k, delta = kwargs["k"], kwargs["delta"]
         inputs = [test_preprocessing.elements.get_rand(ctx) for _ in range(k)]
-        sorted_input = sorted(await ctx.ShareArray(inputs).open(), key=lambda x: x.value)
+        sorted_input = sorted(
+            await ctx.ShareArray(inputs).open(), key=lambda x: x.value
+        )
 
         share_arr = await butterfly.butterfly_network_helper(ctx, k=k, delta=delta)
         outputs = await share_arr.open()
@@ -27,8 +29,9 @@ async def test_butterfly_network(test_preprocessing):
             assert i == j
 
     program_runner = TaskProgramRunner(
-        n, t, {MixinConstants.MultiplyShareArray: BeaverMultiplyArrays()})
-    program_runner.add(verify_output,  k=k, delta=delta)
+        n, t, {MixinConstants.MultiplyShareArray: BeaverMultiplyArrays()}
+    )
+    program_runner.add(verify_output, k=k, delta=delta)
     await program_runner.join()
 
 
@@ -45,7 +48,7 @@ async def test_phase1(test_preprocessing, galois_field):
     test_preprocessing.generate("rands", n, t)
 
     async def verify_phase1(context, **kwargs):
-        k_ = kwargs['k']
+        k_ = kwargs["k"]
         b_ = await test_preprocessing.elements.get_powers(context, 0)[0].open()
         file_prefixes = [uuid4().hex]
         await pm.all_secrets_phase1(context, k=k, file_prefixes=file_prefixes)
@@ -57,8 +60,10 @@ async def test_phase1(test_preprocessing, galois_field):
             a_ = await context.Share(int(f.readline())).open()
             assert int(f.readline()) == (a_ - b_).value
             assert int(f.readline()) == k_
-            for i in range(1, k_+1):
-                assert (await context.Share(int(f.readline())).open()).value == b_**(i)
+            for i in range(1, k_ + 1):
+                assert (await context.Share(int(f.readline())).open()).value == b_ ** (
+                    i
+                )
 
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(verify_phase1, k=k)
@@ -82,9 +87,9 @@ async def test_phase2(galois_field):
         with open(f"{PreProcessingConstants.SHARED_DATA_DIR}{file_name}", "w") as f:
             print(field.modulus, file=f)
             print(a.value, file=f)
-            print((a-b).value, file=f)
+            print((a - b).value, file=f)
             print(k, file=f)
-            for i in range(1, k+1):
+            for i in range(1, k + 1):
                 print(pow(b, i).value, file=f)
 
         await pm.phase2(node_id, run_id, share_id)
@@ -94,7 +99,7 @@ async def test_phase2(galois_field):
             assert int(f.readline()) == field.modulus
             assert int(f.readline()) == k
             for i, p in enumerate(f.read().splitlines()[:k]):
-                assert int(p) == (pow(a, i+1) * j).value
+                assert int(p) == (pow(a, i + 1) * j).value
 
 
 @mark.asyncio
@@ -108,12 +113,13 @@ async def test_asynchronous_mixing(test_preprocessing):
     test_preprocessing.generate("rands", n, t)
 
     async def verify_output(context, **kwargs):
-        result, input_shares = kwargs['result'], kwargs['input_shares']
+        result, input_shares = kwargs["result"], kwargs["input_shares"]
         my_shares = input_shares[context.myid]
         assert len(result) == len(my_shares)
 
-        inputs = await asyncio.gather(*[
-            context.Share(sh.v, t).open() for sh in my_shares])
+        inputs = await asyncio.gather(
+            *[context.Share(sh.v, t).open() for sh in my_shares]
+        )
         assert sorted(map(lambda x: x.value, inputs)) == sorted(result)
 
     result, input_shares = await pm.async_mixing(n, t, k)

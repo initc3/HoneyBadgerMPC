@@ -27,7 +27,7 @@ async def mimc_mpc(context, x, k):
         r1, r2, r3 = pp_elements.get_cube(context)
         y = await (x - r1).open()
         # [x^3] = 3y[r^2] + 3y^2[r] + y^3 + [r^3]
-        x3 = 3*y*r2 + 3*(y**2)*r1 + y**3 + r3
+        x3 = 3 * y * r2 + 3 * (y ** 2) * r1 + y ** 3 + r3
         return x3
 
     # iterating the round function ROUND times
@@ -60,14 +60,15 @@ async def mimc_mpc_batch(context, xs, k):
         ys = await (context.ShareArray(xs) - context.ShareArray(rs)).open()
         for i, y in enumerate(ys):
             # [x^3] = 3y[r^2] + 3y^2[r] + y^3 + [r^3]
-            x3s.append(3*y*rs_sq[i] + 3*(y**2)*rs[i] + y**3 + rs_cube[i])
+            x3s.append(3 * y * rs_sq[i] + 3 * (y ** 2) * rs[i] + y ** 3 + rs_cube[i])
 
         return x3s
 
     # iterating the round function ROUND times
     inp_array = xs
     for ctr in range(ROUND):
-        inp_array = await cubing_share_array([(k + context.field(ctr)) + inp
-                                              for inp in inp_array])
+        inp_array = await cubing_share_array(
+            [(k + context.field(ctr)) + inp for inp in inp_array]
+        )
 
     return [inp + k for inp in inp_array]
