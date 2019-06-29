@@ -27,8 +27,7 @@ import os
 
 
 # For fake preprocessing
-from honeybadgermpc.preprocessing import (
-    PreProcessedElements, clear_preprocessing)
+from honeybadgermpc.preprocessing import PreProcessedElements, clear_preprocessing
 
 field = GF(Subgroup.BLS12_381)
 
@@ -46,6 +45,7 @@ async def wait_for_receipt(w3, tx_hash):
 # Client
 ########
 
+
 class AsynchromixClient(object):
     def __init__(self, sid, myid, send, recv, w3, contract, req_mask):
         self.sid = sid
@@ -61,10 +61,10 @@ class AsynchromixClient(object):
         await asyncio.sleep(60)  # give the servers a head start
         # Client sends several batches of messages then quits
         for epoch in range(1000):
-            logging.info(f'[Client] Starting Epoch {epoch}')
+            logging.info(f"[Client] Starting Epoch {epoch}")
             receipts = []
             for i in range(32):
-                m = f'message:{epoch}:{i}'
+                m = f"message:{epoch}:{i}"
                 task = asyncio.ensure_future(self.send_message(m))
                 task.add_done_callback(print_exception_callback)
                 receipts.append(task)
@@ -107,30 +107,33 @@ class AsynchromixClient(object):
 
         # Step 2. Reserve the input mask
         tx_hash = self.contract.functions.reserve_inputmask().transact(
-            {'from': self.w3.eth.accounts[0]})
+            {"from": self.w3.eth.accounts[0]}
+        )
         tx_receipt = await wait_for_receipt(self.w3, tx_hash)
         rich_logs = self.contract.events.InputMaskClaimed().processReceipt(tx_receipt)
         if rich_logs:
-            inputmask_idx = rich_logs[0]['args']['inputmask_idx']
+            inputmask_idx = rich_logs[0]["args"]["inputmask_idx"]
         else:
             raise ValueError
 
         # Step 3. Fetch the input mask from the servers
         inputmask = await self._get_inputmask(inputmask_idx)
-        message = int.from_bytes(m.encode(), 'big')
+        message = int.from_bytes(m.encode(), "big")
         maskedinput = message + inputmask
         maskedinput_bytes = self.w3.toBytes(hexstr=hex(maskedinput.value))
-        maskedinput_bytes = maskedinput_bytes.rjust(32, b'\x00')
+        maskedinput_bytes = maskedinput_bytes.rjust(32, b"\x00")
 
         # Step 4. Publish the masked input
         tx_hash = self.contract.functions.submit_message(
-            inputmask_idx, maskedinput_bytes).transact({'from': self.w3.eth.accounts[0]})
+            inputmask_idx, maskedinput_bytes
+        ).transact({"from": self.w3.eth.accounts[0]})
         tx_receipt = await wait_for_receipt(self.w3, tx_hash)
 
 
 ########
 # Server
 ########
+
 
 class AsynchromixServer(object):
     def __init__(self, sid, myid, send, recv, w3, contract):
@@ -153,6 +156,7 @@ class AsynchromixServer(object):
 
         def _get_send_recv(tag):
             return wrap_send(tag, send), subscribe(tag)
+
         self.get_send_recv = _get_send_recv
 
         self._inputmasks = []
@@ -182,10 +186,9 @@ class AsynchromixServer(object):
 
     async def _preprocess_report(self):
         # Submit the preprocessing report
-        tx_hash = self.contract.functions.preprocess_report([
-            len(self._triples),
-            len(self._bits),
-            len(self._inputmasks)]).transact({'from': self.w3.eth.accounts[self.myid]})
+        tx_hash = self.contract.functions.preprocess_report(
+            [len(self._triples), len(self._bits), len(self._inputmasks)]
+        ).transact({"from": self.w3.eth.accounts[self.myid]})
 
         # Wait for the tx receipt
         tx_receipt = await wait_for_receipt(self.w3, tx_hash)
@@ -216,28 +219,25 @@ class AsynchromixServer(object):
 
             # Step 1a. II) Run generate triples and generate_bits
             logging.info(
-                f'[{self.myid}] mixes available: {mixes_available} \
-                   target: {target}')
-            logging.info(f'[{self.myid}] Initiating Triples {PER_MIX_TRIPLES}')
-            send, recv = self.get_send_recv(
-                f'preproc:mixes:triples:{preproc_round}')
+                f"[{self.myid}] mixes available: {mixes_available} \
+                   target: {target}"
+            )
+            logging.info(f"[{self.myid}] Initiating Triples {PER_MIX_TRIPLES}")
+            send, recv = self.get_send_recv(f"preproc:mixes:triples:{preproc_round}")
             start_time = time.time()
-            triples = await generate_triples(n, t, PER_MIX_TRIPLES,
-                                             self.myid, send, recv, field)
+            triples = await generate_triples(
+                n, t, PER_MIX_TRIPLES, self.myid, send, recv, field
+            )
             end_time = time.time()
-            logging.info(
-                f"[{self.myid}] Triples finished in {end_time-start_time}")
+            logging.info(f"[{self.myid}] Triples finished in {end_time-start_time}")
 
             # Bits
-            logging.info(f'[{self.myid}] Initiating Bits {PER_MIX_BITS}')
-            send, recv = self.get_send_recv(
-                f'preproc:mixes:bits:{preproc_round}')
+            logging.info(f"[{self.myid}] Initiating Bits {PER_MIX_BITS}")
+            send, recv = self.get_send_recv(f"preproc:mixes:bits:{preproc_round}")
             start_time = time.time()
-            bits = await generate_bits(n, t, PER_MIX_BITS,
-                                       self.myid, send, recv, field)
+            bits = await generate_bits(n, t, PER_MIX_BITS, self.myid, send, recv, field)
             end_time = time.time()
-            logging.info(
-                f"[{self.myid}] Bits finished in {end_time-start_time}")
+            logging.info(f"[{self.myid}] Bits finished in {end_time-start_time}")
 
             # Append each triple
             self._triples += triples
@@ -270,11 +270,11 @@ class AsynchromixServer(object):
 
             # Step 1b. II) Run Randousha
             logging.info(
-                f'[{self.myid}] totalmasks: {totalmasks} \
+                f"[{self.myid}] totalmasks: {totalmasks} \
                 inputmasks available: {inputmasks_available} \
-                target: {target} Initiating Randousha {k * (n - 2*t)}')
-            send, recv = self.get_send_recv(
-                f'preproc:inputmasks:{preproc_round}')
+                target: {target} Initiating Randousha {k * (n - 2*t)}"
+            )
+            send, recv = self.get_send_recv(f"preproc:inputmasks:{preproc_round}")
             start_time = time.time()
             rs_t, rs_2t = zip(*await randousha(n, t, k, self.myid, send, recv, field))
             assert len(rs_t) == len(rs_2t) == k * (n - 2 * t)
@@ -283,8 +283,7 @@ class AsynchromixServer(object):
             # In principle both sides of randousha could be used with
             # a small modification to randousha
             end_time = time.time()
-            logging.info(
-                f"[{self.myid}] Randousha finished in {end_time-start_time}")
+            logging.info(f"[{self.myid}] Randousha finished in {end_time-start_time}")
             self._inputmasks += rs_t
 
             # Step 1b. III) Submit an updated report
@@ -322,7 +321,7 @@ class AsynchromixServer(object):
             for idx in range(epoch * K, (epoch + 1) * K):
                 # Get the public input
                 masked_input, inputmask_idx = contract_concise.input_queue(idx)
-                masked_input = field(int.from_bytes(masked_input, 'big'))
+                masked_input = field(int.from_bytes(masked_input, "big"))
                 # Get the input masks
                 inputmask = self._inputmasks[inputmask_idx]
 
@@ -330,10 +329,10 @@ class AsynchromixServer(object):
                 inputs.append(m_share)
 
             # 3.c. Collect the preprocessing
-            triples = self._triples[(epoch+0)*PER_MIX_TRIPLES:
-                                    (epoch+1)*PER_MIX_TRIPLES]
-            bits = self._bits[(epoch+0)*PER_MIX_BITS:
-                              (epoch+1)*PER_MIX_BITS]
+            triples = self._triples[
+                (epoch + 0) * PER_MIX_TRIPLES : (epoch + 1) * PER_MIX_TRIPLES
+            ]
+            bits = self._bits[(epoch + 0) * PER_MIX_BITS : (epoch + 1) * PER_MIX_BITS]
 
             # Hack explanation... the relevant mixins are in triples
             key = (self.myid, n, t)
@@ -351,35 +350,35 @@ class AsynchromixServer(object):
                 inps = list(map(ctx.Share, inputs))
                 assert len(inps) == K
                 shuffled = await iterated_butterfly_network(ctx, inps, K)
-                shuffled_shares = ctx.ShareArray(
-                    list(map(ctx.Share, shuffled)))
+                shuffled_shares = ctx.ShareArray(list(map(ctx.Share, shuffled)))
                 opened_values = await shuffled_shares.open()
-                msgs = [m.value.to_bytes(32, 'big').decode().strip('\x00')
-                        for m in opened_values]
+                msgs = [
+                    m.value.to_bytes(32, "big").decode().strip("\x00")
+                    for m in opened_values
+                ]
                 return msgs
 
-            send, recv = self.get_send_recv(f'mpc:{epoch}')
-            logging.info(f'[{self.myid}] MPC initiated:{epoch}')
+            send, recv = self.get_send_recv(f"mpc:{epoch}")
+            logging.info(f"[{self.myid}] MPC initiated:{epoch}")
 
             # Config just has to specify mixins used by switching_network
             config = {MixinConstants.MultiplyShareArray: BeaverMultiplyArrays()}
 
-            ctx = Mpc(f'mpc:{epoch}', n, t, self.myid, send, recv,
-                      prog, config)
+            ctx = Mpc(f"mpc:{epoch}", n, t, self.myid, send, recv, prog, config)
             result = await ctx._run()
-            logging.info(f'[{self.myid}] MPC complete {result}')
+            logging.info(f"[{self.myid}] MPC complete {result}")
 
             # 3.e. Output the published messages to contract
-            result = ','.join(result)
-            tx_hash = self.contract.functions.propose_output(epoch, result) \
-                .transact({'from': self.w3.eth.accounts[self.myid]})
+            result = ",".join(result)
+            tx_hash = self.contract.functions.propose_output(epoch, result).transact(
+                {"from": self.w3.eth.accounts[self.myid]}
+            )
             tx_receipt = await wait_for_receipt(self.w3, tx_hash)
-            rich_logs = self.contract.events.MixOutput() \
-                                            .processReceipt(tx_receipt)
+            rich_logs = self.contract.events.MixOutput().processReceipt(tx_receipt)
             if rich_logs:
-                epoch = rich_logs[0]['args']['epoch']
-                output = rich_logs[0]['args']['output']
-                logging.info(f'[{self.myid}] MIX OUTPUT[{epoch}] {output}')
+                epoch = rich_logs[0]["args"]["epoch"]
+                output = rich_logs[0]["args"]["output"]
+                logging.info(f"[{self.myid}] MIX OUTPUT[{epoch}] {output}")
             else:
                 pass
 
@@ -402,21 +401,24 @@ class AsynchromixServer(object):
 
             # Step 4.b. Call initiate mix
             tx_hash = self.contract.functions.initiate_mix().transact(
-                {'from': self.w3.eth.accounts[0]})
+                {"from": self.w3.eth.accounts[0]}
+            )
             tx_receipt = await wait_for_receipt(self.w3, tx_hash)
-            rich_logs = self.contract.events.MixingEpochInitiated() \
-                                            .processReceipt(tx_receipt)
+            rich_logs = self.contract.events.MixingEpochInitiated().processReceipt(
+                tx_receipt
+            )
             if rich_logs:
-                epoch = rich_logs[0]['args']['epoch']
-                logging.info(f'[{self.myid}] Mixing epoch initiated: {epoch}')
+                epoch = rich_logs[0]["args"]["epoch"]
+                logging.info(f"[{self.myid}] Mixing epoch initiated: {epoch}")
             else:
-                logging.info(f'[{self.myid}] initiate_mix failed (redundant?)')
+                logging.info(f"[{self.myid}] initiate_mix failed (redundant?)")
             await asyncio.sleep(10)
 
 
 ###############
 # Ganache test
 ###############
+
 
 async def main_loop(w3):
 
@@ -426,27 +428,30 @@ async def main_loop(w3):
 
     # Step 1.
     # Create the coordinator contract and web3 interface to it
-    compiled_sol = compile_source(open(os.path.join(os.path.dirname(
-        __file__), 'asynchromix.sol')).read())  # Compiled source code
-    contract_interface = compiled_sol['<stdin>:AsynchromixCoordinator']
-    contract_class = w3.eth.contract(abi=contract_interface['abi'],
-                                     bytecode=contract_interface['bin'])
+    compiled_sol = compile_source(
+        open(os.path.join(os.path.dirname(__file__), "asynchromix.sol")).read()
+    )  # Compiled source code
+    contract_interface = compiled_sol["<stdin>:AsynchromixCoordinator"]
+    contract_class = w3.eth.contract(
+        abi=contract_interface["abi"], bytecode=contract_interface["bin"]
+    )
     # tx_hash = contract_class.constructor(w3.eth.accounts[:7],2).transact(
     #   {'from':w3.eth.accounts[0]})  # n=7, t=2
 
     tx_hash = contract_class.constructor(w3.eth.accounts[:4], 1).transact(
-        {'from': w3.eth.accounts[0]})  # n=4, t=1
+        {"from": w3.eth.accounts[0]}
+    )  # n=4, t=1
 
     # Get tx receipt to get contract address
     tx_receipt = await wait_for_receipt(w3, tx_hash)
-    contract_address = tx_receipt['contractAddress']
+    contract_address = tx_receipt["contractAddress"]
 
-    if w3.eth.getCode(contract_address) == b'':
-        logging.critical('code was empty 0x, constructor may have run out of gas')
+    if w3.eth.getCode(contract_address) == b"":
+        logging.critical("code was empty 0x, constructor may have run out of gas")
         raise ValueError
 
     # Contract instance in concise mode
-    abi = contract_interface['abi']
+    abi = contract_interface["abi"]
     contract = w3.eth.contract(address=contract_address, abi=abi)
     contract_concise = ConciseContract(contract)
 
@@ -456,16 +461,16 @@ async def main_loop(w3):
     # Step 2: Create the servers
     router = SimpleRouter(n)
     sends, recvs = router.sends, router.recvs
-    servers = [AsynchromixServer('sid', i, sends[i], recvs[i], w3, contract)
-               for i in range(n)]
+    servers = [
+        AsynchromixServer("sid", i, sends[i], recvs[i], w3, contract) for i in range(n)
+    ]
 
     # Step 3. Create the client
     async def req_mask(i, idx):
         # client requests input mask {idx} from server {i}
         return servers[i]._inputmasks[idx]
 
-    client = AsynchromixClient('sid', 'client', None, None,
-                               w3, contract, req_mask)
+    client = AsynchromixClient("sid", "client", None, None, w3, contract, req_mask)
 
     # Step 4. Wait for conclusion
     for i, server in enumerate(servers):
@@ -481,9 +486,9 @@ def run_and_terminate_process(*args, **kwargs):
     finally:
         logging.info(f"Killing ganache-cli {p.pid}")
         p.terminate()  # send sigterm, or ...
-        p.kill()      # send sigkill
+        p.kill()  # send sigkill
         p.wait()
-        logging.info('done')
+        logging.info("done")
 
 
 def run_eth():
@@ -491,18 +496,16 @@ def run_eth():
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     try:
-        logging.info('entering loop')
-        loop.run_until_complete(
-            asyncio.gather(
-                main_loop(w3),
-            ))
+        logging.info("entering loop")
+        loop.run_until_complete(asyncio.gather(main_loop(w3)))
     finally:
-        logging.info('closing')
+        logging.info("closing")
         loop.close()
 
 
 def test_asynchromix():
     import time
+
     # cmd = 'testrpc -a 50 2>&1 | tee -a acctKeys.json'
     # with run_and_terminate_process(cmd, shell=True,
     # stdout=sys.stdout, stderr=sys.stderr) as proc:
@@ -513,6 +516,6 @@ def test_asynchromix():
         run_eth()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Launch an ethereum test chain
     test_asynchromix()

@@ -20,6 +20,17 @@ To start developing and contributing to HoneyBadgerMPC:
 
     See :ref:`git-remotes` for more information about remotes.
 
+4. Install `pre-commit`_ to use a pre-commit hook to automate
+   formatting the code using `black`_:
+
+   .. code-block:: shell-session
+
+       $ pip3 install --user pre-commit
+       $ pre-commit install
+       pre-commit installed at .git/hooks/pre-commit
+
+   See https://pre-commit.com/#install for other ways to install `pre-commit`_.
+
 **Next step:** :ref:`setup a development environment <devenv>`.
 
 .. _devenv:
@@ -405,3 +416,5 @@ can view them using a browser, e.g.:
 .. _keep going: http://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-keep-going
 .. _gmpy2 docs for Windows: https://gmpy2.readthedocs.io/en/latest/intro.html#installing-gmpy2-on-windows
 .. _The Hitchhiker’s Guide to Python: https://docs.python-guide.org/
+.. _black: https://github.com/ambv/black
+.. _pre-commit: https://pre-commit.com

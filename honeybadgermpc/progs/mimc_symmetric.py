@@ -20,8 +20,9 @@ async def mimc_decrypt(context, key, cs):
     """
     plaintext <- F_MiMC(counter, key) - ciphertext
     """
-    mpcs = await asyncio.gather(*[mimc_mpc(context, context.field(i), key)
-                                for i in range(len(cs))])
+    mpcs = await asyncio.gather(
+        *[mimc_mpc(context, context.field(i), key) for i in range(len(cs))]
+    )
     decrypted = [c - m for (c, m) in zip(cs, mpcs)]
 
     return decrypted

@@ -28,12 +28,14 @@ class PreProcessingConstants(object):
 async def wait_for_preprocessing():
     while not os.path.exists(f"{PreProcessingConstants.SHARED_DATA_DIR}READY"):
         logging.info(
-            f"waiting for preprocessing {PreProcessingConstants.READY_FILE_NAME}")
+            f"waiting for preprocessing {PreProcessingConstants.READY_FILE_NAME}"
+        )
         await asyncio.sleep(1)
 
 
 def clear_preprocessing():
     import shutil
+
     try:
         shutil.rmtree(f"{PreProcessingConstants.SHARED_DATA_DIR}")
     except FileNotFoundError:
@@ -89,8 +91,10 @@ class PreProcessedElements(object):
         assert len(values) % (self._bit_length + 1) == 0
 
         stride = self._bit_length + 1
-        share_bits = [(values[i * stride], values[i * stride + 1: (i+1) * stride])
-                      for i in range(len(values) // stride)]
+        share_bits = [
+            (values[i * stride], values[i * stride + 1 : (i + 1) * stride])
+            for i in range(len(values) // stride)
+        ]
 
         return share_bits
 
@@ -121,7 +125,9 @@ class PreProcessedElements(object):
         key = (ctx.myid, ctx.N, ctx.t)
         if key not in self._triples:
             file_suffix = f"_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-            file_path = f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}{file_suffix}"
+            file_path = (
+                f"{PreProcessingConstants.TRIPLES_FILE_NAME_PREFIX}{file_suffix}"
+            )
             self._triples[key] = iter(self._read_share_values_from_file(file_path))
         try:
             a = ctx.Share(next(self._triples[key]))
@@ -129,7 +135,7 @@ class PreProcessedElements(object):
             ab = ctx.Share(next(self._triples[key]))
             return a, b, ab
         except StopIteration:
-            print('STOP ITERATION TRIPLES')
+            print("STOP ITERATION TRIPLES")
             raise StopIteration(f"preprocess underrun: TRIPLES")
 
     def get_cube(self, ctx):
@@ -174,24 +180,32 @@ class PreProcessedElements(object):
         key = (ctx.myid, ctx.N, ctx.t)
         if key not in self._one_minus_one_rands:
             self._one_minus_one_rands[key] = iter(
-                self._read_share_values_from_file(fpath))
+                self._read_share_values_from_file(fpath)
+            )
         try:
             return ctx.Share(next(self._one_minus_one_rands[key]))
         except StopIteration:
-            print('STOP ITERATION ONE_MINUS_ONE')
+            print("STOP ITERATION ONE_MINUS_ONE")
             raise StopIteration(f"preprocess underrun: ONE_MINUS_ONE")
 
     def get_powers(self, ctx, pid):
         file_suffix = f"_{pid}_{ctx.N}_{ctx.t}-{ctx.myid}.share"
-        return list(map(ctx.Share, self._read_share_values_from_file(
-            f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}{file_suffix}")))
+        return list(
+            map(
+                ctx.Share,
+                self._read_share_values_from_file(
+                    f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}{file_suffix}"
+                ),
+            )
+        )
 
     def get_share(self, ctx, sid, t=None):
         if t is None:
             t = ctx.t
         file_suffix = f"_{sid}_{ctx.N}_{t}-{ctx.myid}.share"
         share_values = self._read_share_values_from_file(
-            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}{file_suffix}")
+            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}{file_suffix}"
+        )
         return ctx.Share(share_values[0], t)
 
     def get_double_share(self, ctx):
@@ -201,7 +215,7 @@ class PreProcessedElements(object):
             path = f"{PreProcessingConstants.DOUBLE_SHARES_FILE_NAME_PREFIX}{suffix}"
             self._double_shares[key] = iter(self._read_share_values_from_file(path))
         r_t = ctx.Share(next(self._double_shares[key]))
-        r_2t = ctx.Share(next(self._double_shares[key]), 2*ctx.t)
+        r_2t = ctx.Share(next(self._double_shares[key]), 2 * ctx.t)
         return r_t, r_2t
 
     def get_share_bits(self, ctx):
@@ -222,8 +236,9 @@ class PreProcessedElements(object):
     #########################
 
     def write_shares(self, ctx, file_name_prefix, degree, shares):
-        with open('%s_%d_%d-%d.share' % (file_name_prefix,
-                                         ctx.N, ctx.t, ctx.myid), 'w') as f:
+        with open(
+            "%s_%d_%d-%d.share" % (file_name_prefix, ctx.N, ctx.t, ctx.myid), "w"
+        ) as f:
             self._write_shares_to_file(f, degree, ctx.myid, shares)
 
     def write_triples(self, ctx, triples):
@@ -248,11 +263,12 @@ class PreProcessedElements(object):
     def _write_polys(self, file_name_prefix, n, t, polys):
         polys = [[coeff.value for coeff in poly.coeffs] for poly in polys]
         all_shares = vandermonde_batch_evaluate(
-            list(range(1, n+1)), polys, self.field.modulus)
+            list(range(1, n + 1)), polys, self.field.modulus
+        )
         for i in range(n):
             shares = [self.field(s[i]) for s in all_shares]
             # with open(f'{file_name_prefix}_{n}_{t}_{i}.share', 'w') as f:
-            with open('%s_%d_%d-%d.share' % (file_name_prefix, n, t, i), 'w') as f:
+            with open("%s_%d_%d-%d.share" % (file_name_prefix, n, t, i), "w") as f:
                 self._write_shares_to_file(f, t, i, shares)
 
     def generate_triples(self, k, n, t):
@@ -261,7 +277,7 @@ class PreProcessedElements(object):
         for _ in range(k):
             a = self.field.random()
             b = self.field.random()
-            c = a*b
+            c = a * b
             polys.append(self.poly.random(t, a))
             polys.append(self.poly.random(t, b))
             polys.append(self.poly.random(t, c))
@@ -272,8 +288,8 @@ class PreProcessedElements(object):
         polys = []
         for _ in range(k):
             a1 = self.field.random()
-            a2 = a1*a1
-            a3 = a1*a2
+            a2 = a1 * a1
+            a3 = a1 * a2
             polys.append(self.poly.random(t, a1))
             polys.append(self.poly.random(t, a2))
             polys.append(self.poly.random(t, a3))
@@ -296,9 +312,10 @@ class PreProcessedElements(object):
 
     def generate_one_minus_one_rands(self, k, n, t):
         self._create_sharedata_dir_if_not_exists()
-        polys = [self.poly.random(t, randint(0, 1)*2 - 1) for _ in range(k)]
+        polys = [self.poly.random(t, randint(0, 1) * 2 - 1) for _ in range(k)]
         self._write_polys(
-            PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX, n, t, polys)
+            PreProcessingConstants.ONE_MINUS_ONE_FILE_NAME_PREFIX, n, t, polys
+        )
 
     def generate_powers(self, k, n, t, z):
         self._create_sharedata_dir_if_not_exists()
@@ -309,11 +326,12 @@ class PreProcessedElements(object):
         powers = [None] * k
         powers[0] = b
         for i in range(1, k):
-            powers[i] = powers[i-1] * b
+            powers[i] = powers[i - 1] * b
         for i in range(z):
             polys = [self.poly.random(t, power) for power in powers]
             self._write_polys(
-                f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{i}", n, t, polys)
+                f"{PreProcessingConstants.POWERS_FILE_NAME_PREFIX}_{i}", n, t, polys
+            )
 
     def generate_double_shares(self, k, n, t):
         self._create_sharedata_dir_if_not_exists()
@@ -321,16 +339,18 @@ class PreProcessedElements(object):
         for _ in range(k):
             r = self.field.random()
             polys.append(self.poly.random(t, r))
-            polys.append(self.poly.random(2*t, r))
+            polys.append(self.poly.random(2 * t, r))
         self._write_polys(
-            PreProcessingConstants.DOUBLE_SHARES_FILE_NAME_PREFIX, n, t, polys)
+            PreProcessingConstants.DOUBLE_SHARES_FILE_NAME_PREFIX, n, t, polys
+        )
 
     def generate_share(self, x, n, t):
         self._create_sharedata_dir_if_not_exists()
         sid = uuid4().hex
         polys = [self.poly.random(t, x)]
         self._write_polys(
-            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}_{sid}", n, t, polys)
+            f"{PreProcessingConstants.SHARES_FILE_NAME_PREFIX}_{sid}", n, t, polys
+        )
         return sid
 
     def generate_share_bits(self, k, n, t):
@@ -345,12 +365,17 @@ class PreProcessedElements(object):
         polys = []
         for _ in range(k):
             r = self.field.random()
-            r_bits = [self.field(b) for b in map(
-                int, reversed(f'{{0:0{self._bit_length}b}}'.format(r.value)))]
+            r_bits = [
+                self.field(b)
+                for b in map(
+                    int, reversed(f"{{0:0{self._bit_length}b}}".format(r.value))
+                )
+            ]
 
             polys.append(self.poly.random(t, r))
             for b in r_bits:
                 polys.append(self.poly.random(t, b))
 
         self._write_polys(
-            PreProcessingConstants.SHARE_BITS_FILE_NAME_PREFIX, n, t, polys)
+            PreProcessingConstants.SHARE_BITS_FILE_NAME_PREFIX, n, t, polys
+        )

@@ -6,14 +6,13 @@ from honeybadgermpc.progs.mimc import mimc_mpc, mimc_plain, mimc_mpc_batch
 from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiply
 
 MIXINS = [BeaverMultiply()]
-PREPROCESSING = ['rands', 'triples', 'zeros', 'cubes']
+PREPROCESSING = ["rands", "triples", "zeros", "cubes"]
 n, t = 3, 1
 k = 10000
 
 
 @mark.asyncio
 async def test_mimc(test_preprocessing, test_runner):
-
     async def _prog(context):
         x = test_preprocessing.elements.get_zero(context)
         field = GF(Subgroup.BLS12_381)

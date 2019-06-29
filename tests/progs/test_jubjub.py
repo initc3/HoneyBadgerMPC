@@ -4,8 +4,13 @@ from pytest import mark
 from honeybadgermpc.elliptic_curve import Ideal, Point, Jubjub
 from honeybadgermpc.progs.jubjub import SharedPoint, SharedIdeal, share_mul
 from honeybadgermpc.progs.mixins.share_arithmetic import (
-    BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
-    DivideShareArrays)
+    BeaverMultiply,
+    BeaverMultiplyArrays,
+    InvertShare,
+    InvertShareArray,
+    DivideShares,
+    DivideShareArrays,
+)
 from honeybadgermpc.progs.mixins.share_comparison import Equality
 
 TEST_CURVE = Jubjub()
@@ -13,13 +18,22 @@ TEST_CURVE = Jubjub()
 TEST_POINTS = [
     # zero
     Point(0, 1, TEST_CURVE),
-    Point(5, 6846412461894745224441235558443359243034138132682534265960483512729196124138, TEST_CURVE),  # noqa: E501
-    Point(10, 9069365299349881324022309154395348339753339814197599672892180073931980134853, TEST_CURVE),  # noqa: E501
-
+    Point(
+        5,
+        6846412461894745224441235558443359243034138132682534265960483512729196124138,
+        TEST_CURVE,
+    ),  # noqa: E501
+    Point(
+        10,
+        9069365299349881324022309154395348339753339814197599672892180073931980134853,
+        TEST_CURVE,
+    ),  # noqa: E501
     # equal to sum of last two elements
-    Point(31969263762581634541702420136595781625976564652055998641927499388080005620826,
-          31851650165997003853447983973612951129977622378317524209017259746316028027479,
-          TEST_CURVE)
+    Point(
+        31969263762581634541702420136595781625976564652055998641927499388080005620826,
+        31851650165997003853447983973612951129977622378317524209017259746316028027479,
+        TEST_CURVE,
+    ),
 ]
 
 STANDARD_ARITHMETIC_MIXINS = [
@@ -29,18 +43,17 @@ STANDARD_ARITHMETIC_MIXINS = [
     InvertShareArray(),
     DivideShares(),
     DivideShareArrays(),
-    Equality()
+    Equality(),
 ]
 
-STANDARD_PREPROCESSING = [
-    'rands', 'triples', 'bits'
-]
+STANDARD_PREPROCESSING = ["rands", "triples", "bits"]
 
 n, t = 4, 1
 
 
-async def run_test_program(prog, test_runner, n=n, t=t, k=10000,
-                           mixins=STANDARD_ARITHMETIC_MIXINS):
+async def run_test_program(
+    prog, test_runner, n=n, t=t, k=10000, mixins=STANDARD_ARITHMETIC_MIXINS
+):
 
     return await test_runner(prog, n, t, STANDARD_PREPROCESSING, k, mixins)
 
@@ -89,10 +102,14 @@ async def test_shared_point_equals(test_preprocessing, test_runner):
 
         p4 = SharedIdeal(TEST_CURVE)
 
-        eqs = await asyncio.gather(*[shared_point_equals(p1, p1),
-                                     shared_point_equals(p1, p2),
-                                     shared_point_equals(p1, p3),
-                                     shared_point_equals(p1, p4)])
+        eqs = await asyncio.gather(
+            *[
+                shared_point_equals(p1, p1),
+                shared_point_equals(p1, p2),
+                shared_point_equals(p1, p3),
+                shared_point_equals(p1, p4),
+            ]
+        )
 
         assert [True, False, False, False] == eqs
 
@@ -113,12 +130,16 @@ async def test_shared_point_creation_from_point(test_preprocessing, test_runner)
 async def test_shared_point_double(test_preprocessing, test_runner):
     async def _prog(context):
         shared_points = [SharedPoint.from_point(context, p) for p in TEST_POINTS]
-        actual_doubled = [SharedPoint.from_point(
-            context, p.double()) for p in TEST_POINTS]
+        actual_doubled = [
+            SharedPoint.from_point(context, p.double()) for p in TEST_POINTS
+        ]
 
         results = [p.double() for p in shared_points]
-        assert all(await asyncio.gather(
-            *[shared_point_equals(a, r) for a, r in zip(actual_doubled, results)]))
+        assert all(
+            await asyncio.gather(
+                *[shared_point_equals(a, r) for a, r in zip(actual_doubled, results)]
+            )
+        )
 
     await run_test_program(_prog, test_runner)
 
@@ -132,7 +153,9 @@ async def test_shared_point_neg(test_preprocessing, test_runner):
         shared_negated = [s.neg() for s in shared_points]
 
         zipped = zip(actual_negated, shared_negated)
-        assert all(await asyncio.gather(*[shared_point_equals(a, r) for a, r in zipped]))
+        assert all(
+            await asyncio.gather(*[shared_point_equals(a, r) for a, r in zipped])
+        )
 
     await run_test_program(_prog, test_runner)
 
@@ -142,16 +165,19 @@ async def test_shared_point_add(test_preprocessing, test_runner):
     async def _prog(context):
         ideal = SharedIdeal(TEST_CURVE)
 
-        p1, p2, p3, p4 = [SharedPoint.from_point(
-            context, point) for point in TEST_POINTS]
+        p1, p2, p3, p4 = [
+            SharedPoint.from_point(context, point) for point in TEST_POINTS
+        ]
 
         r1, r2, r3 = p2.add(ideal), p1.add(p2), p2.add(p3)
 
-        assert all(await asyncio.gather(
-            shared_point_equals(r1, p2),
-            shared_point_equals(r2, p2),
-            shared_point_equals(r3, p4)
-        ))
+        assert all(
+            await asyncio.gather(
+                shared_point_equals(r1, p2),
+                shared_point_equals(r2, p2),
+                shared_point_equals(r3, p4),
+            )
+        )
 
     await run_test_program(_prog, test_runner)
 
@@ -166,8 +192,11 @@ async def test_shared_point_sub(test_preprocessing, test_runner):
         actual = [p.sub(p) for p in shared_points]
         result = [p1.add(p2) for p1, p2 in zip(shared_points, actual_negated)]
 
-        assert all(await asyncio.gather(
-            *[shared_point_equals(a, r) for a, r in zip(actual, result)]))
+        assert all(
+            await asyncio.gather(
+                *[shared_point_equals(a, r) for a, r in zip(actual, result)]
+            )
+        )
 
     await run_test_program(_prog, test_runner)
 
@@ -195,13 +224,9 @@ async def test_shared_point_montgomery_mul(test_preprocessing, test_runner):
         p1_double = p1.double()
         p1_quad = p1_double.double()
 
-        assert await shared_point_equals(
-            p1_quad,
-            p1.montgomery_mul(4))
+        assert await shared_point_equals(p1_quad, p1.montgomery_mul(4))
 
-        assert await shared_point_equals(
-            p1_quad.add(p1),
-            p1.montgomery_mul(5))
+        assert await shared_point_equals(p1_quad.add(p1), p1.montgomery_mul(5))
 
     await run_test_program(_prog, test_runner)
 
@@ -214,11 +239,12 @@ async def test_share_mul(test_preprocessing, test_runner):
         p = TEST_POINTS[1]
 
         multiplier_ = Jubjub.Field(0)
-        m_bits = [test_preprocessing.elements.get_bit(context)
-                  for i in range(bit_length)]
+        m_bits = [
+            test_preprocessing.elements.get_bit(context) for i in range(bit_length)
+        ]
 
         for idx, m in enumerate(m_bits):
-            multiplier_ += (2**idx) * m
+            multiplier_ += (2 ** idx) * m
 
         # Compute share_mul
         p1_ = await share_mul(context, m_bits, p)

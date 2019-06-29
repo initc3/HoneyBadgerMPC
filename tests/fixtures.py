@@ -9,6 +9,7 @@ from pytest import fixture
 def galois_field():
     from honeybadgermpc.field import GF
     from honeybadgermpc.elliptic_curve import Subgroup
+
     return GF(Subgroup.BLS12_381)
 
 
@@ -48,25 +49,28 @@ def galois_field_roots(galois_field):
         19198300450045974760322445328762595043377263979035567067359042471865346602023,
         8440883371485595147185456037843487899036125874298769093456291114070486308750,
         21123405922655689551948186441194090886901565533353647562100078719332932021059,
-        25668834994940048658761004830063370081900324240717227839632269577717222857885
+        25668834994940048658761004830063370081900324240717227839632269577717222857885,
     ]
 
 
 @fixture
 def polynomial(galois_field):
     from honeybadgermpc.polynomial import polynomials_over
+
     return polynomials_over(galois_field)
 
 
 @fixture
 def rust_field():
     from honeybadgermpc.betterpairing import ZR
+
     return ZR
 
 
 @fixture
 def rust_polynomial(rust_field):
     from honeybadgermpc.polynomial import polynomials_over
+
     return polynomials_over(rust_field)
 
 
@@ -78,9 +82,10 @@ def triples_polys(request, triples_fields, polynomial):
     ]
 
 
-class TestPreProcessing():
+class TestPreProcessing:
     def __init__(self):
         from honeybadgermpc.preprocessing import PreProcessedElements
+
         self.cache = {}
         self.elements = PreProcessedElements()
 
@@ -94,7 +99,7 @@ class TestPreProcessing():
             "oneminusone",
             "double_shares",
             "powers",
-            "share_bits"
+            "share_bits",
         ]:
             if (kind, n, t) in self.cache:
                 return
@@ -137,9 +142,9 @@ class TestRouter(SimpleRouter):
         """Overridden to introduce delays.
         """
         delay = self.rnd.random() * self.max_delay
-        asyncio.get_event_loop().call_later(delay,
-                                            super().send,
-                                            player_id, dest_id, message)
+        asyncio.get_event_loop().call_later(
+            delay, super().send, player_id, dest_id, message
+        )
 
 
 @fixture

@@ -9,10 +9,12 @@ class PolyCommitLin(object):
         self.h = crs[1]
 
     def commit(self, phi):
-        degree = len(phi.coeffs)-1
+        degree = len(phi.coeffs) - 1
         phi_hat = polynomials_over(ZR).random(degree)
-        cs = [pow(self.g, phi.coeffs[i]) * pow(self.h, phi_hat.coeffs[i])
-              for i in range(degree+1)]
+        cs = [
+            pow(self.g, phi.coeffs[i]) * pow(self.h, phi_hat.coeffs[i])
+            for i in range(degree + 1)
+        ]
         return cs, phi_hat
 
     def create_witness(self, aux, i):

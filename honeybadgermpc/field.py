@@ -61,11 +61,10 @@ class GF(object):
         return (GF, (self.modulus,))
 
     def random(self, seed=None):
-        return GFElement(Random(seed).randint(0, self.modulus-1), self)
+        return GFElement(Random(seed).randint(0, self.modulus - 1), self)
 
 
 class GFElement(FieldElement):
-
     def __init__(self, value, gf):
         self.modulus = gf.modulus
         self.field = gf
@@ -141,8 +140,8 @@ class GFElement(FieldElement):
             while b != 0:
                 quotient = a // b
                 a, b = b, a % b
-                x, lastx = lastx - quotient*x, x
-                y, lasty = lasty - quotient*y, y
+                x, lastx = lastx - quotient * x, x
+                y, lasty = lasty - quotient * y, y
             return (lastx, lasty, a)
 
         inverse = extended_gcd(self.value, self.modulus)[0]
@@ -172,13 +171,13 @@ class GFElement(FieldElement):
         No attempt is made the to return the positive square root.
         """
         assert self.modulus % 2 == 1, "Modulus must be odd"
-        assert pow(self, (self.modulus-1)//2) == 1
+        assert pow(self, (self.modulus - 1) // 2) == 1
 
         if self.modulus % 4 == 3:
             # The case that the modulus is a Blum prime
             # (congruent to 3 mod 4), there will be no remainder in the
             # division below.
-            root = pow(self.value, (self.modulus+1)//4)
+            root = pow(self.value, (self.modulus + 1) // 4)
             return GFElement(root, self.field)
         else:
             # The case that self.modulus % 4 == 1
@@ -186,20 +185,20 @@ class GFElement(FieldElement):
             # http://people.math.gatech.edu/~mbaker/pdf/cipolla2011.pdf
             t = u = 0
             for i in range(1, self.modulus):
-                u = i*i - self
-                if pow(u, (self.modulus-1)//2) == self.modulus - 1:
+                u = i * i - self
+                if pow(u, (self.modulus - 1) // 2) == self.modulus - 1:
                     t = i
                     break
 
             def cipolla_mult(a, b, w):
-                return ((a[0]*b[0] + a[1]*b[1]*w), (a[0]*b[1] + a[1]*b[0]))
+                return ((a[0] * b[0] + a[1] * b[1] * w), (a[0] * b[1] + a[1] * b[0]))
 
-            exp = (self.modulus+1)//2
+            exp = (self.modulus + 1) // 2
             exp_bin = bin(exp)[2:]
             x1 = (t, 1)
             x2 = cipolla_mult(x1, x1, u)
             for i in range(1, len(exp_bin)):
-                if(exp_bin[i] == "0"):
+                if exp_bin[i] == "0":
                     x2 = cipolla_mult(x2, x1, u)
                     x1 = cipolla_mult(x1, x1, u)
                 else:
@@ -216,7 +215,7 @@ class GFElement(FieldElement):
 
         If x > floor(p/2) then subtract p to obtain negative integer.
         """
-        if self.value > ((self.modulus-1)/2):
+        if self.value > ((self.modulus - 1) / 2):
             return self.value - self.modulus
         else:
             return self.value
@@ -261,11 +260,11 @@ class GFElement(FieldElement):
                 raise FieldsNotIdentical
             # TODO Replace with (a > b) - (a < b)
             # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
-            return cmp(self.value, other.value)     # noqa  XXX until above is done
+            return cmp(self.value, other.value)  # noqa  XXX until above is done
         except AttributeError:
             # TODO Replace with (a > b) - (a < b)
             # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
-            return cmp(self.value, other)   # noqa XXX until above is done
+            return cmp(self.value, other)  # noqa XXX until above is done
 
     def __hash__(self):
         """Hash value."""
@@ -326,17 +325,36 @@ def fake_gf(modulus):
             self.value = value
 
         # Binary operations.
-        __add__ = __radd__ = __sub__ = __rsub__ \
-            = __mul__ = __rmul__ = __div__ = __rdiv__ \
-            = __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ \
-            = __pow__ = __neg__ \
-            = lambda self, other: FakeFieldElement(return_value)
+        __add__ = (
+            __radd__
+        ) = (
+            __sub__
+        ) = (
+            __rsub__
+        ) = (
+            __mul__
+        ) = (
+            __rmul__
+        ) = (
+            __div__
+        ) = (
+            __rdiv__
+        ) = (
+            __truediv__
+        ) = (
+            __rtruediv__
+        ) = (
+            __floordiv__
+        ) = __rfloordiv__ = __pow__ = __neg__ = lambda self, other: FakeFieldElement(
+            return_value
+        )
 
         # Unary operations.
         __invert__ = sqrt = lambda self: FakeFieldElement(return_value)
 
         # Bit extraction. We pretend that the number is *very* big.
-        def bit(self, index): return 1     # noqa  XXX for the time being
+        def bit(self, index):
+            return 1  # noqa  XXX for the time being
 
         # Fake field elements are printed with double curly brackets.
         __repr__ = __str__ = lambda self: "{{%d}}" % self.value
@@ -347,5 +365,6 @@ def fake_gf(modulus):
 
 
 if __name__ == "__main__":
-    import doctest      # pragma NO COVER
-    doctest.testmod()   # pragma NO COVER
+    import doctest  # pragma NO COVER
+
+    doctest.testmod()  # pragma NO COVER

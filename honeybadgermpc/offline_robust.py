@@ -13,9 +13,9 @@ from abc import ABC, abstractmethod
 
 def get_avss_params(n, t, my_id):
     g, h = G1.rand(seed=[0, 0, 0, 1]), G1.rand(seed=[0, 0, 0, 2])
-    public_keys, private_keys = [None]*n, [None]*n
+    public_keys, private_keys = [None] * n, [None] * n
     for i in range(n):
-        private_keys[i] = ZR.random(seed=17+i)
+        private_keys[i] = ZR.random(seed=17 + i)
         public_keys[i] = pow(g, private_keys[i])
     return g, h, public_keys, private_keys[my_id]
 
@@ -23,8 +23,17 @@ def get_avss_params(n, t, my_id):
 class PreProcessingBase(ABC):
     PERIOD_IN_SECONDS = 3
 
-    def __init__(self, n, t, my_id, send, recv, tag,
-                 batch_size=10, avss_value_processor_chunk_size=1):
+    def __init__(
+        self,
+        n,
+        t,
+        my_id,
+        send,
+        recv,
+        tag,
+        batch_size=10,
+        avss_value_processor_chunk_size=1,
+    ):
         self.n, self.t, self.my_id = n, t, my_id
         self.tag = tag
         self.avss_value_processor_chunk_size = avss_value_processor_chunk_size
@@ -42,6 +51,7 @@ class PreProcessingBase(ABC):
 
         def _get_send_recv(tag):
             return wrap_send(tag, send), subscribe(tag)
+
         self.get_send_recv = _get_send_recv
 
     async def get(self):
@@ -55,14 +65,22 @@ class PreProcessingBase(ABC):
         inputs = self._get_input_batch()
         assert type(inputs) in [tuple, list]
         avss_tasks = []
-        avss_tasks.append(asyncio.create_task(
-            self.avss_instance.avss_parallel(
-                avss_id, len(inputs), values=inputs, dealer_id=self.my_id)))
+        avss_tasks.append(
+            asyncio.create_task(
+                self.avss_instance.avss_parallel(
+                    avss_id, len(inputs), values=inputs, dealer_id=self.my_id
+                )
+            )
+        )
         for i in range(self.n):
             if i != self.my_id:
-                avss_tasks.append(asyncio.create_task(
-                    self.avss_instance.avss_parallel(
-                        avss_id, len(inputs), dealer_id=i)))
+                avss_tasks.append(
+                    asyncio.create_task(
+                        self.avss_instance.avss_parallel(
+                            avss_id, len(inputs), dealer_id=i
+                        )
+                    )
+                )
         await asyncio.gather(*avss_tasks)
 
     async def _runner(self):
@@ -96,21 +114,26 @@ class PreProcessingBase(ABC):
 
     def __enter__(self):
         n, t, my_id = self.n, self.t, self.my_id
-        send, recv = self.get_send_recv(f'{self.tag}-AVSS')
+        send, recv = self.get_send_recv(f"{self.tag}-AVSS")
         g, h, pks, sk = get_avss_params(n, t, my_id)
         crs = [g, h]
         self.avss_instance = HbAvssLight(pks, sk, crs, n, t, my_id, send, recv)
         self.avss_instance.__enter__()
         self.tasks.append(asyncio.create_task(self._runner()))
 
-        send, recv = self.get_send_recv(f'{self.tag}-AVSS_VALUE_PROCESSOR')
-        pk, sks = dealer(n, t+1, seed=17)
+        send, recv = self.get_send_recv(f"{self.tag}-AVSS_VALUE_PROCESSOR")
+        pk, sks = dealer(n, t + 1, seed=17)
         self.avss_value_processor = AvssValueProcessor(
-            pk, sks[my_id],
-            n, t, my_id,
-            send, recv,
+            pk,
+            sks[my_id],
+            n,
+            t,
+            my_id,
+            send,
+            recv,
             self.avss_instance.output_queue.get,
-            self.avss_value_processor_chunk_size)
+            self.avss_value_processor_chunk_size,
+        )
         self.avss_value_processor.__enter__()
         self.tasks.append(asyncio.create_task(self._extract()))
         return self
@@ -125,7 +148,8 @@ class PreProcessingBase(ABC):
 class RandomGenerator(PreProcessingBase):
     def __init__(self, n, t, my_id, send, recv, batch_size=10):
         super(RandomGenerator, self).__init__(
-            n, t, my_id, send, recv, "rand", batch_size)
+            n, t, my_id, send, recv, "rand", batch_size
+        )
         self.field = GF(Subgroup.BLS12_381)
 
     def _get_input_batch(self):
@@ -136,23 +160,31 @@ class RandomGenerator(PreProcessingBase):
             async for batch in self._get_output_batch():
                 random_shares_int = await asyncio.gather(*batch)
                 output_shares_int = refine_randoms(
-                    self.n, self.t, self.field, random_shares_int)
+                    self.n, self.t, self.field, random_shares_int
+                )
                 for value in output_shares_int:
                     self.output_queue.put_nowait(self.field(value))
 
 
 class TripleGenerator(PreProcessingBase):
     def __init__(self, n, t, my_id, send, recv, batch_size=10):
-        super(TripleGenerator, self).__init__(n, t, my_id, send, recv, "triple",
-                                              batch_size,
-                                              avss_value_processor_chunk_size=3)
+        super(TripleGenerator, self).__init__(
+            n,
+            t,
+            my_id,
+            send,
+            recv,
+            "triple",
+            batch_size,
+            avss_value_processor_chunk_size=3,
+        )
         self.field = GF(Subgroup.BLS12_381)
 
     def _get_input_batch(self):
         inputs = []
         for _ in range(self.batch_size):
             a, b = self.field.random(), self.field.random()
-            ab = a*b
+            ab = a * b
             inputs += [a.value, b.value, ab.value]
         return inputs
 
@@ -165,7 +197,7 @@ class TripleGenerator(PreProcessingBase):
                 assert n % 3 == 0
 
                 for i in range(0, n, 3):
-                    a, b, ab = triple_shares_int[i:i+3]
+                    a, b, ab = triple_shares_int[i : i + 3]
                     self.output_queue.put_nowait((a, b, ab))
 
 
@@ -200,7 +232,8 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
-        loop.run_until_complete(_prog(
-            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))
+        loop.run_until_complete(
+            _prog(HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id)
+        )
     finally:
         loop.close()

@@ -21,7 +21,8 @@ class NodeCommunicator(object):
 
         self.bytes_sent = 0
         self.benchmark_logger = logging.LoggerAdapter(
-            logging.getLogger("benchmark_logger"), {"node_id": my_id})
+            logging.getLogger("benchmark_logger"), {"node_id": my_id}
+        )
 
         self._dealer_tasks = []
         self._router_task = None
@@ -30,7 +31,7 @@ class NodeCommunicator(object):
 
         n = len(peers_config)
         self._receiver_queue = asyncio.Queue()
-        self._sender_queues = [None]*n
+        self._sender_queues = [None] * n
         for i in range(n):
             if i == self.my_id:
                 self._sender_queues[i] = self._receiver_queue
@@ -57,7 +58,7 @@ class NodeCommunicator(object):
         logging.debug("Dealer tasks finished.")
         self._router_task.cancel()
         logging.debug("Router task cancelled.")
-        self.zmq_context.destroy(linger=self.linger_timeout*1000)
+        self.zmq_context.destroy(linger=self.linger_timeout * 1000)
         self.benchmark_logger.info("Total bytes sent out: %d", self.bytes_sent)
 
     async def _setup(self):
@@ -79,12 +80,15 @@ class NodeCommunicator(object):
                 # a node can pretend to send messages on behalf of other nodes.
                 dealer.setsockopt(IDENTITY, str(self.my_id).encode())
                 dealer.connect(
-                    f"tcp://{self.peers_config[i].ip}:{self.peers_config[i].port}")
+                    f"tcp://{self.peers_config[i].ip}:{self.peers_config[i].port}"
+                )
                 # Setup a task which reads messages intended for this
                 # party from a queue and then sends them to this node.
                 task = asyncio.create_task(
                     self._process_node_messages(
-                        i, self._sender_queues[i], dealer.send_multipart))
+                        i, self._sender_queues[i], dealer.send_multipart
+                    )
+                )
                 self._dealer_tasks.append(task)
 
     async def _recv_loop(self, router):
@@ -132,7 +136,10 @@ class ProcessProgramRunner(object):
             **kwargs,
         )
         program_result = asyncio.Future()
-        def callback(future): program_result.set_result(future.result())
+
+        def callback(future):
+            program_result.set_result(future.result())
+
         task = asyncio.create_task(context._run())
         task.add_done_callback(callback)
         task.add_done_callback(print_exception_callback)
@@ -144,7 +151,9 @@ class ProcessProgramRunner(object):
 
     async def __aenter__(self):
         await self.node_communicator.__aenter__()
-        self.subscribe_task, self.subscribe = subscribe_recv(self.node_communicator.recv)
+        self.subscribe_task, self.subscribe = subscribe_recv(
+            self.node_communicator.recv
+        )
         self.send = self.node_communicator.send
         return self
 
@@ -210,5 +219,8 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     # loop.run_until_complete(
     #     verify_all_connections(HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.my_id))
-    loop.run_until_complete(test_mpc_programs(
-        HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id))
+    loop.run_until_complete(
+        test_mpc_programs(
+            HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.t, HbmpcConfig.my_id
+        )
+    )

@@ -13,7 +13,7 @@ from functools import reduce
 
 # group = PairingGroup('SS512')
 # group = PairingGroup('MNT159')
-group = PairingGroup('MNT224')
+group = PairingGroup("MNT224")
 
 
 def serialize(g):
@@ -25,28 +25,28 @@ def serialize(g):
 def deserialize0(g):
     """ """
     # Only work in G1 here
-    return group.deserialize(b'0:'+encodebytes(g))
+    return group.deserialize(b"0:" + encodebytes(g))
 
 
 def deserialize1(g):
     """ """
     # Only work in G1 here
-    return group.deserialize(b'1:'+encodebytes(g))
+    return group.deserialize(b"1:" + encodebytes(g))
 
 
 def deserialize2(g):
     """ """
     # Only work in G1 here
-    return group.deserialize(b'2:'+encodebytes(g))
+    return group.deserialize(b"2:" + encodebytes(g))
 
 
-g1 = group.hash('geng1', G1)
+g1 = group.hash("geng1", G1)
 g1.initPP()
 # g2 = g1
-g2 = group.hash('geng2', G2)
+g2 = group.hash("geng2", G2)
 g2.initPP()
-ZERO = group.random(ZR, seed=59)*0
-ONE = group.random(ZR, seed=60)*0+1
+ZERO = group.random(ZR, seed=59) * 0
+ONE = group.random(ZR, seed=60) * 0 + 1
 
 
 def polynom_eval(x, coefficients):
@@ -61,6 +61,7 @@ def polynom_eval(x, coefficients):
 
 class TBLSPublicKey(object):
     """ """
+
     def __init__(self, l, k, vk, vks):
         """ """
         self.l = l  # noqa: E741
@@ -71,8 +72,8 @@ class TBLSPublicKey(object):
     def __getstate__(self):
         """ """
         d = dict(self.__dict__)
-        d['VK'] = serialize(self.VK)
-        d['VKs'] = list(map(serialize, self.VKs))
+        d["VK"] = serialize(self.VK)
+        d["VKs"] = list(map(serialize, self.VKs))
         return d
 
     def __setstate__(self, d):
@@ -83,10 +84,10 @@ class TBLSPublicKey(object):
 
     def __eq__(self, other):
         return (
-            self.l == other.l and  # noqa: E741
-            self.k == other.k and
-            self.VK == other.VK and
-            self.VKs == other.VKs
+            self.l == other.l  # noqa: E741
+            and self.k == other.k
+            and self.VK == other.VK
+            and self.VKs == other.VKs
         )
 
     def lagrange(self, s, j):
@@ -100,7 +101,7 @@ class TBLSPublicKey(object):
         assert j in s
         assert 0 <= j < self.l
         num = reduce(mul, [0 - jj - 1 for jj in s if jj != j], ONE)
-        den = reduce(mul, [j - jj     for jj in s if jj != j], ONE)  # noqa: E272
+        den = reduce(mul, [j - jj for jj in s if jj != j], ONE)  # noqa: E272
         # assert num % den == 0
         return num / den
 
@@ -126,9 +127,7 @@ class TBLSPublicKey(object):
         s = set(sigs.keys())
         assert s.issubset(range(self.l))
 
-        res = reduce(mul,
-                     [sig ** self.lagrange(s, j)
-                      for j, sig in sigs.items()], 1)
+        res = reduce(mul, [sig ** self.lagrange(s, j) for j, sig in sigs.items()], 1)
         return res
 
 
@@ -144,9 +143,9 @@ class TBLSPrivateKey(TBLSPublicKey):
 
     def __eq__(self, other):
         return (
-            super(TBLSPrivateKey, self).__eq__(other) and
-            self.i == other.i and
-            self.SK == other.SK
+            super(TBLSPrivateKey, self).__eq__(other)
+            and self.i == other.i
+            and self.SK == other.SK
         )
 
     def sign(self, h):
@@ -156,10 +155,10 @@ class TBLSPrivateKey(TBLSPublicKey):
     def __getstate__(self):
         """ """
         d = dict(self.__dict__)
-        d['VK'] = serialize(self.VK)
-        d['VKs'] = list(map(serialize, self.VKs))
-        d['i'] = self.i
-        d['SK'] = serialize(self.SK)
+        d["VK"] = serialize(self.VK)
+        d["VKs"] = list(map(serialize, self.VKs))
+        d["i"] = self.i
+        d["SK"] = serialize(self.SK)
         return d
 
     def __setstate__(self, d):
@@ -174,14 +173,14 @@ def dealer(players=10, k=5, seed=None):
     """ """
     # Random polynomial coefficients
     if seed is not None:
-        a = [group.random(ZR, seed=seed+i) for i in range(k)]
+        a = [group.random(ZR, seed=seed + i) for i in range(k)]
     else:
         a = group.random(ZR, count=k)
     assert len(a) == k
     secret = a[0]
 
     # Shares of master secret key
-    sks = [polynom_eval(i, a) for i in range(1, players+1)]
+    sks = [polynom_eval(i, a) for i in range(1, players + 1)]
     assert polynom_eval(0, a) == secret
 
     # Verification keys
@@ -190,12 +189,13 @@ def dealer(players=10, k=5, seed=None):
 
     public_key = TBLSPublicKey(players, k, vk, vks)
     private_keys = [
-        TBLSPrivateKey(players, k, vk, vks, sk, i) for i, sk in enumerate(sks)]
+        TBLSPrivateKey(players, k, vk, vks, sk, i) for i, sk in enumerate(sks)
+    ]
 
     # Check reconstruction of 0
     s = set(range(0, k))
     lhs = polynom_eval(0, a)
-    rhs = sum(public_key.lagrange(s, j) * polynom_eval(j+1, a) for j in s)
+    rhs = sum(public_key.lagrange(s, j) * polynom_eval(j + 1, a) for j in s)
     assert lhs == rhs
     # print i, 'ok'
 
@@ -206,7 +206,7 @@ def generate_serialized_keys(n=4, f=1):
     import base64
     from pickle import dumps
 
-    pbk, pvks = dealer(n, f+1)
+    pbk, pvks = dealer(n, f + 1)
     print(base64.b64encode(dumps(pbk)))
     print()
     for pvk in pvks:

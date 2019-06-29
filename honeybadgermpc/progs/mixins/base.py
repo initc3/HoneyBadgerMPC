@@ -7,6 +7,7 @@ class MixinBase(ABC):
     """Abstract base class for all Mixin objects
     These will work like drag-and-drop functors to load in some mpc applications
     """
+
     pp_elements = PreProcessedElements()
 
     @abstractmethod
@@ -30,6 +31,7 @@ class AsyncMixin(MixinBase):
     """Abstract base class representing a mixin with an async
     method to call
     """
+
     from honeybadgermpc.mpc import Mpc
 
     dependencies = []

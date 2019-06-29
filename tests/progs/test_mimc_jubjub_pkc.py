@@ -4,11 +4,19 @@ import asyncio
 from honeybadgermpc.field import GF
 from honeybadgermpc.mpc import Subgroup
 from honeybadgermpc.progs.mixins.share_arithmetic import (
-    BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
-    DivideShareArrays)
+    BeaverMultiply,
+    BeaverMultiplyArrays,
+    InvertShare,
+    InvertShareArray,
+    DivideShares,
+    DivideShareArrays,
+)
 from honeybadgermpc.progs.mixins.share_comparison import Equality
-from honeybadgermpc.progs.mimc_jubjub_pkc import (mimc_encrypt, mimc_decrypt,
-                                                  key_generation)
+from honeybadgermpc.progs.mimc_jubjub_pkc import (
+    mimc_encrypt,
+    mimc_decrypt,
+    key_generation,
+)
 
 STANDARD_ARITHMETIC_MIXINS = [
     BeaverMultiply(),
@@ -17,10 +25,10 @@ STANDARD_ARITHMETIC_MIXINS = [
     InvertShareArray(),
     DivideShares(),
     DivideShareArrays(),
-    Equality()
+    Equality(),
 ]
 
-PREPROCESSING = ['rands', 'triples', 'zeros', 'cubes', 'bits']
+PREPROCESSING = ["rands", "triples", "zeros", "cubes", "bits"]
 n, t = 4, 1
 k = 10000
 

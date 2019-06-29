@@ -3,14 +3,17 @@ from random import shuffle, randint
 from honeybadgermpc.utils.sequencer import Sequencer
 
 
-@mark.parametrize("input_values", (
+@mark.parametrize(
+    "input_values",
     (
-        [(2, "v"), (3, "v"), (1, "v"), (0, "v"), (4, "v")],
-        [(0, "v"), (1, "v"), (2, "v"), (3, "v"), (4, "v")],
-        [(4, "v"), (3, "v"), (2, "v"), (1, "v"), (0, "v")],
-        [(5, "v"), (6, "v"), (1, "v"), (2, "v"), (3, "v"), (4, "v"), (0, "v")]
-    )
-))
+        (
+            [(2, "v"), (3, "v"), (1, "v"), (0, "v"), (4, "v")],
+            [(0, "v"), (1, "v"), (2, "v"), (3, "v"), (4, "v")],
+            [(4, "v"), (3, "v"), (2, "v"), (1, "v"), (0, "v")],
+            [(5, "v"), (6, "v"), (1, "v"), (2, "v"), (3, "v"), (4, "v"), (0, "v")],
+        )
+    ),
+)
 def test_fixed(input_values):
     output_values = sorted(input_values, key=lambda x: x[0])
     sequencer = Sequencer()

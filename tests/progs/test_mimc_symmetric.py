@@ -6,7 +6,7 @@ from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiply
 from honeybadgermpc.progs.mimc_symmetric import mimc_encrypt, mimc_decrypt
 
 MIXINS = [BeaverMultiply()]
-PREPROCESSING = ['rands', 'triples', 'zeros', 'cubes', 'bits']
+PREPROCESSING = ["rands", "triples", "zeros", "cubes", "bits"]
 n, t = 3, 1
 k = 10000
 

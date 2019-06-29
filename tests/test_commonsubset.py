@@ -23,11 +23,11 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
     async def _recv():
         while True:
             (sender, (tag, j, msg)) = await recv()
-            if tag == 'ACS_COIN':
+            if tag == "ACS_COIN":
                 coin_recvs[j].put_nowait((sender, msg))
-            elif tag == 'ACS_RBC':
+            elif tag == "ACS_RBC":
                 rbc_recvs[j].put_nowait((sender, msg))
-            elif tag == 'ACS_ABA':
+            elif tag == "ACS_ABA":
                 aba_recvs[j].put_nowait((sender, msg))
             else:
                 raise ValueError("Unknown tag: %s", tag)
@@ -37,29 +37,49 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
 
     async def _setup(j):
         def coin_bcast(o):
-            bcast(('ACS_COIN', j, o))
+            bcast(("ACS_COIN", j, o))
 
         coin_recvs[j] = asyncio.Queue()
         coin, coin_recv_task = await shared_coin(
-            sid + 'COIN' + str(j), pid, n, f, pk, sk, coin_bcast, coin_recvs[j].get)
+            sid + "COIN" + str(j), pid, n, f, pk, sk, coin_bcast, coin_recvs[j].get
+        )
 
         def aba_bcast(o):
-            bcast(('ACS_ABA', j, o))
+            bcast(("ACS_ABA", j, o))
 
         aba_recvs[j] = asyncio.Queue()
         aba_task = asyncio.create_task(
-            binaryagreement(sid+'ABA'+str(j), pid, n, f, coin, aba_inputs[j].get,
-                            aba_outputs[j].put_nowait, aba_bcast, aba_recvs[j].get))
+            binaryagreement(
+                sid + "ABA" + str(j),
+                pid,
+                n,
+                f,
+                coin,
+                aba_inputs[j].get,
+                aba_outputs[j].put_nowait,
+                aba_bcast,
+                aba_recvs[j].get,
+            )
+        )
 
         def rbc_send(k, o):
-            send(k, ('ACS_RBC', j, o))
+            send(k, ("ACS_RBC", j, o))
 
         # Only leader gets input
         rbc_input = await input_msg() if j == pid else None
         rbc_recvs[j] = asyncio.Queue()
         rbc_outputs[j] = asyncio.create_task(
-            reliablebroadcast(sid+'RBC'+str(j), pid, n, f, j, rbc_input,
-                              rbc_recvs[j].get, rbc_send))
+            reliablebroadcast(
+                sid + "RBC" + str(j),
+                pid,
+                n,
+                f,
+                j,
+                rbc_input,
+                rbc_recvs[j].get,
+                rbc_send,
+            )
+        )
 
         return coin_recv_task, aba_task
 
@@ -69,17 +89,26 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
         recv_tasks.append(c_task)
         work_tasks.append(rcv_task)
 
-    return commonsubset(pid, n, f, rbc_outputs,
-                        [_.put_nowait for _ in aba_inputs],
-                        [_.get for _ in aba_outputs]), recv_tasks, work_tasks
+    return (
+        commonsubset(
+            pid,
+            n,
+            f,
+            rbc_outputs,
+            [_.put_nowait for _ in aba_inputs],
+            [_.get for _ in aba_outputs],
+        ),
+        recv_tasks,
+        work_tasks,
+    )
 
 
 @mark.asyncio
 async def test_commonsubset(test_router):
     n, f, seed = 4, 1, None
     # Generate keys
-    sid = 'sidA'
-    pk, sks = dealer(n, f+1, seed=seed)
+    sid = "sidA"
+    pk, sks = dealer(n, f + 1, seed=seed)
     rnd = random.Random(seed)
     # print('SEED:', seed)
     router_seed = rnd.random()
@@ -91,9 +120,10 @@ async def test_commonsubset(test_router):
         inputs[i] = asyncio.Queue(1)
 
         threads[i] = make_commonsubset(
-            sid, i, n, f, pk, sks[i], inputs[i].get, sends[i], recvs[i], bcasts[i])
+            sid, i, n, f, pk, sks[i], inputs[i].get, sends[i], recvs[i], bcasts[i]
+        )
 
-    await asyncio.gather(*[inputs[i].put('<[ACS Input %d]>' % i) for i in range(n)])
+    await asyncio.gather(*[inputs[i].put("<[ACS Input %d]>" % i) for i in range(n)])
     results = await asyncio.gather(*threads)
     acs, recv_task_lists, work_task_lists = zip(*results)
     outs = await asyncio.gather(*acs)

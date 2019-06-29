@@ -32,9 +32,9 @@ def encode(k, n, m):
     assert k <= 256  # TODO: Record this assumption!
     # pad m to a multiple of K bytes
     padlen = k - (len(m) % k)
-    m += padlen * chr(k-padlen).encode()
-    step = len(m)//k
-    blocks = [m[i*step: (i+1)*step] for i in range(k)]
+    m += padlen * chr(k - padlen).encode()
+    step = len(m) // k
+    blocks = [m[i * step : (i + 1) * step] for i in range(k)]
     stripes = encoder.encode(blocks)
     return stripes
 
@@ -60,7 +60,7 @@ def decode(k, n, stripes):
         raise ValueError("Too few to recover")
     decoder = zfec.Decoder(k, n)
     rec = decoder.decode(blocks, blocknums)
-    m = b''.join(rec)
+    m = b"".join(rec)
     padlen = k - m[-1]
     m = m[:-padlen]
     return m
@@ -78,7 +78,8 @@ def hash(x):
     return hashlib.sha256(x).digest()
 
 
-def ceil(x): return int(math.ceil(x))
+def ceil(x):
+    return int(math.ceil(x))
 
 
 def merkle_tree(str_list):
@@ -90,11 +91,11 @@ def merkle_tree(str_list):
     n = len(str_list)
     assert n >= 1
     bottomrow = 2 ** ceil(math.log(n, 2))
-    mt = [b''] * (2 * bottomrow)
+    mt = [b""] * (2 * bottomrow)
     for i in range(n):
         mt[bottomrow + i] = hash(str_list[i])
     for i in range(bottomrow - 1, 0, -1):
-        mt[i] = hash(mt[i*2] + mt[i*2+1])
+        mt[i] = hash(mt[i * 2] + mt[i * 2 + 1])
     return mt
 
 
@@ -124,8 +125,10 @@ def merkle_verify(n, val, root_hash, branch, index):
         tmp = hash((tindex & 1) and br + tmp or tmp + br)
         tindex >>= 1
     if tmp != root_hash:
-        logger.info(f"Verification failed with {hash(val)} {root_hash} \
-        {branch} {tmp == root_hash}")
+        logger.info(
+            f"Verification failed with {hash(val)} {root_hash} \
+        {branch} {tmp == root_hash}"
+        )
         return False
     return True
 
@@ -163,14 +166,14 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
         but not necessarily reconstructed, then evidence incriminates
         the leader.
     """
-    assert n >= 3*f + 1
+    assert n >= 3 * f + 1
     assert f >= 0
     assert 0 <= leader < n
     assert 0 <= pid < n
 
-    k               = n - 2 * f  # Wait to reconstruct. (# noqa: E221)
-    echo_threshold   = n - f      # Wait for ECHO to send READY. (# noqa: E221)
-    ready_threshold  = f + 1      # Wait for READY to amplify. (# noqa: E221)
+    k = n - 2 * f  # Wait to reconstruct. (# noqa: E221)
+    echo_threshold = n - f  # Wait for ECHO to send READY. (# noqa: E221)
+    ready_threshold = f + 1  # Wait for READY to amplify. (# noqa: E221)
     output_threshold = 2 * f + 1  # Wait for this many READY to output
     # NOTE: The above thresholds  are chosen to minimize the size
     # of the erasure coding stripes, i.e. to maximize K.
@@ -191,7 +194,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
         # strings
         # (with Python 2 it used to be: assert type(m) is str)
         assert isinstance(m, (str, bytes))
-        logger.debug('[%d] Input received: %d bytes' % (pid, len(m),))
+        logger.debug("[%d] Input received: %d bytes" % (pid, len(m)))
 
         stripes = encode(k, n, m)
         mt = merkle_tree(stripes)  # full binary tree
@@ -199,7 +202,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
 
         for i in range(n):
             branch = get_merkle_branch(i, mt)
-            send(i, (sid, 'VAL', roothash, branch, stripes[i]))
+            send(i, (sid, "VAL", roothash, branch, stripes[i]))
 
     # TODO: filter policy: if leader, discard all messages until sending VAL
 
@@ -223,7 +226,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
 
     while True:  # main receive loop
         sender, msg = await receive()
-        if msg[1] == 'VAL' and from_leader is None:
+        if msg[1] == "VAL" and from_leader is None:
             # Validation
             (_, _, roothash, branch, stripe) = msg
             if sender != leader:
@@ -237,13 +240,16 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
 
             # Update
             from_leader = roothash
-            broadcast((sid, 'ECHO', roothash, branch, stripe))
+            broadcast((sid, "ECHO", roothash, branch, stripe))
 
-        elif msg[1] == 'ECHO':
+        elif msg[1] == "ECHO":
             (_, _, roothash, branch, stripe) = msg
             # Validation
-            if roothash in stripes and stripes[roothash][sender] is not None \
-               or sender in echo_senders:
+            if (
+                roothash in stripes
+                and stripes[roothash][sender] is not None
+                or sender in echo_senders
+            ):
                 logger.info("[{pid}] Redundant ECHO")
                 continue
 
@@ -253,7 +259,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
             # try:
             #     assert merkleVerify(N, stripe, roothash, branch, sender)
             # except AssertionError as e:
-                # logger.debug(f"Failed to validate ECHO message: {e}")
+            # logger.debug(f"Failed to validate ECHO message: {e}")
             #     continue
 
             # Update
@@ -263,12 +269,12 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
 
             if echo_counter[roothash] >= echo_threshold and not ready_sent:
                 ready_sent = True
-                broadcast((sid, 'READY', roothash))
+                broadcast((sid, "READY", roothash))
 
             if len(ready[roothash]) >= output_threshold and echo_counter[roothash] >= k:
                 return decode_output(roothash)
 
-        elif msg[1] == 'READY':
+        elif msg[1] == "READY":
             (_, _, roothash) = msg
             # Validation
             if sender in ready[roothash] or sender in ready_senders:
@@ -282,7 +288,7 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
             # Amplify ready messages
             if len(ready[roothash]) >= ready_threshold and not ready_sent:
                 ready_sent = True
-                broadcast((sid, 'READY', roothash))
+                broadcast((sid, "READY", roothash))
 
             if len(ready[roothash]) >= output_threshold and echo_counter[roothash] >= k:
                 return decode_output(roothash)
