@@ -125,13 +125,12 @@ def merkle_verify(n, val, root_hash, branch, index):
         tindex >>= 1
     if tmp != root_hash:
         logger.info(f"Verification failed with {hash(val)} {root_hash} \
-        {branch} {tmp == root_hash}")
+            {branch} {tmp == root_hash}")
         return False
     return True
 
 
-async def reliablebroadcast(sid, pid, n, f, leader, input, 
-    receive, send, client_mode=False):
+async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send, client_mode=False):  # (# noqa: E501)
     """Reliable broadcast
     :param int pid: ``0 <= pid < N``
     :param int N:  at least 3

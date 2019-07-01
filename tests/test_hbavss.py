@@ -59,7 +59,7 @@ async def test_hbavss_light(test_router):
 
 
 @mark.asyncio
-async def test_hbavss_light_GF(test_router):
+async def test_hbavss_light_gf(test_router):
     def callback(future):
         if future.done():
             ex = future.exception()
@@ -80,7 +80,8 @@ async def test_hbavss_light_GF(test_router):
 
     with ExitStack() as stack:
         for i in range(n):
-            hbavss = HbAvssLight(pks, sks[i], crs, n, t, i, sends[i], recvs[i], field=field)
+            hbavss = HbAvssLight(
+                pks, sks[i], crs, n, t, i, sends[i], recvs[i], field=field)
             hbavss_list[i] = hbavss
             stack.enter_context(hbavss)
             if i == dealer_id:
@@ -819,7 +820,7 @@ async def test_hbavss_batch_batch(test_router):
 
 
 @mark.asyncio
-async def test_hbavss_batch_batch_GF(test_router):
+async def test_hbavss_batch_batch_gf(test_router):
     def callback(future):
         if future.done():
             ex = future.exception()
@@ -842,7 +843,8 @@ async def test_hbavss_batch_batch_GF(test_router):
     with ExitStack() as stack:
         hbavss_list = [None] * n
         for i in range(n):
-            hbavss = HbAvssBatch(pks, sks[i], crs, n, t, i, sends[i], recvs[i], field=field)
+            hbavss = HbAvssBatch(
+                pks, sks[i], crs, n, t, i, sends[i], recvs[i], field=field)
             hbavss_list[i] = hbavss
             stack.enter_context(hbavss)
             if i == dealer_id:
