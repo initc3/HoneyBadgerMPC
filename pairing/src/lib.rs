@@ -611,13 +611,15 @@ impl PyFr {
     //    })
     //}
     //fn __new__(obj: &PyRawObject, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()>{
-    fn __new__(obj: &PyRawObject, s: &str) -> PyResult<()>{
-        let f =  Fr::from_str(s).unwrap();
+    //fn __new__(obj: &PyRawObject, s: &str) -> PyResult<()>{
+    fn __new__(obj: &PyRawObject, s1: u64, s2: u64, s3: u64, s4: u64) -> PyResult<()>{
+        //let f =  Fr::from_str(s).unwrap();
+        let f = Fr::from_repr(FrRepr([s1,s2,s3,s4])).unwrap();
         obj.init(|t| PyFr{
             fr: f,
         })
     }
-
+    
     fn one(&mut self) -> PyResult<()> {
         self.fr = Fr::one();
         Ok(())

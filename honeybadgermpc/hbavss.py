@@ -9,6 +9,8 @@ from honeybadgermpc.symmetric_crypto import SymmetricCrypto
 from honeybadgermpc.broadcast.reliablebroadcast import reliablebroadcast
 from honeybadgermpc.broadcast.avid import AVID
 from honeybadgermpc.utils.misc import wrap_send, subscribe_recv
+from honeybadgermpc.field import GF
+from honeybadgermpc.elliptic_curve import Subgroup
 import time
 
 
@@ -29,15 +31,10 @@ class HbAVSSMessageType:
 
 
 class HbAvssLight():
-    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None):
+    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None, field=ZR):
         self.public_keys, self.private_key = public_keys, private_key
         self.n, self.t, self.my_id = n, t, my_id
         self.g = crs[0]
-        if pc is None:
-            self.poly_commit = PolyCommitLin(crs)
-            self.poly_commit.preprocess(5)
-        else:
-            self.poly_commit = pc
 
         # Create a mechanism to split the `recv` channels based on `tag`
         self.subscribe_recv_task, self.subscribe_recv = subscribe_recv(recv)
@@ -51,8 +48,13 @@ class HbAvssLight():
         # This is especially helpful when running multiple AVSSes in parallel.
         self.output_queue = asyncio.Queue()
 
-        self.field = ZR
+        self.field = field
         self.poly = polynomials_over(self.field)
+        if pc is None:
+            self.poly_commit = PolyCommitLin(crs, field=self.field)
+            self.poly_commit.preprocess(5)
+        else:
+            self.poly_commit = pc
 
     def __enter__(self):
         return self
@@ -65,6 +67,7 @@ class HbAvssLight():
         Handle the implication of AVSS.
         Return True if the implication is valid, False otherwise.
         """
+        print("got implication")
         # discard if PKj ! = g^SKj
         if self.public_keys[j] != pow(self.g, j_sk):
             return False
@@ -290,7 +293,7 @@ class HbAvssLight():
 
 
 class HbAvssBatch():
-    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None):
+    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None, field=ZR):
         self.public_keys, self.private_key = public_keys, private_key
         self.n, self.t, self.my_id = n, t, my_id
         assert len(crs) == 3
@@ -305,12 +308,12 @@ class HbAvssBatch():
             return wrap_send(tag, send)
         self.get_send = _send
 
-        self.field = ZR
+        self.field = field
         self.poly = polynomials_over(self.field)
         if pc is not None:
             self.poly_commit = pc
         else:
-            self.poly_commit = PolyCommitConst(crs)
+            self.poly_commit = PolyCommitConst(crs, field=self.field)
             self.poly_commit.preprocess_prover()
             self.poly_commit.preprocess_verifier()
 
