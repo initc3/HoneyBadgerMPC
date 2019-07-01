@@ -31,7 +31,7 @@ class HbAVSSMessageType:
 
 
 class HbAvssLight():
-    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None, field=ZR):
+    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None, field=ZR):  # (# noqa: E501)
         self.public_keys, self.private_key = public_keys, private_key
         self.n, self.t, self.my_id = n, t, my_id
         self.g = crs[0]
@@ -293,7 +293,7 @@ class HbAvssLight():
 
 
 class HbAvssBatch():
-    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None, field=ZR):
+    def __init__(self, public_keys, private_key, crs, n, t, my_id, send, recv, pc=None, field=ZR):  # (# noqa: E501)
         self.public_keys, self.private_key = public_keys, private_key
         self.n, self.t, self.my_id = n, t, my_id
         assert len(crs) == 3
@@ -577,7 +577,7 @@ class HbAvssBatch():
 
         logger.debug("[%d] Starting reliable broadcast", self.my_id)
         rbc_msg = await reliablebroadcast(
-            tag, self.my_id, n, self.t, dealer_id, broadcast_msg, recv, send, client_mode=client_mode)
+            tag, self.my_id, n, self.t, dealer_id, broadcast_msg, recv, send, client_mode=client_mode)  # (# noqa: E501)
 
         tag = f"{dealer_id}-{avss_id}-B-AVID"
         send, recv = self.get_send(tag), self.subscribe_recv(tag)

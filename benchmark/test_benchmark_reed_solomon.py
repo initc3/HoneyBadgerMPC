@@ -5,8 +5,8 @@ from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from random import randint
 from pytest import mark
 
- 
-@mark.parametrize("t", [1,3,5,10,25,33,50,100,256])
+
+@mark.parametrize("t", [1, 3, 5, 10, 25, 33, 50, 100, 256])
 def test_benchmark_gao_robust_decode(benchmark, t, galois_field):
     n = 3*t+1
     galois_field = GF(Subgroup.BLS12_381)
@@ -31,7 +31,8 @@ def test_benchmark_gao_robust_decode(benchmark, t, galois_field):
     # assert truepoly == poly(decoded)
     # assert set(faults) == set(decoded_faults)
 
-@mark.parametrize("t", [1,3,5,10,25,33,50,100,256])
+
+@mark.parametrize("t", [1, 3, 5, 10, 25, 33, 50, 100, 256])
 def test_benchmark_gao_robust_decode_fft(benchmark, t, galois_field):
     n = 3*t+1
     galois_field = GF(Subgroup.BLS12_381)
@@ -52,7 +53,5 @@ def test_benchmark_gao_robust_decode_fft(benchmark, t, galois_field):
         if i in faults:
             shares_with_faults.append(int(galois_field.random()))
         else:
-            shares_with_faults.append(int(truepoly(omega**(i)%p)))
+            shares_with_faults.append(int(truepoly(omega**(i) % p)))
     benchmark(dec.robust_decode, parties, shares_with_faults)
-    
-    

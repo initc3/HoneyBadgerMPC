@@ -1,10 +1,9 @@
 from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
-from contextlib import ExitStack
 from random import randint
 from pytest import mark
 import asyncio
-import cProfile
 import os
+
 
 @mark.parametrize("t, msglen", [(1, 200), (1, 10000), (3, 200), (3, 10000),
                                 (5, 200), (5, 10000), (10, 200), (10, 10000),
@@ -20,7 +19,7 @@ def test_benchmark_rbc(test_router, benchmark, t, msglen):
     def _prog():
         loop.run_until_complete(rbc(params))
     benchmark(_prog)
-    #cProfile.runctx("_prog()", None, locals())
+    # cProfile.runctx("_prog()", None, locals())
 
 
 @mark.parametrize("t, msglen", [(1, 200), (1, 10000), (3, 200), (3, 10000),
@@ -37,7 +36,7 @@ def test_benchmark_rbc_dealer(test_router, benchmark, t, msglen):
     def _prog():
         loop.run_until_complete(rbc_dealer(params))
     benchmark(_prog)
-    #cProfile.runctx("_prog()", None, locals())
+    # cProfile.runctx("_prog()", None, locals())
 
 
 async def rbc(params):
@@ -49,10 +48,12 @@ async def rbc(params):
 
     for i in range(n):
         if i == dealer_id:
-            rbc_tasks[i] = asyncio.create_task(reliablebroadcast(tag, i, n, t, dealer_id, msg, recvs[i], sends[i]))
+            rbc_tasks[i] = asyncio.create_task(
+                reliablebroadcast(tag, i, n, t, dealer_id, msg, recvs[i], sends[i]))
         else:
-            rbc_tasks[i] = asyncio.create_task(reliablebroadcast(tag, i, n, t, dealer_id, None, recvs[i], sends[i]))
-    msgs = await asyncio.gather(*rbc_tasks)
+            rbc_tasks[i] = asyncio.create_task(
+                reliablebroadcast(tag, i, n, t, dealer_id, None, recvs[i], sends[i]))
+    await asyncio.gather(*rbc_tasks)
     for task in rbc_tasks:
         task.cancel()
 
@@ -60,7 +61,5 @@ async def rbc(params):
 async def rbc_dealer(params):
 
     (sends, recvs, t, n, msg) = params
-    rbc_tasks = [None]*n
-    dealer_id = 0
     tag = f"RBC"
     await reliablebroadcast(tag, 0, n, t, 0, msg, recvs[0], sends[0], client_mode=True)

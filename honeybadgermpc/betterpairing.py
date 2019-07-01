@@ -27,7 +27,7 @@ def dupe_pyg2(pyg2):
 
 
 def dupe_pyfr(pyfr):
-    out = PyFr(0,0,0,0)
+    out = PyFr(0, 0, 0, 0)
     out.copy(pyfr)
     return out
 
@@ -111,7 +111,7 @@ class G1:
             try:
                 intother = int(other)
                 exponend = ZR(intother)
-            except:
+            except Exception:
                 raise TypeError(
                     'Invalid exponentiation param. Expected ZR or int. Got '
                     + str(type(other)))
@@ -501,7 +501,7 @@ class GT:
 class ZR:
     def __init__(self, val=None):
         if val is None:
-            self.val = PyFr(0,0,0,0)
+            self.val = PyFr(0, 0, 0, 0)
         elif type(val) is int:
             uint = val % (bls12_381_r)
             u1 = uint % 2**64

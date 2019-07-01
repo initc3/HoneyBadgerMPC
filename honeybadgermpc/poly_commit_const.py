@@ -29,11 +29,8 @@ class PolyCommitConst:
     def create_witness(self, phi, phi_hat, i):
         poly = polynomials_over(self.field)
         div = poly([-1*i, 1])
-        #invdiv = poly([1])/div
         psi = (phi - poly([phi(i)])) / div
         psi_hat = (phi_hat - poly([phi_hat(i)])) / div
-        #psi = (phi - poly([phi(i)])) * invdiv
-        #psi_hat = (phi_hat - poly([phi_hat(i)])) * invdiv
         witness = G1.one()
         j = 0
         for item in self.gs[:-1]:
