@@ -3,14 +3,15 @@ from honeybadgermpc.polynomial import polynomials_over
 
 
 class PolyCommitLin(object):
-    def __init__(self, crs):
+    def __init__(self, crs, field=ZR):
         assert len(crs) == 2
         self.g = crs[0]
         self.h = crs[1]
+        self.field = field
 
     def commit(self, phi):
         degree = len(phi.coeffs)-1
-        phi_hat = polynomials_over(ZR).random(degree)
+        phi_hat = polynomials_over(self.field).random(degree)
         cs = [pow(self.g, phi.coeffs[i]) * pow(self.h, phi_hat.coeffs[i])
               for i in range(degree+1)]
         return cs, phi_hat
