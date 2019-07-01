@@ -1,6 +1,6 @@
 import asyncio
-from honeybadgermpc.ntl.helpers import vandermonde_batch_evaluate
-from honeybadgermpc.ntl.helpers import vandermonde_batch_interpolate
+from honeybadgermpc.ntl import vandermonde_batch_evaluate
+from honeybadgermpc.ntl import vandermonde_batch_interpolate
 
 
 async def batch_beaver(context, a_, b_, x_, y_, z_):
@@ -8,7 +8,7 @@ async def batch_beaver(context, a_, b_, x_, y_, z_):
     a, b, x, y = list(map(context.ShareArray, [a_, b_, x_, y_]))
 
     f, g = await asyncio.gather(*[(a - x).open(), (b - y).open()])
-    c = [(d*e).value + (d*q).v.value + (e*p).v.value + pq
+    c = [(d*e).value + (d*q).value + (e*p).value + pq
          for (p, q, pq, d, e) in zip(x_, y_, z_, f, g)]
     return c
 

@@ -2,4 +2,5 @@
 max_line_length=89
 exclude = 
 	charm/,
-	.eggs/
+	.eggs/,
+        apps/tutorial/

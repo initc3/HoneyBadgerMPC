@@ -84,8 +84,8 @@ extra_link_args = ['-std=c++11', '-O3', '-pthread', '-fopenmp', '-lntl', '-lgmp'
 
 extensions = [
     Extension(
-        name="honeybadgermpc.ntl.helpers",
-        sources=["honeybadgermpc/ntl/helpers.pyx"],
+        name="honeybadgermpc.ntl._hbmpc_ntl_helpers",
+        sources=["honeybadgermpc/ntl/hbmpc_ntl_helpers.pyx"],
         language="c++",
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args
@@ -101,7 +101,7 @@ setup(
     python_requires=REQUIRES_PYTHON,
     setup_requires=['cffi>=1.0.0', 'Cython'],
     install_requires=REQUIRED,
-    cffi_modules=['apps/shuffle/solver/solver_build.py:ffibuilder'],
+    cffi_modules=['apps/asynchromix/solver/solver_build.py:ffibuilder'],
     extras_require=EXTRAS,
     ext_modules=cythonize(extensions),
     classifiers=[

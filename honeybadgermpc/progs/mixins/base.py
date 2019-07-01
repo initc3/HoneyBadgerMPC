@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from honeybadgermpc.preprocessing import PreProcessedElements
-from honeybadgermpc.utils import class_type_check
+from honeybadgermpc.utils.typecheck import TypeCheck
 
 
 class MixinBase(ABC):
@@ -40,8 +40,8 @@ class AsyncMixin(MixinBase):
         return NotImplementedError
 
     @classmethod
-    @class_type_check(Mpc)
-    async def __call__(cls, context, *args, **kwargs):
+    @TypeCheck()
+    async def __call__(cls, context: Mpc, *args, **kwargs):
         for dependency in cls.dependencies:
             if dependency not in context.config:
                 return NotImplemented

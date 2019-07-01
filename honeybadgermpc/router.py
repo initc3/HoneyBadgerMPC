@@ -2,6 +2,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from functools import partial
 import logging
+from honeybadgermpc.utils.typecheck import TypeCheck
 
 
 class Router(ABC):
@@ -40,6 +41,7 @@ class Router(ABC):
         """
         return NotImplementedError
 
+    @TypeCheck()
     def broadcast(self, player_id: int, message: object):
         """ Sends a message from player to all other players
 
@@ -64,12 +66,14 @@ class SimpleRouter(Router):
     """ Simple router which uses queues as a mechanism for sending messages between players
     """
 
+    @TypeCheck()
     def __init__(self, num_parties: int):
         super().__init__(num_parties)
 
         # Mailboxes for each party
         self._queues = [asyncio.Queue() for _ in range(num_parties)]
 
+    @TypeCheck()
     async def recv(self, player_id: int) -> object:
         """ Retrieves a message for player_id.
 
@@ -86,6 +90,7 @@ class SimpleRouter(Router):
 
         return (source_id, message)
 
+    @TypeCheck()
     def send(self, player_id: int, dest_id: int, message: object):
         """ Sends  message from player_id to dest_id
 

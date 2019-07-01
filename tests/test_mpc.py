@@ -6,6 +6,18 @@ import asyncio
 
 
 @mark.asyncio
+async def test_empty_shares():
+    n, t = 3, 1
+
+    async def _prog(context):
+        return await context.open_share_array(context.ShareArray([]))
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog)
+    results = await program_runner.join()
+    assert results == [[] for _ in range(n)]
+
+
+@mark.asyncio
 async def test_open_shares(test_preprocessing):
     n, t = 3, 1
     number_of_secrets = 100

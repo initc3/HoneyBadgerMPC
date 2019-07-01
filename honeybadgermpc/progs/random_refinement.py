@@ -9,7 +9,7 @@ def refine_randoms(n, t, field, random_shares_int):
     k = len(random_shares_int)
     assert k >= n-t and k <= n
 
-    encoder = EncoderFactory.get(EvalPoint(field, n, use_fft=True))
+    encoder = EncoderFactory.get(EvalPoint(field, n, use_omega_powers=True))
 
     # Assume these shares to be the coefficients of a random polynomial. The
     # refined shares are evaluations of this polynomial at powers of omega.

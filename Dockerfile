@@ -6,6 +6,7 @@
 #   - pbc
 #   - charm
 #   - base pip dependencies (cython & setup.py)
+#   - ethereum
 # 
 # Thereafter, it adds ever increasing levels of dependencies-- 
 #   - Test requirements (including doc requirements)
@@ -36,6 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     flex \
     g++ \
     git \
+    iproute2 \
     libflint-dev \
     libgmp-dev \
     libmpc-dev \
@@ -67,8 +69,8 @@ ENV PATH "/root/.cargo/bin:${PATH}"
 RUN curl -so - https://www.shoup.net/ntl/ntl-11.3.2.tar.gz | tar xzvf -
 WORKDIR /ntl-11.3.2/src  
 RUN ./configure CXXFLAGS="-g -O2 -fPIC -march=native -pthread -std=c++11" 
-RUN make -j 
-RUN make install -j
+RUN make 
+RUN make install
 WORKDIR /
 
 
@@ -76,8 +78,8 @@ WORKDIR /
 RUN curl -so - https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz | tar xzvf - 
 WORKDIR /pbc-0.5.14/
 RUN ./configure
-RUN make -j
-RUN make install -j
+RUN make
+RUN make install
 WORKDIR /
 
 
@@ -86,7 +88,26 @@ RUN git clone https://github.com/JHUISI/charm.git
 WORKDIR /charm/
 RUN git reset --hard be9587ccdd4d61c591fb50728ebf2a4690a2064f
 RUN ./configure.sh
-RUN make install -j
+RUN make install
+WORKDIR /
+
+
+# Ethereum .[eth] extras
+RUN apt-get install -y --no-install-recommends \
+    git cmake g++ \
+    libffi-dev libssl-dev sudo
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash
+RUN apt-get install -y --no-install-recommends nodejs npm
+RUN npm install -g ganache-cli
+RUN git clone --recursive https://github.com/ethereum/solidity.git
+WORKDIR /solidity/
+RUN git checkout v0.4.24 # Old version necessary to work???
+RUN git submodule update --init --recursive
+RUN ./scripts/install_deps.sh
+RUN mkdir build/
+WORKDIR build
+RUN cmake ..
+RUN make install
 WORKDIR /
 
 
@@ -99,7 +120,7 @@ RUN pip install Cython
 RUN pip install -e .
 RUN pip install pairing/
 
-
+RUN make -C apps/asynchromix/cpp
 
 # Installs test dependencies
 # For now, upload this to docker-hub
@@ -116,4 +137,3 @@ FROM test-image as dev-release
 # -e so that it installs locally
 # RUN pip install --user -e .["dev,aws"]
 RUN pip install -e .["dev,aws"]
-

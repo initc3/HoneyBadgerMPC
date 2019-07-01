@@ -1,8 +1,10 @@
 from pytest import mark, raises
 from asyncio import gather
+from random import randint
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
-    DivideShareArrays, Equality, DoubleSharingMultiply, DoubleSharingMultiplyArrays)
+    DivideShareArrays, DoubleSharingMultiply, DoubleSharingMultiplyArrays)
+from honeybadgermpc.progs.mixins.share_comparison import Equality
 
 STANDARD_ARITHMETIC_MIXINS = [
     BeaverMultiply(),
@@ -21,7 +23,7 @@ STANDARD_PREPROCESSING = [
 n, t = 3, 1
 
 
-async def run_test_program(prog, test_runner, n=n, t=t, k=10000,
+async def run_test_program(prog, test_runner, n=n, t=t, k=1000,
                            mixins=STANDARD_ARITHMETIC_MIXINS):
 
     return await test_runner(prog, n, t, STANDARD_PREPROCESSING, k, mixins)
@@ -29,7 +31,7 @@ async def run_test_program(prog, test_runner, n=n, t=t, k=10000,
 
 @mark.asyncio
 async def test_degree_reduction_share(galois_field, test_preprocessing, test_runner):
-    n, t = 9, 2
+    n, t = 7, 2
     x_expected = galois_field.random().value
     sid_x_2t = test_preprocessing.generate("share", n, 2*t, x_expected)
 
@@ -44,7 +46,7 @@ async def test_degree_reduction_share(galois_field, test_preprocessing, test_run
 
 @mark.asyncio
 async def test_degree_reduction_share_array(test_preprocessing, test_runner):
-    n, t = 9, 2
+    n, t = 7, 2
     test_preprocessing.generate("rands", n, 2*t)
 
     async def _prog(context):
@@ -187,24 +189,6 @@ async def test_batch_beaver_multiply(test_preprocessing, test_runner):
 
 
 @mark.asyncio
-async def test_equality(test_preprocessing, galois_field, test_runner):
-    equality = Equality()
-
-    async def _prog(context):
-        share0 = test_preprocessing.elements.get_zero(context)
-        share1 = test_preprocessing.elements.get_rand(context)
-        share1_ = share0 + share1
-        share2 = test_preprocessing.elements.get_rand(context)
-
-        assert await (await equality(context, share1, share1_)).open()
-        assert await (share1 == share1_).open()
-        assert not await (share1 == share2).open()
-
-    results = await run_test_program(_prog, test_runner)
-    assert len(results) == n
-
-
-@mark.asyncio
 async def test_invert_share(test_preprocessing, test_runner):
     inverter = InvertShare()
 
@@ -258,10 +242,6 @@ async def test_share_division_needs_mixins(test_preprocessing, test_runner):
 
 @mark.asyncio
 async def test_share_array_division(test_preprocessing, test_runner):
-    n, t = 3, 1
-    test_preprocessing.generate("triples", n, t)
-    test_preprocessing.generate("rands", n, t)
-
     async def _prog(context):
         shares = context.ShareArray(
             [test_preprocessing.elements.get_rand(context) for _ in range(20)])
@@ -269,6 +249,26 @@ async def test_share_array_division(test_preprocessing, test_runner):
         result = await(shares / shares)
         for e in await(result).open():
             assert e == 1
+
+    results = await run_test_program(_prog, test_runner)
+    assert len(results) == n
+
+
+@mark.asyncio
+@mark.parametrize("length", [0, 1, 4, 5])
+async def test_share_array_multiplicative_product(length, test_runner):
+    values = [randint(0, 100) for _ in range(length)]
+
+    async def _prog(context):
+        elements = [context.field(v) for v in values]
+        product = context.field(1)
+        for e in elements:
+            product *= e
+
+        array = context.ShareArray(elements)
+        share_product = await array.multiplicative_product()
+
+        assert (await share_product.open()).value == product.value
 
     results = await run_test_program(_prog, test_runner)
     assert len(results) == n

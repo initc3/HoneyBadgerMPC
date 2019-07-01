@@ -26,12 +26,12 @@ TEST_POINT = Point(5, 6846412461894745224441235558443359243034138132682534265960
 ALL_BIT_NUMBERS = [int(f"0b{'1' * i}", 2) for i in [1, 64, 128]]
 
 n, t = 4, 1
-k = 10000
+k = 50000
 COUNT_MAX = 2
 
 
 def run_benchmark(runner, prog,
-                  n=n, t=t, mixins=MIXINS, preprocessing=TEST_PREPROCESSING, k=10000):
+                  n=n, t=t, mixins=MIXINS, preprocessing=TEST_PREPROCESSING, k=k):
     runner(prog, n, t, preprocessing, k, mixins)
 
 

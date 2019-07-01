@@ -8,10 +8,8 @@ from psutil import cpu_count
 
 from honeybadgermpc.mpc import Mpc
 from honeybadgermpc.config import HbmpcConfig, ConfigVars
-from honeybadgermpc.utils import wrap_send
-
-# TODO: move this functionality outside of batch_reconstruction
-from honeybadgermpc.batch_reconstruction import subscribe_recv
+from honeybadgermpc.utils.misc import wrap_send, subscribe_recv
+from honeybadgermpc.utils.misc import print_exception_callback
 
 
 class NodeCommunicator(object):
@@ -69,6 +67,7 @@ class NodeCommunicator(object):
         router.bind(f"tcp://*:{self.peers_config[self.my_id].port}")
         # Start a task to receive messages on this node.
         self._router_task = asyncio.create_task(self._recv_loop(router))
+        self._router_task.add_done_callback(print_exception_callback)
 
         # Setup one dealer per receving party. This is used
         # as a client to send messages to other parties.
@@ -83,10 +82,10 @@ class NodeCommunicator(object):
                     f"tcp://{self.peers_config[i].ip}:{self.peers_config[i].port}")
                 # Setup a task which reads messages intended for this
                 # party from a queue and then sends them to this node.
-                self._dealer_tasks.append(
-                    asyncio.create_task(
-                        self._process_node_messages(
-                            i, self._sender_queues[i], dealer.send_multipart)))
+                task = asyncio.create_task(
+                    self._process_node_messages(
+                        i, self._sender_queues[i], dealer.send_multipart))
+                self._dealer_tasks.append(task)
 
     async def _recv_loop(self, router):
         while True:
@@ -119,14 +118,13 @@ class ProcessProgramRunner(object):
         self.node_communicator = NodeCommunicator(peers_config, my_id, linger_timeout)
         self.progs = []
 
-    def execute(self, program_tag, program, **kwargs):
-        send, recv = self.get_send_recv(program_tag)
+    def execute(self, sid, program, **kwargs):
+        send, recv = self.get_send_recv(sid)
         context = Mpc(
-            'sid',
+            sid,
             self.n,
             self.t,
             self.my_id,
-            program_tag,
             send,
             recv,
             program,
@@ -137,6 +135,7 @@ class ProcessProgramRunner(object):
         def callback(future): program_result.set_result(future.result())
         task = asyncio.create_task(context._run())
         task.add_done_callback(callback)
+        task.add_done_callback(print_exception_callback)
         self.progs.append(task)
         return program_result
 
@@ -199,11 +198,11 @@ async def test_mpc_programs(peers, n, t, my_id):
             await wait_for_preprocessing()
 
     async with ProcessProgramRunner(peers, n, t, my_id) as runner:
-        r1 = runner.execute(0, test_prog1)
-        r2 = runner.execute(1, test_prog2)
-        r3 = runner.execute(2, test_batchopening)
-        results = await asyncio.gather(*[r1, r2, r3])
-        logging.info("%s", results)
+        test_prog1  # r1 = runner.execute("0", test_prog1)
+        r2 = runner.execute("1", test_prog2)
+        r3 = runner.execute("2", test_batchopening)
+        results = await asyncio.gather(*[r2, r3])
+        return results
 
 
 if __name__ == "__main__":

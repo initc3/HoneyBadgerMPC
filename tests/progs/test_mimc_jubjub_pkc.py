@@ -5,7 +5,8 @@ from honeybadgermpc.field import GF
 from honeybadgermpc.mpc import Subgroup
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
-    DivideShareArrays, Equality)
+    DivideShareArrays)
+from honeybadgermpc.progs.mixins.share_comparison import Equality
 from honeybadgermpc.progs.mimc_jubjub_pkc import (mimc_encrypt, mimc_decrypt,
                                                   key_generation)
 

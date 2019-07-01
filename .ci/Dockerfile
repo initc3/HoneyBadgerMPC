@@ -4,5 +4,5 @@ WORKDIR /usr/src/HoneyBadgerMPC
 COPY . /usr/src/HoneyBadgerMPC
 
 RUN pip install -e .["tests,docs"]
-RUN make -C apps/shuffle/cpp -j
+RUN make -C apps/asynchromix/cpp
 

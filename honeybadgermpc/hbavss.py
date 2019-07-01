@@ -6,17 +6,15 @@ from honeybadgermpc.polynomial import polynomials_over
 from honeybadgermpc.poly_commit_const import PolyCommitConst
 from honeybadgermpc.poly_commit_lin import PolyCommitLin
 from honeybadgermpc.symmetric_crypto import SymmetricCrypto
-from honeybadgermpc.protocols.reliablebroadcast import reliablebroadcast
-from honeybadgermpc.protocols.avid import AVID
-from honeybadgermpc.utils import wrap_send
+from honeybadgermpc.broadcast.reliablebroadcast import reliablebroadcast
+from honeybadgermpc.broadcast.avid import AVID
+from honeybadgermpc.utils.misc import wrap_send, subscribe_recv
 import time
-
-# TODO: Move these to a separate file instead of using it from batch_reconstruction.py
-from honeybadgermpc.batch_reconstruction import subscribe_recv
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
+
 # Uncomment this when you want logs from this file.
 logger.setLevel(logging.NOTSET)
 
@@ -75,7 +73,7 @@ class HbAvssLight():
         except Exception:  # TODO: specific exception
             return True
         return not self.poly_commit.batch_verify_eval(
-                commitments, j+1, j_shares, j_auxs)
+            commitments, j+1, j_shares, j_auxs)
 
     async def _process_avss_msg(self, avss_id, dealer_id, avss_msg):
         tag = f"{dealer_id}-{avss_id}-AVSS"

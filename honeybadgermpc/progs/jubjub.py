@@ -1,3 +1,4 @@
+from __future__ import annotations  # noqa: F407
 import asyncio
 from honeybadgermpc.elliptic_curve import Jubjub, Point, Ideal
 from honeybadgermpc.mpc import Mpc
@@ -20,7 +21,7 @@ class SharedPoint(object):
         self.ys = ys
 
     @staticmethod
-    def from_point(context: Mpc, p: Point) -> 'SharedPoint':
+    def from_point(context: Mpc, p: Point) -> SharedPoint:
         """ Given a local point and a context, created a shared point
         """
         if not isinstance(p, Point):
@@ -83,7 +84,7 @@ class SharedPoint(object):
                            self.ys,
                            self.curve)
 
-    def add(self, other: 'SharedPoint') -> 'SharedPoint':
+    def add(self, other: SharedPoint) -> SharedPoint:
         if isinstance(other, SharedIdeal):
             return self
         elif not isinstance(other, SharedPoint):
@@ -110,10 +111,10 @@ class SharedPoint(object):
 
         return SharedPoint(self.context, x3, y3, self.curve)
 
-    def sub(self, other: 'SharedPoint') -> 'SharedPoint':
+    def sub(self, other: SharedPoint) -> SharedPoint:
         return self.add(other.neg())
 
-    def mul(self, n: int) -> 'SharedPoint':
+    def mul(self, n: int) -> SharedPoint:
         # Using the Double-and-Add algorithm
         # https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
         if not isinstance(n, int):
@@ -137,7 +138,7 @@ class SharedPoint(object):
 
         return product
 
-    def montgomery_mul(self, n: int) -> 'SharedPoint':
+    def montgomery_mul(self, n: int) -> SharedPoint:
         # Using the Montgomery Ladder algorithm
         # https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
         if not isinstance(n, int):
@@ -165,7 +166,7 @@ class SharedPoint(object):
 
         return product
 
-    def double(self) -> 'SharedPoint':
+    def double(self) -> SharedPoint:
         # Uses the optimized implementation from wikipedia
         x_, y_ = self.xs, self.ys
         x_sq, y_sq = (x_*x_), (y_*y_)

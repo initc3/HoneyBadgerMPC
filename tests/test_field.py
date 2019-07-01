@@ -23,7 +23,6 @@ def test_invalid_operations_on_fields():
     operators = [
         operator.add,
         operator.sub,
-        operator.xor,
         operator.mul,
         operator.truediv,
         operator.floordiv,

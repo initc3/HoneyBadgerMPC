@@ -17,7 +17,7 @@ from .exceptions import HoneyBadgerMPCError
 
 
 class Mpc(object):
-    def __init__(self, sid, n, t, myid, pid, send, recv, prog, config, **prog_args):
+    def __init__(self, sid, n, t, myid, send, recv, prog, config, **prog_args):
         # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
         assert type(n) is int and type(t) is int
@@ -26,7 +26,6 @@ class Mpc(object):
         self.N = n
         self.t = t
         self.myid = myid
-        self.pid = pid
         self.field = GF(Subgroup.BLS12_381)
         self.poly = polynomials_over(self.field)
         self.config = config
@@ -105,7 +104,8 @@ class Mpc(object):
 
         # Choose the shareid based on the order this is called
         shareid = self._get_share_id()
-        t = share.t if share.t is not None else self.t
+        t = self.t
+        degree = t if share.t is None else share.t
 
         # Broadcast share
         for dest in range(self.N):
@@ -123,11 +123,11 @@ class Mpc(object):
         # Set up the buffer of received shares
         share_buffer = [self._share_buffers[i][shareid] for i in range(self.N)]
 
-        point = EvalPoint(self.field, self.N, use_fft=False)
+        point = EvalPoint(self.field, self.N, use_omega_powers=False)
 
         # Create polynomial that reconstructs the shared value by evaluating at 0
         reconstruction = asyncio.create_task(robust_reconstruct(
-            share_buffer, self.field, self.N, t, point))
+            share_buffer, self.field, self.N, t, point, degree))
 
         def cb(r):
             p, errors = r.result()
@@ -156,6 +156,9 @@ class Mpc(object):
             Future, which will resolve to an array of GFElements
         """
         res = asyncio.Future()
+        if not sharearray._shares:
+            res.set_result([])
+            return res
 
         def cb(r):
             elements = r.result()
@@ -167,6 +170,8 @@ class Mpc(object):
                 res.set_result(elements)
 
         shareid = self._get_share_id()
+        t = self.t
+        degree = t if sharearray.t is None else sharearray.t
 
         # Creates unique send function based on the share to open
         def _send(dest, o):
@@ -180,13 +185,14 @@ class Mpc(object):
         reconstructed = asyncio.create_task(batch_reconstruct(
             [s.v for s in sharearray._shares],
             self.field.modulus,
-            sharearray.t,
+            t,
             self.N,
             self.myid,
             _send,
             _recv,
             config=self.config.get(ConfigVars.Reconstruction),
-            debug=True))
+            debug=True,
+            degree=degree))
 
         reconstructed.add_done_callback(cb)
 
@@ -253,7 +259,8 @@ class Mpc(object):
 
 class TaskProgramRunner(ProgramRunner):
     def __init__(self, n, t, config={}):
-        self.N, self.t, self.pid = n, t, 0
+        self.N, self.t = n, t
+        self.counter = 0
         self.config = config
         self.tasks = []
         self.loop = asyncio.get_event_loop()
@@ -262,11 +269,10 @@ class TaskProgramRunner(ProgramRunner):
     def add(self, program, **kwargs):
         for i in range(self.N):
             context = Mpc(
-                'sid',
+                'mpc:%d' % (self.counter,),
                 self.N,
                 self.t,
                 i,
-                self.pid,
                 self.router.sends[i],
                 self.router.recvs[i],
                 program,
@@ -274,7 +280,7 @@ class TaskProgramRunner(ProgramRunner):
                 **kwargs,
             )
             self.tasks.append(self.loop.create_task(context._run()))
-        self.pid += 1
+        self.counter += 1
 
     async def join(self):
         return await asyncio.gather(*self.tasks)

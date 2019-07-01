@@ -5,7 +5,8 @@ from honeybadgermpc.elliptic_curve import Ideal, Point, Jubjub
 from honeybadgermpc.progs.jubjub import SharedPoint, SharedIdeal, share_mul
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
-    DivideShareArrays, Equality)
+    DivideShareArrays)
+from honeybadgermpc.progs.mixins.share_comparison import Equality
 
 TEST_CURVE = Jubjub()
 

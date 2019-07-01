@@ -25,7 +25,7 @@ def fft_reconstruction_input(galois_field):
     t = 1
     fp = galois_field
     p = fp.modulus
-    point = EvalPoint(fp, n, use_fft=True)
+    point = EvalPoint(fp, n, use_omega_powers=True)
     omega = point.omega.value
     # x + 2, 3x + 4
     secret_shares = [(omega ** 0 + 2, 3 * omega ** 0 + 4),
@@ -36,7 +36,7 @@ def fft_reconstruction_input(galois_field):
     return n, t, fp, p, omega, secret_shares, secrets
 
 
-async def _get_reconstruction(test_router, secret_shares, n, t, fp, p, use_fft,
+async def _get_reconstruction(test_router, secret_shares, n, t, fp, p, use_omega_powers,
                               skip_list=(), error_list=()):
     """
     :param skip_list: Nodes to skip in reconstruction (Dont send/receive shares)
@@ -53,7 +53,7 @@ async def _get_reconstruction(test_router, secret_shares, n, t, fp, p, use_fft,
         else:
             ss = tuple(map(fp, secret_shares[i]))
         towait.append(batch_reconstruct(ss, p, t, n, i, sends[i], recvs[i],
-                                        use_fft=use_fft))
+                                        use_omega_powers=use_omega_powers))
     results = await asyncio.gather(*towait)
     return results
 
@@ -82,7 +82,7 @@ async def test_reconstruction_with_errors(test_router,
 
     # When
     results = await _get_reconstruction(
-        test_router, secret_shares, n, t, fp, p, use_fft=False, error_list=[1])
+        test_router, secret_shares, n, t, fp, p, use_omega_powers=False, error_list=[1])
 
     # Then
     for r in results:
@@ -113,7 +113,7 @@ async def test_fft_reconstruction_no_errors(test_router, galois_field,
 
     # When
     results = await _get_reconstruction(
-        test_router, secret_shares, n, t, fp, p, use_fft=True)
+        test_router, secret_shares, n, t, fp, p, use_omega_powers=True)
 
     # Then
     for r in results:
@@ -130,7 +130,7 @@ async def test_fft_reconstruction_with_errors(test_router, galois_field,
 
     # When
     results = await _get_reconstruction(test_router, secret_shares, n, t, fp, p,
-                                        use_fft=True, error_list=[1])
+                                        use_omega_powers=True, error_list=[1])
 
     # Then
     for r in results:
@@ -149,7 +149,7 @@ async def test_fft_reconstruction_timeout(test_router, galois_field,
     # When
     with pytest.raises(asyncio.TimeoutError):
         task = _get_reconstruction(test_router, secret_shares, n, t, fp, p,
-                                   use_fft=True, error_list=[1], skip_list=[2])
+                                   use_omega_powers=True, error_list=[1], skip_list=[2])
         await asyncio.wait_for(task, timeout=1)
 
 # TODO: No erasure tests present
