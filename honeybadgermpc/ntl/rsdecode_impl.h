@@ -408,92 +408,71 @@ bool gao_interpolate_fft(vec_ZZ_p &res_vec, vec_ZZ_p &err_vec,
     return true;
 }
 
-class OpaqueZZp {
-   public:
-      ZZ_limbs limbs;
-      OpaqueZZp(ZZ_p zzp) {
-         ZZ a = rep(zzp);
-         long size = a.size();
-         limbs.reserve(size);
-         const ZZ_limb_t *l = ZZ_limbs_get(a);
-         for (int i =0; i< size; i++) {
-            limbs.push_back(l[i]);
-         }
-      }
-
-      OpaqueZZp() {}
-
-      ZZ_limbs getLimbs() {
-          return limbs;
-      }
-      ZZ_p getZZp() {
-         return OpaqueToZZp(limbs);
-      }
-
-      static ZZ_p OpaqueToZZp(ZZ_limbs arr) {
-         long size = arr.size();
-         ZZ a;
-         ZZ_limb_t limbs[size];
-         for (int i =0; i< size; i++) {
-            limbs[i] = arr[i];
-         }
-         ZZ_limb_t *const l = limbs;
-         ZZ_limbs_set(a, l, size);
-         return to_ZZ_p(a);
-      }
-};
-
-ZZ_p LimbsToZZ_p(ZZ_limbs r) {
-    return OpaqueZZp::OpaqueToZZp(r);
+void printLimbs(ZZ_limbs &l) {
+    long size = l.size();
+    for (int i =0; i< size; i++) {
+        cout << l[i] << endl;
+    }
 }
 
-ZZ_limbs ZZ_pToLimbs(ZZ_p x) {
-    return OpaqueZZp(x).getLimbs();
+void LimbsToZZ_p(ZZ_p &zzp, ZZ_limbs &arr) {
+    long size = arr.size();    
+    ZZ_limb_t limbs[size];
+    for (int i =0; i< size; i++) {
+        limbs[i] = arr[i];
+    }
+    ZZ a;
+    ZZ_limb_t *const l = limbs;
+    ZZ_limbs_set(a, l, size);
+    zzp =  to_ZZ_p(a);    
 }
 
-vector<ZZ_limbs> vec_ZZ_pToVecLimbs(vec_ZZ_p row) {
-    vector<ZZ_limbs> serializedRow;
+void ZZ_pToLimbs(ZZ_limbs &limbs, ZZ_p &x) {
+    ZZ zz = rep(x);
+    long size = zz.size();
+    limbs.reserve(size);
+    const ZZ_limb_t *l = ZZ_limbs_get(zz);
+    for (int i =0; i< size; i++) {
+        limbs.push_back(l[i]);
+    }
+}
+
+void vec_ZZ_pToVecLimbs(vector<ZZ_limbs> &serializedRow, vec_ZZ_p &row) {
     long l = row.length();
+    serializedRow.resize(l);
     for(long i = 0; i<l; i++) {
-        serializedRow.push_back(ZZ_pToLimbs(row[i]));
+        ZZ_pToLimbs(serializedRow[i], row[i]);
     }
-    return serializedRow;
 }
 
-vec_ZZ_p VecLimbsToVec_ZZ_p(vector<ZZ_limbs> serializedRow) {
-    Vec<ZZ_p> row;
-    for (ZZ_limbs c: serializedRow) {
-           row.append(LimbsToZZ_p(c));
+void VecLimbsToVec_ZZ_p(vec_ZZ_p &row, vector<ZZ_limbs> &serializedRow) {
+    row.SetLength(serializedRow.size());
+    for (int i=0; i< serializedRow.size(); i++) {
+        LimbsToZZ_p(row[i], serializedRow[i]);
     }
-    return row;
 }
 
-vector<vector<ZZ_limbs>> mat_ZZ_pToVecVecLimbs(mat_ZZ_p a) {
-   vector<vector<ZZ_limbs>> serializedRows;
+void mat_ZZ_pToVecVecLimbs(vector<vector<ZZ_limbs>> &serializedRows, mat_ZZ_p &a) {
    long rows = a.NumRows();
+   serializedRows.resize(rows);
    for(long i = 0; i < rows; i++) {
-       serializedRows.push_back(vec_ZZ_pToVecLimbs(a[i]));
+       vec_ZZ_pToVecLimbs(serializedRows[i], a[i]);
    }
-   return serializedRows;
 }
 
-mat_ZZ_p VecVecLimbsToMat_ZZ_p(vector<vector<ZZ_limbs>> serializedRows) {
-   Vec<Vec<ZZ_p>> rows;
-   for(vector<ZZ_limbs> r: serializedRows) {
-       rows.append(VecLimbsToVec_ZZ_p(r));
-   }
-   mat_ZZ_p res;
-   MakeMatrix(res, rows);
-   return res;
-}
+// mat_ZZ_p& VecVecLimbsToMat_ZZ_p(vector<vector<ZZ_limbs>> &serializedRows) {
+//    Vec<Vec<ZZ_p>> rows;
+//    for(vector<ZZ_limbs> r: serializedRows) {
+//        rows.append(VecLimbsToVec_ZZ_p(r));
+//    }
+//    mat_ZZ_p res;
+//    MakeMatrix(res, rows);
+//    return res;
+// }
 
-mat_ZZ_p mat_ZZ_pTranspose(mat_ZZ_p x) {
-    return transpose(x);
-}
-
-void mat_mul_serialize(vector<vector<ZZ_limbs>> &r, mat_ZZ_p a, mat_ZZ_p b) {
+void mat_mul_serialize(vector<vector<ZZ_limbs>> &r, mat_ZZ_p &a, mat_ZZ_p &b) {
    mat_ZZ_p res;
    mul(res, a, b);
    mat_ZZ_p t = transpose(res);
-   r = mat_ZZ_pToVecVecLimbs(t);
+   mat_ZZ_pToVecVecLimbs(r, t);
 }

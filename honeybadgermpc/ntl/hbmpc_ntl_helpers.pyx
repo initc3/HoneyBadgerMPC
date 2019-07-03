@@ -11,7 +11,7 @@ from .ntlwrapper cimport ZZ_pX_get_coeff, ZZ_pX_set_coeff, ZZ_pX_eval
 from .rsdecode cimport ZZ_limbs
 from .rsdecode cimport interpolate_c, vandermonde_inverse_c, set_vm_matrix_c, fft_c, fft_partial_c, fnt_decode_step1_c, fnt_decode_step2_c, gao_interpolate_c, gao_interpolate_fft_c
 from .rsdecode cimport mat_mul_serialize
-from .rsdecode cimport ZZ_pToLimbs, LimbsToZZ_p, vec_ZZ_pToVecLimbs, VecLimbsToVec_ZZ_p, mat_ZZ_pToVecVecLimbs, VecVecLimbsToMat_ZZ_p, mat_ZZ_pTranspose
+from .rsdecode cimport ZZ_pToLimbs, LimbsToZZ_p, vec_ZZ_pToVecLimbs, VecLimbsToVec_ZZ_p, mat_ZZ_pToVecVecLimbs
 from .ccobject cimport ccrepr, ccreadstr
 from cpython.int cimport PyInt_AS_LONG
 from cython.parallel import parallel, prange
@@ -38,13 +38,18 @@ cpdef intToZZptoInt(c):
     return ZZpToInt(intToZZp(c))
 
 cpdef PyIntToZZpLimbs(x):
-    return ZZ_pToLimbs(intToZZp(x))
+    cdef ZZ_p zzp = intToZZp(x)
+    cdef ZZ_limbs limbs
+    ZZ_pToLimbs(limbs, zzp)
+    return limbs
 
 cpdef init(modulus):
     ZZ_p_init(py_obj_to_ZZ(modulus))
 
 cpdef LimbsToPyInt(x):
-    return ZZpToInt(LimbsToZZ_p(x))
+    cdef ZZ_p zzp
+    LimbsToZZ_p(zzp, x)
+    return ZZpToInt(zzp)
 
 cdef ZZpToInt(ZZ_p X):
     return ZZToInt(to_ZZ(X))
@@ -191,7 +196,7 @@ cpdef vandermonde_batch_interpolate(x, data_list, modulus):
     d = vandermonde_inverse_c(r, x_vec, zz_modulus)
     if d is False:
         raise InterpolationError("Interpolation failed")
-
+    
     cdef mat_ZZ_p m
     cdef int k = max([len(d) for d in data_list])
     cdef int n_chunks = len(data_list)
@@ -200,10 +205,10 @@ cpdef vandermonde_batch_interpolate(x, data_list, modulus):
     for i in range(n_chunks):
         l = len(data_list[i])
         for j in range(l):
-            m[j][i] = LimbsToZZ_p(data_list[i][j])
+            LimbsToZZ_p(m[j][i], data_list[i][j])
         for j in range(l, k):
             m[j][i] = intToZZp(0)
-            
+    
     cdef vector[vector[ZZ_limbs]] res_vectors
     mat_mul_serialize(res_vectors, r, m)
     m.kill()
@@ -241,7 +246,7 @@ cpdef vandermonde_batch_evaluate(x, polynomials, modulus):
     for i in range(k):
         l = len(polynomials[i])
         for j in range(l):
-            poly_matrix[j][i] = LimbsToZZ_p(polynomials[i][j])
+            LimbsToZZ_p(poly_matrix[j][i], polynomials[i][j])
         for j in range(l, d):
             poly_matrix[j][i] = intToZZp(0)
     
@@ -261,7 +266,7 @@ cpdef vandermonde_batch_evaluate(x, polynomials, modulus):
     # result = []
     # for i in range(k):
     #    result+=[res_vectors[i]]
-
+    
     return res_vectors
 
 cpdef fft(coeffs, omega, modulus, int n):
@@ -271,12 +276,13 @@ cpdef fft(coeffs, omega, modulus, int n):
     ZZ_p_init(intToZZ(modulus))
 
     d = len(coeffs)
-    coeffs_vec = VecLimbsToVec_ZZ_p(coeffs)
+    VecLimbsToVec_ZZ_p(coeffs_vec, coeffs)
 
     cdef ZZ_p zz_omega = intToZZp(omega)
     fft_c(result_vec, coeffs_vec, zz_omega, n)
 
-    result = vec_ZZ_pToVecLimbs(result_vec)
+    cdef vector[ZZ_limbs] result;
+    vec_ZZ_pToVecLimbs(result, result_vec)
 
     return result
 
@@ -314,7 +320,7 @@ cpdef fft_batch_evaluate(coeffs, omega, modulus, int n, int k):
     coeffs_vec_list.resize(batch_size)
     result_vec_list.resize(batch_size)
     for i in range(batch_size):
-        coeffs_vec_list[i] = VecLimbsToVec_ZZ_p(coeffs[i])
+        VecLimbsToVec_ZZ_p(coeffs_vec_list[i], coeffs[i])
         
     
     cdef ZZ_p zz_omega = intToZZp(omega)
@@ -323,10 +329,12 @@ cpdef fft_batch_evaluate(coeffs, omega, modulus, int n, int k):
         for i in prange(batch_size):
             fft_partial_c(result_vec_list[i], coeffs_vec_list[i], zz_omega, n, k)
 
-    result = [vec_ZZ_pToVecLimbs(result_vec_list[i]) for i in range(batch_size)]
-
-    return result
-
+    cdef vector[vector[ZZ_limbs]] res;
+    res.resize(batch_size)
+    for i in range(batch_size):
+        vec_ZZ_pToVecLimbs(res[i], result_vec_list[i])
+    return res
+    
 def fft_interpolate(zs, ys, omega, modulus, int n):
     cdef int i
     cdef int k = len(zs)
@@ -374,7 +382,7 @@ def fft_batch_interpolate(zs, ys_list, omega, modulus, int n):
     result_vec_list.resize(n_chunks)
 
     for i in range(n_chunks):
-        y_vec_list[i] = VecLimbsToVec_ZZ_p(ys_list[i])
+        VecLimbsToVec_ZZ_p(y_vec_list[i], ys_list[i])
 
     with nogil, parallel():
 
@@ -382,10 +390,13 @@ def fft_batch_interpolate(zs, ys_list, omega, modulus, int n):
         for i in prange(n_chunks):
             fnt_decode_step2_c(result_vec_list[i], A, Ad_evals_vec, z_vec, y_vec_list[i],
                                zz_omega, n)
-    result = [vec_ZZ_pToVecLimbs(result_vec_list[i]) for i in range(n_chunks)]
-    
 
-    return result
+    cdef vector[vector[ZZ_limbs]] res;
+    res.resize(n_chunks)
+    for i in range(n_chunks):
+        vec_ZZ_pToVecLimbs(res[i], result_vec_list[i])
+    return res
+    
 
 cpdef SetNTLNumThreads(int x):
     SetNTLNumThreads_c(x)
@@ -399,7 +410,8 @@ cpdef gao_interpolate(x, y, int k, modulus, z=None, omega=None, order=None,
     cdef ZZ_p zz_omega
     cdef vector[int] z_vec;
     cdef int i, n, int_order
-    cdef int success
+    cdef int success    
+    cdef vector[ZZ_limbs] res_veclimbs, err_veclimbs;
     assert len(x) == len(y)
     ZZ_p_init(intToZZ(modulus))
 
@@ -411,11 +423,10 @@ cpdef gao_interpolate(x, y, int k, modulus, z=None, omega=None, order=None,
 
     n = len(x)
     x_vec.SetLength(n)
-    y_vec.SetLength(n)
 
     for i in range(n):
-        x_vec[i] = intToZZp(x[i])
-    y_vec = VecLimbsToVec_ZZ_p(y)
+        x_vec[i] = intToZZp(x[i])        
+    VecLimbsToVec_ZZ_p(y_vec, y)
 
     if use_omega_powers is True:
         assert z is not None
@@ -441,7 +452,10 @@ cpdef gao_interpolate(x, y, int k, modulus, z=None, omega=None, order=None,
             result[i] = int(ccrepr(res_vec[i]))
         for i in range(err_vec.length()):
             error_poly[i] = int(ccrepr(err_vec[i]))
-        return vec_ZZ_pToVecLimbs(res_vec), vec_ZZ_pToVecLimbs(err_vec)
+
+        vec_ZZ_pToVecLimbs(res_veclimbs, res_vec)
+        vec_ZZ_pToVecLimbs(err_veclimbs, err_vec)
+        return res_veclimbs, err_veclimbs
 
     return None, None
 

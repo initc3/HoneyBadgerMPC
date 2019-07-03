@@ -35,10 +35,9 @@ cdef extern from "rsdecode_impl.h":
 
     cdef void mat_mul_serialize "mat_mul_serialize"(vector[vector[ZZ_limbs]] x,  mat_ZZ_p a, mat_ZZ_p b) 
 
-    cdef ZZ_limbs ZZ_pToLimbs(ZZ_p x)
-    cdef ZZ_p LimbsToZZ_p(ZZ_limbs r)
-    cdef vector[ZZ_limbs] vec_ZZ_pToVecLimbs(vec_ZZ_p row)
-    cdef vec_ZZ_p VecLimbsToVec_ZZ_p(vector[ZZ_limbs] serializedRow)
-    cdef vector[vector[ZZ_limbs]] mat_ZZ_pToVecVecLimbs(mat_ZZ_p a)
-    cdef mat_ZZ_p VecVecLimbsToMat_ZZ_p(vector[vector[ZZ_limbs]] serializedRows)
-    cdef mat_ZZ_p mat_ZZ_pTranspose(mat_ZZ_p x)
+    cdef void ZZ_pToLimbs(ZZ_limbs&l, ZZ_p &x)
+    cdef void LimbsToZZ_p(ZZ_p& zzp, ZZ_limbs &r)
+    cdef void vec_ZZ_pToVecLimbs(vector[ZZ_limbs] &VecLimbs, vec_ZZ_p &row)
+    cdef void VecLimbsToVec_ZZ_p(vec_ZZ_p &veczzp, vector[ZZ_limbs] &serializedRow)
+    cdef void mat_ZZ_pToVecVecLimbs(vector[vector[ZZ_limbs]] &vecveclimbs, mat_ZZ_p &a)
+    # cdef mat_ZZ_p VecVecLimbsToMat_ZZ_p(vector[vector[ZZ_limbs]] &serializedRows)
