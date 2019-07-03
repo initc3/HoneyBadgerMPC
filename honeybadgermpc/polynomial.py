@@ -59,6 +59,9 @@ def polynomials_over(field):
                 xx *= x
             return y
 
+        def __eq__(self, other):
+            return type(other) is Polynomial and other.coeffs == self.coeffs
+
         @classmethod
         def interpolate_at(cls, shares, x_recomb=field(0)):
             # shares are in the form (x, y=f(x))
