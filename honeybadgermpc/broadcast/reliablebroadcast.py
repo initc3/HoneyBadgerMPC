@@ -133,7 +133,7 @@ def merkle_verify(n, val, root_hash, branch, index):
     return True
 
 
-async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
+async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send, client_mode=False):  # (# noqa: E501)
     """Reliable broadcast
     :param int pid: ``0 <= pid < N``
     :param int N:  at least 3
@@ -203,6 +203,9 @@ async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send):
         for i in range(n):
             branch = get_merkle_branch(i, mt)
             send(i, (sid, "VAL", roothash, branch, stripes[i]))
+
+        if client_mode:
+            return
 
     # TODO: filter policy: if leader, discard all messages until sending VAL
 
