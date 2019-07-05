@@ -1,14 +1,21 @@
 from pytest import mark
-from random import randint
 import asyncio
 from honeybadgermpc.field import GF
 from honeybadgermpc.mpc import Subgroup
 from honeybadgermpc.progs.mixins.share_arithmetic import (
-    BeaverMultiply, BeaverMultiplyArrays, InvertShare, InvertShareArray, DivideShares,
-    DivideShareArrays)
+    BeaverMultiply,
+    BeaverMultiplyArrays,
+    InvertShare,
+    InvertShareArray,
+    DivideShares,
+    DivideShareArrays,
+)
 from honeybadgermpc.progs.mixins.share_comparison import Equality
-from honeybadgermpc.progs.mimc_jubjub_pkc import (mimc_encrypt, mimc_decrypt,
-                                                  key_generation)
+from honeybadgermpc.progs.mimc_jubjub_pkc import (
+    mimc_encrypt,
+    mimc_decrypt,
+    key_generation,
+)
 
 STANDARD_ARITHMETIC_MIXINS = [
     BeaverMultiply(),
@@ -17,20 +24,20 @@ STANDARD_ARITHMETIC_MIXINS = [
     InvertShareArray(),
     DivideShares(),
     DivideShareArrays(),
-    Equality()
+    Equality(),
 ]
 
-PREPROCESSING = ['rands', 'triples', 'zeros', 'cubes', 'bits']
+PREPROCESSING = ["rands", "triples", "zeros", "cubes", "bits"]
 n, t = 4, 1
-k = 10000
+k = 1000
 
 
 @mark.asyncio
-async def test_mimc_jubjub_pkc(test_preprocessing, test_runner):
+async def test_mimc_jubjub_pkc(test_runner):
 
     field = GF(Subgroup.BLS12_381)
-    plaintext = [randint(0, field.modulus)]
-    seed = randint(0, field.modulus)
+    plaintext = [field.random().value]
+    seed = field.random().value
 
     async def _prog(context):
         # Key Generation

@@ -13,9 +13,9 @@ def test_pc_const():
     phi = polynomials_over(ZR).random(t)
     c, phi_hat = pc.commit(phi)
     witness = pc.create_witness(phi, phi_hat, 3)
-    assert(c == g**phi(alpha) * h**phi_hat(alpha))
-    assert(pc.verify_eval(c, 3, phi(3), phi_hat(3), witness))
-    assert(not pc.verify_eval(c, 4, phi(3), phi_hat(3), witness))
+    assert c == g ** phi(alpha) * h ** phi_hat(alpha)
+    assert pc.verify_eval(c, 3, phi(3), phi_hat(3), witness)
+    assert not pc.verify_eval(c, 4, phi(3), phi_hat(3), witness)
 
 
 def test_pc_const_preprocess():
@@ -29,7 +29,7 @@ def test_pc_const_preprocess():
     phi = polynomials_over(ZR).random(t)
     c, phi_hat = pc.commit(phi)
     witness = pc.create_witness(phi, phi_hat, 3)
-    assert(c == g**phi(alpha) * h**phi_hat(alpha))
+    assert c == g ** phi(alpha) * h ** phi_hat(alpha)
     pc.preprocess_verifier()
-    assert(pc.verify_eval(c, 3, phi(3), phi_hat(3), witness))
-    assert(not pc.verify_eval(c, 4, phi(3), phi_hat(3), witness))
+    assert pc.verify_eval(c, 3, phi(3), phi_hat(3), witness)
+    assert not pc.verify_eval(c, 4, phi(3), phi_hat(3), witness)

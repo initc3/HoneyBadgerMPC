@@ -65,7 +65,7 @@ class TypeCheck(object):
         # If the environment variable DISABLE_TYPECHECKING exists, then
         # only perform typechecking if required.
         self._check_types = force or arithmetic
-        if 'DISABLE_TYPECHECKING' not in os.environ:
+        if "DISABLE_TYPECHECKING" not in os.environ:
             self._check_types = self._check_types or __debug__
 
     def _check_complex_annotation(self, name, value, annotation, local_dict):
@@ -91,7 +91,8 @@ class TypeCheck(object):
         except Exception as e:
             raise AssertionError(
                 f"Evaluating string annotation {{{annotation}}} "
-                f"raised the exception: {e}")
+                f"raised the exception: {e}"
+            )
 
         if isinstance(t_eval, bool):
             return t_eval
@@ -116,23 +117,30 @@ class TypeCheck(object):
 
         if isinstance(annotation, tuple):
             simple_annotations = tuple(
-                a for a in annotation if isinstance(a, (type, _Final)))
+                a for a in annotation if isinstance(a, (type, _Final))
+            )
             complex_annotations = [
-                a for a in annotation if not isinstance(a, (type, _Final))]
+                a for a in annotation if not isinstance(a, (type, _Final))
+            ]
         elif isinstance(annotation, (type, _Final)):
-            simple_annotations = (annotation)
+            simple_annotations = annotation
             complex_annotations = []
         else:
             simple_annotations = tuple()
             complex_annotations = [annotation]
 
         simple_valid = isinstance(value, simple_annotations)
-        complex_valid = any([self._check_complex_annotation(name, value, c, local_dict)
-                             for c in complex_annotations])
+        complex_valid = any(
+            [
+                self._check_complex_annotation(name, value, c, local_dict)
+                for c in complex_annotations
+            ]
+        )
 
-        assert (simple_valid or complex_valid), \
-            f"Expected {name} to be of type {annotation}, "\
+        assert simple_valid or complex_valid, (
+            f"Expected {name} to be of type {annotation}, "
             f"but found ({value}) of type ({type(value)})"
+        )
 
         return True
 
@@ -149,7 +157,8 @@ class TypeCheck(object):
                 parameter_name,
                 parameter.default,
                 parameter.annotation,
-                self._default_signature.arguments)
+                self._default_signature.arguments,
+            )
 
     def _validate_annotation(self, annotation):
         """ Validates a single type annotation. This ensures that the annotation is
@@ -181,13 +190,15 @@ class TypeCheck(object):
         """
         for parameter_name in self._signature.parameters:
             parameter = self._signature.parameters[parameter_name]
-            assert self._validate_annotation(parameter.annotation), \
-                f"Type annotation for {parameter_name} must be a string, type, " \
+            assert self._validate_annotation(parameter.annotation), (
+                f"Type annotation for {parameter_name} must be a string, type, "
                 f"or a tuple of strings and types ({parameter})"
+            )
 
-        assert self._validate_annotation(self._signature.return_annotation), \
-            f"Return type annotations must be strings, types, or tuples " \
+        assert self._validate_annotation(self._signature.return_annotation), (
+            f"Return type annotations must be strings, types, or tuples "
             f"of strings or types ({self._signature.return_annotation})"
+        )
 
         self._validate_defaults()
 
@@ -206,10 +217,8 @@ class TypeCheck(object):
             arg_annotation = self._signature.parameters[arg_name].annotation
 
             self._validate_argument(
-                arg_name,
-                arg_value,
-                arg_annotation,
-                self._called_signature.arguments)
+                arg_name, arg_value, arg_annotation, self._called_signature.arguments
+            )
 
     def _check_return_value(self, return_value):
         """ Checks the correctness of the return value of the function being typechecked.
@@ -219,7 +228,7 @@ class TypeCheck(object):
             return_value (object): Value returned by the function invocation.
         """
         return_annotation = self._signature.return_annotation
-        self._validate_argument('return value', return_value, return_annotation)
+        self._validate_argument("return value", return_value, return_annotation)
 
     def _wrap_func(self, func):
         """ Given a function, add typechecking to the function as specified in the class

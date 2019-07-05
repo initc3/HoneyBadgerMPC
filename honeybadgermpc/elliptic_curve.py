@@ -2,17 +2,19 @@ from .field import GF, GFElement
 
 
 class Subgroup:
-    BLS12_381 = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    BLS12_381 = 0x73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001
 
 
 class Jubjub(object):
     """
     JubJub is a twisted Edwards curve of the form -x^2 + y^2 = 1 + dx^2y^2
     """
+
     Field = GF(Subgroup.BLS12_381)
 
-    def __init__(self, a: GFElement = Field(-1),
-                 d: GFElement = -(Field(10240)/Field(10241))):
+    def __init__(
+        self, a: GFElement = Field(-1), d: GFElement = -(Field(10240) / Field(10241))
+    ):
         self.a = a
         self.d = d
 
@@ -23,7 +25,7 @@ class Jubjub(object):
             raise Exception(f"The curve {self} is not smooth!")
 
     def __str__(self) -> str:
-        return '%sx^2 + y^2 = 1 + %sx^2y^2' % (self.a, self.d)
+        return "%sx^2 + y^2 = 1 + %sx^2y^2" % (self.a, self.d)
 
     def __repr__(self) -> str:
         return str(self)
@@ -34,7 +36,7 @@ class Jubjub(object):
     def is_smooth(self) -> bool:
         return self.disc != 0
 
-    def contains_point(self, p: 'Point') -> bool:
+    def contains_point(self, p: "Point") -> bool:
         """
         Checks whether or not the given point sits on the curve
         """
@@ -51,7 +53,8 @@ class Point(object):
         if not isinstance(curve, Jubjub):
             raise Exception(
                 f"Could not create Point-- given curve \
-                not of type Jubjub ({type(curve)})")
+                not of type Jubjub ({type(curve)})"
+            )
 
         self.curve = curve  # the curve containing this point
         self.x = x
@@ -59,7 +62,8 @@ class Point(object):
 
         if not self.curve.contains_point(self):
             raise Exception(
-                f"Could not create Point({self})-- not on the given curve {curve}!")
+                f"Could not create Point({self})-- not on the given curve {curve}!"
+            )
 
     def __str__(self):
         return "(%r, %r)" % (self.x, self.y)
@@ -70,7 +74,7 @@ class Point(object):
     def __neg__(self):
         return Point(self.curve.Field(-self.x), self.y, self.curve)
 
-    def __add__(self, other: 'Point') -> 'Point':
+    def __add__(self, other: "Point") -> "Point":
         if self.curve != other.curve:
             raise Exception("Can't add points on different curves!")
 
@@ -84,10 +88,10 @@ class Point(object):
 
         return Point(x3, y3)
 
-    def __sub__(self, other: 'Point') -> 'Point':
+    def __sub__(self, other: "Point") -> "Point":
         return self + -other
 
-    def __mul__(self, n: int) -> 'Point':
+    def __mul__(self, n: int) -> "Point":
         if not isinstance(n, int):
             raise Exception("Can't scale a point by something which isn't an int!")
 
@@ -129,7 +133,7 @@ class Point(object):
     def __getitem__(self, index: int) -> int:
         return [self.x, self.y][index]
 
-    def double(self) -> 'Point':
+    def double(self) -> "Point":
         return self + self
 
 
@@ -147,7 +151,7 @@ class Ideal(Point):
     def __str__(self):
         return "Ideal"
 
-    def __add__(self, other: 'Point') -> 'Point':
+    def __add__(self, other: "Point") -> "Point":
         if not isinstance(other, Point):
             raise Exception("Can't add something that's not a point to a point")
         elif self.curve != other.curve:
@@ -155,7 +159,7 @@ class Ideal(Point):
 
         return other
 
-    def __mul__(self, n: int) -> 'Point':
+    def __mul__(self, n: int) -> "Point":
         if not isinstance(n, int):
             raise Exception("Can't scale a point by something which isn't an int!")
 
@@ -165,7 +169,7 @@ class Ideal(Point):
         return type(other) is Ideal
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     main method for quick testing
     """
@@ -186,4 +190,4 @@ if __name__ == '__main__':
     try:
         print(p * ideal)
     except Exception:
-        print('correctly prevented multiplying points')
+        print("correctly prevented multiplying points")
