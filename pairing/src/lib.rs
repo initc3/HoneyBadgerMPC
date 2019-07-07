@@ -35,7 +35,7 @@ use ff::{Field,  PrimeField, PrimeFieldDecodingError, PrimeFieldRepr, ScalarEngi
 use std::error::Error;
 use std::fmt;
 use std::io::{self, Write};
-use rand::{Rand, Rng, SeedableRng, XorShiftRng};
+use rand::{Rand, Rng, SeedableRng, XorShiftRng, ChaChaRng};
 
 fn hex_to_bin (hexstr: &String) -> String
 {
@@ -178,8 +178,15 @@ impl PyG1 {
         })
     }
 
-    fn rand(&mut self, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()>{
-        let mut rng = XorShiftRng::from_seed([s1,s2,s3,s4]);
+    fn rand(&mut self, a: Vec<u32>) -> PyResult<()>{
+        let mut seed: [u32;8] = [0,0,0,0,0,0,0,0];
+        let mut i = 0;
+        for item in a.iter(){
+            let myu32: &u32 = item;
+            seed[i] = *myu32;
+            i = i + 1;
+        }
+        let mut rng = ChaChaRng::from_seed(&seed);
         let g = G1::rand(&mut rng);
         self.g1 = g;
         if self.pplevel != 0 {
@@ -393,8 +400,6 @@ impl PyG2 {
 
     #[new]
     fn __new__(obj: &PyRawObject) -> PyResult<()>{
-        //let mut rng = XorShiftRng::from_seed([0,0,0,1]);
-        //let g = G2::rand(&mut rng);
         let g =  G2::one();
         obj.init(|t| PyG2{
             g2: g,
@@ -403,8 +408,15 @@ impl PyG2 {
         })
     }
 
-    fn rand(&mut self, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()>{
-        let mut rng = XorShiftRng::from_seed([s1,s2,s3,s4]);
+    fn rand(&mut self, a: Vec<u32>) -> PyResult<()>{
+        let mut seed: [u32;8] = [0,0,0,0,0,0,0,0];
+        let mut i = 0;
+        for item in a.iter(){
+            let myu32: &u32 = item;
+            seed[i] = *myu32;
+            i = i + 1;
+        }
+        let mut rng = ChaChaRng::from_seed(&seed);
         let g = G2::rand(&mut rng);
         self.g2 = g;
         if self.pplevel != 0 {
@@ -771,6 +783,25 @@ impl PyFq12 {
             pplevel : 0
         })
     }
+
+    fn rand(&mut self, a: Vec<u32>) -> PyResult<()>{
+        let mut seed: [u32;8] = [0,0,0,0,0,0,0,0];
+        let mut i = 0;
+        for item in a.iter(){
+            let myu32: &u32 = item;
+            seed[i] = *myu32;
+            i = i + 1;
+        }
+        let mut rng = ChaChaRng::from_seed(&seed);
+        let g = Fq12::rand(&mut rng);
+        self.fq12 = g;
+        if self.pplevel != 0 {
+            self.pp = Vec::new();
+            self.pplevel = 0;
+        }
+        Ok(())
+    }
+
     fn from_strs(&mut self, s1: &str, s2: &str, s3: &str, s4: &str, s5: &str, s6: &str, s7: &str, s8: &str, s9: &str, s10: &str, s11: &str, s12: &str) -> PyResult<()> {
         let c0 = Fq6 {
             c0: Fq2 {
@@ -815,16 +846,6 @@ impl PyFq12 {
 
     pub fn __repr__(&self) -> PyResult<String> {
         Ok(format!("({} + {} * w)",self.fq12.c0, self.fq12.c1 ))
-    }
-
-    fn rand(&mut self, s1: u32, s2: u32, s3: u32, s4: u32) -> PyResult<()> {
-        let mut rng = XorShiftRng::from_seed([s1,s2,s3,s4]);
-        self.fq12 = Fq12::rand(&mut rng);
-        if self.pplevel != 0 {
-            self.pp = Vec::new();
-            self.pplevel = 0;
-        }
-        Ok(())
     }
 
     fn add_assign(&mut self, other: &Self) -> PyResult<()> {

@@ -57,3 +57,24 @@ def test_serialization():
     bb = G1()
     bb.__setstate__(b.__getstate__())
     assert bb == b
+
+
+def test_hashing():
+    from honeybadgermpc.betterpairing import ZR, G1, G2
+    import pickle
+
+    crs = G1.hash(b"honeybadger", length=10) + G2.hash(b"honeybadger", length=2)
+    assert crs[0] != crs[1]
+    assert type(crs[0]) is G1
+    assert type(crs[11]) is G2
+    assert len(crs) == 12
+    c = ZR.hash(pickle.dumps(crs))
+    assert type(c) is ZR
+    c2 = ZR.hash(pickle.dumps(crs))
+    assert c == c2
+    g = G1.hash(pickle.dumps(crs))
+    g2 = G1.hash(pickle.dumps(crs))
+    ghat = G2.hash(pickle.dumps(crs))
+    ghat2 = G2.hash(pickle.dumps(crs))
+    assert g == g2
+    assert ghat == ghat2
