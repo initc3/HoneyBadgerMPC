@@ -10,7 +10,7 @@
 #include <NTL/ZZ_limbs.h>
 #include <NTL/vec_ZZ_p.h>
 #include <NTL/mat_ZZ_p.h>
-#include "hps-master/src/hps.h"
+#include "/hps/src/hps.h"
 
 using namespace NTL;
 using namespace std;

@@ -73,6 +73,8 @@ RUN make
 RUN make install
 WORKDIR /
 
+# Clone HPS - A C++11 High Performance Serialization Library.
+RUN git clone https://github.com/jl2922/hps.git
 
 # Install betterpairing
 RUN curl -so - https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz | tar xzvf - 
