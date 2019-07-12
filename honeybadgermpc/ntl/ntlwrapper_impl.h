@@ -5,7 +5,6 @@
 #include <NTL/ZZ_pX.h>
 #include <NTL/mat_ZZ_p.h>
 #include <NTL/BasicThreadPool.h>
-#include <NTL/ZZ_limbs.h>
 using namespace NTL;
 
 unsigned char* bytesFromZZ(const ZZ& a) {
