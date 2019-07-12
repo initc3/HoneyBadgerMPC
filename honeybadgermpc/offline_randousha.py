@@ -10,7 +10,11 @@ from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
 from honeybadgermpc.mpc import Mpc
 from honeybadgermpc.ipc import ProcessProgramRunner
 from honeybadgermpc.utils.misc import (
-    wrap_send, transpose_lists, flatten_lists, subscribe_recv)
+    wrap_send,
+    transpose_lists,
+    flatten_lists,
+    subscribe_recv,
+)
 
 
 class HyperInvMessageType(object):
@@ -19,10 +23,10 @@ class HyperInvMessageType(object):
 
 
 async def _recv_loop(n, recv, s=0):
-    results = [None]*n
+    results = [None] * n
     for _ in range(n):
         sender_id, value = await recv()
-        results[sender_id-s] = value
+        results[sender_id - s] = value
     return results
 
 
@@ -43,7 +47,7 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
 
     # Generate t and 2t shares of the random element.
     coeffs_t = [to_int(poly.random(t, r).coeffs) for r in my_randoms]
-    coeffs_2t = [to_int(poly.random(2*t, r).coeffs) for r in my_randoms]
+    coeffs_2t = [to_int(poly.random(2 * t, r).coeffs) for r in my_randoms]
     unref_t = encoder.encode(coeffs_t)
     unref_2t = encoder.encode(coeffs_2t)
 
@@ -82,7 +86,7 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
         share_chk_recv_task = asyncio.create_task(_recv_loop(n, recv))
 
     # Send shares of parties with id in [N-2t+1, N] to those parties.
-    for i in range(big_t+1, n):
+    for i in range(big_t + 1, n):
         send(i, (to_send_t[i], to_send_2t[i]))
 
     # Parties with id in [N-2t+1, N] need to verify that the shares are in-fact correct.
@@ -109,19 +113,24 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
 
         # Verify that the shares are in-fact `t` and `2t` shared.
         # Verify that both `t` and `2t` shares of the same value.
-        if all(deg == t for deg in degree_t) and \
-           all(deg == 2*t for deg in degree_2t) and \
-           secret_t == secret_2t:
+        if (
+            all(deg == t for deg in degree_t)
+            and all(deg == 2 * t for deg in degree_2t)
+            and secret_t == secret_2t
+        ):
             response = HyperInvMessageType.SUCCESS
 
-        logging.debug("[%d] Degree check: %s, Secret Check: %s", my_id,
-                      all(deg == t for deg in degree_t) and
-                      all(deg == 2*t for deg in degree_2t),
-                      secret_t == secret_2t)
+        logging.debug(
+            "[%d] Degree check: %s, Secret Check: %s",
+            my_id,
+            all(deg == t for deg in degree_t)
+            and all(deg == 2 * t for deg in degree_2t),
+            secret_t == secret_2t,
+        )
 
     # Start listening for the verification response.
     send, recv = _get_send_recv("H3")
-    response_recv_task = asyncio.create_task(_recv_loop(n-big_t-1, recv, big_t+1))
+    response_recv_task = asyncio.create_task(_recv_loop(n - big_t - 1, recv, big_t + 1))
 
     # Send the verification response.
     if my_id > big_t:
@@ -132,11 +141,11 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
     subscribe_recv_task.cancel()
 
     # If any of [T+1, N] parties say that the shares are inconsistent then abort.
-    if responses.count(HyperInvMessageType.SUCCESS) != n-big_t-1:
+    if responses.count(HyperInvMessageType.SUCCESS) != n - big_t - 1:
         raise HoneyBadgerMPCError("Aborting because the shares were inconsistent.")
 
-    out_t = flatten_lists([s[:big_t+1] for s in ref_t])
-    out_2t = flatten_lists([s[:big_t+1] for s in ref_2t])
+    out_t = flatten_lists([s[: big_t + 1] for s in ref_t])
+    out_2t = flatten_lists([s[: big_t + 1] for s in ref_2t])
 
     return tuple(zip(out_t, out_2t))
 
@@ -151,9 +160,9 @@ async def generate_triples(n, t, k, my_id, _send, _recv, field):
     send, recv = _get_send_recv("randousha")
     rs_t2t = await randousha(n, t, 3 * k, my_id, send, recv, field)
 
-    as_t2t = rs_t2t[0*k:1*k]
-    bs_t2t = rs_t2t[1*k:2*k]
-    rs_t2t = rs_t2t[2*k:3*k]
+    as_t2t = rs_t2t[0 * k : 1 * k]
+    bs_t2t = rs_t2t[1 * k : 2 * k]
+    rs_t2t = rs_t2t[2 * k : 3 * k]
 
     as_t, _ = zip(*as_t2t)
     bs_t, _ = zip(*bs_t2t)
@@ -167,13 +176,13 @@ async def generate_triples(n, t, k, my_id, _send, _recv, field):
         assert len(rs_2t) == len(rs_t) == len(as_t) == len(bs_t)
 
         abrs_2t = [a * b + r for a, b, r in zip(as_t, bs_t, rs_2t)]
-        abrs = await ctx.ShareArray(abrs_2t, 2*t).open()
+        abrs = await ctx.ShareArray(abrs_2t, 2 * t).open()
         abs_t = [abr - r for abr, r in zip(abrs, rs_t)]
         return list(zip(as_t, bs_t, abs_t))
 
     # TODO: compute triples through degree reduction
     send, recv = _get_send_recv("opening")
-    ctx = Mpc(f'mpc:opening', n, t, my_id, send, recv, prog, {})
+    ctx = Mpc(f"mpc:opening", n, t, my_id, send, recv, prog, {})
 
     result = await ctx._run()
     subscribe_recv_task.cancel()
@@ -197,7 +206,7 @@ async def generate_bits(n, t, k, my_id, _send, _recv, field):
     # for publicly reconstructing:
     #    u^2 = open([u]_t * [u]_t + [r]_2t) - [r]_t
     us_t2t = rs_t2t[0:k]
-    rs_t2t = rs_t2t[k:2*k]
+    rs_t2t = rs_t2t[k : 2 * k]
 
     us_t, _ = zip(*us_t2t)
     us_t = list(map(field, us_t))
@@ -207,7 +216,7 @@ async def generate_bits(n, t, k, my_id, _send, _recv, field):
     async def prog(ctx):
         u2rs_2t = [u * u + r for u, r in zip(us_t, rs_2t)]
         assert len(u2rs_2t) == len(rs_t)
-        u2rs = await ctx.ShareArray(u2rs_2t, 2*t).open()
+        u2rs = await ctx.ShareArray(u2rs_2t, 2 * t).open()
         u2s_t = [u2r - r for u2r, r in zip(u2rs, rs_t)]
         u2s = await ctx.ShareArray(u2s_t).open()
         bits = [u / u2.sqrt() for u, u2 in zip(us_t, u2s)]
@@ -215,7 +224,7 @@ async def generate_bits(n, t, k, my_id, _send, _recv, field):
 
     # TODO: compute triples through degree reduction
     send, recv = _get_send_recv("opening")
-    ctx = Mpc(f'mpc:opening', n, t, my_id, send, recv, prog, {})
+    ctx = Mpc(f"mpc:opening", n, t, my_id, send, recv, prog, {})
     result = await ctx._run()
     # print(f'[{my_id}] Generate triples complete')
     subscribe_recv_task.cancel()
@@ -226,6 +235,7 @@ async def generate_bits(n, t, k, my_id, _send, _recv, field):
 # Process runner
 ########################
 
+
 async def _run(peers, n, t, k, my_id):
     field = GF(Subgroup.BLS12_381)
     async with ProcessProgramRunner(peers, n, t, my_id) as runner:
@@ -233,11 +243,18 @@ async def _run(peers, n, t, k, my_id):
         start_time = time.time()
         await randousha(n, t, k, my_id, send, recv, field)
         end_time = time.time()
-        logging.info("[%d] Finished in %s", my_id, end_time-start_time)
+        logging.info("[%d] Finished in %s", my_id, end_time - start_time)
+
 
 if __name__ == "__main__":
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(_run(HbmpcConfig.peers, HbmpcConfig.N,
-                                 HbmpcConfig.t, HbmpcConfig.extras['k'],
-                                 HbmpcConfig.my_id))
+    loop.run_until_complete(
+        _run(
+            HbmpcConfig.peers,
+            HbmpcConfig.N,
+            HbmpcConfig.t,
+            HbmpcConfig.extras["k"],
+            HbmpcConfig.my_id,
+        )
+    )

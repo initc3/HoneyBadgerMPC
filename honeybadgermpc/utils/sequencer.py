@@ -8,6 +8,7 @@ class Sequencer(object):
     will always return them in strict counting order, (1, _),(2, _),... so values
     added out of order are buffered until the next counting number is available.
     """
+
     def __init__(self):
         self.heap = []
         self.values = set()  # Use this to ensure a duplicate is not added

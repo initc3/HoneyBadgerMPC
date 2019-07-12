@@ -33,12 +33,14 @@ def read_environment_variable(key):
 
 
 class AwsConfig:
-    config = json.load(open('./aws/aws-config.json'))
+    config = json.load(open("./aws/aws-config.json"))
 
     mpc_config = config["mpc"]
 
-    assert mpc_config["num_faulty_nodes"] <= mpc_config["t"], ("`num_faulty_nodes` \
-        cannot be greater than `t`")
+    assert (
+        mpc_config["num_faulty_nodes"] <= mpc_config["t"]
+    ), "`num_faulty_nodes` \
+        cannot be greater than `t`"
 
     MPC_CONFIG = MPCConfig(
         mpc_config["command"],
@@ -63,7 +65,7 @@ class AwsConfig:
             value["security_group_ids"],
             value["image_id"],
             value["key_name"],
-            value["key_file_path"]
+            value["key_file_path"],
         )
         TOTAL_VM_COUNT += value["vm_count"]
     VM_NAME = awsconfig["vm_name"]

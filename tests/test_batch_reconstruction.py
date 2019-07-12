@@ -28,16 +28,27 @@ def fft_reconstruction_input(galois_field):
     point = EvalPoint(fp, n, use_omega_powers=True)
     omega = point.omega.value
     # x + 2, 3x + 4
-    secret_shares = [(omega ** 0 + 2, 3 * omega ** 0 + 4),
-                     (omega ** 1 + 2, 3 * omega ** 1 + 4),
-                     (omega ** 2 + 2, 3 * omega ** 2 + 4),
-                     (omega ** 3 + 2, 3 * omega ** 3 + 4)]
+    secret_shares = [
+        (omega ** 0 + 2, 3 * omega ** 0 + 4),
+        (omega ** 1 + 2, 3 * omega ** 1 + 4),
+        (omega ** 2 + 2, 3 * omega ** 2 + 4),
+        (omega ** 3 + 2, 3 * omega ** 3 + 4),
+    ]
     secrets = [2, 4]
     return n, t, fp, p, omega, secret_shares, secrets
 
 
-async def _get_reconstruction(test_router, secret_shares, n, t, fp, p, use_omega_powers,
-                              skip_list=(), error_list=()):
+async def _get_reconstruction(
+    test_router,
+    secret_shares,
+    n,
+    t,
+    fp,
+    p,
+    use_omega_powers,
+    skip_list=(),
+    error_list=(),
+):
     """
     :param skip_list: Nodes to skip in reconstruction (Dont send/receive shares)
     :param error_list: Nodes to insert errors in
@@ -52,20 +63,24 @@ async def _get_reconstruction(test_router, secret_shares, n, t, fp, p, use_omega
             ss = [fp(0) for _ in secret_shares[i]]
         else:
             ss = tuple(map(fp, secret_shares[i]))
-        towait.append(batch_reconstruct(ss, p, t, n, i, sends[i], recvs[i],
-                                        use_omega_powers=use_omega_powers))
+        towait.append(
+            batch_reconstruct(
+                ss, p, t, n, i, sends[i], recvs[i], use_omega_powers=use_omega_powers
+            )
+        )
     results = await asyncio.gather(*towait)
     return results
 
 
 @mark.asyncio
-async def test_reconstruction_no_errors(test_router, galois_field, reconstruction_input):
+async def test_reconstruction_no_errors(
+    test_router, galois_field, reconstruction_input
+):
     # Given
     n, t, fp, p, shared_secrets, secrets = reconstruction_input
 
     # When
-    results = await _get_reconstruction(
-        test_router, shared_secrets, n, t, fp, p, False)
+    results = await _get_reconstruction(test_router, shared_secrets, n, t, fp, p, False)
 
     # Then
     for r in results:
@@ -75,14 +90,16 @@ async def test_reconstruction_no_errors(test_router, galois_field, reconstructio
 
 
 @mark.asyncio
-async def test_reconstruction_with_errors(test_router,
-                                          galois_field, reconstruction_input):
+async def test_reconstruction_with_errors(
+    test_router, galois_field, reconstruction_input
+):
     # Given
     n, t, fp, p, secret_shares, secrets = reconstruction_input
 
     # When
     results = await _get_reconstruction(
-        test_router, secret_shares, n, t, fp, p, use_omega_powers=False, error_list=[1])
+        test_router, secret_shares, n, t, fp, p, use_omega_powers=False, error_list=[1]
+    )
 
     # Then
     for r in results:
@@ -100,20 +117,30 @@ async def test_reconstruction_timeout(test_router, galois_field, reconstruction_
     # When
     with pytest.raises(asyncio.TimeoutError):
         task = _get_reconstruction(
-            test_router, secret_shares, n, t, fp, p,
-            False, error_list=[1], skip_list=[2])
+            test_router,
+            secret_shares,
+            n,
+            t,
+            fp,
+            p,
+            False,
+            error_list=[1],
+            skip_list=[2],
+        )
         await asyncio.wait_for(task, timeout=1)
 
 
 @mark.asyncio
-async def test_fft_reconstruction_no_errors(test_router, galois_field,
-                                            fft_reconstruction_input):
+async def test_fft_reconstruction_no_errors(
+    test_router, galois_field, fft_reconstruction_input
+):
     # Given
     n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
 
     # When
     results = await _get_reconstruction(
-        test_router, secret_shares, n, t, fp, p, use_omega_powers=True)
+        test_router, secret_shares, n, t, fp, p, use_omega_powers=True
+    )
 
     # Then
     for r in results:
@@ -123,14 +150,16 @@ async def test_fft_reconstruction_no_errors(test_router, galois_field,
 
 
 @mark.asyncio
-async def test_fft_reconstruction_with_errors(test_router, galois_field,
-                                              fft_reconstruction_input):
+async def test_fft_reconstruction_with_errors(
+    test_router, galois_field, fft_reconstruction_input
+):
     # Given
     n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
 
     # When
-    results = await _get_reconstruction(test_router, secret_shares, n, t, fp, p,
-                                        use_omega_powers=True, error_list=[1])
+    results = await _get_reconstruction(
+        test_router, secret_shares, n, t, fp, p, use_omega_powers=True, error_list=[1]
+    )
 
     # Then
     for r in results:
@@ -140,17 +169,28 @@ async def test_fft_reconstruction_with_errors(test_router, galois_field,
 
 
 @mark.asyncio
-async def test_fft_reconstruction_timeout(test_router, galois_field,
-                                          fft_reconstruction_input):
+async def test_fft_reconstruction_timeout(
+    test_router, galois_field, fft_reconstruction_input
+):
     """Test if reconstruction times out if one node is skipped in reconstruction"""
     # Given
     n, t, fp, p, omega, secret_shares, secrets = fft_reconstruction_input
 
     # When
     with pytest.raises(asyncio.TimeoutError):
-        task = _get_reconstruction(test_router, secret_shares, n, t, fp, p,
-                                   use_omega_powers=True, error_list=[1], skip_list=[2])
+        task = _get_reconstruction(
+            test_router,
+            secret_shares,
+            n,
+            t,
+            fp,
+            p,
+            use_omega_powers=True,
+            error_list=[1],
+            skip_list=[2],
+        )
         await asyncio.wait_for(task, timeout=1)
+
 
 # TODO: No erasure tests present
 # TODO: Test graceful exit (throw some Error) when reconstruction fails

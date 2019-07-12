@@ -15,9 +15,7 @@ class GFElementFuture(ABC, asyncio.Future):
         return NotImplementedError
 
     @TypeCheck(arithmetic=True)
-    def __binop_field(self,
-                      other: (int, GFElement, GFElementFuture),
-                      op: Callable):
+    def __binop_field(self, other: (int, GFElement, GFElementFuture), op: Callable):
         if isinstance(other, int):
             other = self.context.field(other)
 
@@ -25,10 +23,10 @@ class GFElementFuture(ABC, asyncio.Future):
 
         if isinstance(other, GFElementFuture):
             asyncio.gather(self, other).add_done_callback(
-                lambda _: res.set_result(op(self.result(), other.result())))
+                lambda _: res.set_result(op(self.result(), other.result()))
+            )
         else:
-            self.add_done_callback(
-                lambda _: res.set_result(op(self.result(), other)))
+            self.add_done_callback(lambda _: res.set_result(op(self.result(), other)))
 
         return res
 
@@ -66,6 +64,7 @@ class Share(ABC):
         res = self.context.GFElementFuture()
 
         if isinstance(self.v, asyncio.Future):
+
             def cb1(v):
                 # Future that will resolve to the opened share
                 opening = self.context.open_share(self.context.Share(v.result()))
@@ -88,7 +87,8 @@ class Share(ABC):
         elif self.t != other.t:
             raise ValueError(
                 f"Shares can't be added to other shares with differing t \
-                    values ({self.t} {other.t})")
+                    values ({self.t} {other.t})"
+            )
 
         return self.context.Share(self.v + other.v, self.t)
 
@@ -104,7 +104,8 @@ class Share(ABC):
         elif self.t != other.t:
             raise ValueError(
                 f"Shares must have same t value to subtract: \
-                    ({self.t} {other.t})")
+                    ({self.t} {other.t})"
+            )
 
         return self.context.Share(self.v - other.v, self.t)
 
@@ -119,7 +120,8 @@ class Share(ABC):
         elif self.t != other.t:
             raise ValueError(
                 f"Shares with differing t values cannot be multiplied \
-                    ({self.t} {other.t})")
+                    ({self.t} {other.t})"
+            )
 
         res = self.context.ShareFuture()
 
@@ -136,7 +138,8 @@ class Share(ABC):
     def __div__(self, other: Share):
         if self.t != other.t:
             raise ValueError(
-                f"Cannot divide shares with differing t values ({self.t} {other.t})")
+                f"Cannot divide shares with differing t values ({self.t} {other.t})"
+            )
 
         res = self.context.ShareFuture()
 
@@ -166,7 +169,7 @@ class Share(ABC):
         return res
 
     def __str__(self):
-        return '{%d}' % (self.v)
+        return "{%d}" % (self.v)
 
 
 class ShareArray(ABC):
@@ -204,7 +207,7 @@ class ShareArray(ABC):
         assert self.t == other.t
         assert len(self) == len(other)
 
-        result = [a+b for (a, b) in zip(self._shares, other._shares)]
+        result = [a + b for (a, b) in zip(self._shares, other._shares)]
         return self.context.ShareArray(result, self.t)
 
     @TypeCheck(arithmetic=True)
@@ -215,7 +218,7 @@ class ShareArray(ABC):
         assert self.t == other.t
         assert len(self) == len(other)
 
-        result = [a-b for (a, b) in zip(self._shares, other._shares)]
+        result = [a - b for (a, b) in zip(self._shares, other._shares)]
         return self.context.ShareArray(result, self.t)
 
     @TypeCheck(arithmetic=True)
@@ -262,8 +265,9 @@ class ShareArray(ABC):
                 extra = left[-1]
                 left = left[:-1]
 
-            results = (await op(self.context.ShareArray(left),
-                                self.context.ShareArray(right)))._shares
+            results = (
+                await op(self.context.ShareArray(left), self.context.ShareArray(right))
+            )._shares
 
             if extra is not None:
                 results.append(extra)
@@ -290,13 +294,9 @@ class ShareFuture(ABC, asyncio.Future):
         return NotImplementedError
 
     @TypeCheck(arithmetic=True)
-    def __binop_share(self,
-                      other: (int,
-                              GFElement,
-                              Share,
-                              ShareFuture,
-                              GFElementFuture),
-                      op: Callable):
+    def __binop_share(
+        self, other: (int, GFElement, Share, ShareFuture, GFElementFuture), op: Callable
+    ):
         """Stacks the application of a function to the resolved value
         of this future with another value, which may or may not be a
         future as well.
@@ -342,8 +342,10 @@ class ShareFuture(ABC, asyncio.Future):
         # it resolves, and the next to set the value of res when opening
         # resolves
         self.add_done_callback(
-            lambda _: self.result().open().add_done_callback(
-                lambda sh: res.set_result(sh.result())))
+            lambda _: self.result()
+            .open()
+            .add_done_callback(lambda sh: res.set_result(sh.result()))
+        )
 
         return res
 

@@ -3,8 +3,13 @@ import logging
 import math
 import asyncio
 from honeybadgermpc.exceptions import HoneyBadgerMPCError
-from honeybadgermpc.broadcast.reliablebroadcast \
-    import encode, decode, merkle_tree, get_merkle_branch, merkle_verify
+from honeybadgermpc.broadcast.reliablebroadcast import (
+    encode,
+    decode,
+    merkle_tree,
+    get_merkle_branch,
+    merkle_verify,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -148,8 +153,16 @@ class AVID:
                 for j in range(self.input_size):
                     branch_list[j] = get_merkle_branch(i, mt_list[j])
                 # send each person the column of stripes
-                self.send(i, (sid, AVIDMessageType.VAL, roothash_list,
-                              branch_list, stripes_list_per_party[i]))
+                self.send(
+                    i,
+                    (
+                        sid,
+                        AVIDMessageType.VAL,
+                        roothash_list,
+                        branch_list,
+                        stripes_list_per_party[i],
+                    ),
+                )
             if client_mode:
                 return
 
@@ -169,15 +182,21 @@ class AVID:
                 (_, _, roothash_list, branch_list, stripes_for_each) = msg
                 if sender != self.leader:
                     logger.warning(
-                        "[%d] VAL message from other than leader: %d", pid, sender)
+                        "[%d] VAL message from other than leader: %d", pid, sender
+                    )
                     continue
 
                 # merkle tree verification
                 validation_fail_flag = False
                 for i in range(len(stripes_for_each)):
                     # verify each entry in the stripes
-                    if not merkle_verify(self.n, stripes_for_each[i],
-                                         roothash_list[i], branch_list[i], pid):
+                    if not merkle_verify(
+                        self.n,
+                        stripes_for_each[i],
+                        roothash_list[i],
+                        branch_list[i],
+                        pid,
+                    ):
                         logger.error("[%d]Failed to validate VAL message", pid)
                         validation_fail_flag = True
                         break
@@ -215,8 +234,16 @@ class AVID:
                     # enqueue a retrieve request
                     self.retrieval_requests.append((sender, index))
                 else:
-                    self.send(sender, (sid, AVIDMessageType.RESPONSE, index,
-                                       my_roothash_list[index], my_stripes[index]))
+                    self.send(
+                        sender,
+                        (
+                            sid,
+                            AVIDMessageType.RESPONSE,
+                            index,
+                            my_roothash_list[index],
+                            my_stripes[index],
+                        ),
+                    )
 
             elif msg[1] == AVIDMessageType.RESPONSE:
                 # put in the queue for retrieve
@@ -239,10 +266,17 @@ class AVID:
             # Handle deferred requests
             if self.ok_future.done() and my_stripes is not None:
                 for (sender, index) in self.retrieval_requests:
-                    logging.info("Sending deferred response sender:%s index:%s",
-                                 sender, index)
-                    self.send(sender, (sid, AVIDMessageType.RESPONSE,
-                                       index,
-                                       my_roothash_list[index],
-                                       my_stripes[index]))
+                    logging.info(
+                        "Sending deferred response sender:%s index:%s", sender, index
+                    )
+                    self.send(
+                        sender,
+                        (
+                            sid,
+                            AVIDMessageType.RESPONSE,
+                            index,
+                            my_roothash_list[index],
+                            my_stripes[index],
+                        ),
+                    )
                 self.retrieval_requests.clear()

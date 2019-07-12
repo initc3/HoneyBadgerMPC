@@ -26,7 +26,7 @@ class AvssValueProcessor(object):
 
         # This stores a list of the indices of the next AVSS value to be returned
         # when a consumer requests a value dealt from a particular dealer.
-        self.next_idx_to_return_per_dealer = [0]*n
+        self.next_idx_to_return_per_dealer = [0] * n
 
         # The input to ACS is the count of values received at this node dealt by all
         # the nodes. In order to get the share of the same element at each node the
@@ -58,6 +58,7 @@ class AvssValueProcessor(object):
 
         def _get_send_recv(tag):
             return wrap_send(tag, send), subscribe(tag)
+
         self.get_send_recv = _get_send_recv
 
         self.pk, self.sk = pk, sk
@@ -88,7 +89,7 @@ class AvssValueProcessor(object):
                 # If this value has already been agreed upon by other parties
                 # then it means that its Future has been added to the output list.
                 # So we need to set the result of that future to be equal to this value.
-                idx = len(self.inputs_per_dealer[dealer_id])-1
+                idx = len(self.inputs_per_dealer[dealer_id]) - 1
                 if idx < len(self.outputs_per_dealer[dealer_id]):
                     assert not self.outputs_per_dealer[dealer_id][idx].done()
                     self.outputs_per_dealer[dealer_id][idx].set_result(avss_value)
@@ -121,7 +122,7 @@ class AvssValueProcessor(object):
         # the same as the current set of agreed output values for that party. This
         # indicates that the parties which were late are treated as if it has not seen
         # any new values.
-        acs_outputs = [None]*self.n
+        acs_outputs = [None] * self.n
         default_acs_output = [len(self.outputs_per_dealer[j]) for j in range(self.n)]
         for i, pickled_acs_output in enumerate(pickled_acs_outputs):
             if pickled_acs_output is not None:
@@ -143,7 +144,7 @@ class AvssValueProcessor(object):
         # of randomized quick sort.
         for i in range(self.n):
             counts_view_at_all_nodes[i].sort()  # This is the nlog(n) part.
-            agreed_value_count = counts_view_at_all_nodes[i][self.n-(self.t+1)]
+            agreed_value_count = counts_view_at_all_nodes[i][self.n - (self.t + 1)]
 
             # This agreed count should always be more than the number
             # of outputs which are available at any instant on any node.
@@ -170,10 +171,13 @@ class AvssValueProcessor(object):
         # Get all the values dealt by each dealer which have been agreed and not
         # yet added to the output queue. i_th row represents the set of values
         # dealt by the i_th dealer.
-        pending_values = [None]*self.n
-        pending_counts = [0]*self.n
+        pending_values = [None] * self.n
+        pending_counts = [0] * self.n
         for i in range(self.n):
-            s, e = self.next_idx_to_return_per_dealer[i], len(self.outputs_per_dealer[i])
+            s, e = (
+                self.next_idx_to_return_per_dealer[i],
+                len(self.outputs_per_dealer[i]),
+            )
             assert e - s >= 0
             pending_values[i] = list(self.outputs_per_dealer[i][s:])
             pending_counts[i] = len(pending_values[i])
@@ -212,7 +216,7 @@ class AvssValueProcessor(object):
             for j in range(self.n):
                 if len(pending_values[j]) // self.chunk_size > i:
                     for k in range(self.chunk_size):
-                        self.output_queue.put_nowait(pending_values[j][i+k])
+                        self.output_queue.put_nowait(pending_values[j][i + k])
                         # Increment the index of the next return value for this dealer
                         self.next_idx_to_return_per_dealer[j] += 1
             self.output_queue.put_nowait(AvssValueProcessor.BATCH_DELIMITER)
@@ -220,19 +224,20 @@ class AvssValueProcessor(object):
     async def _run_acs_to_process_values(self, sid):
         # Get a count of all values which have been received
         # until now from all the other participating nodes.
-        value_counts_per_dealer = [len(self.inputs_per_dealer[i]) for i in range(self.n)]
+        value_counts_per_dealer = [
+            len(self.inputs_per_dealer[i]) for i in range(self.n)
+        ]
 
         acs_input = dumps(value_counts_per_dealer)
-        logging.debug("[%d] ACS [%s] Input:%s", self.my_id, sid, value_counts_per_dealer)
+        logging.debug(
+            "[%d] ACS [%s] Input:%s", self.my_id, sid, value_counts_per_dealer
+        )
 
         send, recv = self.get_send_recv(sid)
 
         acs_outputs = await run_common_subset(
-            sid,
-            self.pk, self.sk,
-            self.n, self.t, self.my_id,
-            send, recv,
-            acs_input)
+            sid, self.pk, self.sk, self.n, self.t, self.my_id, send, recv, acs_input
+        )
 
         assert type(acs_outputs) is tuple
         assert len(acs_outputs) == self.n

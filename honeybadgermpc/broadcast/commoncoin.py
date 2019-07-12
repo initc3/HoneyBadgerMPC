@@ -14,6 +14,7 @@ logger.setLevel(logging.ERROR)
 
 class CommonCoinFailureException(Exception):
     """Raised for common coin failures."""
+
     pass
 
 
@@ -34,20 +35,21 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
     :param receive: receive channel
     :return: a function ``getCoin()``, where ``getCoin(r)`` blocks
     """
-    assert pk.k == f+1
-    assert pk.l == n    # noqa: E741
+    assert pk.k == f + 1
+    assert pk.l == n  # noqa: E741
     received = defaultdict(dict)
     output_queue = defaultdict(lambda: asyncio.Queue(1))
 
     async def _recv():
-        while True:     # main receive loop
-            logger.debug(f'[{pid}] entering loop', extra={'nodeid': pid, 'epoch': '?'})
+        while True:  # main receive loop
+            logger.debug(f"[{pid}] entering loop", extra={"nodeid": pid, "epoch": "?"})
             # New shares for some round r, from sender i
             (i, (_, r, sig_bytes)) = await receive()
             sig = deserialize1(sig_bytes)
             logger.debug(
-                          f'[{pid}] received i, _, r, sig: {i, _, r, sig}',
-                          extra={'nodeid': pid, 'epoch': r})
+                f"[{pid}] received i, _, r, sig: {i, _, r, sig}",
+                extra={"nodeid": pid, "epoch": r},
+            )
             assert i in range(n)
             assert r >= 0
             if i in received[r]:
@@ -69,21 +71,22 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
             # After reaching the threshold, compute the output and
             # make it available locally
             logger.debug(
-                f'[{pid}] if len(received[r]) == f + 1: {len(received[r]) == f + 1}',
-                extra={'nodeid': pid, 'epoch': r},
+                f"[{pid}] if len(received[r]) == f + 1: {len(received[r]) == f + 1}",
+                extra={"nodeid": pid, "epoch": r},
             )
             if len(received[r]) == f + 1:
 
                 # Verify and get the combined signature
-                sigs = dict(list(received[r].items())[:f+1])
+                sigs = dict(list(received[r].items())[: f + 1])
                 sig = pk.combine_shares(sigs)
                 assert pk.verify_signature(sig, h)
 
                 # Compute the bit from the least bit of the hash
                 bit = hash(serialize(sig))[0] % 2
                 logger.debug(
-                    f'[{pid}] put bit {bit} in output queue',
-                    extra={'nodeid': pid, 'epoch': r})
+                    f"[{pid}] put bit {bit} in output queue",
+                    extra={"nodeid": pid, "epoch": r},
+                )
                 output_queue[r].put_nowait(bit)
 
     recv_task = asyncio.create_task(_recv())
@@ -98,9 +101,10 @@ async def shared_coin(sid, pid, n, f, pk, sk, broadcast, receive):
         # I have to do mapping to 1..l
         h = pk.hash_message(str((sid, round)))
         logger.debug(
-                      f"[{pid}] broadcast {('COIN', round, sk.sign(h))}",
-                      extra={'nodeid': pid, 'epoch': round})
-        broadcast(('COIN', round, serialize(sk.sign(h))))
+            f"[{pid}] broadcast {('COIN', round, sk.sign(h))}",
+            extra={"nodeid": pid, "epoch": round},
+        )
+        broadcast(("COIN", round, serialize(sk.sign(h))))
         return await output_queue[round].get()
 
     return get_coin, recv_task
@@ -115,7 +119,8 @@ async def run_common_coin(config, pbk, pvk, n, f, nodeid):
                 send(i, o)
 
         coin, crecv_task = await shared_coin(
-            'sidA', nodeid, n, f, pbk, pvk, broadcast, recv)
+            "sidA", nodeid, n, f, pbk, pvk, broadcast, recv
+        )
         for i in range(10):
             logger.info("[%d] %d COIN VALUE: %s", nodeid, i, await coin(i))
         crecv_task.cancel()
@@ -141,6 +146,8 @@ if __name__ == "__main__":
                 pvk,
                 HbmpcConfig.N,
                 HbmpcConfig.t,
-                HbmpcConfig.my_id))
+                HbmpcConfig.my_id,
+            )
+        )
     finally:
         loop.close()

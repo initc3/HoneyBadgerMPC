@@ -9,6 +9,6 @@ def test_poly_commit():
     degree = randint(10, 50)
     phi = polynomials_over(ZR).random(degree)
     cs, aux = poly_commit.commit(phi)
-    i = randint(0, degree-1)
+    i = randint(0, degree - 1)
     witness = poly_commit.create_witness(aux, i)
     assert poly_commit.verify_eval(cs, i, phi(i), witness)

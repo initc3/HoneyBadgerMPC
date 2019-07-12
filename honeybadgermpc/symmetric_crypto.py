@@ -15,13 +15,14 @@ class SymmetricCrypto(object):
 
     @staticmethod
     def pad(s):
-        padding = (SymmetricCrypto.BS - len(s) % SymmetricCrypto.BS) * bytes([
-            SymmetricCrypto.BS - len(s) % SymmetricCrypto.BS])
+        padding = (SymmetricCrypto.BS - len(s) % SymmetricCrypto.BS) * bytes(
+            [SymmetricCrypto.BS - len(s) % SymmetricCrypto.BS]
+        )
         return s + padding
 
     @staticmethod
     def unpad(s):
-        return s[:-ord(s[len(s)-1:])]
+        return s[: -ord(s[len(s) - 1 :])]
 
     @staticmethod
     def encrypt(key, plaintext):
@@ -30,7 +31,7 @@ class SymmetricCrypto(object):
         assert len(key) == 32
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(key, AES.MODE_CBC, iv)
-        ciphertext = (iv + cipher.encrypt(SymmetricCrypto.pad(dumps(plaintext))))
+        ciphertext = iv + cipher.encrypt(SymmetricCrypto.pad(dumps(plaintext)))
         return ciphertext
 
     @staticmethod

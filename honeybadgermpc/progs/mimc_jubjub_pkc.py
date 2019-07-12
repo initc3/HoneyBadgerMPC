@@ -1,14 +1,13 @@
 import asyncio
-from random import randint
-from honeybadgermpc.mpc import PreProcessedElements
 from honeybadgermpc.elliptic_curve import Point, Jubjub
 from honeybadgermpc.progs.jubjub import share_mul
 from honeybadgermpc.progs.mimc import mimc_mpc, mimc_plain
 
 # TODO: Move into jubjub class
 # GP: The generator of Jubjub curve, hardcode here
-GP = Point(5,
-           6846412461894745224441235558443359243034138132682534265960483512729196124138)
+GP = Point(
+    5, 6846412461894745224441235558443359243034138132682534265960483512729196124138
+)
 
 
 async def key_generation(context, key_length=32):
@@ -17,10 +16,8 @@ async def key_generation(context, key_length=32):
     as the private key (priv_key),
     then calcultes X = ([x]G).open as the public key (pub_key)
     """
-    pp_elements = PreProcessedElements()
-
     # Generate the private key
-    priv_key = [pp_elements.get_bit(context) for _ in range(key_length)]
+    priv_key = [context.preproc.get_bit(context) for _ in range(key_length)]
 
     # Compute [X] = [x]G, then open it as public key
     pub_key_share = await share_mul(context, priv_key, GP)
@@ -43,7 +40,7 @@ def mimc_encrypt(pub_key, ms, seed=None):
     """
 
     # Randomly generated variable hold only by the dealer
-    a = randint(0, Jubjub.Field.modulus) if seed is None else seed
+    a = Jubjub.Field.random() if seed is None else seed
     # Auxiliary variable needed for decryption
     a_ = a * GP
 
@@ -72,8 +69,10 @@ async def mimc_decrypt(context, priv_key, ciphertext):
     # secret share of the secret key k, [k] <- [x]A).x
     k_share = (await share_mul(context, priv_key, a_)).xs
 
-    mpcs = await asyncio.gather(*[mimc_mpc(context, context.field(i), k_share)
-                                  for i in range(len(cs))])
+    mpcs = await asyncio.gather(
+        *[mimc_mpc(context, context.field(i), k_share) for i in range(len(cs))]
+    )
+
     decrypted = [c - m for (c, m) in zip(cs, mpcs)]
 
     return decrypted

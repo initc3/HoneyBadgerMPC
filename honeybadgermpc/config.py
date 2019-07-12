@@ -37,15 +37,16 @@ class ReconstructionConfig(object):
     @classmethod
     def from_json(cls, json_config):
         res = cls.default()
-        if 'induce_faults' in json_config:
-            res.induce_faults = json_config['induce_faults']
+        if "induce_faults" in json_config:
+            res.induce_faults = json_config["induce_faults"]
 
         decoding_algorithms = [RSAlgorithm.WELCH_BERLEKAMP, RSAlgorithm.GAO]
-        if 'decoding_algorithm' in json_config:
-            decoding_algorithm = json_config['decoding_algorithm']
-            assert decoding_algorithm in decoding_algorithms, \
-                f"decoding_algorithm must be in {decoding_algorithms}"
-            res.decoding_algorithm = json_config['decoding_algorithm']
+        if "decoding_algorithm" in json_config:
+            decoding_algorithm = json_config["decoding_algorithm"]
+            assert (
+                decoding_algorithm in decoding_algorithms
+            ), f"decoding_algorithm must be in {decoding_algorithms}"
+            res.decoding_algorithm = json_config["decoding_algorithm"]
 
         return res
 
@@ -61,22 +62,24 @@ class HbmpcConfig(object):
 
     @staticmethod
     def load_config():
-        parser = ArgumentParser(description='Runs an HBMPC program.')
+        parser = ArgumentParser(description="Runs an HBMPC program.")
 
         parser.add_argument(
-            '-d',
-            '--distributed',
-            dest='is_dist',
+            "-d",
+            "--distributed",
+            dest="is_dist",
             action="store_true",
-            help='Indicates that the program is being run in a distributed setting. \
-                This will validate all `default` and `required` parameters.')
+            help="Indicates that the program is being run in a distributed setting. \
+                This will validate all `default` and `required` parameters.",
+        )
 
         parser.add_argument(
-            '-f',
-            '--config-file',
+            "-f",
+            "--config-file",
             type=str,
-            dest='config_file_path',
-            help='Path from where to load the HBMPC config file.')
+            dest="config_file_path",
+            help="Path from where to load the HBMPC config file.",
+        )
 
         args = parser.parse_args()
 
@@ -87,8 +90,7 @@ class HbmpcConfig(object):
             HbmpcConfig.t = config["t"]
             HbmpcConfig.my_id = config["my_id"]
             HbmpcConfig.peers = {
-                peerid: NodeDetails(
-                    addrinfo.split(':')[0], int(addrinfo.split(':')[1]))
+                peerid: NodeDetails(addrinfo.split(":")[0], int(addrinfo.split(":")[1]))
                 for peerid, addrinfo in enumerate(config["peers"])
             }
 
@@ -102,7 +104,8 @@ class HbmpcConfig(object):
                 reconstruction_data = config["reconstruction"]
 
             HbmpcConfig.reconstruction = ReconstructionConfig.from_json(
-                reconstruction_data)
+                reconstruction_data
+            )
 
             # Ensure the required values are set before this method terminates
             assert HbmpcConfig.my_id is not None, "Node Id: missing"
