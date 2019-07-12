@@ -12,7 +12,7 @@ from .reed_solomon import (
 )
 from .reed_solomon import IncrementalDecoder
 import random
-from honeybadgermpc.utils.misc import (    
+from honeybadgermpc.utils.misc import (
     chunk_data,
     flatten_lists,
     transpose_lists,
@@ -122,8 +122,8 @@ async def batch_reconstruct(
         degree = t
 
     secret_shares = [v.value for v in secret_shares]
-    
-        # (optional) Induce faults
+
+    # (optional) Induce faults
     if config is not None and config.induce_faults:
         logging.debug("[FAULT][BatchReconstruction] Sending random shares.")
         secret_shares = [random.randint(0, p - 1) for _ in range(len(secret_shares))]
@@ -180,7 +180,7 @@ async def batch_reconstruct(
 
     if recons_r2 is None:
         logging.error("[BatchReconstruct] P1 reconstruction failed!")
-        return None    
+        return None
 
     end_time = time.time()
     bench_logger.info(f"[BatchReconstruct] P1 Reconstruct: {end_time - start_time}")
@@ -199,8 +199,9 @@ async def batch_reconstruct(
     # Step 4: Attempt to reconstruct R2
     start_time = time.time()
     try:
-        recons_p = await incremental_decode(data_r2, enc, dec, robust_dec,
-                                            num_chunks, t, degree, n)
+        recons_p = await incremental_decode(
+            data_r2, enc, dec, robust_dec, num_chunks, t, degree, n
+        )
         recons_p = ZZ_matrix_to_py_matrix(recons_p)
     except asyncio.CancelledError:
         # Cancel all created tasks

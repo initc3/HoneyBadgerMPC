@@ -10,10 +10,7 @@
 #include <NTL/ZZ_limbs.h>
 #include <NTL/vec_ZZ_p.h>
 #include <NTL/mat_ZZ_p.h>
-<<<<<<< HEAD
-#include "hps-master/src/hps.h"
-=======
->>>>>>> f717a33... Encode/Decode On Limbs instead of PyInts
+#include "/hps/src/hps.h"
 
 using namespace NTL;
 using namespace std;
@@ -412,7 +409,6 @@ bool gao_interpolate_fft(vec_ZZ_p &res_vec, vec_ZZ_p &err_vec,
     return true;
 }
 
-<<<<<<< HEAD
 typedef std::string OpaqueZZp;
 
 void printLimbs(vector<ZZ_limb_t> &l) {
@@ -517,94 +513,4 @@ void mat_mul_serialize(vector<vector<OpaqueZZp>> &r, mat_ZZ_p &a, mat_ZZ_p &b) {
    mul(res, a, b);
    mat_ZZ_p t = transpose(res);
    mat_ZZ_pToVecVecOpaqueZZp(r, t);
-=======
-class OpaqueZZp {
-   public:
-      ZZ_limbs limbs;
-      OpaqueZZp(ZZ_p zzp) {
-         ZZ a = rep(zzp);
-         long size = a.size();
-         limbs.reserve(size);
-         const ZZ_limb_t *l = ZZ_limbs_get(a);
-         for (int i =0; i< size; i++) {
-            limbs.push_back(l[i]);
-         }
-      }
-
-      OpaqueZZp() {}
-
-      ZZ_limbs getLimbs() {
-          return limbs;
-      }
-      ZZ_p getZZp() {
-         return OpaqueToZZp(limbs);
-      }
-
-      static ZZ_p OpaqueToZZp(ZZ_limbs arr) {
-         long size = arr.size();
-         ZZ a;
-         ZZ_limb_t limbs[size];
-         for (int i =0; i< size; i++) {
-            limbs[i] = arr[i];
-         }
-         ZZ_limb_t *const l = limbs;
-         ZZ_limbs_set(a, l, size);
-         return to_ZZ_p(a);
-      }
-};
-
-ZZ_p LimbsToZZ_p(ZZ_limbs r) {
-    return OpaqueZZp::OpaqueToZZp(r);
-}
-
-ZZ_limbs ZZ_pToLimbs(ZZ_p x) {
-    return OpaqueZZp(x).getLimbs();
-}
-
-vector<ZZ_limbs> vec_ZZ_pToVecLimbs(vec_ZZ_p row) {
-    vector<ZZ_limbs> serializedRow;
-    long l = row.length();
-    for(long i = 0; i<l; i++) {
-        serializedRow.push_back(ZZ_pToLimbs(row[i]));
-    }
-    return serializedRow;
-}
-
-vec_ZZ_p VecLimbsToVec_ZZ_p(vector<ZZ_limbs> serializedRow) {
-    Vec<ZZ_p> row;
-    for (ZZ_limbs c: serializedRow) {
-           row.append(LimbsToZZ_p(c));
-    }
-    return row;
-}
-
-vector<vector<ZZ_limbs>> mat_ZZ_pToVecVecLimbs(mat_ZZ_p a) {
-   vector<vector<ZZ_limbs>> serializedRows;
-   long rows = a.NumRows();
-   for(long i = 0; i < rows; i++) {
-       serializedRows.push_back(vec_ZZ_pToVecLimbs(a[i]));
-   }
-   return serializedRows;
-}
-
-mat_ZZ_p VecVecLimbsToMat_ZZ_p(vector<vector<ZZ_limbs>> serializedRows) {
-   Vec<Vec<ZZ_p>> rows;
-   for(vector<ZZ_limbs> r: serializedRows) {
-       rows.append(VecLimbsToVec_ZZ_p(r));
-   }
-   mat_ZZ_p res;
-   MakeMatrix(res, rows);
-   return res;
-}
-
-mat_ZZ_p mat_ZZ_pTranspose(mat_ZZ_p x) {
-    return transpose(x);
-}
-
-void mat_mul_serialize(vector<vector<ZZ_limbs>> &r, mat_ZZ_p a, mat_ZZ_p b) {
-   mat_ZZ_p res;
-   mul(res, a, b);
-   mat_ZZ_p t = transpose(res);
-   r = mat_ZZ_pToVecVecLimbs(t);
->>>>>>> f717a33... Encode/Decode On Limbs instead of PyInts
 }

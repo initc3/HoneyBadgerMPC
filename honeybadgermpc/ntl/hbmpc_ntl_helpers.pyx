@@ -247,22 +247,10 @@ cpdef vandermonde_batch_evaluate(x, polynomials, modulus):
         for j in range(l, d):
             poly_matrix[j][i] = intToZZp(0)
     
+    cdef vector[vector[OpaqueZZp]] res_vectors
     # Finally multiply matrices. This gives evaluation of polynomials at
     # all points chosen
-    #mat_ZZ_p_mul(res_matrix, vm_matrix, poly_matrix)
-
-    # Convert back to python friendly formats
-    #result = [[None] * n for _ in range(k)]
-    #for i in range(n):
-    #    for j in range(k):
-    #        result[j][i] = ZZpToInt(res_matrix[i][j])
-
-    cdef vector[vector[OpaqueZZp]] res_vectors
     mat_mul_serialize(res_vectors, vm_matrix, poly_matrix)
-
-    # result = []
-    # for i in range(k):
-    #    result+=[res_vectors[i]]
     
     return res_vectors
 
@@ -471,4 +459,3 @@ cpdef SetNumThreads(int n):
 
 cpdef GetMaxThreads():
     return openmp.omp_get_max_threads()
-    
