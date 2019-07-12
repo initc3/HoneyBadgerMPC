@@ -1,7 +1,7 @@
-from .ntlwrapper cimport ZZ, mat_ZZ_p, vec_ZZ_p, ZZ_p, ZZ_pX_c
+from .ntlwrapper cimport ZZ, mat_ZZ_p, vec_ZZ_p, ZZ_p, ZZ_pX_c, ZZ_limb_t
 from libcpp.vector cimport vector
 from libcpp cimport bool
-
+from libcpp.string cimport string
 cdef extern from "rsdecode_impl.h":
     cdef void interpolate_c "interpolate"(vector[ZZ] r, vector[ZZ] x,
                                           vector[ZZ] y, ZZ modulus)
@@ -30,3 +30,13 @@ cdef extern from "rsdecode_impl.h":
                                                           vec_ZZ_p y_vec,
                                                           ZZ_p omega,
                                                           int k, int n, int order)
+    
+    ctypedef string OpaqueZZp
+
+    cdef void mat_mul_serialize "mat_mul_serialize"(vector[vector[OpaqueZZp]] x,  mat_ZZ_p a, mat_ZZ_p b) 
+
+    cdef void ZZpToOpaqueZZp(OpaqueZZp&l, ZZ_p &x)
+    cdef void OpaqueZZpToZZp(ZZ_p& zzp, OpaqueZZp &r)
+    cdef void vec_ZZ_pToVecOpaqueZZp(vector[OpaqueZZp] &VecLimbs, vec_ZZ_p &row)
+    cdef void VecOpaqueZZpToVec_ZZ_p(vec_ZZ_p &veczzp, vector[OpaqueZZp] &serializedRow)
+    cdef void mat_ZZ_pToVecVecOpaqueZZp(vector[vector[OpaqueZZp]] &vecveclimbs, mat_ZZ_p &a)

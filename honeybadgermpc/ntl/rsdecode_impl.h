@@ -6,6 +6,11 @@
 #include <iostream>
 #include <map>
 #include <omp.h>
+#include <NTL/lip.h>
+#include <NTL/ZZ_limbs.h>
+#include <NTL/vec_ZZ_p.h>
+#include <NTL/mat_ZZ_p.h>
+#include "hps-master/src/hps.h"
 
 using namespace NTL;
 using namespace std;
@@ -38,7 +43,7 @@ void _set_fft_vandermonde_matrix(ZZ_p omega, int n)
 {
     vec_ZZ_p x;
     x.SetLength(n);
-    set(x[0]);
+    NTL::set(x[0]);
     for (int i=1; i < n; i++) {
         mul(x[i], x[i-1], omega);
     }
@@ -150,7 +155,7 @@ void _fft(vec_ZZ_p &a, ZZ_p omega, int n, int m=-1,
     _fft(a1, omega2, n / 2, m, van_matrix, van_threshold);
 
     ZZ_p w;
-    set(w);
+    NTL::set(w);
 
     int lim = (m + 1) / 2;
     ZZ_p t2;
@@ -401,4 +406,110 @@ bool gao_interpolate_fft(vec_ZZ_p &res_vec, vec_ZZ_p &err_vec,
     }
 
     return true;
+}
+
+typedef std::string OpaqueZZp;
+
+void printLimbs(vector<ZZ_limb_t> &l) {
+    long size = l.size();
+    for (int i =0; i< size; i++) {
+        cout << l[i] << endl;
+    }
+}
+
+void VecLimbToZZ_p(ZZ_p &zzp, vector<ZZ_limb_t> &arr) {
+    long size = arr.size();    
+    ZZ_limb_t limbs[size];
+    for (int i =0; i< size; i++) {
+        limbs[i] = arr[i];
+    }
+    ZZ a;
+    ZZ_limb_t *const l = limbs;
+    ZZ_limbs_set(a, l, size);
+    zzp =  to_ZZ_p(a);    
+}
+
+void ZZ_pToVecLimb(vector<ZZ_limb_t> &limbs, ZZ_p &x) {
+    ZZ zz = rep(x);
+    long size = zz.size();
+    limbs.reserve(size);
+    const ZZ_limb_t *l = ZZ_limbs_get(zz);
+    for (int i =0; i< size; i++) {
+        limbs.push_back(l[i]);
+    }
+}
+
+class ZZplimbs {
+   public:
+        long size;
+        ZZ_limb_t *l;
+
+        template <class B>
+        void serialize(B& buf) const {
+            buf << size;
+            for(int i =0; i<size; i++){
+                buf << l[i];
+            }
+        }
+
+        template <class B>
+        void parse(B& buf) {
+            buf >> size;
+            l = new ZZ_limb_t[size];
+            for(int i =0; i<size; i++){
+                buf >> l[i];
+            }
+        }
+
+        ZZplimbs(ZZ_p &zzp) {
+            ZZ zz = rep(zzp);
+            size = zz.size();
+            l = const_cast<ZZ_limb_t*>(ZZ_limbs_get(zz));
+        }
+        ZZplimbs(){}            
+};
+
+void OpaqueZZpToZZp(ZZ_p &zzp, OpaqueZZp &ss)
+{
+    ZZplimbs ozzp2;
+    hps::from_string<ZZplimbs>(ss, ozzp2);
+    ZZ a;
+    ZZ_limbs_set(a, ozzp2.l, ozzp2.size);
+    zzp = to_ZZ_p(a);
+}
+
+void ZZpToOpaqueZZp(OpaqueZZp &ss, ZZ_p &zzp)
+{
+    ZZplimbs ozzp2(zzp);
+    hps::to_string(ozzp2, ss);
+}
+
+void vec_ZZ_pToVecOpaqueZZp(vector<OpaqueZZp> &serializedRow, vec_ZZ_p &row) {
+    long l = row.length();
+    serializedRow.resize(l);
+    for(long i = 0; i<l; i++) {
+        ZZpToOpaqueZZp(serializedRow[i], row[i]);
+    }
+}
+
+void VecOpaqueZZpToVec_ZZ_p(vec_ZZ_p &row, vector<OpaqueZZp> &serializedRow) {
+    row.SetLength(serializedRow.size());
+    for (int i=0; i< serializedRow.size(); i++) {
+        OpaqueZZpToZZp(row[i], serializedRow[i]);
+    }
+}
+
+void mat_ZZ_pToVecVecOpaqueZZp(vector<vector<OpaqueZZp>> &serializedRows, mat_ZZ_p &a) {
+   long rows = a.NumRows();
+   serializedRows.resize(rows);
+   for(long i = 0; i < rows; i++) {
+       vec_ZZ_pToVecOpaqueZZp(serializedRows[i], a[i]);
+   }
+}
+
+void mat_mul_serialize(vector<vector<OpaqueZZp>> &r, mat_ZZ_p &a, mat_ZZ_p &b) {
+   mat_ZZ_p res;
+   mul(res, a, b);
+   mat_ZZ_p t = transpose(res);
+   mat_ZZ_pToVecVecOpaqueZZp(r, t);
 }
