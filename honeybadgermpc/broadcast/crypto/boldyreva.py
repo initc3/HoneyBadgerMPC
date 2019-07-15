@@ -84,7 +84,7 @@ class TBLSPublicKey(object):
 
     def __eq__(self, other):
         return (
-            self.l == other.l      # noqa: E741
+            self.l == other.l  # noqa: E741
             and self.k == other.k  # noqa: E741
             and self.VK == other.VK
             and self.VKs == other.VKs
