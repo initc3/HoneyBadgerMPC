@@ -10,7 +10,7 @@ def print_exception_callback(future):
     if future.done():
         ex = future.exception()
         if ex is not None:
-            logging.critical(f'\nException: \n{future} \n{type(ex)} \n{ex}')
+            logging.critical(f"\nException: \n{future} \n{type(ex)} \n{ex}")
             raise ex
 
 
@@ -19,6 +19,7 @@ def wrap_send(tag: str, send: Callable):  # noqa: F821
     """Given a `send` function which takes a destination and message,
     this returns a modified function which sends the tag with the object.
     """
+
     def _send(dest, message):
         send(dest, (tag, message))
 
@@ -37,7 +38,9 @@ def chunk_data(data: list, chunk_size: int, default: int = 0):
         return [default] * chunk_size
 
     # Main chunking
-    res = [data[start:(start + chunk_size)] for start in range(0, len(data), chunk_size)]
+    res = [
+        data[start : (start + chunk_size)] for start in range(0, len(data), chunk_size)
+    ]
 
     # Pad final chunk with default value
     res[-1] += [default] * (chunk_size - len(res[-1]))

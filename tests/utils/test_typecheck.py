@@ -5,20 +5,20 @@ from typing import Callable
 
 def test_type_check_callable():
     @TypeCheck()
-    def incorrect_func_with_callable(str: str, func: 'callable(send)'):  # noqa: F821
+    def incorrect_func_with_callable(str: str, func: "callable(send)"):  # noqa: F821
         """ The argument is named `func` but the constraint specifies
         `callable(send)` rather than `callable(func)`
         """
         pass
 
     with raises(AssertionError):
-        incorrect_func_with_callable('hello', lambda w: 'world')
+        incorrect_func_with_callable("hello", lambda w: "world")
 
     @TypeCheck()
-    def func_with_callable(str: str, func: 'callable(func)', c: 'True'):  # noqa: F821
+    def func_with_callable(str: str, func: "callable(func)", c: "True"):  # noqa: F821
         pass
 
-    func_with_callable('hello', lambda w: 'world', func_with_callable)
+    func_with_callable("hello", lambda w: "world", func_with_callable)
 
     @TypeCheck()
     def func_with_callable_2(func: Callable):
@@ -29,18 +29,18 @@ def test_type_check_callable():
 
 def test_type_check_multiple_constraints():
     @TypeCheck()
-    def func_with_tuple_types(a: str, b: ('str', Callable)):
+    def func_with_tuple_types(a: str, b: ("str", Callable)):
         pass
 
-    func_with_tuple_types('hello', lambda w: 'world')
-    func_with_tuple_types('hello', 'world')
+    func_with_tuple_types("hello", lambda w: "world")
+    func_with_tuple_types("hello", "world")
     with raises(AssertionError):
-        func_with_tuple_types('hello', 5)
+        func_with_tuple_types("hello", 5)
 
 
 def test_type_check_invalid_constraints():
     @TypeCheck()
-    def func_1(a: '{}'):
+    def func_1(a: "{}"):
         pass
 
     with raises(AssertionError):
@@ -61,7 +61,7 @@ def test_type_check_invalid_constraints():
         func3({})
 
     @TypeCheck()
-    def func_4(a: ('[]')):
+    def func_4(a: ("[]")):
         pass
 
     with raises(AssertionError):
@@ -83,7 +83,7 @@ def test_type_check_simple():
     simple_func(1, 2)
 
     with raises(AssertionError):
-        simple_func('hello', 2)
+        simple_func("hello", 2)
 
     with raises(AssertionError):
         simple_func(3, None)
@@ -96,23 +96,23 @@ def test_type_check_named_arguments():
 
     named_func(None, a=5)
     named_func(None, a=5, b=4.0)
-    named_func('Hello, World', a=5, b=4.0)
+    named_func("Hello, World", a=5, b=4.0)
 
     with raises(AssertionError):
-        named_func(None, a='hello', b=4.0)
+        named_func(None, a="hello", b=4.0)
 
 
 def test_type_check_complex_arguments():
     @TypeCheck()
-    def func(flag: bool, warn, a: int = 5, b: (str, int) = 'cool', c=18):
+    def func(flag: bool, warn, a: int = 5, b: (str, int) = "cool", c=18):
         pass
 
-    func(True, False, a=4, b='wow')
+    func(True, False, a=4, b="wow")
     func(True, False, a=4, b=6)
     func(True, False, 6, 4, 5)
 
     with raises(AssertionError):
-        func(True, False, 'cat', 'hello', 5)
+        func(True, False, "cat", "hello", 5)
 
     with raises(AssertionError):
         func(True, False, a=4, b=5.0)
@@ -124,7 +124,7 @@ def test_type_check_incorrect_defaults():
         pass
 
     with raises(AssertionError):
-        func(a=4, b='str')
+        func(a=4, b="str")
 
     with raises(AssertionError):
         func()
@@ -133,7 +133,7 @@ def test_type_check_incorrect_defaults():
 def test_type_check_arithmetic():
     @TypeCheck(arithmetic=True)
     def func(a: int = 0, b: int = 0):
-        return a+b
+        return a + b
 
     # Following will raise assertions if code is broken
     assert func() == 0
@@ -160,11 +160,11 @@ class TypeA:
         self.v = v
 
     @TypeCheck(arithmetic=True)
-    def __add__(self, other: 'TypeA'):
+    def __add__(self, other: "TypeA"):
         return TypeA(self.v + other.v)
 
     @TypeCheck(arithmetic=True)
-    def __radd__(self, other: 'TypeB'):
+    def __radd__(self, other: "TypeB"):
         return TypeA(self.v + other.v)
 
 
@@ -173,11 +173,11 @@ class TypeB:
         self.v = v
 
     @TypeCheck(arithmetic=True)
-    def __add__(self, other: 'TypeB'):
+    def __add__(self, other: "TypeB"):
         return TypeB(self.v + other.v)
 
     @TypeCheck(arithmetic=True)
-    def __radd__(self, other: 'TypeA'):
+    def __radd__(self, other: "TypeA"):
         return TypeB(self.v + other.v)
 
 
@@ -185,7 +185,7 @@ def test_type_check_arithmetic_lookup():
     a = TypeA(5)
     b = TypeB(4)
 
-    assert isinstance(a+a, TypeA)
-    assert isinstance(a+b, TypeB)
-    assert isinstance(b+b, TypeB)
-    assert isinstance(b+a, TypeA)
+    assert isinstance(a + a, TypeA)
+    assert isinstance(a + b, TypeB)
+    assert isinstance(b + b, TypeB)
+    assert isinstance(b + a, TypeA)

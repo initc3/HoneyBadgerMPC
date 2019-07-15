@@ -8,7 +8,8 @@ if __name__ == "__main__":
     if os.path.isfile(EC2Manager.current_vms_file_name):
         logging.info(
             f"Do you want to terminate all VMs with the ids: \
-                {ec2manager.get_current_vm_instance_ids()} (y/n)?")
+                {ec2manager.get_current_vm_instance_ids()} (y/n)?"
+        )
 
         while True:
             choice = input()

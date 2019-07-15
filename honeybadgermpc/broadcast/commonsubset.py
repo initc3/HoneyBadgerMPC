@@ -83,11 +83,11 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
     async def _recv():
         while True:
             (sender, (tag, j, msg)) = await recv()
-            if tag == 'ACS_COIN':
+            if tag == "ACS_COIN":
                 coin_recvs[j].put_nowait((sender, msg))
-            elif tag == 'ACS_RBC':
+            elif tag == "ACS_RBC":
                 rbc_recvs[j].put_nowait((sender, msg))
-            elif tag == 'ACS_ABA':
+            elif tag == "ACS_ABA":
                 aba_recvs[j].put_nowait((sender, msg))
             else:
                 raise ValueError("Unknown tag: %s", tag)
@@ -97,27 +97,47 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
 
     async def _setup(j):
         def coin_bcast(o):
-            bcast(('ACS_COIN', j, o))
+            bcast(("ACS_COIN", j, o))
 
         coin, coin_recv_task = await shared_coin(
-            sid + 'COIN' + str(j), pid, n, f, pk, sk, coin_bcast, coin_recvs[j].get)
+            sid + "COIN" + str(j), pid, n, f, pk, sk, coin_bcast, coin_recvs[j].get
+        )
 
         def aba_bcast(o):
-            bcast(('ACS_ABA', j, o))
+            bcast(("ACS_ABA", j, o))
 
         aba_task = asyncio.create_task(
-            binaryagreement(sid+'ABA'+str(j), pid, n, f, coin, aba_inputs[j].get,
-                            aba_outputs[j].put_nowait, aba_bcast, aba_recvs[j].get))
+            binaryagreement(
+                sid + "ABA" + str(j),
+                pid,
+                n,
+                f,
+                coin,
+                aba_inputs[j].get,
+                aba_outputs[j].put_nowait,
+                aba_bcast,
+                aba_recvs[j].get,
+            )
+        )
 
         def rbc_send(k, o):
-            send(k, ('ACS_RBC', j, o))
+            send(k, ("ACS_RBC", j, o))
 
         # Only leader gets input
         rbc_input = await input_msg() if j == pid else None
 
         rbc_outputs[j] = asyncio.create_task(
-            reliablebroadcast(sid+'RBC'+str(j), pid, n, f, j, rbc_input,
-                              rbc_recvs[j].get, rbc_send))
+            reliablebroadcast(
+                sid + "RBC" + str(j),
+                pid,
+                n,
+                f,
+                j,
+                rbc_input,
+                rbc_recvs[j].get,
+                rbc_send,
+            )
+        )
 
         return coin_recv_task, aba_task
 
@@ -127,8 +147,18 @@ async def make_commonsubset(sid, pid, n, f, pk, sk, input_msg, send, recv, bcast
         recv_tasks.append(c_task)
         work_tasks.append(rcv_task)
 
-    return commonsubset(pid, n, f, rbc_outputs, [_.put_nowait for _ in aba_inputs],
-                        [_.get for _ in aba_outputs]), recv_tasks, work_tasks
+    return (
+        commonsubset(
+            pid,
+            n,
+            f,
+            rbc_outputs,
+            [_.put_nowait for _ in aba_inputs],
+            [_.get for _ in aba_outputs],
+        ),
+        recv_tasks,
+        work_tasks,
+    )
 
 
 async def run_common_subset(sid, pbk, pvk, n, f, nodeid, send, recv, value):
@@ -139,7 +169,8 @@ async def run_common_subset(sid, pbk, pvk, n, f, nodeid, send, recv, value):
     input_q = asyncio.Queue(1)
 
     create_acs_task = asyncio.create_task(
-        make_commonsubset(sid, nodeid, n, f, pbk, pvk, input_q.get, send, recv, mcast))
+        make_commonsubset(sid, nodeid, n, f, pbk, pvk, input_q.get, send, recv, mcast)
+    )
 
     await input_q.put(value)
     acs, recv_tasks, work_tasks = await create_acs_task
@@ -152,7 +183,7 @@ async def run_common_subset(sid, pbk, pvk, n, f, nodeid, send, recv, value):
 
 
 async def run_common_subset_in_processes(config, pbk, pvk, n, f, nodeid):
-    sid = 'sidA'
+    sid = "sidA"
 
     async with ProcessProgramRunner(config, n, f, nodeid) as program_runner:
         send, recv = program_runner.get_send_recv(sid)
@@ -165,10 +196,12 @@ async def run_common_subset_in_processes(config, pbk, pvk, n, f, nodeid):
 
         create_acs_task = asyncio.create_task(
             make_commonsubset(
-                sid, nodeid, n, f, pbk, pvk, input_q.get, send, recv, bcast))
+                sid, nodeid, n, f, pbk, pvk, input_q.get, send, recv, bcast
+            )
+        )
 
         start_time = time.time()
-        await input_q.put('<[ACS Input %d]>' % nodeid)
+        await input_q.put("<[ACS Input %d]>" % nodeid)
         acs, recv_tasks, work_tasks = await create_acs_task
         acs_output = await acs
         await asyncio.gather(*work_tasks)
@@ -201,6 +234,8 @@ if __name__ == "__main__":
                 pvk,
                 HbmpcConfig.N,
                 HbmpcConfig.t,
-                HbmpcConfig.my_id))
+                HbmpcConfig.my_id,
+            )
+        )
     finally:
         loop.close()

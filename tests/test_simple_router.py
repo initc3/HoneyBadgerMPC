@@ -4,15 +4,15 @@ from pytest import mark
 
 
 async def progtest(n, myid, send, recv):
-    print('myid:', myid)
+    print("myid:", myid)
     my_mailbox = []
     for j in range(n):
-        send(j, 'hi from ' + str(myid))
+        send(j, "hi from " + str(myid))
     for _ in range(n):
         (i, o) = await recv()
-        print('[%2d->%2d]' % (i, myid), o)
+        print("[%2d->%2d]" % (i, myid), o)
         my_mailbox.append((i, o))
-    print('done')
+    print("done")
     return my_mailbox
 
 
@@ -26,4 +26,4 @@ async def test_router(test_router):
     done, pending = await asyncio.wait(towait)
     assert not pending
     assert len(done) == n
-    assert all([(i, f'hi from {i}') in task.result() for task in done])
+    assert all([(i, f"hi from {i}") in task.result() for task in done])

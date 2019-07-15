@@ -51,7 +51,8 @@ def make_wb_encoder_decoder(n, k, p, point=None):
     """
     if not k <= n <= p:
         raise Exception(
-            "Must have k <= n <= p but instead had (n,k,p) == (%r, %r, %r)" % (n, k, p))
+            "Must have k <= n <= p but instead had (n,k,p) == (%r, %r, %r)" % (n, k, p)
+        )
     t = k - 1  # degree of polynomial
     fp = GF(p)
     poly = polynomials_over(fp)
@@ -67,7 +68,8 @@ def make_wb_encoder_decoder(n, k, p, point=None):
     def encode(message):
         if not all(x < p for x in message):
             raise Exception(
-                "Message is improperly encoded as integers < p. It was:\n%r" % message)
+                "Message is improperly encoded as integers < p. It was:\n%r" % message
+            )
         assert len(message) == t + 1
 
         the_poly = poly(message)
@@ -87,15 +89,14 @@ def make_wb_encoder_decoder(n, k, p, point=None):
 
             def row(i, a, b):
                 return (
-                    [b * a ** j for j in range(e_num_vars)] +
-                    [-1 * a ** j for j in range(q_num_vars)] + [0]
+                    [b * a ** j for j in range(e_num_vars)]
+                    + [-1 * a ** j for j in range(q_num_vars)]
+                    + [0]
                 )  # the "extended" part of the linear system
 
-            system = (
-                [row(i, a, b) for (i, (a, b)) in enumerate(encoded_message)] +
-                [[fp(0)] * (e_num_vars - 1) + [fp(1)] + [fp(0)] * (q_num_vars) + [
-                    fp(1)]]
-            )  # ensure coefficient of x^e in E(x) is 1
+            system = [row(i, a, b) for (i, (a, b)) in enumerate(encoded_message)] + [
+                [fp(0)] * (e_num_vars - 1) + [fp(1)] + [fp(0)] * (q_num_vars) + [fp(1)]
+            ]  # ensure coefficient of x^e in E(x) is 1
 
             if debug:
                 logging.debug("\ne is %r" % e)
@@ -125,18 +126,17 @@ def make_wb_encoder_decoder(n, k, p, point=None):
         raise ValueError("found no divisors!")
 
     def decode(encoded_msg, debug=True):
-        assert (len(encoded_msg) == n)
+        assert len(encoded_msg) == n
         c = sum(m is None for m in encoded_msg)  # number of erasures
-        assert (2 * t + 1 + c <= n)
+        assert 2 * t + 1 + c <= n
         # e = ceil((n - c - t - 1) / 2) = ((n - c - t) // 2)
         e = (n - c - t) // 2
         if debug:
-            logging.debug(f'n: {n} k: {k} t: {t} c: {c}')
-            logging.debug(f'decoding with e: {e}')
-            logging.debug(f'decoding with c: {c}')
+            logging.debug(f"n: {n} k: {k} t: {t} c: {c}")
+            logging.debug(f"decoding with e: {e}")
+            logging.debug(f"decoding with c: {c}")
 
-        enc_m = [(point(i), m)
-                 for i, m in enumerate(encoded_msg) if m is not None]
+        enc_m = [(point(i), m) for i, m in enumerate(encoded_msg) if m is not None]
 
         if e == 0:
             # decode with no errors
@@ -185,8 +185,10 @@ def rref(matrix):
             if other_row == i:
                 continue
             if matrix[other_row][j] != 0:
-                matrix[other_row] = [y - matrix[other_row][j] * x
-                                     for (x, y) in zip(matrix[i], matrix[other_row])]
+                matrix[other_row] = [
+                    y - matrix[other_row][j] * x
+                    for (x, y) in zip(matrix[i], matrix[other_row])
+                ]
 
         i += 1
         j += 1
@@ -263,8 +265,8 @@ def some_solution(system, free_variable_value=1):
 
     for j in pivot_vars:
         the_row = pivot_row_idx[j]
-        variable_values[j] = (system[the_row][-1] -
-                              sum(system[the_row][i] *
-                                  variable_values[i] for i in free_vars))
+        variable_values[j] = system[the_row][-1] - sum(
+            system[the_row][i] * variable_values[i] for i in free_vars
+        )
 
     return variable_values

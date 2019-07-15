@@ -6,18 +6,17 @@ from cffi import FFI
 here = os.path.abspath(os.path.dirname(__file__))
 ffibuilder = FFI()
 
-with open(os.path.join(here, 'solver.cpp')) as cpp:
+with open(os.path.join(here, "solver.cpp")) as cpp:
     ffibuilder.set_source(
-        'lib_solver',
-        cpp.read(),
-        source_extension='.cpp',
-        libraries=['gmp', 'flint'],
-        )
+        "lib_solver", cpp.read(), source_extension=".cpp", libraries=["gmp", "flint"]
+    )
 
-ffibuilder.cdef("""
+ffibuilder.cdef(
+    """
     int solve(char* out_messages[], const char* prime,
               const char* sums[], size_t n);
-""")
+"""
+)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ffibuilder.compile(verbose=True)
