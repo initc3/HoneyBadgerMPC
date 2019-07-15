@@ -1,4 +1,4 @@
-FROM dsluiuc/honeybadgermpc-docker-base AS travis-image
+FROM dsluiuc/honeybadgermpc-base AS travis-image
 
 WORKDIR /usr/src/HoneyBadgerMPC
 COPY . /usr/src/HoneyBadgerMPC

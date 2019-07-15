@@ -3,6 +3,7 @@
 .pytest_cache
 .coverage
 .gitignore
+**/__pycache__
 *.yml
 Dockerfile
 **/*.pyc
