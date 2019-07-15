@@ -14,6 +14,7 @@
 
 using namespace NTL;
 using namespace std;
+typedef vector<ZZ_limb_t> ZZ_limbs;
 
 // Threshold to decide when to use Vandermonde in _fft
 // Determined experimentally based on minimising time taken by fft
