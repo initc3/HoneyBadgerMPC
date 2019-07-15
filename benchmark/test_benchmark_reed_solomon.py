@@ -53,5 +53,5 @@ def test_benchmark_gao_robust_decode_fft(benchmark, t, galois_field):
         if i in faults:
             shares_with_faults.append(int(galois_field.random()))
         else:
-            shares_with_faults.append(int(truepoly(omega**(i) % p)))
+            shares_with_faults.append(int(truepoly(omega ** (i) % p)))
     benchmark(dec.robust_decode, parties, shares_with_faults)

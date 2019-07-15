@@ -75,7 +75,8 @@ async def test_hbavss_light_gf(test_router):
     with ExitStack() as stack:
         for i in range(n):
             hbavss = HbAvssLight(
-                pks, sks[i], crs, n, t, i, sends[i], recvs[i], field=field)
+                pks, sks[i], crs, n, t, i, sends[i], recvs[i], field=field
+            )
             hbavss_list[i] = hbavss
             stack.enter_context(hbavss)
             if i == dealer_id:
@@ -85,7 +86,8 @@ async def test_hbavss_light_gf(test_router):
             avss_tasks[i].add_done_callback(print_exception_callback)
         # shares = await asyncio.gather(*avss_tasks)
         outputs = await asyncio.gather(
-            *[hbavss_list[i].output_queue.get() for i in range(n)])
+            *[hbavss_list[i].output_queue.get() for i in range(n)]
+        )
         for task in avss_tasks:
             task.cancel()
     shares = []
@@ -634,7 +636,8 @@ async def test_hbavss_light_client_mode(test_router):
             hbavss_list[i] = hbavss
             stack.enter_context(hbavss)
             avss_tasks[i] = asyncio.create_task(
-                hbavss.avss(0, dealer_id=dealer_id, client_mode=True))
+                hbavss.avss(0, dealer_id=dealer_id, client_mode=True)
+            )
             avss_tasks[i].add_done_callback(print_exception_callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)]
@@ -674,7 +677,8 @@ async def test_hbavss_batch_client_mode(test_router):
             hbavss_list[i] = hbavss
             stack.enter_context(hbavss)
             avss_tasks[i] = asyncio.create_task(
-                hbavss.avss(0, dealer_id=dealer_id, client_mode=True))
+                hbavss.avss(0, dealer_id=dealer_id, client_mode=True)
+            )
             avss_tasks[i].add_done_callback(print_exception_callback)
         outputs = await asyncio.gather(
             *[hbavss_list[i].output_queue.get() for i in range(n)]
@@ -858,7 +862,8 @@ async def test_hbavss_batch_batch_gf(test_router):
         hbavss_list = [None] * n
         for i in range(n):
             hbavss = HbAvssBatch(
-                pks, sks[i], crs, n, t, i, sends[i], recvs[i], field=field)
+                pks, sks[i], crs, n, t, i, sends[i], recvs[i], field=field
+            )
             hbavss_list[i] = hbavss
             stack.enter_context(hbavss)
             if i == dealer_id:
@@ -867,7 +872,8 @@ async def test_hbavss_batch_batch_gf(test_router):
                 avss_tasks[i] = asyncio.create_task(hbavss.avss(0, dealer_id=dealer_id))
             avss_tasks[i].add_done_callback(print_exception_callback)
         outputs = await asyncio.gather(
-            *[hbavss_list[i].output_queue.get() for i in range(n)])
+            *[hbavss_list[i].output_queue.get() for i in range(n)]
+        )
         shares = [output[2] for output in outputs]
         for task in avss_tasks:
             task.cancel()
@@ -875,7 +881,8 @@ async def test_hbavss_batch_batch_gf(test_router):
     fliped_shares = list(map(list, zip(*shares)))
     recovered_values = []
     for item in fliped_shares:
-        recovered_values.append(polynomials_over(
-            field).interpolate_at(zip(range(1, n + 1), item)))
+        recovered_values.append(
+            polynomials_over(field).interpolate_at(zip(range(1, n + 1), item))
+        )
 
     assert recovered_values == values
