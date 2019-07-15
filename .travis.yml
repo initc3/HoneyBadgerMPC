@@ -1,21 +1,55 @@
 os: linux
 dist: xenial
 language: python
+cache: pip
 python: 3.7
 sudo: true
-
 services:
-  - docker
-
-matrix:
+- docker
+env:
+  global:
+  - secure: p2k4l8RmT5JX81rmesKh8MQoJiO5LowU+vfQxeuzvilFAByuf7FaShaV0TMCM2rt3pUa7YnbklMfHI8KA3y1D2D0ShYXIO7YKmpQNYRmlV7hbfnWE8ySeVtuSopwQObivZjfeSbtJfpd4yJHLTxOoicja9LaMRU/UvUgZX6qeAE6ITzZZBe+cT7b4ekD2CGPrsdpCdU3IVxfZjup9jSVzwZOBgZ3PJmTtoI5a4V9jz5SCohUXcV5vq63SkHaKleHEaYpZjdddVrQKtXdfjYB/DDqAgOyYMqY6lAVk2fdRHE+U3oobcuoTa7TP7Gdg/zRvgq9rHCad270duGgLkmqwrCPaCB+QMyEQ3P4t+PYp3mUg4H8xwYPBiW1T0aY3S3ZqnTF1hPbs1TK7Fy8I7RAoroGZyTRlICbeghUul6OzDHXyu+fbe05Jw/qIGbe7ko5vc1bfNotRmbI16KlLhCdXeWWRtv8UWpVIIGVpMLmeOW3vvp1/kz8LUhKg+eXhxOxQpybh5M/z8+pr8L1ZZzvhCu7cVycmKMU1toh5nvHQopEwJ2l8KMe/h3X9DNL0r/OQNke0KhPbhGhiXdZIKxPdH08kyZx/TldA6IK4k/1Ze+CssUSCI3MqkjqkQeqlFB3ciwo4xX1Oiycd1v63+fHyVQpIexrdS3MSeyQgTRc59M=
+  - secure: E//nWsIBCN6bqam+K5AEF+0+Pk0GHGWxy/9ptdD+EKvqzhbD0/cEBEiTcKzDfAYcJAwUKbf8UP4VOWK86S9PG/ni51HH08mCRjqjpQ2ApuryUzE4xaG4bmvs8b5fbGLhSMFLtEXSEm60KpR9fWx5pZ3RPf4fLFgZLkocEZJTfREf7I+cDhkx0qXGp0CSFsvHMJh/zPqKR5Eok8Y6dtwvoKKjAmMRWOx87q85X0QgUu8jjPewJgXW3/F4v3b6YVBGkV8ypP4fVd1a3Vwg36e0hApDxk2oDvTFgXsCg4qJ8HPrxrst3oA0wMzTKvdfcI0EKyro+hw8QgV3lAjKaMSbHaimRMbG7Ieo4MF2jOdTtdswJNd4Lu5u3t2eAAJ8magJMcnq1w+5rlgj7uW3DuxTmDLGhoW4qflcXdwq7HSfT+qMs4/cxwHd+O8WkfbXZ5rZdHD9ZKR0sF+yPODY9traFOmMfUDR7ZX+PiA1WUYX8CVKy68d5havxUS98+hSCAXdLM/OlMAohsBczdXymZADxTpcOJXc8agZPzMBk1jYjMLpTHKgac80yoqJic+e4RHZ75zECsxq1ArjnHo+vsOLKrXWsOBSIXMnZYassAMalST7OASrkuATDPtRAxp7Mnx+dXLCDT94QyDzv/ivdTGt/pS1brPmUCifGqq1XjCDuSw=
+jobs:
   include:
-    - env: BUILD=tests
-    - env: BUILD=black
-    - env: BUILD=flake8
-    - env: BUILD=docs
-
-install:  .ci/travis-install.sh
-
-script: .ci/travis-script.sh
-
-after_success: .ci/travis-after-success.sh
+  - stage: Linting
+    name: Black
+    install: pip install black
+    script: black --check .
+  - name: Flake8
+    install: pip install flake8 pep8-naming
+    script: flake8
+  - name: Doc8
+    install: pip install doc8 pygments
+    script: doc8 docs/
+  - stage: Build
+    name: Build Docker Image for Current Commit
+    install:
+    - pip install pyyaml
+    - docker login -u $DOCKER_USER -p $DOCKER_PASS
+    script: 
+      - scripts/stager.py build -t prod -c remote -b $TRAVIS_COMMIT --cache-tags $TRAVIS_COMMIT latest
+      # This is in script instead of after_success so that the job fails if the upload fails
+      - scripts/stager.py push -t prod -b $TRAVIS_COMMIT
+    after_success: skip
+  - stage: Test
+    name: Unit Tests
+    install:
+    - pip install codecov pyyaml
+    # Not using `scripts/stager.py` as we only need the one image
+    - docker pull dsluiuc/honeybadger-prod:$TRAVIS_COMMIT
+    script: docker run -it dsluiuc/honeybadger-prod:$TRAVIS_COMMIT pytest -v
+      --cov --cov-report=term-missing --cov-report=xml -Wignore::DeprecationWarning
+      -nauto
+    after_success: 
+      - docker cp $(docker ps -alq --format "{{.Names}}"):/usr/src/HoneyBadgerMPC/coverage.xml .
+      - codecov -v
+      - .ci/travis-after-unit-tests.sh
+  - name: Sphinx Tests
+    install: 
+      - pip install pyyaml
+      - docker pull dsluiuc/honeybadger-prod:$TRAVIS_COMMIT
+    script:
+    - docker run -it dsluiuc/honeybadger-prod:$TRAVIS_COMMIT sphinx-build -M
+      html docs docs/_build -c docs -W
+    after_success: skip
