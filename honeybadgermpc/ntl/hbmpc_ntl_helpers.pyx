@@ -96,6 +96,14 @@ cpdef py_matrix_to_ZZ_matrix(x, modulus):
 cpdef ZZ_matrix_to_py_matrix(x):
     return [[OpaqueZZpToPyInt(c) for c in row] for row in x]
 
+cpdef py_list_to_ZZ_list(x, modulus):
+    cdef ZZ zz_modulus = py_obj_to_ZZ(modulus)
+    ZZ_p_init(zz_modulus)
+    return list(map(PyIntToOpaqueZZp, x))
+
+cpdef ZZ_list_to_py_list(row):
+    return [OpaqueZZpToPyInt(x) for x in row]
+
 cpdef lagrange_interpolate(x, y, modulus):
     """Interpolate polynomial P s.t. P(x[i]) = y[i]
     :param x: Evaluation points for polynomial
@@ -278,16 +286,13 @@ cpdef partial_fft(coeffs, omega, modulus, int n, int k):
     ZZ_p_init(intToZZ(modulus))
 
     d = len(coeffs)
-    coeffs_vec.SetLength(d)
-    for i in range(d):
-        coeffs_vec[i] = intToZZp(coeffs[i])
+    VecOpaqueZZpToVec_ZZ_p(coeffs_vec, coeffs)
 
     cdef ZZ_p zz_omega = intToZZp(omega)
     fft_partial_c(result_vec, coeffs_vec, zz_omega, n, k)
 
-    result = [None] * k
-    for i in range(k):
-        result[i] = ZZpToInt(result_vec[i])
+    cdef vector[OpaqueZZp] result;
+    vec_ZZ_pToVecOpaqueZZp(result, result_vec)
 
     return result
 
@@ -334,14 +339,14 @@ def fft_interpolate(zs, ys, omega, modulus, int n):
     y_vec.SetLength(k)
     for i in range(k):
         z_vec[i] = PyInt_AS_LONG(zs[i])
-        y_vec[i] = intToZZp(ys[i])
+    VecOpaqueZZpToVec_ZZ_p(y_vec, ys)
 
     fnt_decode_step1_c(A, Ad_evals_vec, z_vec, zz_omega, n)
     fnt_decode_step2_c(P_coeffs, A, Ad_evals_vec, z_vec, y_vec, zz_omega, n)
 
-    result = [None] * k
-    for i in range(k):
-        result[i] = int(ccrepr(P_coeffs[i]))
+    cdef vector[OpaqueZZp] result;
+    vec_ZZ_pToVecOpaqueZZp(result, P_coeffs)
+
     return result
 
 def fft_batch_interpolate(zs, ys_list, omega, modulus, int n):
