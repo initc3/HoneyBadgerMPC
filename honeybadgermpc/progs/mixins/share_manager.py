@@ -273,3 +273,28 @@ class SingleShareManager(ShareManager):
 
     def force_opening(self) -> bool:
         return True
+
+
+class BatchedShareManager(ShareManager):
+    def __init__(self, contexts: list, induce_faults: bool = False):
+        self._contexts = contexts
+        self._induce_faults = induce_faults
+
+        self._share_buffers = [defaultdict(asyncio.Future) for _ in range()]
+
+    def add_context(self, context):
+        self._contexts.append(context)
+
+    @TypeCheck()
+    def open_share(self, share: (Share, ShareFuture)) -> asyncio.Future:
+        return asyncio.Future()
+
+    @TypeCheck()
+    def open_share_array(self, share_array: ShareArray) -> asyncio.Future:
+        return asyncio.Future()
+
+    async def _loop_once(self):
+        pass
+
+    def force_opening(self) -> bool:
+        return True
