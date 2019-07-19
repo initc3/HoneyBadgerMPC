@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from os import system
+from subprocess import call
 import re
 import argparse
 import yaml
@@ -60,19 +60,21 @@ class Stager(object):
 
         return repo
 
-    def _run_command(self, command: str):
+    def _run_command(self, command: str) -> int:
         """ Helper method to run a command and log it.
+        Returns the status code from running the command.
         """
         logger.debug(command)
-        system(command)
+        return call(command, shell=True)
 
-    def _push_image(self, target: str, tag: str):
+    def _push_image(self, target: str, tag: str) -> bool:
         """ Push the image with the given target and tag
         """
         repo_name = self._build_repo_name(target, tag)
         logger.info(f"Pushing image: {repo_name}")
 
-        self._run_command(f"docker push {repo_name}")
+        ret = self._run_command(f"docker push {repo_name}")
+        return ret == 0
 
     def push(self, end_target: str, build_tags: list):
         """ Given a goal target, push that target and all intermediate stages
@@ -82,15 +84,17 @@ class Stager(object):
         logger.info(f"Pushing up until target {end_target} with tags {build_tags}")
         for target in self._get_prior_targets(end_target):
             for tag in build_tags:
-                self._push_image(target, tag)
+                if not self._push_image(target, tag):
+                    exit(1)
 
-    def _pull_image(self, target: str, tag: str):
+    def _pull_image(self, target: str, tag: str) -> bool:
         """ Pull the image with the given target and tag from dockerhub
         """
         repo_name = self._build_repo_name(target, tag)
         logger.info(f"Pulling image: {repo_name}")
 
-        self._run_command(f"docker pull {repo_name}")
+        ret = self._run_command(f"docker pull {repo_name}")
+        return ret == 0
 
     def pull(self, end_target: str, build_tags: list):
         """ Given a goal target, pull all stages up to and including
@@ -104,9 +108,10 @@ class Stager(object):
 
         for tag in build_tags:
             for target in self._get_prior_targets(end_target):
-                self._pull_image(target, tag)
+                if not self._pull_image(target, tag):
+                    exit(1)
 
-    def _tag_image(self, target: str, from_tag: str, to_tag: str):
+    def _tag_image(self, target: str, from_tag: str, to_tag: str) -> bool:
         """ Tag the image with the given target and tag (from_tag)
         with the given tag name (to_tag).
         """
@@ -115,22 +120,34 @@ class Stager(object):
 
         logger.info(f"Tagging image {from_repo} as {to_repo}")
         tag_command = f"docker tag {from_repo} {to_repo}"
-        self._run_command(tag_command)
+
+        ret = self._run_command(tag_command)
+        return ret == 0
 
     def tag(self, end_target: str, build_tags: list, source_tag: str):
         """ Given a goal target, tag all images that have the given source_tag
         with the build_tags up until the target image.
         """
         assert end_target in self.targets
+
         logger.info(
             f"Tagging all images until given target {end_target} "
             f"and tag {source_tag} with tags {build_tags}"
         )
+
         for target in self._get_prior_targets(end_target):
             for tag in build_tags:
-                self._tag_image(target, source_tag, tag)
+                if not self._tag_image(target, source_tag, tag):
+                    exit(1)
 
-    def _build_image(self, target: str, build_tag: str, cache: bool, cache_tags: list):
+    def _build_image(
+        self,
+        target: str,
+        build_tag: str,
+        cache: bool,
+        cache_tags: list,
+        cache_skip: list = [],
+    ) -> bool:
         """ Build the image with the given target and build_tag.
 
         args:
@@ -139,17 +156,19 @@ class Stager(object):
             cache (bool): Whether or not to utilize caching
             cache_tags (list): List of tags to use when caching.
                 Attempts to cache using the first cache_tag, then second, etc.
+            cache_skip (list): list of tuples of (target, tag) to skip when caching.
+
+        TODO: Allow for CLI access for cache_skip
         """
         assert len(cache_tags) > 0
 
         repo_name = self._build_repo_name(target, build_tag)
 
         cache_images = []
-        for tag in cache_tags:
-            cache_images += [
-                self._build_repo_name(target, tag)
-                for target in reversed(self._get_prior_targets(target))
-            ]
+        for prior_target in reversed(self._get_prior_targets(target)):
+            for tag in cache_tags:
+                if (prior_target, tag) not in cache_skip:
+                    cache_images.append(self._build_repo_name(prior_target, tag))
 
         logger.info(
             f"Building image: {repo_name}. Cache: {cache}; cache_images: {cache_images}"
@@ -157,7 +176,9 @@ class Stager(object):
 
         cache_flag = f"--cache-from {','.join(cache_images)}" if cache else "--no-cache"
         build_command = f"docker build -t {repo_name} --target {target} {cache_flag} ."
-        self._run_command(build_command)
+
+        ret = self._run_command(build_command)
+        return ret == 0
 
     def build(
         self,
@@ -195,15 +216,23 @@ class Stager(object):
 
         targets = [end_target] if exact else self._get_prior_targets(end_target)
         for target in targets:
+            # skip failed tags
+            failed_tags = []
+
             if cache and remote_cache:
                 for tag in cache_tags:
-                    self.pull(target, [tag])
+                    if not self._pull_image(target, tag):
+                        failed_tags.append((target, tag))
 
-            self._build_image(target, build_tags[0], cache, cache_tags)
+            if not self._build_image(
+                target, build_tags[0], cache, cache_tags, cache_skip=failed_tags
+            ):
+                exit(1)
 
             # Tag built image with extra build tags too.
             for tag in build_tags[1:]:
-                self._tag_image(target, build_tags[0], tag)
+                if not self._tag_image(target, build_tags[0], tag):
+                    exit(1)
 
 
 class ComposeStager(Stager):
@@ -252,7 +281,8 @@ class ComposeStager(Stager):
         if not cache:
             build_command = f"{build_command} --no-cache"
 
-        self._run_command(build_command)
+        ret = self._run_command(build_command)
+        return ret == 0
 
 
 def main():
@@ -262,6 +292,7 @@ def main():
         prog="stager",
         epilog="Author: Drake Eidukas (@Drake-Eidukas)",
     )
+
     base_parser.add_argument(
         "-r",
         "--repo-base",
@@ -347,6 +378,7 @@ def main():
         "\ne.g. If you wanted to re-tag repo:A as repo:B, this flag should be 'A'",
     )
 
+    # TODO: add argument for --exclude to exclude some target:tag combos from being used to cache to the build command.
     builder = subparsers.add_parser(
         "build",
         parents=[target_parser],
