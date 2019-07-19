@@ -128,7 +128,7 @@ class Stager(object):
         )
         for target in self._get_prior_targets(end_target):
             for tag in build_tags:
-                self._tag_image(target, tag, source_tag)
+                self._tag_image(target, source_tag, tag)
 
     def _build_image(self, target: str, build_tag: str, cache: bool, cache_tags: list):
         """ Build the image with the given target and build_tag.
