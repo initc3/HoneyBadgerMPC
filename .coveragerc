@@ -1,7 +1,7 @@
 [run]
 source = 
     honeybadgermpc
-    progs
+    apps
 omit = 
     tests/*
     docs/* 

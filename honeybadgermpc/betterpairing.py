@@ -2,6 +2,7 @@
 import random
 import re
 import struct
+from hashlib import sha256
 
 # Order of BLS group
 bls12_381_r = (
@@ -125,9 +126,10 @@ class G1:
                 exponend = ZR(intother)
             except ValueError:
                 raise TypeError(
-                    'Invalid exponentiation param. Expected ZR or int. Got '
-                    + str(type(other)))
-        out = G1(dupe_pyg1(self.pyg1))
+                    "Invalid exponentiation param. Expected ZR or int. Got "
+                    + str(type(other))
+                )
+        out = G1.one()
         self.pyg1.ppmul(exponend.val, out.pyg1)
         return out
 
@@ -204,14 +206,28 @@ class G1:
         out = PyG1()
         if seed is None:
             seed = []
-            for _ in range(4):
+            for _ in range(8):
                 seed.append(random.SystemRandom().randint(0, 4294967295))
-            out.rand(seed[0], seed[1], seed[2], seed[3])
+            out.rand(seed)
         else:
             assert type(seed) is list
-            assert len(seed) == 4
-            out.rand(seed[0], seed[1], seed[2], seed[3])
+            assert len(seed) <= 8
+            out.rand(seed)
         return G1(out)
+
+    # length determines how many G1 values to return
+    @staticmethod
+    def hash(bytestr, length=1):
+        assert type(bytestr) is bytes
+        hashout = sha256(bytestr).hexdigest()
+        seed = [int(hashout[i : i + 8], 16) for i in range(0, 64, 8)]
+        if length == 1:
+            return G1.rand(seed)
+        out = [G1.rand(seed)]
+        for j in range(0, length - 1):
+            bytestr += b"x42"
+            out.append(G1.hash(bytestr))
+        return out
 
 
 class G2:
@@ -394,14 +410,28 @@ class G2:
         out = PyG2()
         if seed is None:
             seed = []
-            for _ in range(4):
+            for _ in range(8):
                 seed.append(random.SystemRandom().randint(0, 4294967295))
-            out.rand(seed[0], seed[1], seed[2], seed[3])
+            out.rand(seed)
         else:
             assert type(seed) is list
-            assert len(seed) == 4
-            out.rand(seed[0], seed[1], seed[2], seed[3])
+            assert len(seed) <= 8
+            out.rand(seed)
         return G2(out)
+
+    # length determines how many G2 values to return
+    @staticmethod
+    def hash(bytestr, length=1):
+        assert type(bytestr) is bytes
+        hashout = sha256(bytestr).hexdigest()
+        seed = [int(hashout[i : i + 8], 16) for i in range(0, 64, 8)]
+        if length == 1:
+            return G2.rand(seed)
+        out = [G2.rand(seed)]
+        for j in range(0, length - 1):
+            bytestr += b"x42"
+            out.append(G2.hash(bytestr))
+        return out
 
 
 class GT:
@@ -549,10 +579,10 @@ class ZR:
             self.val = PyFr(0, 0, 0, 0)
         elif type(val) is int:
             uint = val % (bls12_381_r)
-            u1 = uint % 2**64
-            u2 = (uint // (2**64)) % 2**64
-            u3 = (uint // (2**128)) % 2**64
-            u4 = (uint // (2**192))
+            u1 = uint % 2 ** 64
+            u2 = (uint // (2 ** 64)) % 2 ** 64
+            u3 = (uint // (2 ** 128)) % 2 ** 64
+            u4 = uint // (2 ** 192)
             self.val = PyFr(u1, u2, u3, u4)
         elif type(val) is str:
             if val[0:2] == "0x":
@@ -560,10 +590,10 @@ class ZR:
             else:
                 intval = int(val)
             uint = intval % (bls12_381_r)
-            u1 = uint % 2**64
-            u2 = (uint // (2**64)) % 2**64
-            u3 = (uint // (2**128)) % 2**64
-            u4 = (uint // (2**192))
+            u1 = uint % 2 ** 64
+            u2 = (uint // (2 ** 64)) % 2 ** 64
+            u3 = (uint // (2 ** 128)) % 2 ** 64
+            u4 = uint // (2 ** 192)
             self.val = PyFr(u1, u2, u3, u4)
         elif type(val) is PyFr:
             self.val = val
@@ -748,6 +778,11 @@ class ZR:
     @staticmethod
     def one():
         return ZR(1)
+
+    @staticmethod
+    def hash(bytestr):
+        assert type(bytestr) is bytes
+        return ZR("0x" + sha256(bytestr).hexdigest())
 
 
 def lagrange_at_x(s, j, x):

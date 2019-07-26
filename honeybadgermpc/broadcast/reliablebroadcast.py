@@ -133,7 +133,9 @@ def merkle_verify(n, val, root_hash, branch, index):
     return True
 
 
-async def reliablebroadcast(sid, pid, n, f, leader, input, receive, send, client_mode=False):  # (# noqa: E501)
+async def reliablebroadcast(
+    sid, pid, n, f, leader, input, receive, send, client_mode=False
+):  # (# noqa: E501)
     """Reliable broadcast
     :param int pid: ``0 <= pid < N``
     :param int N:  at least 3

@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: .ci/Dockerfile
-      target: travis-image
     volumes:
       - ./aws:/usr/src/HoneyBadgerMPC/aws
       - ./conf:/usr/src/HoneyBadgerMPC/conf
