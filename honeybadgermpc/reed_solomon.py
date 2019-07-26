@@ -13,6 +13,7 @@ from honeybadgermpc.exceptions import HoneyBadgerMPCError
 import logging
 import psutil
 from abc import ABC, abstractmethod
+from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
 
 
 class Encoder(ABC):
@@ -176,8 +177,8 @@ class GaoRobustDecoder(RobustDecoder):
                 )[: self.point.n]
             else:
                 x = [self.point(i).value for i in range(self.point.n)]
-                err_eval = vandermonde_batch_evaluate(x, [error_poly], self.modulus)[0]
-
+                err_eval = vandermonde_batch_evaluate(x, [error_poly], self.modulus)[0]                
+            err_eval = OpaqueZZp_to_py(err_eval)
             errors = [i for i in range(self.point.n) if err_eval[i] == 0]
 
         return decoded, errors
@@ -210,8 +211,10 @@ class WelchBerlekampRobustDecoder(RobustDecoder):
 
         if coeffs is not None:
             coeffs = [c.value for c in coeffs]
+            coeffs = py_to_OpaqueZZp(coeffs, self.modulus)
             x = [self.point(i).value for i in range(self.point.n)]
             poly_eval = vandermonde_batch_evaluate(x, [coeffs], self.modulus)[0]
+            poly_eval = OpaqueZZp_to_py(poly_eval)
             errors = [
                 i
                 for i in range(self.point.n)

@@ -12,6 +12,7 @@ from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
 from honeybadgermpc.reed_solomon import EncoderSelector, DecoderSelector
 from honeybadgermpc.ntl import AvailableNTLThreads
 from unittest.mock import patch
+from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
 
 
 @pytest.fixture
@@ -100,16 +101,20 @@ def robust_decoding_test_cases(galois_field):
 def test_vandermonde_encode(encoding_test_cases):
     for test_case in encoding_test_cases:
         data, encoded, point = test_case
+        data = py_to_OpaqueZZp(data, point.field.modulus)
         enc = VandermondeEncoder(point)
         actual = enc.encode(data)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == encoded
 
 
 def test_fft_encode(fft_encoding_test_cases):
     for test_case in fft_encoding_test_cases:
         data, encoded, point = test_case
+        data = py_to_OpaqueZZp(data, point.field.modulus)
         enc = FFTEncoder(point)
         actual = enc.encode(data)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == encoded
 
 
@@ -117,8 +122,10 @@ def test_auto_encode_fft_disabled(encoding_test_cases):
     # Just check if some encoder is being picked
     for test_case in encoding_test_cases:
         data, encoded, point = test_case
+        data = py_to_OpaqueZZp(data, point.field.modulus)
         enc = EncoderFactory.get(point)
         actual = enc.encode(data)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == encoded
 
 
@@ -126,48 +133,60 @@ def test_auto_encode_fft_enabled(fft_encoding_test_cases):
     # Just check if some encoder is being picked
     for test_case in fft_encoding_test_cases:
         data, encoded, point = test_case
+        data = py_to_OpaqueZZp(data, point.field.modulus)
         enc = EncoderFactory.get(point)
         actual = enc.encode(data)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == encoded
 
 
 def test_vandermonde_decode(decoding_test_cases):
     for test_case in decoding_test_cases:
         z, encoded, decoded, point = test_case
+        encoded = py_to_OpaqueZZp(encoded, point.field.modulus)
         dec = VandermondeDecoder(point)
         actual = dec.decode(z, encoded)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == decoded
 
 
 def test_fft_decode(fft_decoding_test_cases):
     for test_case in fft_decoding_test_cases:
         z, encoded, decoded, point = test_case
+        encoded = py_to_OpaqueZZp(encoded, point.field.modulus)
         dec = FFTDecoder(point)
         actual = dec.decode(z, encoded)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == decoded
 
 
 def test_auto_decode_fft_disabled(decoding_test_cases):
     for test_case in decoding_test_cases:
         z, encoded, decoded, point = test_case
+        encoded = py_to_OpaqueZZp(encoded, point.field.modulus)
         dec = DecoderFactory.get(point)
         actual = dec.decode(z, encoded)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == decoded
 
 
 def test_auto_decode_fft_enabled(fft_decoding_test_cases):
     for test_case in fft_decoding_test_cases:
         z, encoded, decoded, point = test_case
+        encoded = py_to_OpaqueZZp(encoded, point.field.modulus)
         dec = DecoderFactory.get(point)
         actual = dec.decode(z, encoded)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == decoded
 
 
 def test_gao_robust_decode(robust_decoding_test_cases):
     for test_case in robust_decoding_test_cases:
         z, encoded, decoded, expected_errors, t, point = test_case
+        encoded = py_to_OpaqueZZp(encoded, point.field.modulus)
         dec = GaoRobustDecoder(t, point)
         actual, actual_errors = dec.robust_decode(z, encoded)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == decoded
         assert actual_errors == expected_errors
 
@@ -177,6 +196,7 @@ def test_wb_robust_decode(robust_decoding_test_cases):
         z, encoded, decoded, expected_errors, t, point = test_case
         dec = WelchBerlekampRobustDecoder(t, point)
         actual, actual_errors = dec.robust_decode(z, encoded)
+        actual = OpaqueZZp_to_py(actual)
         assert actual == decoded
         assert actual_errors == expected_errors
 

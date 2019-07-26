@@ -88,8 +88,7 @@ cdef str ZZ_to_str(ZZ x):
     return ccrepr(x)
 
 cpdef py_matrix_to_ZZ_matrix(x, modulus):
-    cdef ZZ zz_modulus = py_obj_to_ZZ(modulus)
-    ZZ_p_init(zz_modulus)
+    init(modulus)
     x_matrix = [list(map(PyIntToOpaqueZZp, row)) for row in x]    
     return x_matrix
 
@@ -97,12 +96,35 @@ cpdef ZZ_matrix_to_py_matrix(x):
     return [[OpaqueZZpToPyInt(c) for c in row] for row in x]
 
 cpdef py_list_to_ZZ_list(x, modulus):
-    cdef ZZ zz_modulus = py_obj_to_ZZ(modulus)
-    ZZ_p_init(zz_modulus)
+    init(modulus)
     return list(map(PyIntToOpaqueZZp, x))
 
 cpdef ZZ_list_to_py_list(row):
     return [OpaqueZZpToPyInt(x) for x in row]
+
+cpdef py_to_OpaqueZZp(obj, modulus):
+    init(modulus)
+    if type(obj) is int:
+        return PyIntToOpaqueZZp(obj)
+    elif type(obj) is list:
+        if type(obj[0]) is list or type(obj[0]) is tuple:
+            return py_matrix_to_ZZ_matrix(obj, modulus)
+        else:
+            return py_list_to_ZZ_list(obj, modulus)
+    else:
+        raise Exception(f"Invalid object {type(obj)}, {obj}")
+
+cpdef OpaqueZZp_to_py(obj):
+    if type(obj) is bytes:
+        return OpaqueZZpToPyInt(obj)
+    elif type(obj) is list:
+        if type(obj[0]) is list or type(obj[0]) is tuple:
+            return ZZ_matrix_to_py_matrix(obj)
+        else:
+            return ZZ_list_to_py_list(obj)
+    else:
+        raise Exception(f"Invalid object {type(obj)}, {obj}")
+        
 
 cpdef lagrange_interpolate(x, y, modulus):
     """Interpolate polynomial P s.t. P(x[i]) = y[i]
@@ -186,7 +208,7 @@ cpdef vandermonde_batch_interpolate(x, data_list, modulus):
     :type x: list of integers
     :param data_list: evaluations of polynomials
                       data_list[i][j] = evaluation of polynomial i at point x[j]
-    :type data_list: list of lists
+    :type data_list: list of lists of OpaqueZZp elements
     :param modulus: field modulus
     :type modulus: integer
     :return:

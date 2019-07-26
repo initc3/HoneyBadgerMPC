@@ -5,6 +5,7 @@ from itertools import zip_longest
 
 from honeybadgermpc.ntl import fft as fft_cpp
 from honeybadgermpc.ntl import fft_interpolate as fft_interpolate_cpp
+from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
 
 from .betterpairing import ZR
 from .elliptic_curve import Subgroup
@@ -168,10 +169,14 @@ def polynomials_over(field):
             p = omega.modulus
 
             # Interpolate the polynomial up to degree n
+            xs = py_to_OpaqueZZp(xs, p)
             poly = fft_interpolate_cpp(list(range(n)), xs, (pow(omega, 2)).value, p, n)
+            poly = OpaqueZZp_to_py(poly)
 
             # Evaluate the polynomial
+            poly = py_to_OpaqueZZp(poly, p)
             xs2 = fft_cpp(poly, omega.value, p, 2 * n)
+            xs2 = OpaqueZZp_to_py(xs2)
 
             return xs2
 

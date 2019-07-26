@@ -3,6 +3,7 @@ from pytest import mark
 from honeybadgermpc.polynomial import EvalPoint
 from honeybadgermpc.offline_randousha import randousha, generate_triples, generate_bits
 from honeybadgermpc.reed_solomon import Algorithm, DecoderFactory
+from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
 
 
 @mark.asyncio
@@ -23,8 +24,8 @@ async def test_randousha(test_router, polynomial, galois_field, n, k):
     decoder = DecoderFactory.get(eval_point, Algorithm.VANDERMONDE)
     for i, shares in enumerate(zip(*shares_per_party)):
         shares_t, shares_2t = zip(*shares)
-        poly_t = polynomial(decoder.decode(list(range(n)), shares_t))
-        poly_2t = polynomial(decoder.decode(list(range(n)), shares_2t))
+        poly_t = polynomial(OpaqueZZp_to_py(decoder.decode(list(range(n)), shares_t)))
+        poly_2t = polynomial(OpaqueZZp_to_py(decoder.decode(list(range(n)), shares_2t)))
         r_t = poly_t(0)
         r_2t = poly_2t(0)
         assert len(poly_t.coeffs) == t + 1
@@ -49,6 +50,7 @@ async def test_double_decode(n, k, polynomial, galois_field, test_router, test_r
         # Every party needs its share of all the `N` triples' shares
         shares = shares_per_party[context.myid]
         shares_t, shares_2t = list(zip(*shares))
+        shares_t, shares_2t = OpaqueZZp_to_py(list(shares_t)), OpaqueZZp_to_py(list(shares_2t))
         assert len(shares_t) == (n - 2 * t) * k
         assert len(shares_2t) == (n - 2 * t) * k
         rs_t = await context.ShareArray(shares_t).open()

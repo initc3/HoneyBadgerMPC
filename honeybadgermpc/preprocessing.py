@@ -16,6 +16,7 @@ from .field import GF
 from .polynomial import polynomials_over
 from .ntl import vandermonde_batch_evaluate
 from .elliptic_curve import Subgroup
+from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
 
 
 class PreProcessingConstants(Enum):
@@ -220,10 +221,11 @@ class PreProcessingMixin(ABC):
             append: Whether or not to append shares to an existing file, or to overwrite.
         """
         polys = [[coeff.value for coeff in poly.coeffs] for poly in polys]
+        polys = py_to_OpaqueZZp(polys, self.field.modulus)
         all_values = vandermonde_batch_evaluate(
             list(range(1, n + 1)), polys, self.field.modulus
         )
-
+        all_values = OpaqueZZp_to_py(all_values)
         for i in range(n):
             values = [v[i] for v in all_values]
             file_name = self.build_filename(n, t, i, prefix=prefix)

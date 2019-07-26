@@ -15,6 +15,7 @@ from honeybadgermpc.utils.misc import (
     flatten_lists,
     subscribe_recv,
 )
+from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
 
 
 class HyperInvMessageType(object):
@@ -48,8 +49,8 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
     # Generate t and 2t shares of the random element.
     coeffs_t = [to_int(poly.random(t, r).coeffs) for r in my_randoms]
     coeffs_2t = [to_int(poly.random(2 * t, r).coeffs) for r in my_randoms]
-    unref_t = encoder.encode(coeffs_t)
-    unref_2t = encoder.encode(coeffs_2t)
+    unref_t = encoder.encode(py_to_OpaqueZZp(coeffs_t, field.modulus))
+    unref_2t = encoder.encode(py_to_OpaqueZZp(coeffs_2t, field.modulus))
 
     subscribe_recv_task, subscribe = subscribe_recv(_recv)
 
@@ -104,6 +105,7 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
         def get_degree_and_secret(shares):
             decoder = DecoderFactory.get(eval_point)
             polys = decoder.decode(list(range(n)), transpose_lists(list(shares)))
+            polys = OpaqueZZp_to_py(polys)
             secrets = [p[0] for p in polys]
             degrees = [get_degree(p) for p in polys]
             return degrees, secrets
@@ -146,7 +148,7 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
 
     out_t = flatten_lists([s[: big_t + 1] for s in ref_t])
     out_2t = flatten_lists([s[: big_t + 1] for s in ref_2t])
-
+    
     return tuple(zip(out_t, out_2t))
 
 
@@ -159,6 +161,7 @@ async def generate_triples(n, t, k, my_id, _send, _recv, field):
     # Start listening for my share of t and 2t shares from all parties.
     send, recv = _get_send_recv("randousha")
     rs_t2t = await randousha(n, t, 3 * k, my_id, send, recv, field)
+    rs_t2t = OpaqueZZp_to_py(list(rs_t2t))
 
     as_t2t = rs_t2t[0 * k : 1 * k]
     bs_t2t = rs_t2t[1 * k : 2 * k]
@@ -199,6 +202,7 @@ async def generate_bits(n, t, k, my_id, _send, _recv, field):
     # Start listening for my share of t and 2t shares from all parties.
     send, recv = _get_send_recv("randousha")
     rs_t2t = await randousha(n, t, 2 * k, my_id, send, recv, field)
+    rs_t2t = OpaqueZZp_to_py(list(rs_t2t))
 
     # To generate bits, we generate a batch of `t,2t` sharings of
     # [u]_t, [u]_2t, [r]_t, [r]_2t. The goal is to recontruct `u^2`

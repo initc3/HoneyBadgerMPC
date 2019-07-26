@@ -196,7 +196,7 @@ def benchmark_runner(benchmark):
 
     def _benchmark_runner(prog, n=4, t=1, to_generate=[], k=1000, mixins=[]):
         pp_elements = PreProcessedElements()
-        _preprocess(pp_elements, n, t, k, to_generate)
+        _preprocess(n, t, k, to_generate)
 
         config = _build_config(mixins)
         program_runner = TaskProgramRunner(n, t, config)

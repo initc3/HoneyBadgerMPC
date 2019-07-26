@@ -33,10 +33,10 @@ cdef extern from "rsdecode_impl.h":
     
     ctypedef string OpaqueZZp
 
-    cdef void mat_mul_serialize "mat_mul_serialize"(vector[vector[OpaqueZZp]] x,  mat_ZZ_p a, mat_ZZ_p b) 
+    cdef void mat_mul_serialize "mat_mul_serialize"(vector[vector[OpaqueZZp]] x,  mat_ZZ_p a, mat_ZZ_p b) except +
 
-    cdef void ZZpToOpaqueZZp(OpaqueZZp&l, ZZ_p &x)
-    cdef void OpaqueZZpToZZp(ZZ_p& zzp, OpaqueZZp &r)
-    cdef void vec_ZZ_pToVecOpaqueZZp(vector[OpaqueZZp] &VecLimbs, vec_ZZ_p &row)
-    cdef void VecOpaqueZZpToVec_ZZ_p(vec_ZZ_p &veczzp, vector[OpaqueZZp] &serializedRow)
-    cdef void mat_ZZ_pToVecVecOpaqueZZp(vector[vector[OpaqueZZp]] &vecveclimbs, mat_ZZ_p &a)
+    cdef void ZZpToOpaqueZZp(OpaqueZZp&l, ZZ_p &x) except +
+    cdef void OpaqueZZpToZZp(ZZ_p& zzp, OpaqueZZp &r) except +
+    cdef void vec_ZZ_pToVecOpaqueZZp(vector[OpaqueZZp] &VecLimbs, vec_ZZ_p &row) except +
+    cdef void VecOpaqueZZpToVec_ZZ_p(vec_ZZ_p &veczzp, vector[OpaqueZZp] &serializedRow) except +
+    cdef void mat_ZZ_pToVecVecOpaqueZZp(vector[vector[OpaqueZZp]] &vecveclimbs, mat_ZZ_p &a) except +

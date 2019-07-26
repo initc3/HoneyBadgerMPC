@@ -417,28 +417,6 @@ void printLimbs(vector<ZZ_limb_t> &l) {
     }
 }
 
-void VecLimbToZZ_p(ZZ_p &zzp, vector<ZZ_limb_t> &arr) {
-    long size = arr.size();    
-    ZZ_limb_t limbs[size];
-    for (int i =0; i< size; i++) {
-        limbs[i] = arr[i];
-    }
-    ZZ a;
-    ZZ_limb_t *const l = limbs;
-    ZZ_limbs_set(a, l, size);
-    zzp =  to_ZZ_p(a);    
-}
-
-void ZZ_pToVecLimb(vector<ZZ_limb_t> &limbs, ZZ_p &x) {
-    ZZ zz = rep(x);
-    long size = zz.size();
-    limbs.reserve(size);
-    const ZZ_limb_t *l = ZZ_limbs_get(zz);
-    for (int i =0; i< size; i++) {
-        limbs.push_back(l[i]);
-    }
-}
-
 class ZZplimbs {
    public:
         long size;
@@ -472,7 +450,7 @@ class ZZplimbs {
 void OpaqueZZpToZZp(ZZ_p &zzp, OpaqueZZp &ss)
 {
     ZZplimbs ozzp2;
-    hps::from_string<ZZplimbs>(ss, ozzp2);
+    hps::from_string<ZZplimbs>(ss, ozzp2);        
     ZZ a;
     ZZ_limbs_set(a, ozzp2.l, ozzp2.size);
     zzp = to_ZZ_p(a);
