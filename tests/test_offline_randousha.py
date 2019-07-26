@@ -3,7 +3,7 @@ from pytest import mark
 from honeybadgermpc.polynomial import EvalPoint
 from honeybadgermpc.offline_randousha import randousha, generate_triples, generate_bits
 from honeybadgermpc.reed_solomon import Algorithm, DecoderFactory
-from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
+from honeybadgermpc.ntl import OpaqueZZp_to_py
 
 
 @mark.asyncio
