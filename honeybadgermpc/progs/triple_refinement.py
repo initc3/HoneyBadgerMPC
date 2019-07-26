@@ -1,7 +1,13 @@
 import asyncio
-from honeybadgermpc.ntl import vandermonde_batch_evaluate
-from honeybadgermpc.ntl import vandermonde_batch_interpolate
+from honeybadgermpc.ntl import vandermonde_batch_evaluate as vbe
+from honeybadgermpc.ntl import vandermonde_batch_interpolate as vbi
+from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
 
+def vandermonde_batch_evaluate(x, polynomials, modulus):
+    return OpaqueZZp_to_py(vbe(x, py_to_OpaqueZZp(polynomials, modulus), modulus))
+
+def vandermonde_batch_interpolate(x, data_list, modulus):
+    return OpaqueZZp_to_py(vbi(x, py_to_OpaqueZZp(data_list, modulus), modulus))
 
 async def batch_beaver(context, a_, b_, x_, y_, z_):
     assert len(a_) == len(b_) == len(x_) == len(y_) == len(z_)
