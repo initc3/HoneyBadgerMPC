@@ -50,7 +50,10 @@ async def test_double_decode(n, k, polynomial, galois_field, test_router, test_r
         # Every party needs its share of all the `N` triples' shares
         shares = shares_per_party[context.myid]
         shares_t, shares_2t = list(zip(*shares))
-        shares_t, shares_2t = OpaqueZZp_to_py(list(shares_t)), OpaqueZZp_to_py(list(shares_2t))
+        shares_t, shares_2t = (
+            OpaqueZZp_to_py(list(shares_t)),
+            OpaqueZZp_to_py(list(shares_2t)),
+        )
         assert len(shares_t) == (n - 2 * t) * k
         assert len(shares_2t) == (n - 2 * t) * k
         rs_t = await context.ShareArray(shares_t).open()

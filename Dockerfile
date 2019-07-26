@@ -110,10 +110,6 @@ RUN ./configure CXXFLAGS="-g -O2 -fPIC -march=native -pthread -std=c++11"
 RUN make 
 RUN make install
 
-# Clone HPS - A C++11 High Performance Serialization Library.
-WORKDIR /
-RUN git clone https://github.com/jl2922/hps.git
-
 # Install better pairing
 # Creates dependencies in /usr/local/include/pbc and /usr/local/lib
 WORKDIR /
@@ -148,12 +144,19 @@ RUN pip install pairing/
 # target for dev targets later with good cache performance by delaying copying 
 # changed files until the end of the dev targets.
 FROM base AS pre-prod
-WORKDIR /usr/src/HoneyBadgerMPC/
 
+# Copy previously built build artifacts
+WORKDIR /usr/src/HoneyBadgerMPC/
 COPY --from=build ${PYTHON_LIBRARY_PATH} ${PYTHON_LIBRARY_PATH}
 COPY --from=build /usr/local/include/ /usr/local/include/
 COPY --from=build ${LIBRARY_PATH} ${LIBRARY_PATH}
 
+# Clone HPS - A C++11 High Performance Serialization Library.
+WORKDIR /
+RUN git clone https://github.com/jl2922/hps.git
+
+# Build remaining python dependencies
+WORKDIR /usr/src/HoneyBadgerMPC/
 COPY apps/asynchromix/cpp/ apps/asynchromix/cpp/
 RUN make -C apps/asynchromix/cpp
 
