@@ -3,6 +3,8 @@ from honeybadgermpc.reed_solomon import EncoderFactory
 
 
 from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
+
+
 def refine_randoms(n, t, field, random_shares_int):
     assert 3 * t + 1 <= n
 

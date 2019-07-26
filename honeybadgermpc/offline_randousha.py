@@ -148,7 +148,7 @@ async def randousha(n, t, k, my_id, _send, _recv, field):
 
     out_t = flatten_lists([s[: big_t + 1] for s in ref_t])
     out_2t = flatten_lists([s[: big_t + 1] for s in ref_2t])
-    
+
     return tuple(zip(out_t, out_2t))
 
 

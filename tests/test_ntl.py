@@ -11,7 +11,7 @@ from honeybadgermpc.ntl import (
     partial_fft,
     fft_batch_evaluate,
 )
-from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp, init
+from honeybadgermpc.ntl import OpaqueZZp_to_py, py_to_OpaqueZZp
 import random
 
 
@@ -33,7 +33,7 @@ def test_batch_vandermonde_interpolate(galois_field):
     x = [1, 2]
     p = galois_field.modulus
     y = py_to_OpaqueZZp([[1, 2], [3, 5]], p)
-    
+
     # When
     polynomials = vandermonde_batch_interpolate(x, y, p)
 
@@ -57,7 +57,7 @@ def test_batch_vandermonde_evaluate(galois_field):
 def test_fft():
     # Given
     p = 13
-    coeffs = py_to_OpaqueZZp([0,1], p)
+    coeffs = py_to_OpaqueZZp([0, 1], p)
     omega = 5
     n = 4
 

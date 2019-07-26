@@ -20,6 +20,7 @@ from honeybadgermpc.utils.misc import (
 )
 from honeybadgermpc.ntl import py_matrix_to_ZZ_matrix, ZZ_matrix_to_py_matrix
 
+
 async def fetch_one(awaitables):
     """ Given a list of awaitables, run them concurrently and
     return them in the order they complete
@@ -113,7 +114,7 @@ async def batch_reconstruct(
       up to one of each for each party
 
     Reconstruction takes places in chunks of t+1 values
-    """    
+    """
     bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),
                                          {"node_id": myid})
 

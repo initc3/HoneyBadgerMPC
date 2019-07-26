@@ -177,7 +177,7 @@ class GaoRobustDecoder(RobustDecoder):
                 )[: self.point.n]
             else:
                 x = [self.point(i).value for i in range(self.point.n)]
-                err_eval = vandermonde_batch_evaluate(x, [error_poly], self.modulus)[0]                
+                err_eval = vandermonde_batch_evaluate(x, [error_poly], self.modulus)[0]
             err_eval = OpaqueZZp_to_py(err_eval)
             errors = [i for i in range(self.point.n) if err_eval[i] == 0]
 
