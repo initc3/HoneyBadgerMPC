@@ -115,8 +115,9 @@ async def batch_reconstruct(
 
     Reconstruction takes places in chunks of t+1 values
     """
-    bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),
-                                         {"node_id": myid})
+    bench_logger = logging.LoggerAdapter(
+        logging.getLogger("benchmark_logger"), {"node_id": myid}
+    )
 
     if degree is None:
         degree = t
@@ -170,8 +171,9 @@ async def batch_reconstruct(
     # Step 2: Attempt to reconstruct P1
     start_time = time.time()
     try:
-        recons_r2 = await incremental_decode(data_r1, enc, dec, robust_dec,
-                                             num_chunks, t, degree, n)
+        recons_r2 = await incremental_decode(
+            data_r1, enc, dec, robust_dec, num_chunks, t, degree, n
+        )
     except asyncio.CancelledError:
         # Cancel all created tasks
         for task in [task_r1, task_r2, subscribe_task, *data_r1, *data_r2]:

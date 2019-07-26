@@ -85,7 +85,10 @@ def test_fft_big(galois_field, galois_field_roots):
     assert len(fft_rep) == n
     for i in range(n):
         x = pow(omega, i, p)
-        assert OpaqueZZp_to_py(fft_rep[i]) == sum(coeffs[j] * pow(x, j, p) for j in range(d)) % p
+        assert (
+            OpaqueZZp_to_py(fft_rep[i])
+            == sum(coeffs[j] * pow(x, j, p) for j in range(d)) % p
+        )
 
 
 def test_fft_batch_evaluate_big(galois_field, galois_field_roots):
@@ -112,7 +115,8 @@ def test_fft_batch_evaluate_big(galois_field, galois_field_roots):
         for j in range(k):
             x = pow(omega, j, p)
             assert (
-                OpaqueZZp_to_py(fft_rep[i][j]) == sum(coeffs[i][l] * pow(x, l, p) for l in range(d)) % p
+                OpaqueZZp_to_py(fft_rep[i][j])
+                == sum(coeffs[i][l] * pow(x, l, p) for l in range(d)) % p
             )
 
 
@@ -134,7 +138,10 @@ def test_partial_fft_big(galois_field, galois_field_roots):
     assert len(fft_rep) == k
     for i in range(k):
         x = pow(omega, i, p)
-        assert OpaqueZZp_to_py(fft_rep[i]) == sum(coeffs[j] * pow(x, j, p) for j in range(d)) % p
+        assert (
+            OpaqueZZp_to_py(fft_rep[i])
+            == sum(coeffs[j] * pow(x, j, p) for j in range(d)) % p
+        )
 
 
 def test_fft_interpolate(galois_field, galois_field_roots):
@@ -286,7 +293,14 @@ def test_gao_interpolate_fft(galois_field, galois_field_roots):
 
     # Check decoding with no errors
     decoded, _ = gao_interpolate(
-        x, py_to_OpaqueZZp(encoded, p), k, p, z=z, omega=omega, order=order, use_omega_powers=True
+        x,
+        py_to_OpaqueZZp(encoded, p),
+        k,
+        p,
+        z=z,
+        omega=omega,
+        order=order,
+        use_omega_powers=True,
     )
     # decoded, _ = gao_interpolate(x, encoded, k, p)
     assert OpaqueZZp_to_py(decoded) == int_msg
@@ -295,7 +309,14 @@ def test_gao_interpolate_fft(galois_field, galois_field_roots):
     cmax = n - 2 * t - 1
     corrupted = corrupt(encoded, num_errors=0, num_nones=cmax)
     coeffs, _ = gao_interpolate(
-        x, py_to_OpaqueZZp(corrupted, p), k, p, z=z, omega=omega, order=order, use_omega_powers=True
+        x,
+        py_to_OpaqueZZp(corrupted, p),
+        k,
+        p,
+        z=z,
+        omega=omega,
+        order=order,
+        use_omega_powers=True,
     )
     assert OpaqueZZp_to_py(coeffs) == int_msg
 
@@ -303,7 +324,14 @@ def test_gao_interpolate_fft(galois_field, galois_field_roots):
     emax = (n - 2 * t - 1) // 2
     corrupted = corrupt(encoded, num_errors=emax, num_nones=0)
     coeffs, _ = gao_interpolate(
-        x, py_to_OpaqueZZp(corrupted, p), k, p, z=z, omega=omega, order=order, use_omega_powers=True
+        x,
+        py_to_OpaqueZZp(corrupted, p),
+        k,
+        p,
+        z=z,
+        omega=omega,
+        order=order,
+        use_omega_powers=True,
     )
     assert OpaqueZZp_to_py(coeffs) == int_msg
 
@@ -312,7 +340,14 @@ def test_gao_interpolate_fft(galois_field, galois_field_roots):
     c = cmax // 4
     corrupted = corrupt(encoded, num_errors=e, num_nones=c)
     coeffs, _ = gao_interpolate(
-        x, py_to_OpaqueZZp(corrupted, p), k, p, z=z, omega=omega, order=order, use_omega_powers=True
+        x,
+        py_to_OpaqueZZp(corrupted, p),
+        k,
+        p,
+        z=z,
+        omega=omega,
+        order=order,
+        use_omega_powers=True,
     )
     assert OpaqueZZp_to_py(coeffs) == int_msg
 
