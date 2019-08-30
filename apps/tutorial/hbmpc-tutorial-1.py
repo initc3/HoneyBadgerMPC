@@ -27,7 +27,7 @@ async def beaver_multiply(ctx, x: Share, y: Share):
      - Shares of random values are available from preprocessing
      - Opening a Share returns a GFElementFuture
     """
-    a, b, ab = ctx.preproc.get_triple(ctx)
+    a, b, ab = ctx.preproc.get_triples(ctx)
     D = await (x - a).open()
     E = await (y - b).open()
 
