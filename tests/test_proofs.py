@@ -21,7 +21,7 @@ def test_inner_product_proof():
 
 
 def test_inner_product_proof_one_known():
-    n = 10
+    n = 15
     a = [ZR.random() for i in range(n)]
     b = [ZR.random() for i in range(n)]
     iprod = ZR(0)
@@ -34,7 +34,7 @@ def test_inner_product_proof_one_known():
 
 
 def test_batch_inner_product_proof_one_known():
-    n = 10
+    n = 13
     a = [ZR.random() for i in range(n)]
     bs = [[ZR.random() for j in range(n)] for i in range(3*n)]
     comm, iprods, proofs = prove_batch_inner_product_one_known(a, bs)

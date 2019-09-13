@@ -14,7 +14,7 @@ class PolyCommitLog:
             self.u = G1.hash(b"honeybadgeru")
         else:
             assert len(crs) == 3
-            [self.gs, self.hs, self.u] = crs
+            [self.gs, self.h, self.u] = crs
         self.y_vecs = []
 
     def commit(self, phi, r):
@@ -99,14 +99,11 @@ class PolyCommitLog:
             challenge = ZR.hash(pickle.dumps([self.gs, self.h, self.u, S, T]))
         else:
             [roothash, branch, S, T, D, mu, t_hat, iproof] = witness
-            print(branch)
             if not MerkleTree.verify_membership(pickle.dumps(T), branch, roothash):
                 return False
             challenge = ZR.hash(pickle.dumps([roothash, self.gs, self.h, self.u, S]))
         ret = self.gs[0]**t_hat == self.gs[0]**phi_at_i * T ** challenge
-        print(ret)
         ret &= D * self.h**mu == S**challenge * c
-        print(ret)
         if len(iproof[-1]) > 3:
             ret &= verify_batch_inner_product_one_known(
                     D, t_hat, y_vec, iproof, crs=[self.gs, self.u])

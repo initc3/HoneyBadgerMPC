@@ -221,6 +221,7 @@ def prove_inner_product_one_known(a_vec, b_vec, comm=None, crs=None):
         u = G1.hash(b"honeybadgeru")
     else:
         [g_vec, u] = crs
+        g_vec = g_vec[:n]
     if comm is not None:
         P = comm * G1.one()
     else:
@@ -263,6 +264,7 @@ def verify_inner_product_one_known(comm, iprod, b_vec, proof, crs=None):
         u = G1.hash(b"honeybadgeru")
     else:
         [g_vec, u] = crs
+        g_vec = g_vec[:n]
     P = comm * u ** iprod
     transcript = b''
     return recursive_verify(g_vec, b_vec, u, iproof, n, P, transcript)
@@ -284,8 +286,8 @@ def prove_batch_inner_product_one_known(a_vec, b_vecs, comm=None, crs=None):
                 P_vec[j] *= g_vec[-1] ** (na) * u ** (na * b_vecs[j][-1])
                 proofsteps[j].append(na)
         n_p = n//2
-        cls = [ZR(0) for _ in range(len(b_vecs))]
-        crs = [ZR(0) for _ in range(len(b_vecs))]
+        cl_vec = [ZR(0) for _ in range(len(b_vecs))]
+        cr_vec = [ZR(0) for _ in range(len(b_vecs))]
         La = G1.one()
         Ra = G1.one()
         L_vec = [None] * len(b_vecs)
@@ -295,10 +297,10 @@ def prove_batch_inner_product_one_known(a_vec, b_vecs, comm=None, crs=None):
             Ra *= g_vec[:n_p][i]**a_vec[n_p:][i]
         for j in range(len(b_vecs)):
             for i in range(n_p):
-                cls[j] += a_vec[:n_p][i] * b_vecs[j][n_p:][i]
-                crs[j] += a_vec[n_p:][i] * b_vecs[j][:n_p][i]
-            L_vec[j] = La * (u ** cls[j])
-            R_vec[j] = Ra * (u ** crs[j])
+                cl_vec[j] += a_vec[:n_p][i] * b_vecs[j][n_p:][i]
+                cr_vec[j] += a_vec[n_p:][i] * b_vecs[j][:n_p][i]
+            L_vec[j] = La * (u ** cl_vec[j])
+            R_vec[j] = Ra * (u ** cr_vec[j])
         # Fiat Shamir
         # Make a merkle tree over everything that varies between verifiers
         # TODO: na should be in the transcript
@@ -326,7 +328,7 @@ def prove_batch_inner_product_one_known(a_vec, b_vecs, comm=None, crs=None):
         Lax2Raxi2 = La ** x2 * Ra ** xi2
         for j in range(len(P_vec)):
             # Instead of doing L_vec[j]**(x2)*P_vec[j]*R_vec[j]**(xi2), save computation
-            P_vec[j] *= Lax2Raxi2 * u ** (x2 * cls[j] + xi2 * crs[j])
+            P_vec[j] *= Lax2Raxi2 * u ** (x2 * cl_vec[j] + xi2 * cr_vec[j])
         proofs = recursive_proofs(g_vec_p, a_vec_p, b_vecs_p, u, n_p, P_vec, transcript)
         for j in range(len(proofs)):
             proofsteps[j].append(L_vec[j])
@@ -339,6 +341,7 @@ def prove_batch_inner_product_one_known(a_vec, b_vecs, comm=None, crs=None):
         u = G1.hash(b"honeybadgeru")
     else:
         [g_vec, u] = crs
+        g_vec = g_vec[:n]
     if comm is None:
         comm = G1.one()
         for i in range(n):
@@ -374,7 +377,6 @@ def verify_batch_inner_product_one_known(comm, iprod, b_vec, proof, crs=None):
         transcript += pickle.dumps([g_vec, roothash])
         x = ZR.hash(transcript)
         xi = 1/x
-        print(x)
         n_p = n//2
         g_vec_p = []
         b_vec_p = []
@@ -390,6 +392,7 @@ def verify_batch_inner_product_one_known(comm, iprod, b_vec, proof, crs=None):
         u = G1.hash(b"honeybadgeru")
     else:
         [g_vec, u] = crs
+        g_vec = g_vec[:n]
     P = comm * u ** iprod
     transcript = pickle.dumps(u)
     return recursive_verify(g_vec, b_vec, u, iproof, n, P, transcript)
