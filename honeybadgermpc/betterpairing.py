@@ -2,9 +2,12 @@
 import random
 import re
 import struct
+from hashlib import sha256
 
 # Order of BLS group
-bls12_381_r = 52435875175126190479447740508185965837690552500527637822603658699938581184513  # (# noqa: E501)
+bls12_381_r = (
+    52435875175126190479447740508185965837690552500527637822603658699938581184513
+)  # (# noqa: E501)
 
 
 def pair(g1, g2):
@@ -27,7 +30,7 @@ def dupe_pyg2(pyg2):
 
 
 def dupe_pyfr(pyfr):
-    out = PyFr("1")
+    out = PyFr(0, 0, 0, 0)
     out.copy(pyfr)
     return out
 
@@ -45,10 +48,22 @@ class G1:
         elif type(other) is list:
             assert len(other) == 2
             assert len(other[0]) == 6
-            x = PyFqRepr(other[0][0], other[0][1], other[0][2],
-                         other[0][3], other[0][4], other[0][5])
-            y = PyFqRepr(other[1][0], other[1][1], other[1][2],
-                         other[1][3], other[1][4], other[1][5])
+            x = PyFqRepr(
+                other[0][0],
+                other[0][1],
+                other[0][2],
+                other[0][3],
+                other[0][4],
+                other[0][5],
+            )
+            y = PyFqRepr(
+                other[1][0],
+                other[1][1],
+                other[1][2],
+                other[1][3],
+                other[1][4],
+                other[1][5],
+            )
             xq = PyFq()
             yq = PyFq()
             xq.from_repr(x)
@@ -75,16 +90,16 @@ class G1:
             return G1(out)
         else:
             raise TypeError(
-                'Invalid multiplication param. Expected G1. Got '
-                + str(type(other)))
+                "Invalid multiplication param. Expected G1. Got " + str(type(other))
+            )
 
     def __imul__(self, other):
         if type(other) is G1:
             self.pyg1.add_assign(other.pyg1)
             return self
         raise TypeError(
-            'Invalid multiplication param. Expected G1. Got '
-            + str(type(other)))
+            "Invalid multiplication param. Expected G1. Got " + str(type(other))
+        )
 
     def __truediv__(self, other):
         if type(other) is G1:
@@ -93,27 +108,28 @@ class G1:
             return G1(out)
         else:
             raise TypeError(
-                'Invalid division param. Expected G1. Got '
-                + str(type(other)))
+                "Invalid division param. Expected G1. Got " + str(type(other))
+            )
 
     def __idiv__(self, other):
         if type(other) is G1:
             self.pyg1.sub_assign(other.pyg1)
             return self
-        raise TypeError(
-            'Invalid division param. Expected G1. Got '
-            + str(type(other)))
+        raise TypeError("Invalid division param. Expected G1. Got " + str(type(other)))
 
     def __pow__(self, other):
-        if type(other) is int:
-            exponend = ZR(other)
-        elif type(other) is ZR:
+        if type(other) is ZR:
             exponend = other
         else:
-            raise TypeError(
-                'Invalid exponentiation param. Expected ZR or int. Got '
-                + str(type(other)))
-        out = G1(dupe_pyg1(self.pyg1))
+            try:
+                intother = int(other)
+                exponend = ZR(intother)
+            except ValueError:
+                raise TypeError(
+                    "Invalid exponentiation param. Expected ZR or int. Got "
+                    + str(type(other))
+                )
+        out = G1.one()
         self.pyg1.ppmul(exponend.val, out.pyg1)
         return out
 
@@ -126,8 +142,9 @@ class G1:
             return self
         else:
             raise TypeError(
-                'Invalid exponentiation param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid exponentiation param. Expected ZR or int. Got "
+                + str(type(other))
+            )
 
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -152,10 +169,10 @@ class G1:
         for i in range(6):
             xlist[i] = int(xlist[i], 16)
             ylist[i] = int(ylist[i], 16)
-        return struct.pack('QQQQQQQQQQQQ', *(xlist+ylist))
+        return struct.pack("QQQQQQQQQQQQ", *(xlist + ylist))
 
     def __setstate__(self, d):
-        xylist = struct.unpack('QQQQQQQQQQQQ', d)
+        xylist = struct.unpack("QQQQQQQQQQQQ", d)
         self.__init__([xylist[:6], xylist[6:]])
 
     def preprocess(self, level=4):
@@ -189,14 +206,29 @@ class G1:
         out = PyG1()
         if seed is None:
             seed = []
-            for _ in range(4):
+            for _ in range(8):
                 seed.append(random.SystemRandom().randint(0, 4294967295))
-            out.rand(seed[0], seed[1], seed[2], seed[3])
+            out.rand(seed)
         else:
             assert type(seed) is list
-            assert len(seed) == 4
-            out.rand(seed[0], seed[1], seed[2], seed[3])
+            assert len(seed) <= 8
+            out.rand(seed)
         return G1(out)
+
+    # length determines how many G1 values to return
+    @staticmethod
+    def hash(bytestr, length=None):
+        assert type(bytestr) is bytes
+        hashout = sha256(bytestr).hexdigest()
+        seed = [int(hashout[i: i + 8], 16) for i in range(0, 64, 8)]
+        if length is None:
+            return G1.rand(seed)
+        assert type(length) is int
+        out = [G1.rand(seed)]
+        for j in range(0, length - 1):
+            bytestr += b"x42"
+            out.append(G1.hash(bytestr))
+        return out
 
 
 class G2:
@@ -206,14 +238,38 @@ class G2:
         if type(other) is list:
             assert len(other) == 4
             assert len(other[0]) == 6
-            x1 = PyFqRepr(other[0][0], other[0][1], other[0][2],
-                          other[0][3], other[0][4], other[0][5])
-            x2 = PyFqRepr(other[1][0], other[1][1], other[1][2],
-                          other[1][3], other[1][4], other[1][5])
-            y1 = PyFqRepr(other[2][0], other[2][1], other[2][2],
-                          other[2][3], other[2][4], other[2][5])
-            y2 = PyFqRepr(other[3][0], other[3][1], other[3][2],
-                          other[3][3], other[3][4], other[3][5])
+            x1 = PyFqRepr(
+                other[0][0],
+                other[0][1],
+                other[0][2],
+                other[0][3],
+                other[0][4],
+                other[0][5],
+            )
+            x2 = PyFqRepr(
+                other[1][0],
+                other[1][1],
+                other[1][2],
+                other[1][3],
+                other[1][4],
+                other[1][5],
+            )
+            y1 = PyFqRepr(
+                other[2][0],
+                other[2][1],
+                other[2][2],
+                other[2][3],
+                other[2][4],
+                other[2][5],
+            )
+            y2 = PyFqRepr(
+                other[3][0],
+                other[3][1],
+                other[3][2],
+                other[3][3],
+                other[3][4],
+                other[3][5],
+            )
             xq = PyFq2()
             yq = PyFq2()
             xq.from_repr(x1, x2)
@@ -229,7 +285,9 @@ class G2:
         x2 = int(out[113:211], 0)
         y1 = int(out[226:324], 0)
         y2 = int(out[331:429], 0)
-        return "(" + str(x1) + " + " + str(x2) + "u, " + str(y1) + " + " + str(y2) + "u)"
+        return (
+            "(" + str(x1) + " + " + str(x2) + "u, " + str(y1) + " + " + str(y2) + "u)"
+        )
 
     def __repr__(self):
         return str(self)
@@ -252,8 +310,8 @@ class G2:
             return G2(out)
         else:
             raise TypeError(
-                'Invalid division param. Expected G2. Got '
-                + str(type(other)))
+                "Invalid division param. Expected G2. Got " + str(type(other))
+            )
 
     def __idiv__(self, other):
         if type(other) is G2:
@@ -267,8 +325,9 @@ class G2:
             exponend = other
         else:
             raise TypeError(
-                'Invalid exponentiation param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid exponentiation param. Expected ZR or int. Got "
+                + str(type(other))
+            )
         out = G2(dupe_pyg2(self.pyg2))
         self.pyg2.ppmul(exponend.val, out.pyg2)
         return out
@@ -288,8 +347,9 @@ class G2:
             return self
         else:
             raise TypeError(
-                'Invalid exponentiation param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid exponentiation param. Expected ZR or int. Got "
+                + str(type(other))
+            )
 
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -351,14 +411,29 @@ class G2:
         out = PyG2()
         if seed is None:
             seed = []
-            for _ in range(4):
+            for _ in range(8):
                 seed.append(random.SystemRandom().randint(0, 4294967295))
-            out.rand(seed[0], seed[1], seed[2], seed[3])
+            out.rand(seed)
         else:
             assert type(seed) is list
-            assert len(seed) == 4
-            out.rand(seed[0], seed[1], seed[2], seed[3])
+            assert len(seed) <= 8
+            out.rand(seed)
         return G2(out)
+
+    # length determines how many G2 values to return
+    @staticmethod
+    def hash(bytestr, length=None):
+        assert type(bytestr) is bytes
+        hashout = sha256(bytestr).hexdigest()
+        seed = [int(hashout[i: i + 8], 16) for i in range(0, 64, 8)]
+        if length is None:
+            return G2.rand(seed)
+        assert type(length) is int
+        out = [G2.rand(seed)]
+        for j in range(0, length - 1):
+            bytestr += b"x42"
+            out.append(G2.hash(bytestr))
+        return out
 
 
 class GT:
@@ -374,11 +449,11 @@ class GT:
             self.pyfq12.from_strs(*other)
         elif type(other) is int:
             self.pyfq12 = PyFq12()
-            self.pyfq12.from_strs(str(other), *["0"]*11)
+            self.pyfq12.from_strs(str(other), *["0"] * 11)
         elif type(other) is str:
-            lst = [x.strip() for x in other.split(',')]
+            lst = [x.strip() for x in other.split(",")]
             assert len(lst) == 12
-            if lst[0][1] == 'x':
+            if lst[0][1] == "x":
                 for i in range(len(lst)):
                     lst[i] = str(int(lst[i], 0))
             self.pyfq12 = PyFq12()
@@ -402,8 +477,9 @@ class GT:
             return out
         else:
             raise TypeError(
-                'Invalid exponentiation param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid exponentiation param. Expected ZR or int. Got "
+                + str(type(other))
+            )
 
     def __pow__(self, other):
         if type(other) is int:
@@ -412,8 +488,9 @@ class GT:
             exponend = other
         else:
             raise TypeError(
-                'Invalid exponentiation param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid exponentiation param. Expected ZR or int. Got "
+                + str(type(other))
+            )
         outfq12 = PyFq12()
         self.pyfq12.pppow(exponend.val, outfq12)
         return GT(outfq12)
@@ -425,8 +502,8 @@ class GT:
             return GT(out)
         else:
             raise TypeError(
-                'Invalid multiplication param. Expected GT. Got '
-                + str(type(other)))
+                "Invalid multiplication param. Expected GT. Got " + str(type(other))
+            )
 
     def __truediv__(self, other):
         if type(other) is GT:
@@ -437,8 +514,8 @@ class GT:
             return GT(out)
         else:
             raise TypeError(
-                'Invalid division param. Expected GT. Got '
-                + str(type(other)))
+                "Invalid division param. Expected GT. Got " + str(type(other))
+            )
 
     def __radd__(self, other):
         return self.__add__(other)
@@ -486,12 +563,14 @@ class GT:
     def rand(seed=None):
         r = bls12_381_r
         if seed is None:
-            r = random.SystemRandom().randint(0, r-1)
+            r = random.SystemRandom().randint(0, r - 1)
         else:
             # Generate pseudorandomly based on seed
-            r = random.Random(seed).randint(0, r-1)
+            r = random.Random(seed).randint(0, r - 1)
         exp = ZR(str(r))
-        out = GT('0x0158e1808f680056282c178bcba60c5acba8f0475a3c41a71d81f868772583714dc4b3eb5ca8c5d5061996e5c5ef24bcc,0x0b9df4a93419648e1d43121721548f16ed690a5f12c73ce16eba5969fe05995534cb764a7de2439edaa94924a939984d,0x0ad9d36bdee6b0d48b80a486461ec570e7f15393f721aa7631c5b685bb5b1e7b008f25437692e561083cac10c0a0aab0,0x0fb4a6fd9c72613c58e85dee45f293c9ac3df84243b775a80ca855e690f438b6361f82ed31c202709c16f75dd431e962,0x03b22c64e0522668d304ed847a33e02930cdb42f79ffab3aa2c54a7718283cf52fd7532d96e14f749c3e09ce4beabe49,0x01b597b86cbce4fc08a09487ec6d7141e3f4b6e02ec56fa57453b03ee0f2f535f3b2414d7b8366f45687a65475160ed0,0x0989f5f2a47ae4f5095ba9323b07330617f214f3972dc34be643e8ec361e3f04b260b845c46505429c6be9d441e721d1,0x01893a49f8840733e25c408a9fe57f15047da20a0fd498ea168b99977b99da42a32430a4934fd0acb7bc61b5abfb391a,0x0155d79b2f854e71ec012d26bdc0e05e0ffd4f002bfb4139b9e779f9e5fce72f0770f66d4cd475bfa4a6e769210a4e97a,0x016659bfd6c7b703935fd139f5c73653d1dd470435f05e73d2711bd5be4dd36c337a736f242f9c41d1674e18063f0548d,0x03cfeca937de62d23620a0de8d9e04b6318100480e8b10c30c16e33684629c34337ff25742986b90cfcf325fbae99564,0x0cb863283c7d744ddbb00c427295d45aaa3bd7be6181a5369b3bdbb89ffe3179dc58fd2aeca27bf19bf25b99af0cbd23')  # (# noqa: E501)
+        out = GT(
+            "0x0158e1808f680056282c178bcba60c5acba8f0475a3c41a71d81f868772583714dc4b3eb5ca8c5d5061996e5c5ef24bcc,0x0b9df4a93419648e1d43121721548f16ed690a5f12c73ce16eba5969fe05995534cb764a7de2439edaa94924a939984d,0x0ad9d36bdee6b0d48b80a486461ec570e7f15393f721aa7631c5b685bb5b1e7b008f25437692e561083cac10c0a0aab0,0x0fb4a6fd9c72613c58e85dee45f293c9ac3df84243b775a80ca855e690f438b6361f82ed31c202709c16f75dd431e962,0x03b22c64e0522668d304ed847a33e02930cdb42f79ffab3aa2c54a7718283cf52fd7532d96e14f749c3e09ce4beabe49,0x01b597b86cbce4fc08a09487ec6d7141e3f4b6e02ec56fa57453b03ee0f2f535f3b2414d7b8366f45687a65475160ed0,0x0989f5f2a47ae4f5095ba9323b07330617f214f3972dc34be643e8ec361e3f04b260b845c46505429c6be9d441e721d1,0x01893a49f8840733e25c408a9fe57f15047da20a0fd498ea168b99977b99da42a32430a4934fd0acb7bc61b5abfb391a,0x0155d79b2f854e71ec012d26bdc0e05e0ffd4f002bfb4139b9e779f9e5fce72f0770f66d4cd475bfa4a6e769210a4e97a,0x016659bfd6c7b703935fd139f5c73653d1dd470435f05e73d2711bd5be4dd36c337a736f242f9c41d1674e18063f0548d,0x03cfeca937de62d23620a0de8d9e04b6318100480e8b10c30c16e33684629c34337ff25742986b90cfcf325fbae99564,0x0cb863283c7d744ddbb00c427295d45aaa3bd7be6181a5369b3bdbb89ffe3179dc58fd2aeca27bf19bf25b99af0cbd23"  # (# noqa: E501)
+        )
         out **= exp
         return out
 
@@ -499,16 +578,25 @@ class GT:
 class ZR:
     def __init__(self, val=None):
         if val is None:
-            self.val = PyFr("0")
+            self.val = PyFr(0, 0, 0, 0)
         elif type(val) is int:
-            self.val = PyFr(str(val % (bls12_381_r)))
+            uint = val % (bls12_381_r)
+            u1 = uint % 2 ** 64
+            u2 = (uint // (2 ** 64)) % 2 ** 64
+            u3 = (uint // (2 ** 128)) % 2 ** 64
+            u4 = uint // (2 ** 192)
+            self.val = PyFr(u1, u2, u3, u4)
         elif type(val) is str:
-            if val[0:2] == '0x':
+            if val[0:2] == "0x":
                 intval = int(val, 0)
-                self.val = PyFr(str(intval % (bls12_381_r)))
             else:
                 intval = int(val)
-                self.val = PyFr(str(intval % (bls12_381_r)))
+            uint = intval % (bls12_381_r)
+            u1 = uint % 2 ** 64
+            u2 = (uint // (2 ** 64)) % 2 ** 64
+            u3 = (uint // (2 ** 128)) % 2 ** 64
+            u4 = uint // (2 ** 192)
+            self.val = PyFr(u1, u2, u3, u4)
         elif type(val) is PyFr:
             self.val = val
 
@@ -530,18 +618,13 @@ class ZR:
             return ZR(out)
         elif type(other) is int:
             out = dupe_pyfr(self.val)
-            if other < 0:
-                other *= -1
-                addend = PyFr(str(other))
-                addend.negate()
-            else:
-                addend = PyFr(str(other))
-            out.add_assign(addend)
+            zrother = ZR(other)
+            out.add_assign(zrother.val)
             return ZR(out)
         else:
             raise TypeError(
-                'Invalid addition param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid addition param. Expected ZR or int. Got " + str(type(other))
+            )
 
     def __radd__(self, other):
         assert type(other) is int
@@ -552,18 +635,13 @@ class ZR:
             self.val.add_assign(other.val)
             return self
         elif type(other) is int:
-            if other < 0:
-                other *= -1
-                addend = PyFr(str(other))
-                addend.negate()
-            else:
-                addend = PyFr(str(other))
-            self.val.add_assign(addend)
+            zrother = ZR(other)
+            self.val.add_assign(zrother.val)
             return self
         else:
             raise TypeError(
-                'Invalid addition param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid addition param. Expected ZR or int. Got " + str(type(other))
+            )
 
     def __sub__(self, other):
         if type(other) is ZR:
@@ -572,18 +650,13 @@ class ZR:
             return ZR(out)
         elif type(other) is int:
             out = dupe_pyfr(self.val)
-            if other < 0:
-                other *= -1
-                subend = PyFr(str(other))
-                subend.negate()
-            else:
-                subend = PyFr(str(other))
-            out.sub_assign(subend)
+            zrother = ZR(other)
+            out.sub_assign(zrother.val)
             return ZR(out)
         else:
             raise TypeError(
-                'Invalid addition param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid addition param. Expected ZR or int. Got " + str(type(other))
+            )
 
     def __rsub__(self, other):
         assert type(other) is int
@@ -594,18 +667,13 @@ class ZR:
             self.val.sub_assign(other.val)
             return self
         elif type(other) is int:
-            if other < 0:
-                other *= -1
-                subend = PyFr(str(other))
-                subend.negate()
-            else:
-                subend = PyFr(str(other))
-            self.val.sub_assign(subend)
+            zrother = ZR(other)
+            self.val.sub_assign(zrother.val)
             return self
         else:
             raise TypeError(
-                'Invalid addition param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid addition param. Expected ZR or int. Got " + str(type(other))
+            )
 
     def __mul__(self, other):
         if type(other) is ZR:
@@ -614,36 +682,28 @@ class ZR:
             return ZR(out)
         elif type(other) is int:
             out = dupe_pyfr(self.val)
-            if other < 0:
-                other *= -1
-                prodend = PyFr(str(other))
-                prodend.negate()
-            else:
-                prodend = PyFr(str(other))
-            out.mul_assign(prodend)
+            zrother = ZR(other)
+            out.mul_assign(zrother.val)
             return ZR(out)
         else:
             raise TypeError(
-                'Invalid multiplication param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid multiplication param. Expected ZR or int. Got "
+                + str(type(other))
+            )
 
     def __imul__(self, other):
         if type(other) is ZR:
             self.val.mul_assign(other.val)
             return self
         elif type(other) is int:
-            if other < 0:
-                other *= -1
-                prodend = PyFr(str(other))
-                prodend.negate()
-            else:
-                prodend = PyFr(str(other))
-            self.val.mul_assign(prodend)
+            zrother = ZR(other)
+            self.val.mul_assign(zrother.val)
             return self
         else:
             raise TypeError(
-                'Invalid multiplication param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid multiplication param. Expected ZR or int. Got "
+                + str(type(other))
+            )
 
     def __rmul__(self, other):
         assert type(other) is int
@@ -658,36 +718,32 @@ class ZR:
             return ZR(out)
         elif type(other) is int:
             out = dupe_pyfr(self.val)
-            if other < 0:
-                other *= -1
-                prodend = PyFr(str(other))
-                prodend.negate()
-            else:
-                prodend = PyFr(str(other))
-            prodend.inverse()
-            out.mul_assign(prodend)
+            zrother = ZR(other)
+            zrother.val.inverse()
+            out.mul_assign(zrother.val)
             return ZR(out)
         else:
             raise TypeError(
-                'Invalid division param. Expected ZR or int. Got '
-                + str(type(other)))
+                "Invalid division param. Expected ZR or int. Got " + str(type(other))
+            )
 
     def __rtruediv__(self, other):
         return ZR(other).__truediv__(self)
 
     def __pow__(self, other):
         if type(other) is int:
-            exponend = ZR(other % (bls12_381_r-1))
+            exponend = ZR(other % (bls12_381_r - 1))
             out = dupe_pyfr(self.val)
             out.pow_assign(exponend.val)
             return ZR(out)
         elif type(other) is ZR:
             raise TypeError(
-                'Invalid multiplication param. Expected int. Got ZR. This is not a bug')
+                "Invalid multiplication param. Expected int. Got ZR. This is not a bug"
+            )
         else:
             raise TypeError(
-                'Invalid multiplication param. Expected int. Got '
-                + str(type(other)))
+                "Invalid multiplication param. Expected int. Got " + str(type(other))
+            )
 
     def __neg__(self):
         out = dupe_pyfr(self.val)
@@ -710,20 +766,25 @@ class ZR:
     def random(seed=None):
         r = bls12_381_r
         if seed is None:
-            r = random.SystemRandom().randint(0, r-1)
+            r = random.SystemRandom().randint(0, r - 1)
             return ZR(str(r))
         else:
             # Generate pseudorandomly based on seed
-            r = random.Random(seed).randint(0, r-1)
+            r = random.Random(seed).randint(0, r - 1)
             return ZR(str(r))
 
     @staticmethod
     def zero():
-        return ZR(PyFr("0"))
+        return ZR(0)
 
     @staticmethod
     def one():
-        return ZR(PyFr("1"))
+        return ZR(1)
+
+    @staticmethod
+    def hash(bytestr):
+        assert type(bytestr) is bytes
+        return ZR("0x" + sha256(bytestr).hexdigest())
 
 
 def lagrange_at_x(s, j, x):

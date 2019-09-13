@@ -3,3 +3,6 @@ max_line_length=89
 exclude = 
 	charm/,
 	.eggs/
+per-file-ignores =
+	honeybadgermpc/poly_commit_log.py: N806, N803
+    honeybadgermpc/proofs.py: N806, N803
