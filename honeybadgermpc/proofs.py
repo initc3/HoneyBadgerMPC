@@ -124,6 +124,8 @@ def prove_inner_product(a_vec, b_vec, comm=None, crs=None):
         u = G1.hash(b"honeybadgeru")
     else:
         [g_vec, h_vec, u] = crs
+        g_vec = g_vec[:n]
+        h_vec = h_vec[:n]
     if comm is not None:
         P = comm * G1.one()
     else:
