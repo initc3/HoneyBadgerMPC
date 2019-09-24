@@ -5,12 +5,12 @@ from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.field import GF
 from honeybadgermpc.preprocessing import (
-    PreProcessedElements as FakePreProcessedElements)
-from honeybadgermpc.progs.mixins.share_arithmetic import (
-    MixinConstants, BeaverMultiply)
+    PreProcessedElements as FakePreProcessedElements,
+)
+from honeybadgermpc.progs.mixins.share_arithmetic import MixinConstants, BeaverMultiply
 
 
-config = {MixinConstants.MultiplyShare: BeaverMultiply(), }
+config = {MixinConstants.MultiplyShare: BeaverMultiply()}
 
 
 # Fixed Point parameters
@@ -21,10 +21,31 @@ K = 64  # Total number of padding bits (?)
 p = modulus = Subgroup.BLS12_381
 Field = GF(p)
 
+"""
+Library for fixed point operations:
+Throughout the code:
+`x` stands for private floating point number
+`k` is the total of number of bits we are repersenting
+
+"""
+
 
 # General (non MPC) fixed point functions
+""" Change a function to fixed point form. In general when we are dealing with fixed points, it
+is convert them back to fixed form.
+
+2.5 with f = 32 goes to 2.5* 2**32 which is an int.
+Note that this function always rounds down the error
+"""
+
+
 def to_fixed_point_repr(x, f=F):
     return int(x * 2 ** f)
+
+
+"""
+Convert a number back from fixed point int form to python float.
+"""
 
 
 def from_fixed_point_repr(x, k=K, f=F, signed=True):
@@ -40,6 +61,7 @@ def binary_repr(x, k):
     Convert x to a k-bit representation
     Least significant bit first
     """
+
     def _binary_repr(v):
         res = []
         v = int(v)
@@ -53,6 +75,7 @@ def binary_repr(x, k):
 
 
 # MPC operations for fixed point
+# Get a random integer from [0  ... 2**m -1) range or m bit random number
 async def random2m(ctx, m):
     result = ctx.Share(0)
     bits = []
@@ -86,13 +109,15 @@ async def get_carry_bit(ctx, a_bits, b_bits, low_carry_bit=1):
     async def _bit_ltl_reduce(x):
         if len(x) == 1:
             return x[0]
-        carry1, all_one1 = await _bit_ltl_reduce(x[:len(x) // 2])
-        carry2, all_one2 = await _bit_ltl_reduce(x[len(x) // 2:])
+        carry1, all_one1 = await _bit_ltl_reduce(x[: len(x) // 2])
+        carry2, all_one2 = await _bit_ltl_reduce(x[len(x) // 2 :])
         return carry1 + (await (all_one1 * carry2)), (await (all_one1 * all_one2))
 
     carry_bits = [(await (ai * bi)) for ai, bi in zip(a_bits, b_bits)]
-    all_one_bits = [ctx.Share(ai.v + bi.v - 2 * carryi.v) for ai, bi, carryi in
-                    zip(a_bits, b_bits, carry_bits)]
+    all_one_bits = [
+        ctx.Share(ai.v + bi.v - 2 * carryi.v)
+        for ai, bi, carryi in zip(a_bits, b_bits, carry_bits)
+    ]
     carry_bits.append(ctx.Share(low_carry_bit))
     all_one_bits.append(ctx.Share(0))
     return (await _bit_ltl_reduce(list(zip(carry_bits, all_one_bits))))[0]
@@ -138,16 +163,16 @@ class FixedPoint(object):
         else:
             raise NotImplementedError
 
-    def add(self, x):
+    def __add__(self, x):
         if type(x) is FixedPoint:
             return FixedPoint(self.ctx, self.share + x.share)
 
-    def sub(self, x):
+    def __sub__(self, x):
         if type(x) is FixedPoint:
             return FixedPoint(self.ctx, self.share - x.share)
         raise NotImplementedError
 
-    async def mul(self, x):
+    async def __mul__(self, x):
         if type(x) is FixedPoint:
             start_time = time.time()
             res_share = await (self.share * x.share)
@@ -174,11 +199,11 @@ class FixedPoint(object):
         return self.ctx.Share(-t.v)
 
     async def lt(self, x):
-        return await self.sub(x).ltz()
+        return await (self - x).ltz()
 
     async def div(self, x):
         if type(x) in [float, int]:
-            return await self.mul(FixedPoint(self.ctx, 1. / x))
+            return await self.__mul__(FixedPoint(self.ctx, 1.0 / x))
         raise NotImplementedError
 
 
@@ -189,14 +214,14 @@ async def _prog(ctx):
     b = FixedPoint(ctx, -3.8)
     A = await a.open()  # noqa: F841, N806
     B = await b.open()  # noqa: F841, N806
-    AplusB = await (a.add(b)).open()  # noqa: N806
-    AminusB = await (a.sub(b)).open()  # noqa: N806
-    AtimesB = await (await a.mul(b)).open()  # noqa: N806
+    AplusB = await (a + b).open()  # noqa: N806
+    AminusB = await (a - b).open()  # noqa: N806
+    AtimesB = await (await a.__mul__(b)).open()  # noqa: N806
     AltB = await (await a.lt(b)).open()  # noqa: N806
     BltA = await (await b.lt(a)).open()  # noqa: N806
-    logging.info('done')
-    logging.info(f'A:{A} B:{B} A-B:{AminusB} A+B:{AplusB}')
-    logging.info(f'A*B:{AtimesB} A<B:{AltB} B<A:{BltA}')
+    logging.info("done")
+    logging.info(f"A:{A} B:{B} A-B:{AminusB} A+B:{AplusB}")
+    logging.info(f"A*B:{AtimesB} A<B:{AltB} B<A:{BltA}")
     logging.info("Finished _prog")
 
 
@@ -219,5 +244,5 @@ def main():
     loop.run_until_complete(tutorial_fixedpoint())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
