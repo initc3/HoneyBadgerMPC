@@ -29,25 +29,25 @@ jobs:
   - stage: Build
     name: Build Docker Image for Current Commit
     install: pip install pyyaml
-    before_script: if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then docker login -p $DOCKER_PASS -u $DOCKER_USER; fi
+    before_script: bash scripts/docker_login.sh
     script: scripts/stager.py -vv build -t prod -c remote -b $TRAVIS_COMMIT --cache-tags $TRAVIS_COMMIT latest
     after_success: scripts/stager.py -vv push -t prod -b $TRAVIS_COMMIT
   - stage: Test
-    name: Unit Tests
+    name: Sphinx Tests
     install: pip install codecov pyyaml
     # Not using `scripts/stager.py` as we only need the one image
-    before_script: docker pull dsluiuc/honeybadger-prod:$TRAVIS_COMMIT
-    script: docker run -it dsluiuc/honeybadger-prod:$TRAVIS_COMMIT pytest -v --cov --cov-report=term-missing --cov-report=xml -Wignore::DeprecationWarning -nauto
+    before_script: bash scripts/docker_image_pull.sh
+    script: bash scripts/docker_doc_run.sh
     after_success: 
       - docker cp $(docker ps -alq --format "{{.Names}}"):/usr/src/HoneyBadgerMPC/coverage.xml .
       - codecov -v
-  - name: Sphinx Tests
+  - name: Unit Tests
     install: skip
     # Not using `scripts/stager.py` as we only need the one image
-    before_script: docker pull dsluiuc/honeybadger-prod:$TRAVIS_COMMIT
+    before_script: bash scripts/docker_image_pull.sh
     # TODO: currently spits out errors on travis runs
     # See: https://travis-ci.org/initc3/HoneyBadgerMPC/jobs/560315742
-    script: docker run -it dsluiuc/honeybadger-prod:$TRAVIS_COMMIT sphinx-build -M html docs docs/_build -c docs -W
+    script: bash scripts/docker_test_run.sh
     after_success: skip
   - stage: Upload
     if: type = push
