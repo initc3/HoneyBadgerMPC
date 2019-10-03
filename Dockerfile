@@ -98,7 +98,7 @@ RUN apt-get install -y --no-install-recommends \
     wget
 
 # Downloads rust and sets it up
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly-2018-10-24
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
 ENV PATH "/root/.cargo/bin:${PATH}"
 
 
