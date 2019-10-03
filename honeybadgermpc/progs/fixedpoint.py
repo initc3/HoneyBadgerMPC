@@ -16,8 +16,12 @@ config = {MixinConstants.MultiplyShare: BeaverMultiply()}
 # Fixed Point parameters
 
 F = 32  # The precision (binary bits)
+"""
+This implementation of the library is not completely hiding. This leaks information about the bits used in computation which is determinied by the security parameter Kappa.
+In particular, we leak O(1/(2^Kappa)) information theorotic bits per operation on a floating point secret.
+"""
 KAPPA = 32  # Statistical security parameter
-K = 64  # Total number of padding bits (?)
+K = 64  # Total number of padding bits ()
 p = modulus = Subgroup.BLS12_381
 Field = GF(p)
 
@@ -25,7 +29,7 @@ Field = GF(p)
 Library for fixed point operations:
 Throughout the code:
 `x` stands for private floating point number
-`k` is the total of number of bits we are repersenting
+`k` is the total of number of bits we are representing
 
 """
 
@@ -45,6 +49,8 @@ def to_fixed_point_repr(x, f=F):
 
 """
 Convert a number back from fixed point int form to python float.
+x: number to be converted.
+changes an int `x` to float value `x`/2**f deafult F=32
 """
 
 
@@ -56,12 +62,13 @@ def from_fixed_point_repr(x, k=K, f=F, signed=True):
     return float(x) / 2 ** f
 
 
-def binary_repr(x, k):
-    """
-    Convert x to a k-bit representation
-    Least significant bit first
-    """
+"""
+Convert x to a k-bit representation
+Least significant bit first
+"""
 
+
+def binary_repr(x, k):
     def _binary_repr(v):
         res = []
         v = int(v)
@@ -86,6 +93,11 @@ async def random2m(ctx, m):
     return result, bits
 
 
+"""
+truncate `m` least significant bits from x. Return the shares of the trancated number
+"""
+
+
 async def trunc_pr(ctx, x, k, m):
     """
     k: Maximum number of bits
@@ -99,6 +111,12 @@ async def trunc_pr(ctx, x, k, m):
     c2 = c.value % (2 ** m)
     d = ctx.Share((x.v - Field(c2) + r1.v) * ~(Field(2) ** m))
     return d
+
+
+"""
+Add a_bits and b_bits vectors and return the final carry bit. This is used in substracting numbers `a` and `b`
+If the `a` + (1^n - `b`) has a carry bit then a > b. where 1^n represents the all one vector.
+"""
 
 
 async def get_carry_bit(ctx, a_bits, b_bits, low_carry_bit=1):
@@ -123,6 +141,15 @@ async def get_carry_bit(ctx, a_bits, b_bits, low_carry_bit=1):
     return (await _bit_ltl_reduce(list(zip(carry_bits, all_one_bits))))[0]
 
 
+"""
+This is used in substracting numbers `a` and `b_bits`.
+a is a known public number and b_bits is a secret shared array.
+This algorithmc computes whether a + int(1^n - b) has a carry bit.
+In other words, we check whether number created from the secret shared bit decompation of the b_bits,
+`b` is less than publically known `a`.
+"""
+
+
 async def bit_ltl(ctx, a, b_bits):
     """
     a: Public
@@ -135,7 +162,12 @@ async def bit_ltl(ctx, a, b_bits):
     return ctx.Share(Field(1) - carry.v)
 
 
-async def mod2m(ctx, x, k, m):
+"""
+Given the secret shared [x] calcuate the secret shares of [x//2^m] for known  public m.
+"""
+
+
+async def div2m(ctx, x, k, m):
     r1, r1_bits = await random2m(ctx, m)
     r2, _ = await random2m(ctx, k + KAPPA - m)
     r2 = ctx.Share(r2.v * Field(2) ** m)
@@ -147,8 +179,16 @@ async def mod2m(ctx, x, k, m):
     return a2
 
 
+"""
+Given the secret shared [x] calcuate the secret shares of [x%2^m] for known  public m.
+This is calcuated by first calculating the value of [x//2^m] usiinig div2m and substracting that from [x]
+
+Returns the value: [x % 2^m]
+"""
+
+
 async def trunc(ctx, x, k, m):
-    a2 = await mod2m(ctx, x, k, m)
+    a2 = await div2m(ctx, x, k, m)
     d = ctx.Share((x.v - a2.v) / (Field(2)) ** m)
     return d
 
@@ -172,6 +212,13 @@ class FixedPoint(object):
             return FixedPoint(self.ctx, self.share - x.share)
         raise NotImplementedError
 
+    """
+    TODO: replacing * in __mul__ in a await statement does not work.
+
+    Multiplty the two number using normal multiplication of numbers.
+    Truncate the last F bits of resulting 2*K bit number.
+    """
+
     async def __mul__(self, x):
         if type(x) is FixedPoint:
             start_time = time.time()
@@ -194,9 +241,17 @@ class FixedPoint(object):
     def neg(self):
         return FixedPoint(self.ctx, Field(-1) * self.share)
 
+    """
+    Compute the last K-1 bits and check if the resulting number is 0 or 1.
+    """
+
     async def ltz(self):
         t = await trunc(self.ctx, self.share, K, K - 1)
         return self.ctx.Share(-t.v)
+
+    """
+    Check whether the self is than is x.
+    """
 
     async def lt(self, x):
         return await (self - x).ltz()
