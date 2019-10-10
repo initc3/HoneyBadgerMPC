@@ -5,7 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: dev-release
+    cap_add:
+      - NET_ADMIN
     volumes:
       - ./apps:/usr/src/HoneyBadgerMPC/apps
       - ./progs:/usr/src/HoneyBadgerMPC/progs

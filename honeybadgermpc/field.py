@@ -1,3 +1,9 @@
+# Copyright 2019 Decentralized Systems Lab
+#
+# This file (field.py) began as a modification of a file from
+# Viff, the copyright notice for which is posted below.
+# See https://viff.dk/
+#
 # Copyright 2007, 2008 VIFF Development Team.
 #
 # This file is part of VIFF, the Virtual Ideal Functionality Framework.
@@ -14,65 +20,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with VIFF. If not, see <http://www.gnu.org/licenses/>.
-
-"""Modeling of Galois (finite) fields. The GF function creates classes
-which implements Galois (finite) fields of prime order
-
-All fields work the same: instantiate an object from a field to get
-hold of an element of that field. Elements implement the normal
-arithmetic one would expect: addition, multiplication, etc.
-
-Defining a field:
-
->>> Zp = GF(19)
-
-Defining field elements:
-
->>> x = Zp(10)
->>> y = Zp(15)
->>> z = Zp(1)
-
-Addition and subtraction (with modulo reduction):
-
->>> x + y
-{6}
->>> x - y
-{14}
-
-Bitwise xor for field elements:
-
->>> z ^ z
-{0}
->>> z ^ 0
-{1}
->>> 1 ^ z
-{0}
-
-Exponentiation:
-
->>> x**3
-{12}
-
-Square roots can be found for elements based on GF fields with a Blum
-prime modulus (see :func:`GF` for more information):
-
->>> x.sqrt()
-{3}
-
-Field elements from different fields cannot be mixed, you will get a
-type error if you try:
-
->>> Zq = GF(17)
->>> z = Zq(2)
->>> x + z
-Traceback (most recent call last):
-    ...
-TypeError: unsupported operand type(s) for +: 'GFElement' and 'GFElement'
-
-The reason for the slightly confusing error message is that ``x`` and
-``z`` are instances of two *different* classes called ``GFElement``.
-"""
-
 from gmpy2 import is_prime, mpz
 from random import Random
 
@@ -85,11 +32,6 @@ class FieldElement(object):
     """Common base class for elements."""
 
     def __int__(self):
-        """Extract integer value from the field element.
-
-        >>> int(GF256(10))
-        10
-        """
         return self.value
 
     __long__ = __int__
@@ -119,11 +61,10 @@ class GF(object):
         return (GF, (self.modulus,))
 
     def random(self, seed=None):
-        return GFElement(Random(seed).randint(0, self.modulus-1), self)
+        return GFElement(Random(seed).randint(0, self.modulus - 1), self)
 
 
 class GFElement(FieldElement):
-
     def __init__(self, value, gf):
         self.modulus = gf.modulus
         self.field = gf
@@ -159,21 +100,6 @@ class GFElement(FieldElement):
     def __rsub__(self, other):
         """Subtraction (reflected argument version)."""
         return GFElement(other - self.value, self.field)
-
-    def __xor__(self, other):
-        """Xor for bitvalues."""
-        if not isinstance(other, (GFElement, int)):
-            return NotImplemented
-        try:
-            if self.field is not other.field:
-                raise FieldsNotIdentical
-            return GFElement(self.value ^ other.value, self.field)
-        except AttributeError:
-            return GFElement(self.value ^ other, self.field)
-
-    def __rxor__(self, other):
-        """Xor for bitvalues (reflected argument version)."""
-        return GFElement(other ^ self.value, self.field)
 
     def __mul__(self, other):
         """Multiplication."""
@@ -214,8 +140,8 @@ class GFElement(FieldElement):
             while b != 0:
                 quotient = a // b
                 a, b = b, a % b
-                x, lastx = lastx - quotient*x, x
-                y, lasty = lasty - quotient*y, y
+                x, lastx = lastx - quotient * x, x
+                y, lasty = lasty - quotient * y, y
             return (lastx, lasty, a)
 
         inverse = extended_gcd(self.value, self.modulus)[0]
@@ -245,13 +171,13 @@ class GFElement(FieldElement):
         No attempt is made the to return the positive square root.
         """
         assert self.modulus % 2 == 1, "Modulus must be odd"
-        assert pow(self, (self.modulus-1)//2) == 1
+        assert pow(self, (self.modulus - 1) // 2) == 1
 
         if self.modulus % 4 == 3:
             # The case that the modulus is a Blum prime
             # (congruent to 3 mod 4), there will be no remainder in the
             # division below.
-            root = pow(self.value, (self.modulus+1)//4)
+            root = pow(self.value, (self.modulus + 1) // 4)
             return GFElement(root, self.field)
         else:
             # The case that self.modulus % 4 == 1
@@ -259,20 +185,20 @@ class GFElement(FieldElement):
             # http://people.math.gatech.edu/~mbaker/pdf/cipolla2011.pdf
             t = u = 0
             for i in range(1, self.modulus):
-                u = i*i - self
-                if pow(u, (self.modulus-1)//2) == self.modulus - 1:
+                u = i * i - self
+                if pow(u, (self.modulus - 1) // 2) == self.modulus - 1:
                     t = i
                     break
 
             def cipolla_mult(a, b, w):
-                return ((a[0]*b[0] + a[1]*b[1]*w), (a[0]*b[1] + a[1]*b[0]))
+                return ((a[0] * b[0] + a[1] * b[1] * w), (a[0] * b[1] + a[1] * b[0]))
 
-            exp = (self.modulus+1)//2
+            exp = (self.modulus + 1) // 2
             exp_bin = bin(exp)[2:]
             x1 = (t, 1)
             x2 = cipolla_mult(x1, x1, u)
             for i in range(1, len(exp_bin)):
-                if(exp_bin[i] == "0"):
+                if exp_bin[i] == "0":
                     x2 = cipolla_mult(x2, x1, u)
                     x1 = cipolla_mult(x1, x1, u)
                 else:
@@ -289,7 +215,7 @@ class GFElement(FieldElement):
 
         If x > floor(p/2) then subtract p to obtain negative integer.
         """
-        if self.value > ((self.modulus-1)/2):
+        if self.value > ((self.modulus - 1) / 2):
             return self.value - self.modulus
         else:
             return self.value
@@ -334,11 +260,11 @@ class GFElement(FieldElement):
                 raise FieldsNotIdentical
             # TODO Replace with (a > b) - (a < b)
             # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
-            return cmp(self.value, other.value)     # noqa  XXX until above is done
+            return cmp(self.value, other.value)  # noqa  XXX until above is done
         except AttributeError:
             # TODO Replace with (a > b) - (a < b)
             # see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons
-            return cmp(self.value, other)   # noqa XXX until above is done
+            return cmp(self.value, other)  # noqa XXX until above is done
 
     def __hash__(self):
         """Hash value."""
@@ -399,17 +325,36 @@ def fake_gf(modulus):
             self.value = value
 
         # Binary operations.
-        __add__ = __radd__ = __sub__ = __rsub__ \
-            = __mul__ = __rmul__ = __div__ = __rdiv__ \
-            = __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ \
-            = __pow__ = __neg__ \
-            = lambda self, other: FakeFieldElement(return_value)
+        __add__ = (
+            __radd__
+        ) = (
+            __sub__
+        ) = (
+            __rsub__
+        ) = (
+            __mul__
+        ) = (
+            __rmul__
+        ) = (
+            __div__
+        ) = (
+            __rdiv__
+        ) = (
+            __truediv__
+        ) = (
+            __rtruediv__
+        ) = (
+            __floordiv__
+        ) = __rfloordiv__ = __pow__ = __neg__ = lambda self, other: FakeFieldElement(
+            return_value
+        )
 
         # Unary operations.
         __invert__ = sqrt = lambda self: FakeFieldElement(return_value)
 
         # Bit extraction. We pretend that the number is *very* big.
-        def bit(self, index): return 1     # noqa  XXX for the time being
+        def bit(self, index):
+            return 1  # noqa  XXX for the time being
 
         # Fake field elements are printed with double curly brackets.
         __repr__ = __str__ = lambda self: "{{%d}}" % self.value
@@ -420,5 +365,6 @@ def fake_gf(modulus):
 
 
 if __name__ == "__main__":
-    import doctest      # pragma NO COVER
-    doctest.testmod()   # pragma NO COVER
+    import doctest  # pragma NO COVER
+
+    doctest.testmod()  # pragma NO COVER

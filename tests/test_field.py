@@ -6,6 +6,7 @@ from honeybadgermpc.field import GF, FieldsNotIdentical
 
 def test_bool():
     from honeybadgermpc.field import GF
+
     field1 = GF(17)
     assert bool(field1(23))
     assert not bool(field1(0))
@@ -23,7 +24,6 @@ def test_invalid_operations_on_fields():
     operators = [
         operator.add,
         operator.sub,
-        operator.xor,
         operator.mul,
         operator.truediv,
         operator.floordiv,
@@ -38,7 +38,7 @@ def test_sqrt(galois_field):
     field = galois_field
     for _ in range(100):
         num = galois_field.random()
-        if pow(num, (field.modulus-1)//2) == 1:
+        if pow(num, (field.modulus - 1) // 2) == 1:
             root = num.sqrt()
             assert root * root == num
         else:

@@ -135,3 +135,6 @@ sharedata/
 
 # OS X noise
 .DS_Store
+
+# Emacs save
+\#*#

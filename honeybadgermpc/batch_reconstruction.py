@@ -2,13 +2,22 @@ import asyncio
 from .field import GF
 from .polynomial import EvalPoint
 import logging
-from collections import defaultdict
 from asyncio import Queue
 import time
-from .reed_solomon import Algorithm, EncoderFactory, DecoderFactory, RobustDecoderFactory
+from .reed_solomon import (
+    Algorithm,
+    EncoderFactory,
+    DecoderFactory,
+    RobustDecoderFactory,
+)
 from .reed_solomon import IncrementalDecoder
 import random
-from honeybadgermpc.utils import chunk_data, flatten_lists, transpose_lists
+from honeybadgermpc.utils.misc import (
+    chunk_data,
+    flatten_lists,
+    transpose_lists,
+    subscribe_recv,
+)
 
 
 async def fetch_one(awaitables):
@@ -26,14 +35,20 @@ async def fetch_one(awaitables):
     while len(pending) > 0:
         done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
         for d in done:
-            yield(mapping[d], await d)
+            yield (mapping[d], await d)
 
 
-async def incremental_decode(receivers, encoder, decoder, robust_decoder, batch_size, t,
-                             n):
-    inc_decoder = IncrementalDecoder(encoder, decoder, robust_decoder,
-                                     degree=t, batch_size=batch_size,
-                                     max_errors=t)
+async def incremental_decode(
+    receivers, encoder, decoder, robust_decoder, batch_size, t, degree, n
+):
+    inc_decoder = IncrementalDecoder(
+        encoder,
+        decoder,
+        robust_decoder,
+        degree=degree,
+        batch_size=batch_size,
+        max_errors=t,
+    )
 
     async for idx, d in fetch_one(receivers):
         inc_decoder.add(idx, d)
@@ -42,41 +57,6 @@ async def incremental_decode(receivers, encoder, decoder, robust_decoder, batch_
             return result
 
     return None
-
-
-def subscribe_recv(recv):
-    """ Given the recv method for this batch reconstruction,
-    create a background loop to put the received events into
-    the appropriate queue for the tag
-
-    Returns _task and subscribe, where _task is to be run in
-    the background to forward events to the associated queue,
-    and subscribe, which is used to register a new tag/queue pair
-
-    TODO: move this out of this file
-    """
-    # Stores the queues for each subscribed tag
-    tag_table = defaultdict(Queue)
-    taken = set()  # Replace this with a bloom filter?
-
-    async def _recv_loop():
-        while True:
-            # Whenever we receive a share array, directly put it in the
-            # appropriate queue for that round
-            j, (tag, o) = await recv()
-            tag_table[tag].put_nowait((j, o))
-
-    def subscribe(tag):
-        # TODO: make this raise an exception
-        # Ensure that this tag has not been subscribed to already
-        assert tag not in taken
-        taken.add(tag)
-
-        # Return the getter of the queue for this tag
-        return tag_table[tag].get
-
-    _task = asyncio.create_task(_recv_loop())
-    return _task, subscribe
 
 
 def recv_each_party(recv, n):
@@ -103,15 +83,27 @@ def recv_each_party(recv, n):
     return _task, [q.get for q in queues]
 
 
-async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=None,
-                            use_fft=False, debug=False):
+async def batch_reconstruct(
+    secret_shares,
+    p,
+    t,
+    n,
+    myid,
+    send,
+    recv,
+    config=None,
+    use_omega_powers=False,
+    debug=False,
+    degree=None,
+):
     """
     args:
       shared_secrets: an array of points representing shared secrets S1 - SB
       p: field modulus
-      t: degree t polynomial
+      t: faults tolerated
       n: total number of nodes n >= 3t+1
       myid: id of the specific node running batch_reconstruction function
+      degree: degree of polynomial to decode (defaults to t)
 
     output:
       the reconstructed array of B shares
@@ -122,25 +114,28 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
 
     Reconstruction takes places in chunks of t+1 values
     """
-    bench_logger = logging.LoggerAdapter(logging.getLogger("benchmark_logger"),
-                                         {"node_id": myid})
+    bench_logger = logging.LoggerAdapter(
+        logging.getLogger("benchmark_logger"), {"node_id": myid}
+    )
 
-    # (optional) Induce faults
+    if degree is None:
+        degree = t
 
     secret_shares = [v.value for v in secret_shares]
+
+    # (optional) Induce faults
     if config is not None and config.induce_faults:
         logging.debug("[FAULT][BatchReconstruction] Sending random shares.")
         secret_shares = [random.randint(0, p - 1) for _ in range(len(secret_shares))]
 
     # Prepare recv loops for this batch reconstruction
-
     subscribe_task, subscribe = subscribe_recv(recv)
     del recv  # ILC enforces this in type system, no duplication of reads
 
-    task_r1, recvs_r1 = recv_each_party(subscribe('R1'), n)
+    task_r1, recvs_r1 = recv_each_party(subscribe("R1"), n)
     data_r1 = [asyncio.create_task(recv()) for recv in recvs_r1]
 
-    task_r2, recvs_r2 = recv_each_party(subscribe('R2'), n)
+    task_r2, recvs_r2 = recv_each_party(subscribe("R2"), n)
     data_r2 = [asyncio.create_task(recv()) for recv in recvs_r2]
     del subscribe  # ILC should determine we can garbage collect after this
 
@@ -148,13 +143,17 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     fp = GF(p)
     decoding_algorithm = Algorithm.GAO if config is None else config.decoding_algorithm
 
-    point = EvalPoint(fp, n, use_fft=use_fft)
-    enc = EncoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
-    dec = DecoderFactory.get(point, Algorithm.FFT if use_fft else Algorithm.VANDERMONDE)
+    point = EvalPoint(fp, n, use_omega_powers=use_omega_powers)
+    enc = EncoderFactory.get(
+        point, Algorithm.FFT if use_omega_powers else Algorithm.VANDERMONDE
+    )
+    dec = DecoderFactory.get(
+        point, Algorithm.FFT if use_omega_powers else Algorithm.VANDERMONDE
+    )
     robust_dec = RobustDecoderFactory.get(t, point, algorithm=decoding_algorithm)
 
     # Prepare data for step 1
-    round1_chunks = chunk_data(secret_shares, t + 1)
+    round1_chunks = chunk_data(secret_shares, degree + 1)
     num_chunks = len(round1_chunks)
 
     # Step 1: Compute the polynomial P1, then send the elements
@@ -163,16 +162,22 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     encoded = enc.encode(round1_chunks)
     to_send = transpose_lists(encoded)
     for dest, message in enumerate(to_send):
-        send(dest, ('R1', message))
+        send(dest, ("R1", message))
 
     end_time = time.time()
     bench_logger.info(f"[BatchReconstruct] P1 Send: {end_time - start_time}")
 
     # Step 2: Attempt to reconstruct P1
     start_time = time.time()
+    try:
+        recons_r2 = await incremental_decode(
+            data_r1, enc, dec, robust_dec, num_chunks, t, degree, n
+        )
+    except asyncio.CancelledError:
+        # Cancel all created tasks
+        for task in [task_r1, task_r2, subscribe_task, *data_r1, *data_r2]:
+            task.cancel()
 
-    recons_r2 = await incremental_decode(data_r1, enc, dec, robust_dec,
-                                         num_chunks, t, n)
     if recons_r2 is None:
         logging.error("[BatchReconstruct] P1 reconstruction failed!")
         return None
@@ -186,15 +191,22 @@ async def batch_reconstruct(secret_shares, p, t, n, myid, send, recv, config=Non
     # Evaluate all chunks at x=0, then broadcast
     message = [chunk[0] for chunk in recons_r2]
     for dest in range(n):
-        send(dest, ('R2', message))
+        send(dest, ("R2", message))
 
     end_time = time.time()
     bench_logger.info(f"[BatchReconstruct] P2 Send: {end_time - start_time}")
 
     # Step 4: Attempt to reconstruct R2
     start_time = time.time()
-    recons_p = await incremental_decode(data_r2, enc, dec, robust_dec,
-                                        num_chunks, t, n)
+    try:
+        recons_p = await incremental_decode(
+            data_r2, enc, dec, robust_dec, num_chunks, t, degree, n
+        )
+    except asyncio.CancelledError:
+        # Cancel all created tasks
+        for task in [task_r1, task_r2, subscribe_task, *data_r1, *data_r2]:
+            task.cancel()
+
     if recons_p is None:
         logging.error("[BatchReconstruct] P2 reconstruction failed!")
         return None

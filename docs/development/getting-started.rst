@@ -20,6 +20,17 @@ To start developing and contributing to HoneyBadgerMPC:
 
     See :ref:`git-remotes` for more information about remotes.
 
+4. Install `pre-commit`_ to use a pre-commit hook to automate
+   formatting the code using `black`_:
+
+   .. code-block:: shell-session
+
+       $ pip3 install --user pre-commit
+       $ pre-commit install
+       pre-commit installed at .git/hooks/pre-commit
+
+   See https://pre-commit.com/#install for other ways to install `pre-commit`_.
+
 **Next step:** :ref:`setup a development environment <devenv>`.
 
 .. _devenv:
@@ -80,7 +91,7 @@ If the above went all well, you should be setup for developing
 
     .. code-block:: shell-session
 
-        $ docker-compose run --rm honeybadgermpc sh
+        $ docker-compose run --rm honeybadgermpc bash
 
     Once in the session (container) you can execute commands just as you would
     in a non-container session.
@@ -93,19 +104,19 @@ Run a shell session in a container:
 
 .. code-block:: shell-session
 
-    $ docker-compose run --rm honeybadgermpc sh
+    $ docker-compose run --rm honeybadgermpc bash
 
 Run the test:
 
 .. code-block:: shell-session
 
-    $ pytest -v tests/test_passive.py -s
+    $ pytest -vs tests/test_mpc.py
 
 or
 
 .. code-block:: shell-session
 
-    $ python -m honeybadgermpc.passive
+    $ python -m honeybadgermpc.mpc
 
 .. rubric:: About code changes and building the image
 
@@ -193,7 +204,7 @@ Running a specific test:
 
 .. code-block:: shell-session
 
-    $ pytest -v tests/test_passive.py::test_open_share
+    $ pytest -v tests/test_mpc.py::test_open_shares
 
 When debugging, i.e. if one has put breakpoints in the code, use the ``-s``
 option (or its equivalent ``--capture=no``):
@@ -405,3 +416,5 @@ can view them using a browser, e.g.:
 .. _keep going: http://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-keep-going
 .. _gmpy2 docs for Windows: https://gmpy2.readthedocs.io/en/latest/intro.html#installing-gmpy2-on-windows
 .. _The Hitchhiker’s Guide to Python: https://docs.python-guide.org/
+.. _black: https://github.com/ambv/black
+.. _pre-commit: https://pre-commit.com
