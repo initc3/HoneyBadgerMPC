@@ -1,10 +1,10 @@
 # pairing [![Crates.io](https://img.shields.io/crates/v/pairing.svg)](https://crates.io/crates/pairing) #
 
-This is a Rust crate for using pairing-friendly elliptic curves. Currently, only the [BLS12-381](https://z.cash/blog/new-snark-curve.html) construction is implemented.
+This is a Rust crate for using pairing-friendly elliptic curves. Currently, only the [BLS12-381](https://z.cash/blog/new-snark-curve.html) construction is implemented. This code is based on pairings in [librustzcash](https://github.com/zcash/librustzcash/tree/master/pairing)  
 
 ## [Documentation](https://docs.rs/pairing/)
 
-Bring the `pairing` crate into your project just as you normally would.
+Bring the `pairing` crate into your project just as you normally would. 
 
 ## Security Warnings
 
