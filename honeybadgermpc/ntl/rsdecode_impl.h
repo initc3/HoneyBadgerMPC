@@ -6,6 +6,7 @@
 #include <iostream>
 #include <map>
 #include <omp.h>
+#include <mutex>
 
 using namespace NTL;
 using namespace std;
