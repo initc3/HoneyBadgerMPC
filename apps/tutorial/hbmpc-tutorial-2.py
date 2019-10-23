@@ -67,9 +67,9 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     try:
+        pp_elements = FakePreProcessedElements()
         if HbmpcConfig.my_id == 0:
             k = 100  # How many of each kind of preproc
-            pp_elements = FakePreProcessedElements()
             pp_elements.generate_bits(k, HbmpcConfig.N, HbmpcConfig.t)
             pp_elements.generate_triples(k, HbmpcConfig.N, HbmpcConfig.t)
             pp_elements.preprocessing_done()
