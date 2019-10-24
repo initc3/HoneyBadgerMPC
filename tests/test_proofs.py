@@ -1,7 +1,12 @@
-from honeybadgermpc.proofs import prove_inner_product, verify_inner_product, \
-    prove_inner_product_one_known, verify_inner_product_one_known, \
-    prove_batch_inner_product_one_known, verify_batch_inner_product_one_known, \
-    MerkleTree
+from honeybadgermpc.proofs import (
+    prove_inner_product,
+    verify_inner_product,
+    prove_inner_product_one_known,
+    verify_inner_product_one_known,
+    prove_batch_inner_product_one_known,
+    verify_batch_inner_product_one_known,
+    MerkleTree,
+)
 from honeybadgermpc.betterpairing import ZR, G1
 
 
@@ -11,7 +16,7 @@ def test_inner_product_proof():
     b = [ZR.random() for i in range(n)]
     iprod = ZR(0)
     for i in range(n):
-        iprod += a[i]*b[i]
+        iprod += a[i] * b[i]
     comm, iprod, proof = prove_inner_product(a, b)
     assert verify_inner_product(comm, iprod, proof)
     comm, iprod, proof2 = prove_inner_product(a, b, comm=comm)
@@ -26,7 +31,7 @@ def test_inner_product_proof_one_known():
     b = [ZR.random() for i in range(n)]
     iprod = ZR(0)
     for i in range(n):
-        iprod += a[i]*b[i]
+        iprod += a[i] * b[i]
     comm, iprod, proof = prove_inner_product_one_known(a, b)
     assert verify_inner_product_one_known(comm, iprod, b, proof)
     comm, iprod, badproof = prove_inner_product_one_known(a, b, comm=G1.rand())
@@ -36,15 +41,18 @@ def test_inner_product_proof_one_known():
 def test_batch_inner_product_proof_one_known():
     n = 13
     a = [ZR.random() for i in range(n)]
-    bs = [[ZR.random() for j in range(n)] for i in range(3*n)]
+    bs = [[ZR.random() for j in range(n)] for i in range(3 * n)]
     comm, iprods, proofs = prove_batch_inner_product_one_known(a, bs)
     assert verify_batch_inner_product_one_known(comm, iprods[2], bs[2], proofs[2])
     comm, iprods, badproofs = prove_batch_inner_product_one_known(a, bs, comm=G1.rand())
-    assert not verify_batch_inner_product_one_known(comm, iprods[2], bs[2], badproofs[2])
+    assert not verify_batch_inner_product_one_known(
+        comm, iprods[2], bs[2], badproofs[2]
+    )
 
 
 def test_merkle_tree():
     import pickle
+
     leaves = [b"Cravings", b"is", b"best", b"restaurant"]
     t = MerkleTree(leaves)
     rh = t.get_root_hash()

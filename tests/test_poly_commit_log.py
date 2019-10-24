@@ -3,6 +3,7 @@ from honeybadgermpc.betterpairing import ZR, G1
 from honeybadgermpc.polynomial import polynomials_over
 from honeybadgermpc.poly_commit_log import PolyCommitLog
 
+
 @mark.parametrize("t", [3, 6, 10])
 def test_pc_log(t):
     pc = PolyCommitLog()
@@ -15,6 +16,7 @@ def test_pc_log(t):
     assert pc.verify_eval(c, 3, phi(3), witness)
     assert not pc.verify_eval(c, 4, phi(3), witness)
     assert not pc.verify_eval(G1.rand(), 3, phi(3), witness)
+
 
 @mark.parametrize("t", [3, 6, 10])
 def test_pc_log_batch(t):
