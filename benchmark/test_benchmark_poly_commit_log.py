@@ -26,4 +26,4 @@ def test_benchmark_create_batch_witness(benchmark, t):
     r = ZR.random()
     phi = polynomials_over(ZR).random(t)
     pc.preprocess_prover()
-    benchmark(pc.batch_create_witness, phi, r, n=3*t+1)
+    benchmark(pc.batch_create_witness, phi, r, n=3 * t + 1)
