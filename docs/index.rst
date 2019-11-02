@@ -16,14 +16,10 @@
     intro
     subprotocols
     performance
-    roadmap
 
 .. toctree::
     :maxdepth: 1
     :caption: Guides
-
-    guides/acs-evm
-    guides/passive
 
 .. .. note:: A tutorial should show some primary use cases in more detail. The
     reader will follow a step-by-step procedure to set-up a working prototype.
@@ -41,15 +37,7 @@
     :maxdepth: 2
     :caption: Library Reference
 
-    libref/honeybadgermpc
-..    libref/passive
-..    libref/commonsubset
-..    libref/triple_refinement
-..    libref/rand
-..    libref/secretshare
-..    libref/field
-..    libref/polynomial
-..    libref/router
+    internals
 
 .. development/index
 .. toctree::
