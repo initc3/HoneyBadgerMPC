@@ -215,6 +215,8 @@ async def test_mpc_programs(peers, n, t, my_id):
 
 
 if __name__ == "__main__":
+    HbmpcConfig.load_config()
+
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     # loop.run_until_complete(

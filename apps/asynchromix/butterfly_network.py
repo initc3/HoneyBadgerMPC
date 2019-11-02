@@ -84,6 +84,8 @@ async def _run(peers, n, t, my_id):
 if __name__ == "__main__":
     from honeybadgermpc.config import HbmpcConfig
 
+    HbmpcConfig.load_config()
+
     k = int(HbmpcConfig.extras["k"])
 
     pp_elements = PreProcessedElements()

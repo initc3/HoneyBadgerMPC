@@ -55,6 +55,8 @@ if __name__ == "__main__":
     from honeybadgermpc.config import HbmpcConfig
     import sys
 
+    HbmpcConfig.load_config()
+
     if not HbmpcConfig.peers:
         print(
             f"WARNING: the $CONFIG_PATH environment variable wasn't set. "

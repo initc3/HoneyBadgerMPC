@@ -3,10 +3,8 @@
 import logging.config
 import os
 import yaml
-import sys
-from pathlib import Path
 
-from honeybadgermpc.config import HbmpcConfig
+from pathlib import Path
 
 
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -17,7 +15,3 @@ with open(CURRENT_DIR / "logging.yaml", "r") as f:
     logging_config = yaml.safe_load(f.read())
     logging.config.dictConfig(logging_config)
     logging.getLogger("asyncio").setLevel(logging.WARNING)
-
-# Skip loading the config for tests since the would have different values for sys.argv.
-if "pytest" not in sys.modules:
-    HbmpcConfig.load_config()
