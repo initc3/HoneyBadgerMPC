@@ -40,7 +40,7 @@ jobs:
     script: bash scripts/docker_doc_run.sh
     after_success: skip
   - name: Unit Tests
-    install: pip install codecov
+    install: pip install --upgrade codecov
     # Not using `scripts/stager.py` as we only need the one image
     before_script: bash scripts/docker_image_pull.sh
     # TODO: currently spits out errors on travis runs
