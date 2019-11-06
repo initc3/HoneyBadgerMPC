@@ -9,13 +9,14 @@ scripts/launch-tmuxlocal.sh apps/tutorial/hbmpc-tutorial-2.py conf/mpc/local
 """
 import asyncio
 import logging
+
 from honeybadgermpc.preprocessing import (
     PreProcessedElements as FakePreProcessedElements,
 )
 from honeybadgermpc.progs.mixins.share_arithmetic import (
-    MixinConstants,
     BeaverMultiply,
     BeaverMultiplyArrays,
+    MixinConstants,
 )
 
 mpc_config = {

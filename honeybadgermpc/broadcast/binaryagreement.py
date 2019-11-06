@@ -1,8 +1,8 @@
 import asyncio
-from collections import defaultdict
 import logging
+from collections import defaultdict
 
-from honeybadgermpc.exceptions import RedundantMessageError, AbandonedNodeError
+from honeybadgermpc.exceptions import AbandonedNodeError, RedundantMessageError
 
 
 logger = logging.getLogger(__name__)

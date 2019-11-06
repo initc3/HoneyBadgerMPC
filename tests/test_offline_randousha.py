@@ -1,7 +1,9 @@
 import asyncio
+
 from pytest import mark
+
+from honeybadgermpc.offline_randousha import generate_bits, generate_triples, randousha
 from honeybadgermpc.polynomial import EvalPoint
-from honeybadgermpc.offline_randousha import randousha, generate_triples, generate_bits
 from honeybadgermpc.reed_solomon import Algorithm, DecoderFactory
 
 

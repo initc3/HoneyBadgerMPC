@@ -1,15 +1,19 @@
-import logging
 import asyncio
-
-from zmq import ROUTER, DEALER, IDENTITY
-from zmq.asyncio import Context
+import logging
 from pickle import dumps, loads
+
 from psutil import cpu_count
 
+from zmq import DEALER, IDENTITY, ROUTER
+from zmq.asyncio import Context
+
+from honeybadgermpc.config import ConfigVars, HbmpcConfig
 from honeybadgermpc.mpc import Mpc
-from honeybadgermpc.config import HbmpcConfig, ConfigVars
-from honeybadgermpc.utils.misc import wrap_send, subscribe_recv
-from honeybadgermpc.utils.misc import print_exception_callback
+from honeybadgermpc.utils.misc import (
+    print_exception_callback,
+    subscribe_recv,
+    wrap_send,
+)
 
 
 class NodeCommunicator(object):

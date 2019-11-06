@@ -1,22 +1,24 @@
 import asyncio
-from .field import GF
-from .polynomial import EvalPoint
 import logging
-from asyncio import Queue
-import time
-from .reed_solomon import (
-    Algorithm,
-    EncoderFactory,
-    DecoderFactory,
-    RobustDecoderFactory,
-)
-from .reed_solomon import IncrementalDecoder
 import random
+import time
+from asyncio import Queue
+
 from honeybadgermpc.utils.misc import (
     chunk_data,
     flatten_lists,
-    transpose_lists,
     subscribe_recv,
+    transpose_lists,
+)
+
+from .field import GF
+from .polynomial import EvalPoint
+from .reed_solomon import (
+    Algorithm,
+    DecoderFactory,
+    EncoderFactory,
+    IncrementalDecoder,
+    RobustDecoderFactory,
 )
 
 

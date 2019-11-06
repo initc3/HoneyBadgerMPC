@@ -1,4 +1,5 @@
-from math import log, ceil
+from math import ceil, log
+
 from honeybadgermpc.elliptic_curve import Subgroup
 
 # ROUND: iteration time of MiMC encryption function,

@@ -1,7 +1,8 @@
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from functools import partial
-import logging
+
 from honeybadgermpc.utils.typecheck import TypeCheck
 
 

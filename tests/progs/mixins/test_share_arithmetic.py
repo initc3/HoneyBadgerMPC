@@ -1,16 +1,18 @@
-from pytest import mark, raises
 from asyncio import gather
 from random import randint
+
+from pytest import mark, raises
+
 from honeybadgermpc.preprocessing import PreProcessedElements
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply,
     BeaverMultiplyArrays,
-    InvertShare,
-    InvertShareArray,
-    DivideShares,
     DivideShareArrays,
+    DivideShares,
     DoubleSharingMultiply,
     DoubleSharingMultiplyArrays,
+    InvertShare,
+    InvertShareArray,
 )
 from honeybadgermpc.progs.mixins.share_comparison import Equality
 

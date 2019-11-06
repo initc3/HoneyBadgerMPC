@@ -10,8 +10,9 @@ This module can be used to:
 Sample config can be found at: conf/sample.ini
 """
 
-from argparse import ArgumentParser
 import json
+from argparse import ArgumentParser
+
 from honeybadgermpc.reed_solomon import Algorithm as RSAlgorithm
 
 

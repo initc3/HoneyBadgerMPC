@@ -39,8 +39,8 @@ jobs:
     install: pip install black
     script: black --check .
   - name: Flake8
-    install: pip install flake8 pep8-naming
-    script: flake8
+    install: pip install flake8 pep8-naming flake8-import-order
+    script: flake8 --count
   - name: Doc8
     install: pip install doc8 pygments
     script: doc8 docs/

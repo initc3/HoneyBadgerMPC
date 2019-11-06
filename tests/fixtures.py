@@ -1,10 +1,12 @@
-from honeybadgermpc.mpc import TaskProgramRunner
-from honeybadgermpc.router import SimpleRouter
 import asyncio
 import random
-from tempfile import mkdtemp
-from pytest import fixture
 from os import makedirs
+from tempfile import mkdtemp
+
+from pytest import fixture
+
+from honeybadgermpc.mpc import TaskProgramRunner
+from honeybadgermpc.router import SimpleRouter
 
 
 @fixture

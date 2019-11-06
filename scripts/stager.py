@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from subprocess import call
-import re
 import argparse
-import yaml
 import logging
+import re
+from subprocess import call
+
+import yaml
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s", datefmt="%m-%d %H:%M:%S"

@@ -1,7 +1,9 @@
-from pytest import mark
-from honeybadgermpc.utils.misc import wrap_send
-from random import randint
 import asyncio
+from random import randint
+
+from pytest import mark
+
+from honeybadgermpc.utils.misc import wrap_send
 
 
 def test_wrap_send():

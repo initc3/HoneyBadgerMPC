@@ -1,10 +1,12 @@
+import asyncio
+import logging
+import time
+
+from honeybadgermpc.betterpairing import ZR
 from honeybadgermpc.config import HbmpcConfig
 from honeybadgermpc.ipc import ProcessProgramRunner
-from .hbavss import get_avss_params, HbAvssLight
-from honeybadgermpc.betterpairing import ZR
-import asyncio
-import time
-import logging
+
+from .hbavss import HbAvssLight, get_avss_params
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)

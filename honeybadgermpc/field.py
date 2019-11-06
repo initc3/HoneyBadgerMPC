@@ -20,8 +20,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with VIFF. If not, see <http://www.gnu.org/licenses/>.
-from gmpy2 import is_prime, mpz
 from random import Random
+
+from gmpy2 import is_prime, mpz
 
 
 class FieldsNotIdentical(Exception):

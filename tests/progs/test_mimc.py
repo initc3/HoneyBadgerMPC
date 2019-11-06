@@ -1,8 +1,10 @@
-from pytest import mark
 from random import randint
+
+from pytest import mark
+
 from honeybadgermpc.field import GF
 from honeybadgermpc.mpc import Subgroup
-from honeybadgermpc.progs.mimc import mimc_mpc, mimc_plain, mimc_mpc_batch
+from honeybadgermpc.progs.mimc import mimc_mpc, mimc_mpc_batch, mimc_plain
 from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiply
 
 MIXINS = [BeaverMultiply()]

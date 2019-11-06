@@ -1,5 +1,6 @@
 from random import randint, shuffle
-from honeybadgermpc.polynomial import get_omega, fnt_decode_step1, fnt_decode_step2
+
+from honeybadgermpc.polynomial import fnt_decode_step1, fnt_decode_step2, get_omega
 
 
 def test_poly_eval_at_k(galois_field, polynomial):

@@ -1,4 +1,5 @@
 from pytest import mark
+
 from honeybadgermpc.progs.random_refinement import refine_randoms
 
 

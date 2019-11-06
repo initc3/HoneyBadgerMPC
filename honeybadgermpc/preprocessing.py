@@ -1,21 +1,21 @@
-import logging
 import asyncio
-import re
+import logging
 import os
-from os import makedirs, listdir
-from os.path import isfile, join
-from uuid import uuid4
-from random import randint
-from collections import defaultdict
-from itertools import chain
-from enum import Enum
+import re
 from abc import ABC, abstractmethod
+from collections import defaultdict
+from enum import Enum
+from itertools import chain
+from os import listdir, makedirs
+from os.path import isfile, join
+from random import randint
 from shutil import rmtree
+from uuid import uuid4
 
-from .field import GF
-from .polynomial import polynomials_over
-from .ntl import vandermonde_batch_evaluate
 from .elliptic_curve import Subgroup
+from .field import GF
+from .ntl import vandermonde_batch_evaluate
+from .polynomial import polynomials_over
 
 
 class PreProcessingConstants(Enum):

@@ -1,7 +1,8 @@
-from Crypto.Cipher import AES
-from Crypto import Random
 from hashlib import sha256
 from pickle import dumps, loads
+
+from Crypto import Random
+from Crypto.Cipher import AES
 
 
 class SymmetricCrypto(object):

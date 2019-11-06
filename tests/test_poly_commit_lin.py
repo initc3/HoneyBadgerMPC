@@ -1,7 +1,8 @@
+from random import randint
+
+from honeybadgermpc.betterpairing import G1, ZR
 from honeybadgermpc.poly_commit_lin import PolyCommitLin
 from honeybadgermpc.polynomial import polynomials_over
-from honeybadgermpc.betterpairing import G1, ZR
-from random import randint
 
 
 def test_poly_commit():

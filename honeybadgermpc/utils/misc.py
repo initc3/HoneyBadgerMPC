@@ -1,10 +1,11 @@
-from .typecheck import TypeCheck
-from collections import defaultdict
-from asyncio import Queue
 import asyncio
-from typing import Callable
 import logging
 import traceback
+from asyncio import Queue
+from collections import defaultdict
+from typing import Callable
+
+from .typecheck import TypeCheck
 
 
 def print_exception_callback(future):

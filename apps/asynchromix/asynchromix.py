@@ -1,34 +1,35 @@
 """
 Implementation of Asynchromix MPC Coordinator using an EVM blockchain
 """
-from web3 import Web3, HTTPProvider
-import time
 import asyncio
 import logging
-from contextlib import contextmanager
+import os
 import subprocess
+import time
+from contextlib import contextmanager
+
+from ethereum.tools._solidity import compile_code as compile_source
+
+from web3 import HTTPProvider, Web3
+from web3.contract import ConciseContract
+
+from apps.asynchromix.butterfly_network import iterated_butterfly_network
+
+from honeybadgermpc.elliptic_curve import Subgroup
+from honeybadgermpc.field import GF
+from honeybadgermpc.mpc import Mpc
+from honeybadgermpc.offline_randousha import generate_bits, generate_triples, randousha
+from honeybadgermpc.polynomial import EvalPoint, polynomials_over
+from honeybadgermpc.preprocessing import PreProcessedElements
+from honeybadgermpc.progs.mixins.constants import MixinConstants
+from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiplyArrays
 from honeybadgermpc.router import SimpleRouter
 from honeybadgermpc.utils.misc import (
+    flatten_lists,
+    print_exception_callback,
     subscribe_recv,
     wrap_send,
-    print_exception_callback,
-    flatten_lists,
 )
-from honeybadgermpc.field import GF
-from honeybadgermpc.preprocessing import PreProcessedElements
-from honeybadgermpc.polynomial import EvalPoint, polynomials_over
-from honeybadgermpc.elliptic_curve import Subgroup
-from honeybadgermpc.offline_randousha import randousha
-from honeybadgermpc.offline_randousha import generate_triples
-from honeybadgermpc.offline_randousha import generate_bits
-from honeybadgermpc.mpc import Mpc
-from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiplyArrays
-from honeybadgermpc.progs.mixins.constants import MixinConstants
-from butterfly_network import iterated_butterfly_network
-from ethereum.tools._solidity import compile_code as compile_source
-from web3.contract import ConciseContract
-import os
-
 
 field = GF(Subgroup.BLS12_381)
 

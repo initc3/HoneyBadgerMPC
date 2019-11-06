@@ -1,10 +1,12 @@
 from __future__ import annotations  # noqa: F407
+
 import asyncio
 from abc import ABC, abstractmethod
+from typing import Callable
+
 from honeybadgermpc.field import GFElement
 from honeybadgermpc.progs.mixins.constants import MixinConstants
 from honeybadgermpc.utils.typecheck import TypeCheck
-from typing import Callable
 
 
 class GFElementFuture(ABC, asyncio.Future):

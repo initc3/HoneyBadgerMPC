@@ -1,9 +1,10 @@
 # coding=utf-8
-from collections import defaultdict
-import zfec
-import logging
 import hashlib
+import logging
 import math
+from collections import defaultdict
+
+import zfec
 
 
 logger = logging.getLogger(__name__)

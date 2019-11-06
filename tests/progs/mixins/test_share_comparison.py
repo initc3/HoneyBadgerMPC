@@ -1,18 +1,20 @@
-from pytest import mark
 from asyncio import gather
 from random import randint
+
+from pytest import mark
+
 from honeybadgermpc.field import GF
 from honeybadgermpc.mpc import Subgroup
+from honeybadgermpc.preprocessing import PreProcessedElements
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply,
     BeaverMultiplyArrays,
+    DivideShareArrays,
+    DivideShares,
     InvertShare,
     InvertShareArray,
-    DivideShares,
-    DivideShareArrays,
 )
 from honeybadgermpc.progs.mixins.share_comparison import Equality, LessThan
-from honeybadgermpc.preprocessing import PreProcessedElements
 
 STANDARD_ARITHMETIC_MIXINS = [
     BeaverMultiply(),

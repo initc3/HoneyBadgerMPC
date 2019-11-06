@@ -1,6 +1,8 @@
 from __future__ import annotations  # noqa: F407
+
 import asyncio
-from honeybadgermpc.elliptic_curve import Jubjub, Point, Ideal
+
+from honeybadgermpc.elliptic_curve import Ideal, Jubjub, Point
 from honeybadgermpc.mpc import Mpc
 
 

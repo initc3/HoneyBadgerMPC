@@ -1,17 +1,19 @@
+from unittest.mock import patch
+
 import pytest
+
+from honeybadgermpc.ntl import AvailableNTLThreads
+from honeybadgermpc.polynomial import EvalPoint
+from honeybadgermpc.reed_solomon import DecoderFactory, EncoderFactory
+from honeybadgermpc.reed_solomon import DecoderSelector, EncoderSelector
 from honeybadgermpc.reed_solomon import (
-    VandermondeEncoder,
-    FFTEncoder,
-    VandermondeDecoder,
     FFTDecoder,
+    FFTEncoder,
     GaoRobustDecoder,
+    VandermondeDecoder,
+    VandermondeEncoder,
     WelchBerlekampRobustDecoder,
 )
-from honeybadgermpc.polynomial import EvalPoint
-from honeybadgermpc.reed_solomon import EncoderFactory, DecoderFactory
-from honeybadgermpc.reed_solomon import EncoderSelector, DecoderSelector
-from honeybadgermpc.ntl import AvailableNTLThreads
-from unittest.mock import patch
 
 
 @pytest.fixture

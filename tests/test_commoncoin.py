@@ -1,6 +1,8 @@
-import random
 import asyncio
+import random
+
 from pytest import mark
+
 from honeybadgermpc.broadcast.commoncoin import shared_coin
 from honeybadgermpc.broadcast.crypto.boldyreva import dealer
 

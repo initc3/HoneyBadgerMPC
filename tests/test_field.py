@@ -1,7 +1,9 @@
-import pytest
 import operator
+
+import pytest
 from pytest import raises
-from honeybadgermpc.field import GF, FieldsNotIdentical
+
+from honeybadgermpc.field import FieldsNotIdentical, GF
 
 
 def test_bool():

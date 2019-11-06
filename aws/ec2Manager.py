@@ -1,9 +1,12 @@
-import boto3
-import paramiko
-import os.path
 import logging
+import os.path
 from threading import Semaphore
+
 from aws.AWSConfig import AwsConfig
+
+import boto3
+
+import paramiko
 
 
 class EC2Manager:

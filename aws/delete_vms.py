@@ -1,5 +1,6 @@
-import os
 import logging
+import os
+
 from aws.ec2Manager import EC2Manager
 
 
