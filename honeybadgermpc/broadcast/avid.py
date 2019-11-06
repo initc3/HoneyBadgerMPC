@@ -1,15 +1,16 @@
 # coding=utf-8
+import asyncio
 import logging
 import math
-import asyncio
-from honeybadgermpc.exceptions import HoneyBadgerMPCError
+
 from honeybadgermpc.broadcast.reliablebroadcast import (
-    encode,
     decode,
-    merkle_tree,
+    encode,
     get_merkle_branch,
+    merkle_tree,
     merkle_verify,
 )
+from honeybadgermpc.exceptions import HoneyBadgerMPCError
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)

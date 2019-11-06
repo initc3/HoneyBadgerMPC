@@ -1,8 +1,9 @@
-﻿from pypairing import PyFq, PyFq2, PyFq12, PyFqRepr, PyG1, PyG2, PyFr
 import random
 import re
 import struct
 from hashlib import sha256
+
+from pypairing import PyFq, PyFq12, PyFq2, PyFqRepr, PyFr, PyG1, PyG2
 
 # Order of BLS group
 bls12_381_r = 52435875175126190479447740508185965837690552500527637822603658699938581184513  # (# noqa: E501)

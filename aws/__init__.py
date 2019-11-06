@@ -1,6 +1,7 @@
 import logging.config
-import yaml
 import os
+
+import yaml
 
 
 with open("honeybadgermpc/logging.yaml", "r") as f:

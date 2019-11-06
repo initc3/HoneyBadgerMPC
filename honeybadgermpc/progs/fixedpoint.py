@@ -1,13 +1,14 @@
-import logging
 import asyncio
+import logging
 import time
-from honeybadgermpc.mpc import TaskProgramRunner
+
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.field import GF
+from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.preprocessing import (
     PreProcessedElements as FakePreProcessedElements,
 )
-from honeybadgermpc.progs.mixins.share_arithmetic import MixinConstants, BeaverMultiply
+from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiply, MixinConstants
 
 
 config = {MixinConstants.MultiplyShare: BeaverMultiply()}

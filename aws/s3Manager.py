@@ -1,6 +1,8 @@
-import boto3
 from concurrent.futures import ThreadPoolExecutor
+
 from aws.AWSConfig import AwsConfig
+
+import boto3
 
 
 class S3Manager(object):

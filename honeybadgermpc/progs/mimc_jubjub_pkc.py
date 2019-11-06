@@ -1,5 +1,6 @@
 import asyncio
-from honeybadgermpc.elliptic_curve import Point, Jubjub
+
+from honeybadgermpc.elliptic_curve import Jubjub, Point
 from honeybadgermpc.progs.jubjub import share_mul
 from honeybadgermpc.progs.mimc import mimc_mpc, mimc_plain
 

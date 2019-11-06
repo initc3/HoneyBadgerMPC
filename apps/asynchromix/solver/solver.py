@@ -1,6 +1,8 @@
-from lib_solver import ffi, lib
-from honeybadgermpc.elliptic_curve import Subgroup
 import logging
+
+from honeybadgermpc.elliptic_curve import Subgroup
+
+from lib_solver import ffi, lib
 
 
 def int2hexbytes(n):

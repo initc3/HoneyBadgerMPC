@@ -1,15 +1,16 @@
 from pytest import mark
+
+from honeybadgermpc.elliptic_curve import Jubjub, Point
 from honeybadgermpc.progs.jubjub import SharedPoint, share_mul
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply,
     BeaverMultiplyArrays,
+    DivideShareArrays,
+    DivideShares,
+    Equality,
     InvertShare,
     InvertShareArray,
-    DivideShares,
-    DivideShareArrays,
-    Equality,
 )
-from honeybadgermpc.elliptic_curve import Jubjub, Point
 
 
 MIXINS = [

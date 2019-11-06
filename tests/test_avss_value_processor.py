@@ -1,7 +1,9 @@
 import asyncio
-from pytest import mark
 from contextlib import ExitStack
 from pickle import dumps
+
+from pytest import mark
+
 from honeybadgermpc.avss_value_processor import AvssValueProcessor
 from honeybadgermpc.broadcast.crypto.boldyreva import dealer
 

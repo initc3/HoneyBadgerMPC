@@ -1,7 +1,9 @@
+import asyncio
+
 from pytest import mark
+
 from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.preprocessing import PreProcessedElements
-import asyncio
 
 
 @mark.asyncio

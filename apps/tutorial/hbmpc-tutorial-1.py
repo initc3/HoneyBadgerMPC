@@ -2,17 +2,18 @@
 hbMPC tutorial 1. Running sample MPC programs in the testing simulator
 """
 import asyncio
+
 from honeybadgermpc.mpc import TaskProgramRunner
-from honeybadgermpc.progs.mixins.dataflow import Share
 from honeybadgermpc.preprocessing import (
     PreProcessedElements as FakePreProcessedElements,
 )
-from honeybadgermpc.utils.typecheck import TypeCheck
+from honeybadgermpc.progs.mixins.dataflow import Share
 from honeybadgermpc.progs.mixins.share_arithmetic import (
-    MixinConstants,
     BeaverMultiply,
     BeaverMultiplyArrays,
+    MixinConstants,
 )
+from honeybadgermpc.utils.typecheck import TypeCheck
 
 config = {
     MixinConstants.MultiplyShareArray: BeaverMultiplyArrays(),

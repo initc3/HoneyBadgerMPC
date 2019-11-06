@@ -1,21 +1,23 @@
-from pytest import mark
 import asyncio
+
+from pytest import mark
+
 from honeybadgermpc.field import GF
 from honeybadgermpc.mpc import Subgroup
+from honeybadgermpc.progs.mimc_jubjub_pkc import (
+    key_generation,
+    mimc_decrypt,
+    mimc_encrypt,
+)
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply,
     BeaverMultiplyArrays,
+    DivideShareArrays,
+    DivideShares,
     InvertShare,
     InvertShareArray,
-    DivideShares,
-    DivideShareArrays,
 )
 from honeybadgermpc.progs.mixins.share_comparison import Equality
-from honeybadgermpc.progs.mimc_jubjub_pkc import (
-    mimc_encrypt,
-    mimc_decrypt,
-    key_generation,
-)
 
 STANDARD_ARITHMETIC_MIXINS = [
     BeaverMultiply(),

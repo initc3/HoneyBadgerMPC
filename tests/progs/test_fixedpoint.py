@@ -1,10 +1,12 @@
+import random
+
 from pytest import mark
-from honeybadgermpc.progs.fixedpoint import FixedPoint
+
 from honeybadgermpc.preprocessing import (
     PreProcessedElements as FakePreProcessedElements,
 )
-from honeybadgermpc.progs.mixins.share_arithmetic import MixinConstants, BeaverMultiply
-import random
+from honeybadgermpc.progs.fixedpoint import FixedPoint
+from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiply, MixinConstants
 
 config = {MixinConstants.MultiplyShare: BeaverMultiply()}
 

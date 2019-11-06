@@ -1,6 +1,7 @@
 import asyncio
-from honeybadgermpc.field import GF
+
 from honeybadgermpc.elliptic_curve import Subgroup
+from honeybadgermpc.field import GF
 from honeybadgermpc.progs.mimc import mimc_mpc, mimc_plain
 
 field = GF(Subgroup.BLS12_381)

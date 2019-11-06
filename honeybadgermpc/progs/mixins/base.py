@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 from honeybadgermpc.utils.typecheck import TypeCheck
 
 

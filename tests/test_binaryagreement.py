@@ -1,12 +1,12 @@
 import random
-from asyncio import Queue, Event
-from asyncio import get_event_loop, create_task, gather
+from asyncio import Event, Queue, create_task, gather, get_event_loop
+from collections import defaultdict
+
 from pytest import mark, raises
 
-from honeybadgermpc.broadcast.commoncoin import shared_coin
 from honeybadgermpc.broadcast.binaryagreement import binaryagreement
+from honeybadgermpc.broadcast.commoncoin import shared_coin
 from honeybadgermpc.broadcast.crypto.boldyreva import dealer
-from collections import defaultdict
 
 
 def byzantine_broadcast_router(n, maxdelay=0.005, seed=None, **byzargs):

@@ -1,4 +1,5 @@
 import random
+
 from honeybadgermpc.reed_solomon_wb import make_wb_encoder_decoder
 
 

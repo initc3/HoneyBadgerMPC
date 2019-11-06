@@ -1,4 +1,5 @@
-from charm.toolbox.pairinggroup import PairingGroup, ZR, G2
+from charm.toolbox.pairinggroup import G2, PairingGroup, ZR
+
 from pytest import fixture
 
 

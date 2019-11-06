@@ -1,11 +1,12 @@
 import asyncio
+import logging
 import uuid
 from time import time
-from honeybadgermpc.mpc import TaskProgramRunner
-from honeybadgermpc.field import GF
+
 from honeybadgermpc.elliptic_curve import Subgroup
+from honeybadgermpc.field import GF
+from honeybadgermpc.mpc import TaskProgramRunner
 from honeybadgermpc.preprocessing import PreProcessedElements
-import logging
 
 
 async def all_secrets_phase1(context, **kwargs):

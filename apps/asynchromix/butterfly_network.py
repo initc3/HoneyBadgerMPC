@@ -1,8 +1,9 @@
 import asyncio
 import logging
 from math import log
-from honeybadgermpc.preprocessing import PreProcessedElements
 from time import time
+
+from honeybadgermpc.preprocessing import PreProcessedElements
 
 
 async def batch_switch(ctx, xs, ys, n):

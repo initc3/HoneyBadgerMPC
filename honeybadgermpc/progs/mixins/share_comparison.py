@@ -1,9 +1,9 @@
+from asyncio import gather
+
 from honeybadgermpc.progs.mixins.base import AsyncMixin
 from honeybadgermpc.progs.mixins.constants import MixinConstants
-from honeybadgermpc.utils.typecheck import TypeCheck
 from honeybadgermpc.progs.mixins.dataflow import Share, ShareFuture
-
-from asyncio import gather
+from honeybadgermpc.utils.typecheck import TypeCheck
 
 
 class Equality(AsyncMixin):

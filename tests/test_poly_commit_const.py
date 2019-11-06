@@ -1,6 +1,6 @@
 from honeybadgermpc.betterpairing import G1, ZR
-from honeybadgermpc.polynomial import polynomials_over
 from honeybadgermpc.poly_commit_const import PolyCommitConst, gen_pc_const_crs
+from honeybadgermpc.polynomial import polynomials_over
 
 
 def test_pc_const():

@@ -1,6 +1,7 @@
 """Build helper for C++ extension module used to solve the equation system"""
 
 import os.path
+
 from cffi import FFI
 
 here = os.path.abspath(os.path.dirname(__file__))

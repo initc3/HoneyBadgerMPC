@@ -1,7 +1,9 @@
 import pickle
 import random
 from base64 import encodebytes
+
 from pytest import mark
+
 from honeybadgermpc.broadcast.crypto.boldyreva import dealer
 
 

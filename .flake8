@@ -5,3 +5,4 @@ exclude =
 	.eggs/,
         apps/tutorial/
 ignore = E203, E266, E501, W503
+application_import_names = apps,honeybadgermpc,lib_solver

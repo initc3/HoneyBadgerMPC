@@ -1,14 +1,14 @@
 from honeybadgermpc.polynomial import polynomials_over
 from honeybadgermpc.reed_solomon import (
     Algorithm,
-    EncoderFactory,
     DecoderFactory,
+    EncoderFactory,
     RobustDecoderFactory,
 )
 from honeybadgermpc.reed_solomon import IncrementalDecoder
 
 # TODO: Abstract this to a separate file instead of importing it from here.
-from honeybadgermpc.batch_reconstruction import fetch_one
+from honeybadgermpc.batch_reconstruction import fetch_one  # noqa I100
 
 
 async def robust_reconstruct(field_futures, field, n, t, point, degree):

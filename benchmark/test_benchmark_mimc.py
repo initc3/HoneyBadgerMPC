@@ -1,15 +1,17 @@
-from pytest import mark
 from random import randint
+
+from pytest import mark
+
 from honeybadgermpc.elliptic_curve import Jubjub
 from honeybadgermpc.progs.mimc import mimc_mpc_batch
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply,
     BeaverMultiplyArrays,
+    DivideShareArrays,
+    DivideShares,
+    Equality,
     InvertShare,
     InvertShareArray,
-    DivideShares,
-    DivideShareArrays,
-    Equality,
 )
 
 CONFIG = {

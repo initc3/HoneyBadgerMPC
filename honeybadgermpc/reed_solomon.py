@@ -1,18 +1,21 @@
-from honeybadgermpc.ntl import vandermonde_batch_evaluate, vandermonde_batch_interpolate
-from honeybadgermpc.ntl import gao_interpolate
+import logging
+from abc import ABC, abstractmethod
+
+import psutil
+
+from honeybadgermpc.exceptions import HoneyBadgerMPCError
 from honeybadgermpc.ntl import (
-    fft,
-    fft_interpolate,
-    fft_batch_interpolate,
-    fft_batch_evaluate,
-    SetNumThreads,
     AvailableNTLThreads,
+    SetNumThreads,
+    fft,
+    fft_batch_evaluate,
+    fft_batch_interpolate,
+    fft_interpolate,
+    gao_interpolate,
+    vandermonde_batch_evaluate,
+    vandermonde_batch_interpolate,
 )
 from honeybadgermpc.reed_solomon_wb import make_wb_encoder_decoder
-from honeybadgermpc.exceptions import HoneyBadgerMPCError
-import logging
-import psutil
-from abc import ABC, abstractmethod
 
 
 class Encoder(ABC):

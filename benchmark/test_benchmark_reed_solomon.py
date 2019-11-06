@@ -1,9 +1,11 @@
-from honeybadgermpc.field import GF
-from honeybadgermpc.elliptic_curve import Subgroup
-from honeybadgermpc.reed_solomon import GaoRobustDecoder
-from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from random import randint
+
 from pytest import mark
+
+from honeybadgermpc.elliptic_curve import Subgroup
+from honeybadgermpc.field import GF
+from honeybadgermpc.polynomial import EvalPoint, polynomials_over
+from honeybadgermpc.reed_solomon import GaoRobustDecoder
 
 
 @mark.parametrize("t", [1, 3, 5, 10, 25, 33, 50, 100, 256])

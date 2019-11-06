@@ -1,8 +1,10 @@
-from honeybadgermpc.broadcast.reliablebroadcast import reliablebroadcast
-from random import randint
-from pytest import mark
 import asyncio
 import os
+from random import randint
+
+from pytest import mark
+
+from honeybadgermpc.broadcast.reliablebroadcast import reliablebroadcast
 
 
 @mark.parametrize(

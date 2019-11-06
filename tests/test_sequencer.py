@@ -1,5 +1,7 @@
+from random import randint, shuffle
+
 from pytest import mark, raises
-from random import shuffle, randint
+
 from honeybadgermpc.utils.sequencer import Sequencer
 
 

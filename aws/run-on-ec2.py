@@ -1,14 +1,14 @@
-import threading
-import uuid
-import os
 import argparse
 import json
 import logging
-from time import time
+import os
+import threading
+import uuid
 from math import log
+from time import time
 
-from aws.ec2Manager import EC2Manager
 from aws.AWSConfig import AwsConfig
+from aws.ec2Manager import EC2Manager
 from aws.s3Manager import S3Manager
 
 

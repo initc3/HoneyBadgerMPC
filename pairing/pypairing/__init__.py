@@ -2,14 +2,14 @@
 from __future__ import absolute_import
 
 from .pypairing import (
-    PyG1,
+    PyFq,
+    PyFq12,
+    PyFq2,
+    PyFqRepr,
     PyFr,
+    PyG1,
     PyG2,
     py_pairing,
-    PyFq,
-    PyFq2,
-    PyFq12,
-    PyFqRepr,
     vec_sum,
 )
 

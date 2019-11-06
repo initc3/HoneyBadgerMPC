@@ -1,4 +1,4 @@
-from honeybadgermpc.betterpairing import ZR, G1, G2, pair
+from honeybadgermpc.betterpairing import G1, G2, ZR, pair
 from honeybadgermpc.polynomial import polynomials_over
 
 
