@@ -73,7 +73,7 @@ release: clean ## package and upload a release
 	twine upload dist/*
 
 dist: clean ## builds source and wheel package
-	python setup.py sdist bdist_wheel
+	python3.7 setup.py sdist bdist_wheel
 	ls -l dist
 
 install: clean ## install the package to the active Python's site-packages

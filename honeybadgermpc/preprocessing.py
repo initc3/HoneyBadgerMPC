@@ -536,9 +536,7 @@ class PreProcessedElements:
         self.data_directory = data_directory
         self._init_data_dir()
 
-        self._ready_file = (
-            f"{self.data_directory}" f"{PreProcessingConstants.READY_FILE_NAME}"
-        )
+        self._ready_file = f"{PreProcessingConstants.READY_FILE_NAME}"
 
         self._append = append
 
