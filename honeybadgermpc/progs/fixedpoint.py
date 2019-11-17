@@ -69,16 +69,12 @@ Least significant bit first
 
 
 def binary_repr(x, k):
-    def _binary_repr(v):
-        res = []
-        v = int(v)
-        for i in range(k):
-            res.append(v % 2)
-            v //= 2
-        return res
-
-    assert type(x) is int
-    return _binary_repr(x)
+    assert isinstance(x, int)
+    try:
+        bin_str = f"{x:0{k}b}"
+    except ValueError:
+        raise TypeError("x must be an integer")
+    return [int(i) for i in bin_str[::-1]]
 
 
 # MPC operations for fixed point
@@ -94,7 +90,8 @@ async def random2m(ctx, m):
 
 
 """
-truncate `m` least significant bits from x. Return the shares of the trancated number
+truncate `m` least significant bits from x. `k` is the total of number of bits we are representing.
+Return the shares of the trancated number,
 """
 
 
@@ -144,7 +141,7 @@ async def get_carry_bit(ctx, a_bits, b_bits, low_carry_bit=1):
 """
 This is used in substracting numbers `a` and `b_bits`.
 a is a known public number and b_bits is a secret shared array.
-This algorithmc computes whether a + int(1^n - b) has a carry bit.
+This algorithm computes whether a + int(1^n - b) has a carry bit.
 In other words, we check whether number created from the secret shared bit decompation of the b_bits,
 `b` is less than publically known `a`.
 """
@@ -163,7 +160,11 @@ async def bit_ltl(ctx, a, b_bits):
 
 
 """
-Given the secret shared [x] calcuate the secret shares of [x//2^m] for known  public m.
+Given the secret shared [x] calcuate the secret shares of [x//(2^m)].
+// operator represents integer division. 9//4 = 2
+x is a secret shared floating point value and m is a known public value.
+k is the total number of bits for the floating point number.
+returns the secret shares of [x//2^m]
 """
 
 
@@ -183,7 +184,10 @@ async def div2m(ctx, x, k, m):
 Given the secret shared [x] calcuate the secret shares of [x%2^m] for known  public m.
 This is calcuated by first calculating the value of [x//2^m] usiinig div2m and substracting that from [x]
 
-Returns the value: [x % 2^m]
+
+This function takes in as arugment secret shares [x] of a floating point number,
+`k` the total number of bits we are representing and `m` the truncation modulas.
+Returns the (share)value: [x % 2^m]
 """
 
 
@@ -193,10 +197,10 @@ async def trunc(ctx, x, k, m):
     return d
 
 
-class FixedPoint(object):
+class FixedPoint:
     def __init__(self, ctx, x):
         self.ctx = ctx
-        if type(x) in [int, float]:
+        if isinstance(x, (float, int)):
             self.share = ctx.preproc.get_zero(ctx) + ctx.Share(int(x * 2 ** F))
         elif type(x) is ctx.Share:
             self.share = x
