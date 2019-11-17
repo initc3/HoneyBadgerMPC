@@ -14,7 +14,7 @@ HoneyBadgerMPC is a research prototype, and is best used for prototyping, proofs
 - for testing and development, they can be running in a single-process simulated network
 - to test the entire protocol implementation including socket communications, it can be run in a docker network with multiple containers
 - For distributed benchmarks, HoneyBadgerMPC can also be deployed to different cloud datacenters
-- To try out HoneyBadgerMPC, we recommend following [these instructions](docs/development/getting-started.rst#managing-your-development-environment-with-docker-compose) to set up the Docker-based development environment. Then check out [`apps/tutorial/`](apps/tutorial/) for a walkthrough that explains some sample MPC programs and shows to run in different modes
+- To try out HoneyBadgerMPC, we recommend following [these instructions](docs/development/getting-started.rst#managing-your-development-environment-with-docker-compose) to set up the Docker-based development environment. Then check out [`apps/tutorial/`](apps/tutorial/) for a walkthrough that explains some sample MPC programs and shows how to run in different modes
 
 ## How it Works
 Secure Multiparty Computation (MPC) is about computing on secret-shared data. For each piece of confidential data `x`, each of the `n` server nodes stores a different share `[x]`. Any `t` of the servers can be compromised without revealing any information about the confidential data. However, as long as `n-t` parties are runnng correctly, they can work together to perform arbitrary computations and disclose only the outputs, leaking no additional information about the inputs.
