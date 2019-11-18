@@ -34,21 +34,21 @@ jobs:
     after_success: scripts/stager.py -vv push -t prod -b $TRAVIS_COMMIT
   - stage: Test
     name: Sphinx Tests
-    install: pip install codecov pyyaml
+    install: pip install pyyaml
     # Not using `scripts/stager.py` as we only need the one image
     before_script: bash scripts/docker_image_pull.sh
     script: bash scripts/docker_doc_run.sh
-    after_success: 
-      - docker cp $(docker ps -alq --format "{{.Names}}"):/usr/src/HoneyBadgerMPC/coverage.xml .
-      - codecov -v
+    after_success: skip
   - name: Unit Tests
-    install: skip
+    install: pip install --upgrade codecov
     # Not using `scripts/stager.py` as we only need the one image
     before_script: bash scripts/docker_image_pull.sh
     # TODO: currently spits out errors on travis runs
     # See: https://travis-ci.org/initc3/HoneyBadgerMPC/jobs/560315742
     script: bash scripts/docker_test_run.sh
-    after_success: skip
+    after_success:
+      - docker cp $(docker ps -alq --format "{{.Names}}"):/usr/src/HoneyBadgerMPC/coverage.xml .
+      - codecov -v
   - stage: Upload
     if: type = push
     name: Tag and upload images to Dockerhub
