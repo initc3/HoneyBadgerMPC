@@ -228,6 +228,8 @@ if __name__ == "__main__":
     from honeybadgermpc.config import HbmpcConfig
     from honeybadgermpc.ipc import ProcessProgramRunner
 
+    HbmpcConfig.load_config()
+
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     loop.set_debug(True)

@@ -47,6 +47,8 @@ async def _run(peers, n, t, my_id, batch_size):
 
 
 if __name__ == "__main__":
+    HbmpcConfig.load_config()
+
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
 
