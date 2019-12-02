@@ -4,13 +4,15 @@ from asyncio import Queue
 import asyncio
 from typing import Callable
 import logging
+import traceback
 
 
 def print_exception_callback(future):
     if future.done():
         ex = future.exception()
         if ex is not None:
-            logging.critical(f"\nException: \n{future} \n{type(ex)} \n{ex}")
+            tb = "".join(traceback.format_exception(None, ex, ex.__traceback__))
+            logging.critical(f"\nException: \n{future} \n{tb})")
             raise ex
 
 
