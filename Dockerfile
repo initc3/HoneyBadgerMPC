@@ -28,18 +28,8 @@ COPY . .
 FROM tests as pre-dev
 WORKDIR /
 
-# Install solidity
-# TODO look at https://github.com/ethereum/solidity/blob/e383b2bbbaeae33bd44d1e3b641ca922cf030c8d/.circleci/docker/Dockerfile.ubuntu1904
-RUN git clone --recursive https://github.com/ethereum/solidity.git
-WORKDIR /solidity/
-RUN git checkout v0.4.24 # Old version necessary to work???
-RUN git submodule update --init --recursive
-RUN ./scripts/install_deps.sh
-RUN mkdir build/
-WORKDIR /solidity/build/
-RUN cmake ..
-RUN make install
-WORKDIR /
+# solidity
+COPY --from=ethereum/solc:0.4.24 /usr/bin/solc /usr/bin/solc
 
 # Bash commands
 RUN echo "alias cls=\"clear && printf '\e[3J'\"" >> ~/.bashrc
