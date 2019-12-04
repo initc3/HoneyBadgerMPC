@@ -1,3 +1,5 @@
+.. _contributing-new-code:
+
 Contributing new code
 =====================
 Since `git`_  and `github`_ are used to version and host the code, one needs

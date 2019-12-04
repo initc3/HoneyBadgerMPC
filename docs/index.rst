@@ -58,6 +58,7 @@
 
     development/getting-started
     development/contributing
+    development/docker-images
     development/reviewing-contributions
     ci
     packaging
