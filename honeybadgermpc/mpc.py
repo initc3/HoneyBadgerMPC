@@ -18,6 +18,7 @@ from .elliptic_curve import Subgroup
 from .preprocessing import PreProcessedElements
 from .config import ConfigVars
 from .exceptions import HoneyBadgerMPCError
+from .utils.misc import print_exception_callback
 
 
 class Mpc(object):
@@ -92,7 +93,9 @@ class Mpc(object):
         if name not in self.config:
             raise NotImplementedError(f"Mixin {name} not present!")
 
-        return asyncio.create_task(self.config[name](self, *args, **kwargs))
+        task = asyncio.create_task(self.config[name](self, *args, **kwargs))
+        task.add_done_callback(print_exception_callback)
+        return task
 
     def open_share(self, share):
         """ Given secret-shared value share, open the value by
