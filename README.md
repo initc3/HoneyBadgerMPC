@@ -47,7 +47,7 @@ We use a linear overhead method `RanDouSha` [BH08]. See `offline_randousha.py`
 For more detail on the HoneyBadgerMPC components, see [docs/subprotocols.rst](docs/subprotocols.rst).
 
 ### Comparison with other MPC implementations
-Compared to oher MPC toolkit implementations (http://www.multipartycomputation.com/mpc-software,https://github.com/rdragos/awesome-mpc#software), HoneyBadgerMPC is unique in that it focuses on robustness.
+Compared to oher MPC toolkit implementations (http://www.multipartycomputation.com/mpc-software, https://github.com/rdragos/awesome-mpc#software), HoneyBadgerMPC is unique in that it focuses on robustness.
 In a network of `n` server nodes, assuming at most `t<n/3` are compromised, then HonyeBadgerMPC provides confidentiality, integrity, and availability guarantees. In MPC terminology, it is asynchronous, provides active security, has linear communication overhead, and guarantees output delivery.
 Other MPC toolkits, such as SCALE-MAMBA, Viff, EMP, SPDZ, and others, do not provide guaranteed output delivery, and so if even a single node crashes they stop providing output at all.
 
