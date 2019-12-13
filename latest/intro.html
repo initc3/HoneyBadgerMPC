@@ -17,34 +17,37 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Protocol Descriptions" href="subprotocols.html" />
     <link rel="prev" title="Indices and tables" href="index.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -89,7 +92,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -108,6 +111,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -184,37 +188,34 @@ a novel confidentiality layer for consortium blockchains.</p>
 <p>HoneyBadgerMPC is the first MPC toolkit to provide all the following desired
 properties:</p>
 <ul class="simple">
-<li>Scales to large number of nodes (5 to 50). <em>Viff fails at this!</em></li>
-<li>Guarantees output even if some nodes crash or are compromised recent
-developments like SPDZ and EMP-Toolkit fail at this.</li>
-<li>Prevents data breaches even if some nodes are compromised.</li>
+<li><p>Scales to large number of nodes (5 to 50). <em>Viff fails at this!</em></p></li>
+<li><p>Guarantees output even if some nodes crash or are compromised recent
+developments like SPDZ and EMP-Toolkit fail at this.</p></li>
+<li><p>Prevents data breaches even if some nodes are compromised.</p></li>
 </ul>
 <div class="section" id="motivation-use-case-supply-chain-tracking">
 <h2>Motivation Use Case: Supply Chain Tracking<a class="headerlink" href="#motivation-use-case-supply-chain-tracking" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Security Goals</p>
 <ul class="simple">
-<li><dl class="first docutils">
-<dt><strong>Integrity and consistency:</strong></dt>
-<dd><ul class="first last">
-<li>Records cannot be modified or removed without leaving an audit trail.</li>
-<li>All parties can see a consistent view of records.</li>
+<li><dl class="simple">
+<dt><strong>Integrity and consistency:</strong></dt><dd><ul>
+<li><p>Records cannot be modified or removed without leaving an audit trail.</p></li>
+<li><p>All parties can see a consistent view of records.</p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt><strong>Availability:</strong></dt>
-<dd><ul class="first last">
-<li>No one can be prevented from submitting or reading a record.</li>
+<li><dl class="simple">
+<dt><strong>Availability:</strong></dt><dd><ul>
+<li><p>No one can be prevented from submitting or reading a record.</p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt><strong>Privacy:</strong></dt>
-<dd><ul class="first last">
-<li>Names of participants, business relationships, are proprietary &amp;
-sensitive.</li>
+<li><dl class="simple">
+<dt><strong>Privacy:</strong></dt><dd><ul>
+<li><p>Names of participants, business relationships, are proprietary &amp;
+sensitive.</p></li>
 </ul>
 </dd>
 </dl>
@@ -222,9 +223,9 @@ sensitive.</li>
 </ul>
 <div class="section" id="blockchain-databases-today-hyperledger-fabric">
 <h3>Blockchain databases today: Hyperledger Fabric<a class="headerlink" href="#blockchain-databases-today-hyperledger-fabric" title="Permalink to this headline">¶</a></h3>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">Keep going!</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Keep going!</p>
 </div>
 </div>
 </div>
@@ -241,7 +242,7 @@ sensitive.</li>
         <a href="subprotocols.html" class="btn btn-neutral float-right" title="Protocol Descriptions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Indices and tables" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Indices and tables" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -267,26 +268,16 @@ sensitive.</li>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

@@ -18,36 +18,41 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script type="text/javascript" src="_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -86,7 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -105,6 +110,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -179,10 +185,12 @@
  | <a href="#A"><strong>A</strong></a>
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
+ | <a href="#J"><strong>J</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
@@ -192,43 +200,53 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
+ | <a href="#Z"><strong>Z</strong></a>
  
 </div>
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/field.html#honeybadgermpc.field.GF._field_cache">_field_cache (honeybadgermpc.field.GF attribute)</a>
-</li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_functionality.ShareSingle_IdealProtocol._instances">_instances (honeybadgermpc.rand_functionality.ShareSingle_IdealProtocol attribute)</a>
-</li>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.PassiveMpc._reconstruct">_reconstruct() (honeybadgermpc.passive.PassiveMpc method)</a>
-</li>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.PassiveMpc._recvloop">_recvloop() (honeybadgermpc.passive.PassiveMpc method)</a>
-</li>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_functionality.ACS_Functionality._run">_run() (honeybadgermpc.commonsubset_functionality.ACS_Functionality method)</a>
+      <li><a href="internals.html#honeybadgermpc.router.Router._abc_impl">_abc_impl (honeybadgermpc.router.Router attribute)</a>, <a href="libref/router.html#honeybadgermpc.router.Router._abc_impl">[1]</a>
 
       <ul>
-        <li><a href="libref/passive.html#honeybadgermpc.passive.PassiveMpc._run">(honeybadgermpc.passive.PassiveMpc method)</a>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._abc_impl">(honeybadgermpc.router.SimpleRouter attribute)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter._abc_impl">[1]</a>
 </li>
-        <li><a href="libref/rand.html#honeybadgermpc.rand_functionality.ShareSingle_Functionality._run">(honeybadgermpc.rand_functionality.ShareSingle_Functionality method)</a>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.field.GF._field_cache">_field_cache (honeybadgermpc.field.GF attribute)</a>, <a href="libref/field.html#honeybadgermpc.field.GF._field_cache">[1]</a>
 </li>
-        <li><a href="libref/secretshare.html#honeybadgermpc.secretshare_functionality.SecretShare_Functionality._run">(honeybadgermpc.secretshare_functionality.SecretShare_Functionality method)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.Mpc._get_share_id">_get_share_id() (honeybadgermpc.mpc.Mpc method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.router.Router._make_broadcasts">_make_broadcasts() (honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router._make_broadcasts">[1]</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._make_broadcasts">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter._make_broadcasts">[1]</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.router.Router._make_recvs">_make_recvs() (honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router._make_recvs">[1]</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._make_recvs">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter._make_recvs">[1]</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_functionality._test_acs_ideal">_test_acs_ideal() (in module honeybadgermpc.commonsubset_functionality)</a>
-</li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_protocol._test_naive">_test_naive() (in module honeybadgermpc.rand_protocol)</a>
-</li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_batch._test_rand">_test_rand() (in module honeybadgermpc.rand_batch)</a>
+      <li><a href="internals.html#honeybadgermpc.router.Router._make_sends">_make_sends() (honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router._make_sends">[1]</a>
 
       <ul>
-        <li><a href="libref/rand.html#honeybadgermpc.rand_protocol._test_rand">(in module honeybadgermpc.rand_protocol)</a>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._make_sends">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter._make_sends">[1]</a>
 </li>
       </ul></li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_functionality._test_sharesingle_ideal">_test_sharesingle_ideal() (in module honeybadgermpc.rand_functionality)</a>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._process_node_messages">_process_node_messages() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+</li>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._recv_loop">_recv_loop() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.mpc.Mpc._recvloop">_recvloop() (honeybadgermpc.mpc.Mpc method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.mpc.Mpc._run">_run() (honeybadgermpc.mpc.Mpc method)</a>
+</li>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._setup">_setup() (honeybadgermpc.ipc.NodeCommunicator method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -236,47 +254,47 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_functionality.ACS_Functionality">ACS_Functionality (class in honeybadgermpc.commonsubset_functionality)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.TaskProgramRunner.add">add() (honeybadgermpc.mpc.TaskProgramRunner method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/field.html#honeybadgermpc.field.FieldsNotIdentical.args">args (honeybadgermpc.field.FieldsNotIdentical attribute)</a>
-
-      <ul>
-        <li><a href="libref/passive.html#honeybadgermpc.passive.NotEnoughShares.args">(honeybadgermpc.passive.NotEnoughShares attribute)</a>
+      <li><a href="internals.html#honeybadgermpc.field.FieldsNotIdentical.args">args (honeybadgermpc.field.FieldsNotIdentical attribute)</a>, <a href="libref/field.html#honeybadgermpc.field.FieldsNotIdentical.args">[1]</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/triple_refinement.html#honeybadgermpc.triple_refinement.batchBeaver">batchBeaver() (in module honeybadgermpc.triple_refinement)</a>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement.bit">bit() (honeybadgermpc.field.GFElement method)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement.bit">[1]</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/field.html#honeybadgermpc.field.GFElement.bit">bit() (honeybadgermpc.field.GFElement method)</a>
+      <li><a href="internals.html#honeybadgermpc.router.Router.broadcast">broadcast() (honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router.broadcast">[1]</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter.broadcast">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter.broadcast">[1]</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.Listener.close">close() (honeybadgermpc.ipc.Listener method)</a>
-
-      <ul>
-        <li><a href="libref/ipc.html#honeybadgermpc.ipc.Senders.close">(honeybadgermpc.ipc.Senders method)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.Mpc.call_mixin">call_mixin() (honeybadgermpc.mpc.Mpc method)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_functionality.CommonSubset_IdealProtocol">CommonSubset_IdealProtocol() (in module honeybadgermpc.commonsubset_functionality)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.ConfigVars">ConfigVars (class in honeybadgermpc.config)</a>
 </li>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_blockchain.CommonSubsetProtocol">CommonSubsetProtocol() (in module honeybadgermpc.commonsubset_blockchain)</a>
-</li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.Senders.connect">connect() (honeybadgermpc.ipc.Senders method)</a>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="libref/config.html#honeybadgermpc.config.ReconstructionConfig.default">default() (honeybadgermpc.config.ReconstructionConfig class method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -292,22 +310,36 @@
 </li>
       </ul></li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#honeybadgermpc.polynomial.EvalPoint">EvalPoint (class in honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.EvalPoint">[1]</a>
+</li>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner.execute">execute() (honeybadgermpc.ipc.ProcessProgramRunner method)</a>
+</li>
+      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.extras">extras (honeybadgermpc.config.HbmpcConfig attribute)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/field.html#honeybadgermpc.field.FakeGF">FakeGF() (in module honeybadgermpc.field)</a>
+      <li><a href="internals.html#honeybadgermpc.field.fake_gf">fake_gf() (in module honeybadgermpc.field)</a>, <a href="libref/field.html#honeybadgermpc.field.fake_gf">[1]</a>
 </li>
-      <li><a href="libref/polynomial.html#honeybadgermpc.polynomial.fft">fft() (in module honeybadgermpc.polynomial)</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.fft">fft() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.fft">[1]</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.polynomial.fft_helper">fft_helper() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.fft_helper">[1]</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.field.FieldElement">FieldElement (class in honeybadgermpc.field)</a>, <a href="libref/field.html#honeybadgermpc.field.FieldElement">[1]</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/polynomial.html#honeybadgermpc.polynomial.fft_helper">fft_helper() (in module honeybadgermpc.polynomial)</a>
+      <li><a href="internals.html#honeybadgermpc.field.FieldsNotIdentical">FieldsNotIdentical</a>, <a href="libref/field.html#honeybadgermpc.field.FieldsNotIdentical">[1]</a>
 </li>
-      <li><a href="libref/field.html#honeybadgermpc.field.FieldElement">FieldElement (class in honeybadgermpc.field)</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.fnt_decode_step1">fnt_decode_step1() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.fnt_decode_step1">[1]</a>
 </li>
-      <li><a href="libref/field.html#honeybadgermpc.field.FieldsNotIdentical">FieldsNotIdentical</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.fnt_decode_step2">fnt_decode_step2() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.fnt_decode_step2">[1]</a>
+</li>
+      <li><a href="libref/config.html#honeybadgermpc.config.ReconstructionConfig.from_json">from_json() (honeybadgermpc.config.ReconstructionConfig class method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -315,25 +347,15 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.generate_test_randoms">generate_test_randoms() (in module honeybadgermpc.passive)</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.get_omega">get_omega() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.get_omega">[1]</a>
 </li>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.generate_test_triples">generate_test_triples() (in module honeybadgermpc.passive)</a>
-</li>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.generate_test_zeros">generate_test_zeros() (in module honeybadgermpc.passive)</a>
-</li>
-      <li><a href="libref/field.html#honeybadgermpc.field.GF.get">get() (honeybadgermpc.field.GF static method)</a>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner.get_send_recv">get_send_recv() (honeybadgermpc.ipc.ProcessProgramRunner method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/polynomial.html#honeybadgermpc.polynomial.get_omega">get_omega() (in module honeybadgermpc.polynomial)</a>
+      <li><a href="internals.html#honeybadgermpc.field.GF">GF (class in honeybadgermpc.field)</a>, <a href="libref/field.html#honeybadgermpc.field.GF">[1]</a>
 </li>
-      <li><a href="libref/triple_refinement.html#honeybadgermpc.triple_refinement.getExtrapolatedValues">getExtrapolatedValues() (in module honeybadgermpc.triple_refinement)</a>
-</li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.Listener.getMessage">getMessage() (honeybadgermpc.ipc.Listener method)</a>
-</li>
-      <li><a href="libref/field.html#honeybadgermpc.field.GF">GF (class in honeybadgermpc.field)</a>
-</li>
-      <li><a href="libref/field.html#honeybadgermpc.field.GFElement">GFElement (class in honeybadgermpc.field)</a>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement">GFElement (class in honeybadgermpc.field)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement">[1]</a>
 </li>
   </ul></td>
 </tr></table>
@@ -341,41 +363,33 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.Listener.handle_client">handle_client() (honeybadgermpc.ipc.Listener method)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.handle_async_exception">handle_async_exception() (in module honeybadgermpc.mpc)</a>
 </li>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_blockchain.handle_event">handle_event() (in module honeybadgermpc.commonsubset_blockchain)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig">HbmpcConfig (class in honeybadgermpc.config)</a>
 </li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.handle_result">handle_result() (in module honeybadgermpc.ipc)</a>
-</li>
-      <li><a href="libref/honeybadgermpc.html#module-honeybadgermpc">honeybadgermpc (module)</a>
-</li>
-      <li><a href="libref/commonsubset.html#module-honeybadgermpc.commonsubset_blockchain">honeybadgermpc.commonsubset_blockchain (module)</a>
-</li>
-      <li><a href="libref/commonsubset.html#module-honeybadgermpc.commonsubset_functionality">honeybadgermpc.commonsubset_functionality (module)</a>
+      <li><a href="internals.html#module-honeybadgermpc">honeybadgermpc (module)</a>, <a href="libref/honeybadgermpc.html#module-honeybadgermpc">[1]</a>
 </li>
       <li><a href="libref/config.html#module-honeybadgermpc.config">honeybadgermpc.config (module)</a>
 </li>
-      <li><a href="libref/field.html#module-honeybadgermpc.field">honeybadgermpc.field (module)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#module-honeybadgermpc.field">honeybadgermpc.field (module)</a>, <a href="libref/field.html#module-honeybadgermpc.field">[1]</a>
+</li>
       <li><a href="libref/ipc.html#module-honeybadgermpc.ipc">honeybadgermpc.ipc (module)</a>
 </li>
-      <li><a href="libref/passive.html#module-honeybadgermpc.passive">honeybadgermpc.passive (module)</a>
+      <li><a href="internals.html#module-honeybadgermpc.mpc">honeybadgermpc.mpc (module)</a>
 </li>
-      <li><a href="libref/polynomial.html#module-honeybadgermpc.polynomial">honeybadgermpc.polynomial (module)</a>
+      <li><a href="internals.html#module-honeybadgermpc.polynomial">honeybadgermpc.polynomial (module)</a>, <a href="libref/polynomial.html#module-honeybadgermpc.polynomial">[1]</a>
 </li>
-      <li><a href="libref/rand.html#module-honeybadgermpc.rand_batch">honeybadgermpc.rand_batch (module)</a>
+      <li><a href="internals.html#module-honeybadgermpc.router">honeybadgermpc.router (module)</a>, <a href="libref/router.html#module-honeybadgermpc.router">[1]</a>
 </li>
-      <li><a href="libref/rand.html#module-honeybadgermpc.rand_functionality">honeybadgermpc.rand_functionality (module)</a>
-</li>
-      <li><a href="libref/rand.html#module-honeybadgermpc.rand_protocol">honeybadgermpc.rand_protocol (module)</a>
-</li>
-      <li><a href="libref/router.html#module-honeybadgermpc.router">honeybadgermpc.router (module)</a>
-</li>
-      <li><a href="libref/secretshare.html#module-honeybadgermpc.secretshare_functionality">honeybadgermpc.secretshare_functionality (module)</a>
-</li>
-      <li><a href="libref/triple_refinement.html#module-honeybadgermpc.triple_refinement">honeybadgermpc.triple_refinement (module)</a>
+  </ul></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#honeybadgermpc.mpc.TaskProgramRunner.join">join() (honeybadgermpc.mpc.TaskProgramRunner method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -383,13 +397,11 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.Listener">Listener (class in honeybadgermpc.ipc)</a>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.LAST_MSG">LAST_MSG (honeybadgermpc.ipc.NodeCommunicator attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/config.html#honeybadgermpc.config.load_config">load_config() (in module honeybadgermpc.config)</a>
-</li>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_blockchain.log_loop">log_loop() (in module honeybadgermpc.commonsubset_blockchain)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.load_config">load_config() (honeybadgermpc.config.HbmpcConfig static method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -397,11 +409,11 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_blockchain.main">main() (in module honeybadgermpc.commonsubset_blockchain)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.Mpc">Mpc (class in honeybadgermpc.mpc)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_blockchain.main_loop">main_loop() (in module honeybadgermpc.commonsubset_blockchain)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.my_id">my_id (honeybadgermpc.config.HbmpcConfig attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -409,13 +421,13 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_protocol.NaiveShareRandomProtocol">NaiveShareRandomProtocol (class in honeybadgermpc.rand_protocol)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.N">N (honeybadgermpc.config.HbmpcConfig attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeDetails">NodeDetails (class in honeybadgermpc.ipc)</a>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator">NodeCommunicator (class in honeybadgermpc.ipc)</a>
 </li>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.NotEnoughShares">NotEnoughShares</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.NodeDetails">NodeDetails (class in honeybadgermpc.config)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -423,7 +435,11 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.PassiveMpc.open_share">open_share() (honeybadgermpc.passive.PassiveMpc method)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.Mpc.open_share">open_share() (honeybadgermpc.mpc.Mpc method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#honeybadgermpc.mpc.Mpc.open_share_array">open_share_array() (honeybadgermpc.mpc.Mpc method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -431,13 +447,13 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.PassiveMpc">PassiveMpc (class in honeybadgermpc.passive)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.peers">peers (honeybadgermpc.config.HbmpcConfig attribute)</a>
 </li>
-      <li><a href="libref/polynomial.html#honeybadgermpc.polynomial.polynomialsOver">polynomialsOver() (in module honeybadgermpc.polynomial)</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.polynomials_over">polynomials_over() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.polynomials_over">[1]</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.Senders.process_queue">process_queue() (honeybadgermpc.ipc.Senders method)</a>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner">ProcessProgramRunner (class in honeybadgermpc.ipc)</a>
 </li>
       <li><a href="development/troubleshooting.html#index-0">PYTHONPATH</a>
 </li>
@@ -447,23 +463,25 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.PassiveMpc.read_shares">read_shares() (honeybadgermpc.passive.PassiveMpc method)</a>
+      <li><a href="internals.html#honeybadgermpc.field.GF.random">random() (honeybadgermpc.field.GF method)</a>, <a href="libref/field.html#honeybadgermpc.field.GF.random">[1]</a>
 </li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.Listener.recvall">recvall() (honeybadgermpc.ipc.Listener method)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.ConfigVars.Reconstruction">Reconstruction (honeybadgermpc.config.ConfigVars attribute)</a>
 </li>
-      <li><a href="libref/triple_refinement.html#honeybadgermpc.triple_refinement.refineTriples">refineTriples() (in module honeybadgermpc.triple_refinement)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.reconstruction">reconstruction (honeybadgermpc.config.HbmpcConfig attribute)</a>
 </li>
-      <li><a href="libref/triple_refinement.html#honeybadgermpc.triple_refinement.renameAndUnpackInputs">renameAndUnpackInputs() (in module honeybadgermpc.triple_refinement)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.ReconstructionConfig">ReconstructionConfig (class in honeybadgermpc.config)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_blockchain.run_and_terminate_process">run_and_terminate_process() (in module honeybadgermpc.commonsubset_blockchain)</a>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.recv">recv() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.router.Router.recv">(honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router.recv">[1]</a>
 </li>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_blockchain.run_eth">run_eth() (in module honeybadgermpc.commonsubset_blockchain)</a>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter.recv">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter.recv">[1]</a>
 </li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.runProgramAsProcesses">runProgramAsProcesses() (in module honeybadgermpc.ipc)</a>
-</li>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.runProgramAsTasks">runProgramAsTasks() (in module honeybadgermpc.passive)</a>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.router.Router">Router (class in honeybadgermpc.router)</a>, <a href="libref/router.html#honeybadgermpc.router.Router">[1]</a>
 </li>
   </ul></td>
 </tr></table>
@@ -471,33 +489,25 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/secretshare.html#honeybadgermpc.secretshare_functionality.SecretShare_Functionality">SecretShare_Functionality (class in honeybadgermpc.secretshare_functionality)</a>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.send">send() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.router.Router.send">(honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router.send">[1]</a>
 </li>
-      <li><a href="libref/secretshare.html#honeybadgermpc.secretshare_functionality.SecretShare_IdealProtocol">SecretShare_IdealProtocol() (in module honeybadgermpc.secretshare_functionality)</a>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter.send">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter.send">[1]</a>
 </li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.Senders">Senders (class in honeybadgermpc.ipc)</a>
-</li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.setup_sockets">setup_sockets() (in module honeybadgermpc.ipc)</a>
-</li>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.shareInContext">shareInContext() (in module honeybadgermpc.passive)</a>
-</li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_batch.ShareRandom_Protocol">ShareRandom_Protocol (class in honeybadgermpc.rand_batch)</a>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement.signed">signed() (honeybadgermpc.field.GFElement method)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement.signed">[1]</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_functionality.ShareSingle_Functionality">ShareSingle_Functionality (class in honeybadgermpc.rand_functionality)</a>
+      <li><a href="internals.html#honeybadgermpc.router.SimpleRouter">SimpleRouter (class in honeybadgermpc.router)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter">[1]</a>
 </li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_functionality.ShareSingle_IdealProtocol">ShareSingle_IdealProtocol (class in honeybadgermpc.rand_functionality)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.skip_preprocessing">skip_preprocessing (honeybadgermpc.config.HbmpcConfig attribute)</a>
 </li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_protocol.ShareSingle_Protocol">ShareSingle_Protocol (class in honeybadgermpc.rand_protocol)</a>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement.sqrt">sqrt() (honeybadgermpc.field.GFElement method)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement.sqrt">[1]</a>
 </li>
-      <li><a href="libref/field.html#honeybadgermpc.field.GFElement.signed">signed() (honeybadgermpc.field.GFElement method)</a>
-</li>
-      <li><a href="libref/router.html#honeybadgermpc.router.simple_router">simple_router() (in module honeybadgermpc.router)</a>
-</li>
-      <li><a href="libref/field.html#honeybadgermpc.field.GFElement.sqrt">sqrt() (honeybadgermpc.field.GFElement method)</a>
-</li>
-      <li><a href="libref/polynomial.html#honeybadgermpc.polynomial.strip_trailing_zeros">strip_trailing_zeros() (in module honeybadgermpc.polynomial)</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.strip_trailing_zeros">strip_trailing_zeros() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.strip_trailing_zeros">[1]</a>
 </li>
   </ul></td>
 </tr></table>
@@ -505,25 +515,19 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/secretshare.html#honeybadgermpc.secretshare_functionality.test1">test1() (in module honeybadgermpc.secretshare_functionality)</a>
+      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.t">t (honeybadgermpc.config.HbmpcConfig attribute)</a>
 </li>
-      <li><a href="libref/commonsubset.html#honeybadgermpc.commonsubset_functionality.test_acs_ideal">test_acs_ideal() (in module honeybadgermpc.commonsubset_functionality)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.TaskProgramRunner">TaskProgramRunner (class in honeybadgermpc.mpc)</a>
 </li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_protocol.test_naive">test_naive() (in module honeybadgermpc.rand_protocol)</a>
-</li>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.test_prog1">test_prog1() (in module honeybadgermpc.passive)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.test_batchopening">test_batchopening() (in module honeybadgermpc.mpc)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.test_prog2">test_prog2() (in module honeybadgermpc.passive)</a>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.test_mpc_programs">test_mpc_programs() (in module honeybadgermpc.ipc)</a>
 </li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_batch.test_rand">test_rand() (in module honeybadgermpc.rand_batch)</a>
-
-      <ul>
-        <li><a href="libref/rand.html#honeybadgermpc.rand_protocol.test_rand">(in module honeybadgermpc.rand_protocol)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.test_prog1">test_prog1() (in module honeybadgermpc.mpc)</a>
 </li>
-      </ul></li>
-      <li><a href="libref/rand.html#honeybadgermpc.rand_functionality.test_sharesingle_ideal">test_sharesingle_ideal() (in module honeybadgermpc.rand_functionality)</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.test_prog2">test_prog2() (in module honeybadgermpc.mpc)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -531,7 +535,15 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/field.html#honeybadgermpc.field.GFElement.unsigned">unsigned() (honeybadgermpc.field.GFElement method)</a>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement.unsigned">unsigned() (honeybadgermpc.field.GFElement method)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement.unsigned">[1]</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="libref/ipc.html#honeybadgermpc.ipc.verify_all_connections">verify_all_connections() (in module honeybadgermpc.ipc)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -539,22 +551,16 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/field.html#honeybadgermpc.field.FieldsNotIdentical.with_traceback">with_traceback() (honeybadgermpc.field.FieldsNotIdentical method)</a>
-
-      <ul>
-        <li><a href="libref/passive.html#honeybadgermpc.passive.NotEnoughShares.with_traceback">(honeybadgermpc.passive.NotEnoughShares method)</a>
+      <li><a href="internals.html#honeybadgermpc.field.FieldsNotIdentical.with_traceback">with_traceback() (honeybadgermpc.field.FieldsNotIdentical method)</a>, <a href="libref/field.html#honeybadgermpc.field.FieldsNotIdentical.with_traceback">[1]</a>
 </li>
-      </ul></li>
   </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.write_polys">write_polys() (in module honeybadgermpc.passive)</a>
-</li>
-      <li><a href="libref/passive.html#honeybadgermpc.passive.PassiveMpc.write_shares">write_shares() (honeybadgermpc.passive.PassiveMpc method)</a>
+</tr></table>
 
-      <ul>
-        <li><a href="libref/passive.html#honeybadgermpc.passive.write_shares">(in module honeybadgermpc.passive)</a>
+<h2 id="Z">Z</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#honeybadgermpc.polynomial.EvalPoint.zero">zero() (honeybadgermpc.polynomial.EvalPoint method)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.EvalPoint.zero">[1]</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -587,28 +593,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/sphinx_tabs/tabs.js"></script>
-        <script type="text/javascript" src="_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

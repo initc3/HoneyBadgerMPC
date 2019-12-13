@@ -17,36 +17,41 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -85,7 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -104,6 +109,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -171,15 +177,24 @@
            <div itemprop="articleBody">
             
   <h1>Source code for honeybadgermpc.polynomial</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">operator</span>
-<span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
-<span class="kn">from</span> <span class="nn">.field</span> <span class="k">import</span> <span class="n">GF</span><span class="p">,</span> <span class="n">GFElement</span>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">zip_longest</span>
+
+<span class="kn">from</span> <span class="nn">honeybadgermpc.ntl</span> <span class="kn">import</span> <span class="n">fft</span> <span class="k">as</span> <span class="n">fft_cpp</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.ntl</span> <span class="kn">import</span> <span class="n">fft_interpolate</span> <span class="k">as</span> <span class="n">fft_interpolate_cpp</span>
+
+<span class="kn">from</span> <span class="nn">.betterpairing</span> <span class="kn">import</span> <span class="n">ZR</span>
+<span class="kn">from</span> <span class="nn">.elliptic_curve</span> <span class="kn">import</span> <span class="n">Subgroup</span>
+<span class="kn">from</span> <span class="nn">.field</span> <span class="kn">import</span> <span class="n">GF</span><span class="p">,</span> <span class="n">GFElement</span>
 
 
 <div class="viewcode-block" id="strip_trailing_zeros"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.strip_trailing_zeros">[docs]</a><span class="k">def</span> <span class="nf">strip_trailing_zeros</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">break</span>
     <span class="k">return</span> <span class="n">a</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span></div>
 
@@ -187,44 +202,87 @@
 <span class="n">_poly_cache</span> <span class="o">=</span> <span class="p">{}</span>
 
 
-<div class="viewcode-block" id="polynomialsOver"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.polynomialsOver">[docs]</a><span class="k">def</span> <span class="nf">polynomialsOver</span><span class="p">(</span><span class="n">field</span><span class="p">):</span>
+<div class="viewcode-block" id="polynomials_over"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.polynomials_over">[docs]</a><span class="k">def</span> <span class="nf">polynomials_over</span><span class="p">(</span><span class="n">field</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="ow">is</span> <span class="n">GF</span> <span class="ow">or</span> <span class="n">field</span> <span class="o">==</span> <span class="n">ZR</span>
+    <span class="n">field_type</span> <span class="o">=</span> <span class="n">GFElement</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="ow">is</span> <span class="n">GF</span> <span class="k">else</span> <span class="n">ZR</span>
     <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">_poly_cache</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_poly_cache</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
 
     <span class="k">class</span> <span class="nc">Polynomial</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">=</span> <span class="n">strip_trailing_zeros</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">strip_trailing_zeros</span><span class="p">(</span><span class="n">coeffs</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">is</span> <span class="n">field_type</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">field</span>
 
-        <span class="k">def</span> <span class="nf">isZero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">==</span> <span class="p">[]</span>
+        <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">==</span> <span class="p">[]</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isZero</span><span class="p">():</span>
-                <span class="k">return</span> <span class="s1">&#39;0&#39;</span>
-            <span class="k">return</span> <span class="s1">&#39; + &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> x^</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">a</span>
-                               <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)])</span>
+        <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_zero</span><span class="p">():</span>
+                <span class="k">return</span> <span class="s2">&quot;0&quot;</span>
+            <span class="k">return</span> <span class="s2">&quot; + &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> x^</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">a</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">xx</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">xx</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">:</span>
                 <span class="n">y</span> <span class="o">+=</span> <span class="n">coeff</span> <span class="o">*</span> <span class="n">xx</span>
                 <span class="n">xx</span> <span class="o">*=</span> <span class="n">x</span>
             <span class="k">return</span> <span class="n">y</span>
+
+        <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Polynomial</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span>
 
         <span class="nd">@classmethod</span>
         <span class="k">def</span> <span class="nf">interpolate_at</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">shares</span><span class="p">,</span> <span class="n">x_recomb</span><span class="o">=</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)):</span>
             <span class="c1"># shares are in the form (x, y=f(x))</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">x_recomb</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
                 <span class="n">x_recomb</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">x_recomb</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">x_recomb</span><span class="p">)</span> <span class="ow">is</span> <span class="n">GFElement</span>
+            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">x_recomb</span><span class="p">)</span> <span class="ow">is</span> <span class="n">field_type</span>
             <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">shares</span><span class="p">)</span>
             <span class="n">vector</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">xs</span><span class="p">):</span>
-                <span class="n">factors</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x_k</span> <span class="o">-</span> <span class="n">x_recomb</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x_k</span> <span class="o">-</span> <span class="n">x_i</span><span class="p">)</span>
-                           <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">x_k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">i</span><span class="p">]</span>
+                <span class="n">factors</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">x_k</span> <span class="o">-</span> <span class="n">x_recomb</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x_k</span> <span class="o">-</span> <span class="n">x_i</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">x_k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">i</span>
+                <span class="p">]</span>
                 <span class="n">vector</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">factors</span><span class="p">))</span>
             <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">vector</span><span class="p">))</span>
+
+        <span class="n">_lagrange_cache</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Cache lagrange polynomials</span>
+
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">shares</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">([</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">field</span><span class="p">(</span><span class="mi">1</span><span class="p">)])</span>  <span class="c1"># This is the polynomial f(x) = x</span>
+            <span class="n">one</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">([</span><span class="n">field</span><span class="p">(</span><span class="mi">1</span><span class="p">)])</span>  <span class="c1"># This is the polynomial f(x) = 1</span>
+            <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">shares</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">lagrange</span><span class="p">(</span><span class="n">xi</span><span class="p">):</span>
+                <span class="c1"># Let&#39;s cache lagrange values</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">xi</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_lagrange_cache</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_lagrange_cache</span><span class="p">[(</span><span class="n">xs</span><span class="p">,</span> <span class="n">xi</span><span class="p">)]</span>
+
+                <span class="k">def</span> <span class="nf">mul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+
+                <span class="n">num</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">mul</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="bp">cls</span><span class="p">([</span><span class="n">xj</span><span class="p">])</span> <span class="k">for</span> <span class="n">xj</span> <span class="ow">in</span> <span class="n">xs</span> <span class="k">if</span> <span class="n">xj</span> <span class="o">!=</span> <span class="n">xi</span><span class="p">],</span> <span class="n">one</span><span class="p">)</span>
+                <span class="n">den</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">mul</span><span class="p">,</span> <span class="p">[</span><span class="n">xi</span> <span class="o">-</span> <span class="n">xj</span> <span class="k">for</span> <span class="n">xj</span> <span class="ow">in</span> <span class="n">xs</span> <span class="k">if</span> <span class="n">xj</span> <span class="o">!=</span> <span class="n">xi</span><span class="p">],</span> <span class="n">field</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">num</span> <span class="o">*</span> <span class="bp">cls</span><span class="p">([</span><span class="mi">1</span> <span class="o">/</span> <span class="n">den</span><span class="p">])</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">_lagrange_cache</span><span class="p">[(</span><span class="n">xs</span><span class="p">,</span> <span class="n">xi</span><span class="p">)]</span> <span class="o">=</span> <span class="n">p</span>
+                <span class="k">return</span> <span class="n">p</span>
+
+            <span class="n">f</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">):</span>
+                <span class="n">pi</span> <span class="o">=</span> <span class="n">lagrange</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+                <span class="n">f</span> <span class="o">+=</span> <span class="bp">cls</span><span class="p">([</span><span class="n">yi</span><span class="p">])</span> <span class="o">*</span> <span class="n">pi</span>
+            <span class="k">return</span> <span class="n">f</span>
 
         <span class="nd">@classmethod</span>
         <span class="k">def</span> <span class="nf">interpolate_fft</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
@@ -233,24 +291,27 @@
 <span class="sd">            such that f(omega^i) == ys[i]</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be power of two&quot;</span>
-            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span> <span class="ow">is</span> <span class="n">GFElement</span>
+            <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be power of two&quot;</span>
+            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span> <span class="ow">is</span> <span class="n">field_type</span>
             <span class="k">assert</span> <span class="n">omega</span> <span class="o">**</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;must be an n&#39;th root of unity&quot;</span>
-            <span class="k">assert</span> <span class="n">omega</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;must be a primitive n&#39;th root of unity&quot;</span>
-            <span class="n">coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">/</span><span class="n">n</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">omega</span><span class="p">,</span> <span class="n">field</span><span class="p">)]</span>
+            <span class="k">assert</span> <span class="n">omega</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;must be a primitive n&#39;th root of unity&quot;</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="o">/</span> <span class="n">n</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">omega</span><span class="p">,</span> <span class="n">field</span><span class="p">)]</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">evaluate_fft</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be power of two&quot;</span>
-            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span> <span class="ow">is</span> <span class="n">GFElement</span>
+            <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be power of two&quot;</span>
+            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span> <span class="ow">is</span> <span class="n">field_type</span>
             <span class="k">assert</span> <span class="n">omega</span> <span class="o">**</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;must be an n&#39;th root of unity&quot;</span>
-            <span class="k">assert</span> <span class="n">omega</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;must be a primitive n&#39;th root of unity&quot;</span>
+            <span class="k">assert</span> <span class="n">omega</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;must be a primitive n&#39;th root of unity&quot;</span>
             <span class="k">return</span> <span class="n">fft</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
 
         <span class="nd">@classmethod</span>
         <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">y0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-            <span class="n">coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">degree</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">degree</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
             <span class="k">if</span> <span class="n">y0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">y0</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+                    <span class="n">y0</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">y0</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">y0</span><span class="p">)</span> <span class="ow">is</span> <span class="n">field_type</span>
                 <span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">y0</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span>
 
@@ -261,17 +322,106 @@
 <span class="sd">            then evaluates at all points omega^i</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be power of 2&quot;</span>
-            <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;omega must be 2n&#39;th root of unity&quot;</span>
+            <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be power of 2&quot;</span>
+            <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;omega must be 2n&#39;th root of unity&quot;</span>
             <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;omega must be primitive 2n&#39;th root of unity&quot;</span>
 
             <span class="c1"># Interpolate the polynomial up to degree n</span>
-            <span class="n">poly</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">interpolate_fft</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">poly</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">interpolate_fft</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">omega</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
 
             <span class="c1"># Evaluate the polynomial</span>
-            <span class="n">xs2</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">evaluate_fft</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">xs2</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">evaluate_fft</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="n">xs2</span>
+
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">interp_extrap_cpp</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Interpolates the polynomial based on the even points omega^2i</span>
+<span class="sd">            then evaluates at all points omega^i using C++ FFT routines.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be power of 2&quot;</span>
+            <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;omega must be 2n&#39;th root of unity&quot;</span>
+            <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;omega must be primitive 2n&#39;th root of unity&quot;</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">omega</span><span class="o">.</span><span class="n">modulus</span>
+
+            <span class="c1"># Interpolate the polynomial up to degree n</span>
+            <span class="n">poly</span> <span class="o">=</span> <span class="n">fft_interpolate_cpp</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)),</span> <span class="n">xs</span><span class="p">,</span> <span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="c1"># Evaluate the polynomial</span>
+            <span class="n">xs2</span> <span class="o">=</span> <span class="n">fft_cpp</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">omega</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">xs2</span>
+
+        <span class="c1"># the valuation only gives 0 to the zero polynomial, i.e. 1+degree</span>
+        <span class="k">def</span> <span class="fm">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">other</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Polynomial</span><span class="p">([</span><span class="o">-</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span>
+
+        <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+            <span class="n">new_coefficients</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">zip_longest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">fillvalue</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="p">]</span>
+            <span class="k">return</span> <span class="n">Polynomial</span><span class="p">(</span><span class="n">new_coefficients</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_zero</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">zero</span><span class="p">()</span>
+
+            <span class="n">new_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+                    <span class="n">new_coeffs</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+            <span class="k">return</span> <span class="n">Polynomial</span><span class="p">(</span><span class="n">new_coeffs</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">degree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">def</span> <span class="nf">leading_coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="fm">__divmod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">divisor</span><span class="p">):</span>
+            <span class="n">quotient</span><span class="p">,</span> <span class="n">remainder</span> <span class="o">=</span> <span class="n">zero</span><span class="p">(),</span> <span class="bp">self</span>
+            <span class="n">divisor_deg</span> <span class="o">=</span> <span class="n">divisor</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+            <span class="n">divisor_lc</span> <span class="o">=</span> <span class="n">divisor</span><span class="o">.</span><span class="n">leading_coefficient</span><span class="p">()</span>
+
+            <span class="k">while</span> <span class="n">remainder</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">divisor_deg</span><span class="p">:</span>
+                <span class="n">monomial_exponent</span> <span class="o">=</span> <span class="n">remainder</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="o">-</span> <span class="n">divisor_deg</span>
+                <span class="n">monomial_zeros</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">monomial_exponent</span><span class="p">)]</span>
+                <span class="n">monomial_divisor</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+                    <span class="n">monomial_zeros</span> <span class="o">+</span> <span class="p">[</span><span class="n">remainder</span><span class="o">.</span><span class="n">leading_coefficient</span><span class="p">()</span> <span class="o">/</span> <span class="n">divisor_lc</span><span class="p">]</span>
+                <span class="p">)</span>
+
+                <span class="n">quotient</span> <span class="o">+=</span> <span class="n">monomial_divisor</span>
+                <span class="n">remainder</span> <span class="o">-=</span> <span class="n">monomial_divisor</span> <span class="o">*</span> <span class="n">divisor</span>
+
+            <span class="k">return</span> <span class="n">quotient</span><span class="p">,</span> <span class="n">remainder</span>
+
+        <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">divisor</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">divisor</span><span class="o">.</span><span class="n">is_zero</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ZeroDivisionError</span>
+            <span class="k">return</span> <span class="nb">divmod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">divisor</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="fm">__mod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">divisor</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">divisor</span><span class="o">.</span><span class="n">isZero</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ZeroDivisionError</span>
+            <span class="k">return</span> <span class="nb">divmod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">divisor</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">zero</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">Polynomial</span><span class="p">([])</span>
 
     <span class="n">_poly_cache</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">Polynomial</span>
     <span class="k">return</span> <span class="n">Polynomial</span></div>
@@ -285,19 +435,17 @@
 
 <span class="sd">    This only makes sense if n is a power of 2!</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be a power of 2&quot;</span>
-    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">n</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">y</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">pow</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be a power of 2&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">y</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">pow</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;omega must be 2n&#39;th root of unity&quot;</span>
-    <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;omega must be primitive 2n&#39;th root of unity&quot;</span>
+    <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;omega must be primitive 2n&#39;th root of unity&quot;</span>
     <span class="k">return</span> <span class="n">y</span></div>
 
 
-<div class="viewcode-block" id="fft_helper"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fft_helper">[docs]</a><span class="k">def</span> <span class="nf">fft_helper</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+<div class="viewcode-block" id="fft_helper"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fft_helper">[docs]</a><span class="k">def</span> <span class="nf">fft_helper</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given coefficients A of polynomial this method does FFT and returns</span>
 <span class="sd">    the evaluation of the polynomial at [omega^0, omega^(n-1)]</span>
@@ -305,64 +453,185 @@
 <span class="sd">    If the polynomial is a0*x^0 + a1*x^1 + ... + an*x^n then the coefficients</span>
 <span class="sd">    list is of the form [a0, a1, ... , an].</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span><span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="s2">&quot;n must be a power of 2&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span><span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)),</span> <span class="s2">&quot;n must be a power of 2&quot;</span>
 
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">A</span>
+        <span class="k">return</span> <span class="n">a</span>
 
-    <span class="n">B</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">B_bar</span> <span class="o">=</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">field</span><span class="p">)</span>
-    <span class="n">C_bar</span> <span class="o">=</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">field</span><span class="p">)</span>
-    <span class="n">A_bar</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">b_bar</span> <span class="o">=</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">field</span><span class="p">)</span>
+    <span class="n">c_bar</span> <span class="o">=</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">field</span><span class="p">)</span>
+    <span class="n">a_bar</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-        <span class="n">k</span> <span class="o">=</span> <span class="p">(</span><span class="n">j</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">))</span>
-        <span class="n">A_bar</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">B_bar</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="n">C_bar</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">A_bar</span></div>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">j</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">a_bar</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">b_bar</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="n">c_bar</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">a_bar</span></div>
 
 
-<div class="viewcode-block" id="fft"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fft">[docs]</a><span class="k">def</span> <span class="nf">fft</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be a power of 2&quot;</span>
+<div class="viewcode-block" id="fft"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fft">[docs]</a><span class="k">def</span> <span class="nf">fft</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be a power of 2&quot;</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">n</span>
     <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
-    <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span>
+    <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span>
 
-    <span class="n">paddedCoeffs</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">+</span> <span class="p">([</span><span class="n">poly</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)))</span>
-    <span class="k">return</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">paddedCoeffs</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">poly</span><span class="o">.</span><span class="n">field</span><span class="p">)</span></div>
+    <span class="n">padded_coeffs</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">+</span> <span class="p">([</span><span class="n">poly</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">padded_coeffs</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">poly</span><span class="o">.</span><span class="n">field</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="fnt_decode_step1"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fnt_decode_step1">[docs]</a><span class="k">def</span> <span class="nf">fnt_decode_step1</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">omega2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This needs to be run once for decoding a batch of secret shares</span>
+<span class="sd">    It depends only on the x values (the points the polynomial is</span>
+<span class="sd">    evaluated at, i.e. the IDs of the parties contributing shares) so</span>
+<span class="sd">    it can be reused for multiple batches.</span>
+<span class="sd">    Complexity: O(n^2)</span>
+
+<span class="sd">    args:</span>
+<span class="sd">        zs is a subset of [0,n)</span>
+<span class="sd">        omega2 is a (2*n)th root of unity</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">        A(X) evaluated at 1...omega2**(2n-1)</span>
+<span class="sd">        Ai(xi) for each xi = omega**(zi)</span>
+
+<span class="sd">    where:</span>
+<span class="sd">        omega = omega2**2</span>
+<span class="sd">        where A(X) = prod( X - xj ) for each xj</span>
+<span class="sd">        Ai(xi) = prod( xi - xj ) for j != i</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">zs</span><span class="p">)</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="n">omega2</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">omega</span> <span class="o">**</span> <span class="n">z</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">zs</span><span class="p">]</span>
+
+    <span class="c1"># Compute A(X)</span>
+    <span class="n">a_</span> <span class="o">=</span> <span class="n">poly</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+        <span class="n">a_</span> <span class="o">*=</span> <span class="n">poly</span><span class="p">([</span><span class="o">-</span><span class="n">xs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">as_</span> <span class="o">=</span> <span class="p">[</span><span class="n">a_</span><span class="p">(</span><span class="n">omega2</span> <span class="o">**</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)]</span>
+
+    <span class="c1"># Compute all Ai(Xi)</span>
+    <span class="n">ais_</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+        <span class="n">ai</span> <span class="o">=</span> <span class="n">a_</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
+                <span class="n">ai</span> <span class="o">*=</span> <span class="n">xs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        <span class="n">ais_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ai</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">as_</span><span class="p">,</span> <span class="n">ais_</span></div>
+
+
+<div class="viewcode-block" id="fnt_decode_step2"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fnt_decode_step2">[docs]</a><span class="k">def</span> <span class="nf">fnt_decode_step2</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">as_</span><span class="p">,</span> <span class="n">ais_</span><span class="p">,</span> <span class="n">omega2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a polynomial P such that P(omega**zi) = yi</span>
+
+<span class="sd">    Complexity: O(n log n)</span>
+
+<span class="sd">    args:</span>
+<span class="sd">        zs is a subset of [0,n)</span>
+<span class="sd">        As, Ais = fnt_decode_step1(zs, omega2, n)</span>
+<span class="sd">        omega2 is a (2*n)th root of unity</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">        P  Poly</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ais_</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">as_</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="n">omega2</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="c1"># Compute N&#39;(x)</span>
+    <span class="n">nis</span> <span class="o">=</span> <span class="p">[</span><span class="n">ys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">ais_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span>
+    <span class="n">ncoeffs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+        <span class="n">ncoeffs</span><span class="p">[</span><span class="n">zs</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">nis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">n_</span> <span class="o">=</span> <span class="n">poly</span><span class="p">(</span><span class="n">ncoeffs</span><span class="p">)</span>
+
+    <span class="c1"># Compute P/A(X)</span>
+    <span class="n">nevals</span> <span class="o">=</span> <span class="n">n_</span><span class="o">.</span><span class="n">evaluate_fft</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">power_a</span> <span class="o">=</span> <span class="o">-</span><span class="n">poly</span><span class="p">(</span><span class="n">nevals</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">pas</span> <span class="o">=</span> <span class="n">power_a</span><span class="o">.</span><span class="n">evaluate_fft</span><span class="p">(</span><span class="n">omega2</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="c1"># Recover P(X)</span>
+    <span class="n">ps</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="o">*</span> <span class="n">a</span> <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pas</span><span class="p">,</span> <span class="n">as_</span><span class="p">)]</span>
+    <span class="n">prec</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">interpolate_fft</span><span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">omega2</span><span class="p">)</span>
+    <span class="n">prec</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">=</span> <span class="n">prec</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">prec</span></div>
+
+
+<div class="viewcode-block" id="EvalPoint"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.EvalPoint">[docs]</a><span class="k">class</span> <span class="nc">EvalPoint</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper to generate evaluation points for polynomials between n parties</span>
+
+<span class="sd">    If FFT is being used:</span>
+<span class="sd">    omega is a root of unity s.t. order(omega) = (smallest power of 2 &gt;= n)</span>
+<span class="sd">    i&#39;th point (zero-indexed) = omega^(i)</span>
+
+<span class="sd">    Without FFT:</span>
+<span class="sd">    i&#39;th point (zero-indexed) = i + 1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">use_omega_powers</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_omega_powers</span> <span class="o">=</span> <span class="n">use_omega_powers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">field</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="c1"># Need an additional point where we evaluate polynomial to get secret</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">if</span> <span class="n">use_omega_powers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">order</span> <span class="k">if</span> <span class="p">(</span><span class="n">order</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">order</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1"># All parties must use the same omega for FFT to work with batch</span>
+            <span class="c1"># reconstruction. Fixing the seed to 0 is a simple way to do this.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">omega2</span> <span class="o">=</span> <span class="n">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega2</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">order</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">omega2</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_omega_powers</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega2</span><span class="o">.</span><span class="n">value</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EvalPoint.zero"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.EvalPoint.zero">[docs]</a>    <span class="k">def</span> <span class="nf">zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">field</span> <span class="o">=</span> <span class="n">GF</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mh">0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001</span><span class="p">)</span>
-    <span class="n">Poly</span> <span class="o">=</span> <span class="n">polynomialsOver</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="n">GF</span><span class="p">(</span><span class="n">Subgroup</span><span class="o">.</span><span class="n">BLS12_381</span><span class="p">)</span>
+    <span class="n">Poly</span> <span class="o">=</span> <span class="n">polynomials_over</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
     <span class="n">poly</span> <span class="o">=</span> <span class="n">Poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">degree</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
     <span class="n">poly</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">3</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">3</span>
     <span class="n">omega</span> <span class="o">=</span> <span class="n">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">omega2</span> <span class="o">=</span> <span class="n">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
     <span class="c1"># FFT</span>
     <span class="c1"># x = fft(poly, omega=omega, n=n, test=True, enable_profiling=True)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">evaluate_fft</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
     <span class="c1"># IFFT</span>
-    <span class="n">x2</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">/</span><span class="n">n</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">omega</span><span class="p">,</span> <span class="n">field</span><span class="p">)]</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="o">/</span> <span class="n">n</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">omega</span><span class="p">,</span> <span class="n">field</span><span class="p">)]</span>
     <span class="n">poly2</span> <span class="o">=</span> <span class="n">Poly</span><span class="o">.</span><span class="n">interpolate_fft</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">poly2</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">poly2</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;omega1:&#39;</span><span class="p">,</span> <span class="n">omega</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;omega2:&#39;</span><span class="p">,</span> <span class="n">omega2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;omega1: {omega ** (n//2)}&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;omega2: {omega2 ** (n//2)}&quot;</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;eval:&#39;</span><span class="p">)</span>
-    <span class="n">omega</span> <span class="o">=</span> <span class="n">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;eval:&quot;</span><span class="p">)</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="n">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">omega</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">),</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;interp_extrap:&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;{omega**(2*i)} </span><span class="si">{x[i]}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;interp_extrap:&quot;</span><span class="p">)</span>
     <span class="n">x3</span> <span class="o">=</span> <span class="n">Poly</span><span class="o">.</span><span class="n">interp_extrap</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x3</span><span class="p">)):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">omega</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="n">x3</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;{omega**i} </span><span class="si">{x3[i]}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;How many omegas are there?&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;How many omegas are there?&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
-        <span class="n">omega</span> <span class="o">=</span> <span class="n">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">20</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">omega</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">17</span><span class="p">))</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{omega}</span><span class="s2"> {omega**(2**17)}&quot;</span><span class="p">)</span>
 </pre></div>
 
            </div>
@@ -392,28 +661,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

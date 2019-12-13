@@ -1,0 +1,654 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Internals &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="libref/honeybadgermpc.html">honeybadgermpc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Internals</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/internals.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-honeybadgermpc">
+<span id="internals"></span><h1>Internals<a class="headerlink" href="#module-honeybadgermpc" title="Permalink to this headline">¶</a></h1>
+<p>HoneyBadgerMPC: Confidentiality Layer for Consortium Blockchains.</p>
+<div class="section" id="module-honeybadgermpc.field">
+<span id="field"></span><h2>field<a class="headerlink" href="#module-honeybadgermpc.field" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="honeybadgermpc.field.FieldElement">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.field.</code><code class="sig-name descname">FieldElement</code><a class="reference internal" href="_modules/honeybadgermpc/field.html#FieldElement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.FieldElement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Common base class for elements.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="honeybadgermpc.field.FieldsNotIdentical">
+<em class="property">exception </em><code class="sig-prename descclassname">honeybadgermpc.field.</code><code class="sig-name descname">FieldsNotIdentical</code><a class="reference internal" href="_modules/honeybadgermpc/field.html#FieldsNotIdentical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.FieldsNotIdentical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<dl class="attribute">
+<dt id="honeybadgermpc.field.FieldsNotIdentical.args">
+<code class="sig-name descname">args</code><a class="headerlink" href="#honeybadgermpc.field.FieldsNotIdentical.args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.field.FieldsNotIdentical.with_traceback">
+<code class="sig-name descname">with_traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.field.FieldsNotIdentical.with_traceback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="honeybadgermpc.field.GF">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.field.</code><code class="sig-name descname">GF</code><span class="sig-paren">(</span><em class="sig-param">modulus</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/field.html#GF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="attribute">
+<dt id="honeybadgermpc.field.GF._field_cache">
+<code class="sig-name descname">_field_cache</code><em class="property"> = {}</em><a class="headerlink" href="#honeybadgermpc.field.GF._field_cache" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.field.GF.random">
+<code class="sig-name descname">random</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/field.html#GF.random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GF.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="honeybadgermpc.field.GFElement">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.field.</code><code class="sig-name descname">GFElement</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">gf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/field.html#GFElement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="libref/field.html#honeybadgermpc.field.FieldElement" title="honeybadgermpc.field.FieldElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">honeybadgermpc.field.FieldElement</span></code></a></p>
+<dl class="method">
+<dt id="honeybadgermpc.field.GFElement.bit">
+<code class="sig-name descname">bit</code><span class="sig-paren">(</span><em class="sig-param">index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/field.html#GFElement.bit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement.bit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract a bit (index is counted from zero).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.field.GFElement.signed">
+<code class="sig-name descname">signed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/field.html#GFElement.signed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement.signed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a signed integer representation of the value.</p>
+<p>If x &gt; floor(p/2) then subtract p to obtain negative integer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.field.GFElement.sqrt">
+<code class="sig-name descname">sqrt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/field.html#GFElement.sqrt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement.sqrt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Square root.
+No attempt is made the to return the positive square root.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.field.GFElement.unsigned">
+<code class="sig-name descname">unsigned</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/field.html#GFElement.unsigned"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.GFElement.unsigned" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a unsigned representation of the value</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.field.fake_gf">
+<code class="sig-prename descclassname">honeybadgermpc.field.</code><code class="sig-name descname">fake_gf</code><span class="sig-paren">(</span><em class="sig-param">modulus</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/field.html#fake_gf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.field.fake_gf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a fake field.</p>
+<p>These fields should only be used in benchmarking. They work like
+any other field except that all computations will give <code class="docutils literal notranslate"><span class="pre">-1</span></code> as
+the result:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">FakeGF</span><span class="p">(</span><span class="mi">1031</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">F</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">F</span><span class="p">(</span><span class="mi">234</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<span class="go">{{1030}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+<span class="go">{{1030}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+<span class="go">{{1030}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">bit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-honeybadgermpc.polynomial">
+<span id="polynomial"></span><h2>polynomial<a class="headerlink" href="#module-honeybadgermpc.polynomial" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="honeybadgermpc.polynomial.EvalPoint">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.polynomial.</code><code class="sig-name descname">EvalPoint</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">n</em>, <em class="sig-param">use_omega_powers=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/polynomial.html#EvalPoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.EvalPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Helper to generate evaluation points for polynomials between n parties</p>
+<p>If FFT is being used:
+omega is a root of unity s.t. order(omega) = (smallest power of 2 &gt;= n)
+i’th point (zero-indexed) = omega^(i)</p>
+<p>Without FFT:
+i’th point (zero-indexed) = i + 1</p>
+<dl class="method">
+<dt id="honeybadgermpc.polynomial.EvalPoint.zero">
+<code class="sig-name descname">zero</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/polynomial.html#EvalPoint.zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.EvalPoint.zero" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.fft">
+<code class="sig-prename descclassname">honeybadgermpc.polynomial.</code><code class="sig-name descname">fft</code><span class="sig-paren">(</span><em class="sig-param">poly</em>, <em class="sig-param">omega</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/polynomial.html#fft"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.fft" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.fft_helper">
+<code class="sig-prename descclassname">honeybadgermpc.polynomial.</code><code class="sig-name descname">fft_helper</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">omega</em>, <em class="sig-param">field</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/polynomial.html#fft_helper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.fft_helper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given coefficients A of polynomial this method does FFT and returns
+the evaluation of the polynomial at [omega^0, omega^(n-1)]</p>
+<p>If the polynomial is a0*x^0 + a1*x^1 + … + an*x^n then the coefficients
+list is of the form [a0, a1, … , an].</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.fnt_decode_step1">
+<code class="sig-prename descclassname">honeybadgermpc.polynomial.</code><code class="sig-name descname">fnt_decode_step1</code><span class="sig-paren">(</span><em class="sig-param">poly</em>, <em class="sig-param">zs</em>, <em class="sig-param">omega2</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/polynomial.html#fnt_decode_step1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.fnt_decode_step1" title="Permalink to this definition">¶</a></dt>
+<dd><p>This needs to be run once for decoding a batch of secret shares
+It depends only on the x values (the points the polynomial is
+evaluated at, i.e. the IDs of the parties contributing shares) so
+it can be reused for multiple batches.
+Complexity: O(n^2)</p>
+<dl class="simple">
+<dt>args:</dt><dd><p>zs is a subset of [0,n)
+omega2 is a (2*n)th root of unity</p>
+</dd>
+<dt>returns:</dt><dd><p>A(X) evaluated at 1…omega2**(2n-1)
+Ai(xi) for each xi = omega**(zi)</p>
+</dd>
+<dt>where:</dt><dd><p>omega = omega2**2
+where A(X) = prod( X - xj ) for each xj
+Ai(xi) = prod( xi - xj ) for j != i</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.fnt_decode_step2">
+<code class="sig-prename descclassname">honeybadgermpc.polynomial.</code><code class="sig-name descname">fnt_decode_step2</code><span class="sig-paren">(</span><em class="sig-param">poly</em>, <em class="sig-param">zs</em>, <em class="sig-param">ys</em>, <em class="sig-param">as_</em>, <em class="sig-param">ais_</em>, <em class="sig-param">omega2</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/polynomial.html#fnt_decode_step2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.fnt_decode_step2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a polynomial P such that P(omega**zi) = yi</p>
+<p>Complexity: O(n log n)</p>
+<dl class="simple">
+<dt>args:</dt><dd><p>zs is a subset of [0,n)
+As, Ais = fnt_decode_step1(zs, omega2, n)
+omega2 is a (2*n)th root of unity</p>
+</dd>
+<dt>returns:</dt><dd><p>P  Poly</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.get_omega">
+<code class="sig-prename descclassname">honeybadgermpc.polynomial.</code><code class="sig-name descname">get_omega</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">n</em>, <em class="sig-param">seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/polynomial.html#get_omega"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.get_omega" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a field, this method returns an n^th root of unity.
+If the seed is not None then this method will return the
+same n’th root of unity for every run with the same seed</p>
+<p>This only makes sense if n is a power of 2!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.polynomials_over">
+<code class="sig-prename descclassname">honeybadgermpc.polynomial.</code><code class="sig-name descname">polynomials_over</code><span class="sig-paren">(</span><em class="sig-param">field</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/polynomial.html#polynomials_over"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.polynomials_over" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.polynomial.strip_trailing_zeros">
+<code class="sig-prename descclassname">honeybadgermpc.polynomial.</code><code class="sig-name descname">strip_trailing_zeros</code><span class="sig-paren">(</span><em class="sig-param">a</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/polynomial.html#strip_trailing_zeros"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.polynomial.strip_trailing_zeros" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-honeybadgermpc.mpc">
+<span id="mpc"></span><h2>mpc<a class="headerlink" href="#module-honeybadgermpc.mpc" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="honeybadgermpc.mpc.Mpc">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.mpc.</code><code class="sig-name descname">Mpc</code><span class="sig-paren">(</span><em class="sig-param">sid</em>, <em class="sig-param">n</em>, <em class="sig-param">t</em>, <em class="sig-param">myid</em>, <em class="sig-param">send</em>, <em class="sig-param">recv</em>, <em class="sig-param">prog</em>, <em class="sig-param">config</em>, <em class="sig-param">preproc=None</em>, <em class="sig-param">**prog_args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#Mpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.Mpc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="honeybadgermpc.mpc.Mpc._get_share_id">
+<code class="sig-name descname">_get_share_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#Mpc._get_share_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.Mpc._get_share_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a monotonically increasing int value
+each time this is called</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.mpc.Mpc._recvloop">
+<em class="property">async </em><code class="sig-name descname">_recvloop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#Mpc._recvloop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.Mpc._recvloop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Background task to continually receive incoming shares, and
+put the received share in the appropriate buffer. In the case
+of a single share this puts it into self._share_buffers, otherwise,
+it gets enqueued in the appropriate self._sharearray_buffers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.mpc.Mpc._run">
+<em class="property">async </em><code class="sig-name descname">_run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#Mpc._run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.Mpc._run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.mpc.Mpc.call_mixin">
+<code class="sig-name descname">call_mixin</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#Mpc.call_mixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.Mpc.call_mixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience method to check if a mixin is present, and call it if so
+args:</p>
+<blockquote>
+<div><p>name(str): Name of the mixin to call
+args(list): arguments to pass to the call to the mixin
+kwargs(dict): named arguments to pass to the call to the mixin</p>
+</div></blockquote>
+<dl class="simple">
+<dt>outputs:</dt><dd><p>future that resolves to the result of calling the mixin operation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.mpc.Mpc.open_share">
+<code class="sig-name descname">open_share</code><span class="sig-paren">(</span><em class="sig-param">share</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#Mpc.open_share"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.Mpc.open_share" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given secret-shared value share, open the value by
+broadcasting our local share, and then receive the likewise
+broadcasted local shares from other nodes, and finally reconstruct
+the secret shared value.</p>
+<dl class="simple">
+<dt>args:</dt><dd><p>share (Share): Secret shared value to open</p>
+</dd>
+<dt>outputs:</dt><dd><p>Future that resolves to the plaintext value of the share.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.mpc.Mpc.open_share_array">
+<code class="sig-name descname">open_share_array</code><span class="sig-paren">(</span><em class="sig-param">sharearray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#Mpc.open_share_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.Mpc.open_share_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given array of secret shares, opens them in a batch
+and returns their plaintext values.</p>
+<dl class="simple">
+<dt>args:</dt><dd><p>sharearray (ShareArray): shares to open</p>
+</dd>
+<dt>outputs:</dt><dd><p>Future, which will resolve to an array of GFElements</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="honeybadgermpc.mpc.TaskProgramRunner">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.mpc.</code><code class="sig-name descname">TaskProgramRunner</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">t</em>, <em class="sig-param">config={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#TaskProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.TaskProgramRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">honeybadgermpc.program_runner.ProgramRunner</span></code></p>
+<dl class="method">
+<dt id="honeybadgermpc.mpc.TaskProgramRunner.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">program</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#TaskProgramRunner.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.TaskProgramRunner.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.mpc.TaskProgramRunner.join">
+<em class="property">async </em><code class="sig-name descname">join</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#TaskProgramRunner.join"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.TaskProgramRunner.join" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.mpc.handle_async_exception">
+<code class="sig-prename descclassname">honeybadgermpc.mpc.</code><code class="sig-name descname">handle_async_exception</code><span class="sig-paren">(</span><em class="sig-param">loop</em>, <em class="sig-param">ctx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#handle_async_exception"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.handle_async_exception" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.mpc.test_batchopening">
+<em class="property">async </em><code class="sig-prename descclassname">honeybadgermpc.mpc.</code><code class="sig-name descname">test_batchopening</code><span class="sig-paren">(</span><em class="sig-param">context</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#test_batchopening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.test_batchopening" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.mpc.test_prog1">
+<em class="property">async </em><code class="sig-prename descclassname">honeybadgermpc.mpc.</code><code class="sig-name descname">test_prog1</code><span class="sig-paren">(</span><em class="sig-param">context</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#test_prog1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.test_prog1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="honeybadgermpc.mpc.test_prog2">
+<em class="property">async </em><code class="sig-prename descclassname">honeybadgermpc.mpc.</code><code class="sig-name descname">test_prog2</code><span class="sig-paren">(</span><em class="sig-param">context</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#test_prog2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.test_prog2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="commonsubset">
+<h2>commonsubset<a class="headerlink" href="#commonsubset" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="rand">
+<h2>rand<a class="headerlink" href="#rand" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="secretshare">
+<h2>secretshare<a class="headerlink" href="#secretshare" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-honeybadgermpc.router">
+<span id="router"></span><h2>router<a class="headerlink" href="#module-honeybadgermpc.router" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="honeybadgermpc.router.Router">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.router.</code><code class="sig-name descname">Router</code><span class="sig-paren">(</span><em class="sig-param">num_parties: int</em>, <em class="sig-param">debug: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/router.html#Router"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.Router" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Base class for Router objects defining the recv and send methods.</p>
+<dl class="attribute">
+<dt id="honeybadgermpc.router.Router._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#honeybadgermpc.router.Router._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.Router._make_broadcasts">
+<code class="sig-name descname">_make_broadcasts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/router.html#Router._make_broadcasts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.Router._make_broadcasts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.Router._make_recvs">
+<code class="sig-name descname">_make_recvs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/router.html#Router._make_recvs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.Router._make_recvs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.Router._make_sends">
+<code class="sig-name descname">_make_sends</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/router.html#Router._make_sends"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.Router._make_sends" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.Router.broadcast">
+<code class="sig-name descname">broadcast</code><span class="sig-paren">(</span><em class="sig-param">player_id: int</em>, <em class="sig-param">message: object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/router.html#Router.broadcast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.Router.broadcast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a message from player to all other players</p>
+<dl class="simple">
+<dt>args:</dt><dd><p>player_id (int): Id of the broadcasting player
+message (object): Message to broadcast</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.Router.recv">
+<em class="property">abstract async </em><code class="sig-name descname">recv</code><span class="sig-paren">(</span><em class="sig-param">player_id: int</em><span class="sig-paren">)</span> &#x2192; object<a class="reference internal" href="_modules/honeybadgermpc/router.html#Router.recv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.Router.recv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives a message from player with id <cite>player_id</cite></p>
+<dl class="simple">
+<dt>args:</dt><dd><p>player_id (int): Id of the receiving player</p>
+</dd>
+<dt>outputs:</dt><dd><p>returns the first message that arrives for the given player</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.Router.send">
+<em class="property">abstract </em><code class="sig-name descname">send</code><span class="sig-paren">(</span><em class="sig-param">player_id: int</em>, <em class="sig-param">dest_id: int</em>, <em class="sig-param">message: object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/router.html#Router.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.Router.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a message to player with id <cite>dest</cite> from <cite>player_id</cite></p>
+<dl class="simple">
+<dt>args:</dt><dd><p>player_id (int): Id of the sending player
+dest_id (int): Id of the receiving player
+message (object): Message to send to dest_id</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="honeybadgermpc.router.SimpleRouter">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.router.</code><code class="sig-name descname">SimpleRouter</code><span class="sig-paren">(</span><em class="sig-param">num_parties: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/router.html#SimpleRouter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.SimpleRouter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="libref/router.html#honeybadgermpc.router.Router" title="honeybadgermpc.router.Router"><code class="xref py py-class docutils literal notranslate"><span class="pre">honeybadgermpc.router.Router</span></code></a></p>
+<p>Simple router which uses queues as a mechanism for sending messages between players</p>
+<dl class="attribute">
+<dt id="honeybadgermpc.router.SimpleRouter._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#honeybadgermpc.router.SimpleRouter._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.SimpleRouter._make_broadcasts">
+<code class="sig-name descname">_make_broadcasts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.router.SimpleRouter._make_broadcasts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.SimpleRouter._make_recvs">
+<code class="sig-name descname">_make_recvs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.router.SimpleRouter._make_recvs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.SimpleRouter._make_sends">
+<code class="sig-name descname">_make_sends</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.router.SimpleRouter._make_sends" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.SimpleRouter.broadcast">
+<code class="sig-name descname">broadcast</code><span class="sig-paren">(</span><em class="sig-param">player_id: int</em>, <em class="sig-param">message: object</em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.router.SimpleRouter.broadcast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a message from player to all other players</p>
+<dl class="simple">
+<dt>args:</dt><dd><p>player_id (int): Id of the broadcasting player
+message (object): Message to broadcast</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.SimpleRouter.recv">
+<code class="sig-name descname">recv</code><span class="sig-paren">(</span><em class="sig-param">player_id: int</em><span class="sig-paren">)</span> &#x2192; object<a class="reference internal" href="_modules/honeybadgermpc/router.html#SimpleRouter.recv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.SimpleRouter.recv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a message for player_id.</p>
+<dl class="simple">
+<dt>args:</dt><dd><p>player_id(int): id of player to receive message</p>
+</dd>
+<dt>outputs:</dt><dd><p>Returns the first message received for the given player</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.router.SimpleRouter.send">
+<code class="sig-name descname">send</code><span class="sig-paren">(</span><em class="sig-param">player_id: int</em>, <em class="sig-param">dest_id: int</em>, <em class="sig-param">message: object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/router.html#SimpleRouter.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.router.SimpleRouter.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends  message from player_id to dest_id</p>
+<dl class="simple">
+<dt>args:</dt><dd><p>player_id (int): Player sending message
+dest_id (int): Player receiving message
+message (object): Message to send to other player</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

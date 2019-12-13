@@ -1,3 +1,12 @@
+if (!String.prototype.startsWith) {
+  Object.defineProperty(String.prototype, 'startsWith', {
+    value: function(search, pos) {
+      pos = !pos || pos < 0 ? 0 : +pos;
+      return this.substring(pos, pos + search.length) === search;
+    }
+  });
+}
+
 // From http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
 function elementIsInView (el) {
   if (typeof jQuery === "function" && el instanceof jQuery) {
@@ -51,17 +60,30 @@ $(function() {
       // Find offset in view
       const offset = (this1.offset().top - $(window).scrollTop());
 
-      $('[data-tab]').each(function() {
+      // Enable all tabs with this id
+
+      // For each tab group
+      $('.sphinx-tabs').each(function() {
         var this2 = $(this);
-        // Remove 'active' class from tabs that aren't the same
-        if (this2.attr('data-tab') !== data_tab) {
-          // Keep 'active' if there isn't a tab with the same data-tab value
-          if (0 < this2.parent().find('[data-tab="' + data_tab + '"]').length) {
-            this2.removeClass('active');
-          }
-        } else {
-          // Add 'active' if data-tab value is the same
-          this2.addClass('active');
+
+        // Check if tab group has a tab matching the clicked tab
+        var has_tab = false;
+        this2.children().eq(0).children().each(function() {
+          has_tab |= $(this).attr('data-tab') === data_tab;
+        });
+
+        if (has_tab) {
+          // Enable just the matching tab
+          var toggle = function() {
+            var this3 = $(this);
+            if (this3.attr('data-tab') === data_tab) {
+              this3.addClass('active');
+            } else {
+              this3.removeClass('active');
+            }
+          };
+          this2.children().eq(0).children('[data-tab]').each(toggle);
+          this2.children('[data-tab]').each(toggle);
         }
       });
 

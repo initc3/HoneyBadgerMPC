@@ -17,36 +17,41 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -85,7 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -104,6 +109,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -171,7 +177,13 @@
            <div itemprop="articleBody">
             
   <h1>Source code for honeybadgermpc.field</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright 2007, 2008 VIFF Development Team.</span>
+<span></span><span class="c1"># Copyright 2019 Decentralized Systems Lab</span>
+<span class="c1">#</span>
+<span class="c1"># This file (field.py) began as a modification of a file from</span>
+<span class="c1"># Viff, the copyright notice for which is posted below.</span>
+<span class="c1"># See https://viff.dk/</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2007, 2008 VIFF Development Team.</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of VIFF, the Virtual Ideal Functionality Framework.</span>
 <span class="c1">#</span>
@@ -187,66 +199,8 @@
 <span class="c1">#</span>
 <span class="c1"># You should have received a copy of the GNU Lesser General Public</span>
 <span class="c1"># License along with VIFF. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
-
-<span class="sd">&quot;&quot;&quot;Modeling of Galois (finite) fields. The GF function creates classes</span>
-<span class="sd">which implements Galois (finite) fields of prime order</span>
-
-<span class="sd">All fields work the same: instantiate an object from a field to get</span>
-<span class="sd">hold of an element of that field. Elements implement the normal</span>
-<span class="sd">arithmetic one would expect: addition, multiplication, etc.</span>
-
-<span class="sd">Defining a field:</span>
-
-<span class="sd">&gt;&gt;&gt; Zp = GF.get(19)</span>
-
-<span class="sd">Defining field elements:</span>
-
-<span class="sd">&gt;&gt;&gt; x = Zp(10)</span>
-<span class="sd">&gt;&gt;&gt; y = Zp(15)</span>
-<span class="sd">&gt;&gt;&gt; z = Zp(1)</span>
-
-<span class="sd">Addition and subtraction (with modulo reduction):</span>
-
-<span class="sd">&gt;&gt;&gt; x + y</span>
-<span class="sd">{6}</span>
-<span class="sd">&gt;&gt;&gt; x - y</span>
-<span class="sd">{14}</span>
-
-<span class="sd">Bitwise xor for field elements:</span>
-
-<span class="sd">&gt;&gt;&gt; z ^ z</span>
-<span class="sd">{0}</span>
-<span class="sd">&gt;&gt;&gt; z ^ 0</span>
-<span class="sd">{1}</span>
-<span class="sd">&gt;&gt;&gt; 1 ^ z</span>
-<span class="sd">{0}</span>
-
-<span class="sd">Exponentiation:</span>
-
-<span class="sd">&gt;&gt;&gt; x**3</span>
-<span class="sd">{12}</span>
-
-<span class="sd">Square roots can be found for elements based on GF fields with a Blum</span>
-<span class="sd">prime modulus (see :func:`GF` for more information):</span>
-
-<span class="sd">&gt;&gt;&gt; x.sqrt()</span>
-<span class="sd">{3}</span>
-
-<span class="sd">Field elements from different fields cannot be mixed, you will get a</span>
-<span class="sd">type error if you try:</span>
-
-<span class="sd">&gt;&gt;&gt; Zq = GF.get(17)</span>
-<span class="sd">&gt;&gt;&gt; z = Zq(2)</span>
-<span class="sd">&gt;&gt;&gt; x + z</span>
-<span class="sd">Traceback (most recent call last):</span>
-<span class="sd">    ...</span>
-<span class="sd">TypeError: unsupported operand type(s) for +: &#39;GFElement&#39; and &#39;GFElement&#39;</span>
-
-<span class="sd">The reason for the slightly confusing error message is that ``x`` and</span>
-<span class="sd">``z`` are instances of two *different* classes called ``GFElement``.</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-<span class="kn">from</span> <span class="nn">gmpy2</span> <span class="k">import</span> <span class="n">is_prime</span><span class="p">,</span> <span class="n">mpz</span>
+<span class="kn">from</span> <span class="nn">gmpy2</span> <span class="kn">import</span> <span class="n">is_prime</span><span class="p">,</span> <span class="n">mpz</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">Random</span>
 
 
 <div class="viewcode-block" id="FieldsNotIdentical"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.FieldsNotIdentical">[docs]</a><span class="k">class</span> <span class="nc">FieldsNotIdentical</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -256,50 +210,46 @@
 <div class="viewcode-block" id="FieldElement"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.FieldElement">[docs]</a><span class="k">class</span> <span class="nc">FieldElement</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Common base class for elements.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Extract integer value from the field element.</span>
-
-<span class="sd">        &gt;&gt;&gt; int(GF256(10))</span>
-<span class="sd">        10</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
 
     <span class="n">__long__</span> <span class="o">=</span> <span class="fm">__int__</span></div>
 
 
 <div class="viewcode-block" id="GF"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GF">[docs]</a><span class="k">class</span> <span class="nc">GF</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="c1"># Class is implemented following the &#39;multiton&#39; design pattern</span>
+    <span class="c1"># When the constructor is called with a value that&#39;s been used</span>
+    <span class="c1"># before, it returns the previously created field, such that all</span>
+    <span class="c1"># fields with the same modulus are the same object</span>
     <span class="n">_field_cache</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modulus</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">modulus</span><span class="p">):</span>
+        <span class="c1"># Creates a new field if not present in the cache</span>
+        <span class="k">return</span> <span class="n">GF</span><span class="o">.</span><span class="n">_field_cache</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">modulus</span><span class="p">,</span> <span class="nb">super</span><span class="p">(</span><span class="n">GF</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modulus</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_prime</span><span class="p">(</span><span class="n">mpz</span><span class="p">(</span><span class="n">modulus</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{modulus}</span><span class="s2"> is not a prime&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">=</span> <span class="n">modulus</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">GF</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">,))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">GF</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">,))</span>
 
-<div class="viewcode-block" id="GF.get"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GF.get">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">modulus</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">modulus</span> <span class="ow">in</span> <span class="n">GF</span><span class="o">.</span><span class="n">_field_cache</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">GF</span><span class="o">.</span><span class="n">_field_cache</span><span class="p">[</span><span class="n">modulus</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_prime</span><span class="p">(</span><span class="n">mpz</span><span class="p">(</span><span class="n">modulus</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> is not a prime&quot;</span> <span class="o">%</span> <span class="n">modulus</span><span class="p">)</span>
-
-        <span class="n">gf</span> <span class="o">=</span> <span class="n">GF</span><span class="p">(</span><span class="n">modulus</span><span class="p">)</span>
-        <span class="n">GF</span><span class="o">.</span><span class="n">_field_cache</span><span class="p">[</span><span class="n">modulus</span><span class="p">]</span> <span class="o">=</span> <span class="n">gf</span>
-        <span class="k">return</span> <span class="n">gf</span></div></div>
+<div class="viewcode-block" id="GF.random"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GF.random">[docs]</a>    <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="GFElement"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement">[docs]</a><span class="k">class</span> <span class="nc">GFElement</span><span class="p">(</span><span class="n">FieldElement</span><span class="p">):</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">gf</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">gf</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">=</span> <span class="n">gf</span><span class="o">.</span><span class="n">modulus</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">gf</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span>
 
-    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Addition.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">GFElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
@@ -315,7 +265,7 @@
 
     <span class="fm">__radd__</span> <span class="o">=</span> <span class="fm">__add__</span>
 
-    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Subtraction.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">GFElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
@@ -326,26 +276,11 @@
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Subtraction (reflected argument version).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">other</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__xor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Xor for bitvalues.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">GFElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
-            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">^</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">^</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__rxor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Xor for bitvalues (reflected argument version).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">other</span> <span class="o">^</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Multiplication.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">GFElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
@@ -358,15 +293,15 @@
 
     <span class="fm">__rmul__</span> <span class="o">=</span> <span class="fm">__mul__</span>
 
-    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exponent</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exponent</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Exponentiation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">exponent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Negation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inversion.</span>
 
 <span class="sd">        Note that zero cannot be inverted, trying to do so</span>
@@ -384,8 +319,8 @@
             <span class="k">while</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">quotient</span> <span class="o">=</span> <span class="n">a</span> <span class="o">//</span> <span class="n">b</span>
                 <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">%</span> <span class="n">b</span>
-                <span class="n">x</span><span class="p">,</span> <span class="n">lastx</span> <span class="o">=</span> <span class="n">lastx</span> <span class="o">-</span> <span class="n">quotient</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span>
-                <span class="n">y</span><span class="p">,</span> <span class="n">lasty</span> <span class="o">=</span> <span class="n">lasty</span> <span class="o">-</span> <span class="n">quotient</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">lastx</span> <span class="o">=</span> <span class="n">lastx</span> <span class="o">-</span> <span class="n">quotient</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span>
+                <span class="n">y</span><span class="p">,</span> <span class="n">lasty</span> <span class="o">=</span> <span class="n">lasty</span> <span class="o">-</span> <span class="n">quotient</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">lastx</span><span class="p">,</span> <span class="n">lasty</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
 
         <span class="n">inverse</span> <span class="o">=</span> <span class="n">extended_gcd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
@@ -412,20 +347,43 @@
 
 <div class="viewcode-block" id="GFElement.sqrt"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.sqrt">[docs]</a>    <span class="k">def</span> <span class="nf">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Square root.</span>
-
 <span class="sd">        No attempt is made the to return the positive square root.</span>
-
-<span class="sd">        Computing square roots is only possible when the modulus</span>
-<span class="sd">        is a Blum prime (congruent to 3 mod 4).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Cannot compute square &quot;</span> \
-            <span class="s2">&quot;root of </span><span class="si">%s</span><span class="s2"> with modulus </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Modulus must be odd&quot;</span>
+        <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
 
-        <span class="c1"># Because we assert that the modulus is a Blum prime</span>
-        <span class="c1"># (congruent to 3 mod 4), there will be no reminder in the</span>
-        <span class="c1"># division below.</span>
-        <span class="n">root</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># The case that the modulus is a Blum prime</span>
+            <span class="c1"># (congruent to 3 mod 4), there will be no remainder in the</span>
+            <span class="c1"># division below.</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The case that self.modulus % 4 == 1</span>
+            <span class="c1"># Cipolla’s Algorithm</span>
+            <span class="c1"># http://people.math.gatech.edu/~mbaker/pdf/cipolla2011.pdf</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">u</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">):</span>
+                <span class="n">u</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="n">i</span> <span class="o">-</span> <span class="bp">self</span>
+                <span class="k">if</span> <span class="nb">pow</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">t</span> <span class="o">=</span> <span class="n">i</span>
+                    <span class="k">break</span>
+
+            <span class="k">def</span> <span class="nf">cipolla_mult</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">((</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">w</span><span class="p">),</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+            <span class="n">exp</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">exp_bin</span> <span class="o">=</span> <span class="nb">bin</span><span class="p">(</span><span class="n">exp</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="n">x1</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">x2</span> <span class="o">=</span> <span class="n">cipolla_mult</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">exp_bin</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">exp_bin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;0&quot;</span><span class="p">:</span>
+                    <span class="n">x2</span> <span class="o">=</span> <span class="n">cipolla_mult</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+                    <span class="n">x1</span> <span class="o">=</span> <span class="n">cipolla_mult</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">x1</span> <span class="o">=</span> <span class="n">cipolla_mult</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+                    <span class="n">x2</span> <span class="o">=</span> <span class="n">cipolla_mult</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">x1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="GFElement.bit"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.bit">[docs]</a>    <span class="k">def</span> <span class="nf">bit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Extract a bit (index is counted from zero).&quot;&quot;&quot;</span>
@@ -436,7 +394,7 @@
 
 <span class="sd">        If x &gt; floor(p/2) then subtract p to obtain negative integer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
@@ -445,18 +403,18 @@
         <span class="sd">&quot;&quot;&quot;Return a unsigned representation of the value&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;{</span><span class="si">%d</span><span class="s2">}&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
         <span class="c1"># return &quot;GFElement(%d)&quot; % self.value</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Informal string representation.</span>
 
 <span class="sd">        This is simply the value enclosed in curly braces.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;{</span><span class="si">%d</span><span class="s2">}&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">unsigned</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Equality test.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
@@ -465,7 +423,7 @@
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">other</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inequality test.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
@@ -481,17 +439,17 @@
                 <span class="k">raise</span> <span class="n">FieldsNotIdentical</span>
             <span class="c1"># TODO Replace with (a &gt; b) - (a &lt; b)</span>
             <span class="c1"># see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons</span>
-            <span class="k">return</span> <span class="nb">cmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>     <span class="c1"># noqa  XXX until above is done</span>
+            <span class="k">return</span> <span class="nb">cmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># noqa  XXX until above is done</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="c1"># TODO Replace with (a &gt; b) - (a &lt; b)</span>
             <span class="c1"># see https://docs.python.org/3/whatsnew/3.0.html#ordering-comparisons</span>
-            <span class="k">return</span> <span class="nb">cmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>   <span class="c1"># noqa XXX until above is done</span>
+            <span class="k">return</span> <span class="nb">cmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>  <span class="c1"># noqa XXX until above is done</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Hash value.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__nonzero__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Truth value testing.</span>
 
 <span class="sd">        Returns False if this element is zero, True otherwise.</span>
@@ -509,7 +467,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="mi">0</span></div>
 
 
-<div class="viewcode-block" id="FakeGF"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.FakeGF">[docs]</a><span class="k">def</span> <span class="nf">FakeGF</span><span class="p">(</span><span class="n">modulus</span><span class="p">):</span>
+<div class="viewcode-block" id="fake_gf"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.fake_gf">[docs]</a><span class="k">def</span> <span class="nf">fake_gf</span><span class="p">(</span><span class="n">modulus</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Construct a fake field.</span>
 
 <span class="sd">    These fields should only be used in benchmarking. They work like</span>
@@ -536,7 +494,7 @@
     <span class="k">class</span> <span class="nc">FakeFieldElement</span><span class="p">(</span><span class="n">FieldElement</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Fake field which does no computations.&quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;Create a fake field element.</span>
 
 <span class="sd">            The element will store *value* in order to take up a realistic</span>
@@ -546,17 +504,36 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
 
         <span class="c1"># Binary operations.</span>
-        <span class="fm">__add__</span> <span class="o">=</span> <span class="fm">__radd__</span> <span class="o">=</span> <span class="fm">__sub__</span> <span class="o">=</span> <span class="fm">__rsub__</span> \
-            <span class="o">=</span> <span class="fm">__mul__</span> <span class="o">=</span> <span class="fm">__rmul__</span> <span class="o">=</span> <span class="n">__div__</span> <span class="o">=</span> <span class="n">__rdiv__</span> \
-            <span class="o">=</span> <span class="fm">__truediv__</span> <span class="o">=</span> <span class="fm">__rtruediv__</span> <span class="o">=</span> <span class="fm">__floordiv__</span> <span class="o">=</span> <span class="fm">__rfloordiv__</span> \
-            <span class="o">=</span> <span class="fm">__pow__</span> <span class="o">=</span> <span class="fm">__neg__</span> \
-            <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">FakeFieldElement</span><span class="p">(</span><span class="n">return_value</span><span class="p">)</span>
+        <span class="fm">__add__</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="fm">__radd__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="fm">__sub__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="fm">__rsub__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="fm">__mul__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="fm">__rmul__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">__div__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">__rdiv__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="fm">__truediv__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="fm">__rtruediv__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="fm">__floordiv__</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="fm">__rfloordiv__</span> <span class="o">=</span> <span class="fm">__pow__</span> <span class="o">=</span> <span class="fm">__neg__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">FakeFieldElement</span><span class="p">(</span>
+            <span class="n">return_value</span>
+        <span class="p">)</span>
 
         <span class="c1"># Unary operations.</span>
         <span class="fm">__invert__</span> <span class="o">=</span> <span class="n">sqrt</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="n">FakeFieldElement</span><span class="p">(</span><span class="n">return_value</span><span class="p">)</span>
 
         <span class="c1"># Bit extraction. We pretend that the number is *very* big.</span>
-        <span class="n">bit</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="mi">1</span>     <span class="c1"># noqa  XXX for the time being</span>
+        <span class="k">def</span> <span class="nf">bit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">1</span>  <span class="c1"># noqa  XXX for the time being</span>
 
         <span class="c1"># Fake field elements are printed with double curly brackets.</span>
         <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="s2">&quot;{{</span><span class="si">%d</span><span class="s2">}}&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
@@ -567,8 +544,9 @@
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">doctest</span>      <span class="c1"># pragma NO COVER</span>
-    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>   <span class="c1"># pragma NO COVER</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>  <span class="c1"># pragma NO COVER</span>
+
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>  <span class="c1"># pragma NO COVER</span>
 </pre></div>
 
            </div>
@@ -598,28 +576,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

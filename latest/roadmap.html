@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Roadmap &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  <title>Development tasks for HoneyBadgerMPC prototype &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
   
 
   
@@ -17,34 +17,37 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Running ACS with an EVM blockchain" href="guides/acs-evm.html" />
     <link rel="prev" title="Performance" href="performance.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -83,12 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Roadmap</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#benchmarking">Benchmarking</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#project-structure">Project structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#development-tasks-for-honeybadgermpc-prototype">Development tasks for HoneyBadgerMPC prototype</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -107,6 +105,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -156,7 +155,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Roadmap</li>
+      <li>Development tasks for HoneyBadgerMPC prototype</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -175,35 +174,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="roadmap">
-<h1>Roadmap<a class="headerlink" href="#roadmap" title="Permalink to this headline">¶</a></h1>
-<p><em>draft</em></p>
-<div class="section" id="benchmarking">
-<h2>Benchmarking<a class="headerlink" href="#benchmarking" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>Measure the number of Beaver triples that can be generated per seconds.</li>
-<li>Become aware of where the bottlenecks are, for each subprotocol.</li>
-<li>One performance goal is to be able to have similar performance metrics as viff
-with better robustness and capability to support a larger number of participants.</li>
-<li>Figure out how well the protocol performs for real-world applications such as the
-sugar beets auction.</li>
-<li>Identify which parts of the implementation need performance optimizations, and
-write C or Rust extensions for these parts.</li>
-</ul>
-</div>
-<div class="section" id="project-structure">
-<h2>Project structure<a class="headerlink" href="#project-structure" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>Refine the project structure over time to reflect the modularity and composability
-of the protocol.</li>
-<li>Possibly, eventually package and distribute the key sub-protocols as standalone,
-re-usable software libraries/packages which can be used in diverse larger protocols.</li>
-</ul>
-</div>
-<div class="section" id="development-tasks-for-honeybadgermpc-prototype">
-<h2>Development tasks for HoneyBadgerMPC prototype<a class="headerlink" href="#development-tasks-for-honeybadgermpc-prototype" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="development-tasks-for-honeybadgermpc-prototype">
+<h1>Development tasks for HoneyBadgerMPC prototype<a class="headerlink" href="#development-tasks-for-honeybadgermpc-prototype" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/issues">https://github.com/initc3/HoneyBadgerMPC/issues</a></p>
-</div>
 </div>
 
 
@@ -217,7 +190,7 @@ re-usable software libraries/packages which can be used in diverse larger protoc
         <a href="guides/acs-evm.html" class="btn btn-neutral float-right" title="Running ACS with an EVM blockchain" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="performance.html" class="btn btn-neutral" title="Performance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="performance.html" class="btn btn-neutral float-left" title="Performance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -243,26 +216,16 @@ re-usable software libraries/packages which can be used in diverse larger protoc
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

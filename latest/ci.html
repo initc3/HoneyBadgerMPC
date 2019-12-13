@@ -17,34 +17,37 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Packaging and Distributing HoneyBadgerMPC" href="packaging.html" />
     <link rel="prev" title="Reviewing and merging pull requests" href="development/reviewing-contributions.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -83,7 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -102,6 +105,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Continuous integration</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#travis-yml">.travis.yml</a></li>
@@ -190,7 +194,7 @@ Each check-in is then verified by an automated build, allowing teams to
 detect problems early.</em></p>
 <p><em>By integrating regularly, you can detect errors quickly, and locate them
 more easily.</em></p>
-<p class="attribution">&mdash;<a class="reference external" href="ThoughtWorks:ContinuousIntegration">ThoughtWorks</a></p>
+<p class="attribution">—<a class="reference external" href="ThoughtWorks:ContinuousIntegration">ThoughtWorks</a></p>
 </div></blockquote>
 <p><code class="docutils literal notranslate"><span class="pre">honeybadgermpc</span></code> currently uses <a class="reference external" href="https://docs.travis-ci.com/">Travis CI</a> to perform various checks when
 one wishes to merge new code into a shared branch under the shared repository
@@ -201,16 +205,16 @@ triggered.</p>
 <h2>.travis.yml<a class="headerlink" href="#travis-yml" title="Permalink to this headline">¶</a></h2>
 <p>Whenever a build is triggered, three checks are currently performed:</p>
 <ol class="arabic simple">
-<li>tests</li>
-<li>code quality via <a class="reference external" href="http://flake8.pycqa.org/en/latest/index.html">flake8</a>. and</li>
-<li>documentation generation.</li>
+<li><p>tests</p></li>
+<li><p>code quality via <a class="reference external" href="http://flake8.pycqa.org/en/latest/index.html">flake8</a>. and</p></li>
+<li><p>documentation generation.</p></li>
 </ol>
 <p>Each of these checks corresponds to a row in the <a class="reference external" href="https://docs.travis-ci.com/user/customizing-the-build/#build-matrix">build matrix</a>:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">matrix</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">include</span><span class="p p-Indicator">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">env</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">BUILD=tests</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">env</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">BUILD=flake8</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">env</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">BUILD=docs</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">matrix</span><span class="p">:</span>
+  <span class="nt">include</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">env</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">BUILD=tests</span>
+    <span class="p p-Indicator">-</span> <span class="nt">env</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">BUILD=flake8</span>
+    <span class="p p-Indicator">-</span> <span class="nt">env</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">BUILD=docs</span>
 </pre></div>
 </div>
 <p>Depending on the value of the <code class="docutils literal notranslate"><span class="pre">BUILD</span></code> variable the various steps (e.g.:
@@ -218,11 +222,11 @@ triggered.</p>
 <p class="rubric">Using Python 3.7 on Travis CI</p>
 <p>In order to use Python 3.7 the following workaround is used in
 <code class="docutils literal notranslate"><span class="pre">.travis.yml</span></code>:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">os</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">linux</span>
-<span class="l l-Scalar l-Scalar-Plain">dist</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">xenial</span>
-<span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">python</span>
-<span class="l l-Scalar l-Scalar-Plain">python</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">3.7</span>
-<span class="l l-Scalar l-Scalar-Plain">sudo</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">os</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">linux</span>
+<span class="nt">dist</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">xenial</span>
+<span class="nt">language</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">python</span>
+<span class="nt">python</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3.7</span>
+<span class="nt">sudo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
 </pre></div>
 </div>
 <p>See currently opened issue on this matter:
@@ -230,9 +234,9 @@ triggered.</p>
 <p class="rubric">Using Docker on Travis CI</p>
 <p>In order to use Docker the following settings are needed in
 <code class="docutils literal notranslate"><span class="pre">travis.yml</span></code>:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">sudo</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">sudo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
 
-<span class="l l-Scalar l-Scalar-Plain">services</span><span class="p p-Indicator">:</span>
+<span class="nt">services</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">docker</span>
 </pre></div>
 </div>
@@ -257,8 +261,8 @@ the ones used for development. One key difference is that only the docs or
 tests requirements are installed, depending on the value of the <code class="docutils literal notranslate"><span class="pre">BUILD</span></code>
 environment variable.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Some work could perhaps be done to limit the duplication accross the
+<p class="admonition-title">Note</p>
+<p>Some work could perhaps be done to limit the duplication accross the
 two Dockerfiles, by using a base Dockerfile for instance, but this may
 also complicate things so for now some duplication is tolerated.</p>
 </div>
@@ -277,12 +281,12 @@ the end of the <code class="docutils literal notranslate"><span class="pre">scri
 <p>If the test run was successful the report is uploaded to <a class="reference external" href="https://codecov.io/gh/initc3/HoneyBadgerMPC">codecov</a> in the
 <code class="docutils literal notranslate"><span class="pre">after_success</span></code> step:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># .travis.yml</span>
-<span class="l l-Scalar l-Scalar-Plain">after_success</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">.ci/travis-after-success.sh</span>
+<span class="nt">after_success</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">.ci/travis-after-success.sh</span>
 </pre></div>
 </div>
 <div class="admonition important">
-<p class="first admonition-title">Important</p>
-<p class="last">It is important to note that the coverage measurement happens
+<p class="admonition-title">Important</p>
+<p>It is important to note that the coverage measurement happens
 in a docker container meanwhile the report upload happens outside the
 container. There are different ways to handle this situation and the
 current approach used is a variation of what is outlined in
@@ -306,9 +310,9 @@ a  <a class="reference external" href="https://docs.codecov.io/docs/team-bot">te
 <div class="section" id="recommended-readings">
 <h2>Recommended readings<a class="headerlink" href="#recommended-readings" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><a class="reference external" href="https://docs.travis-ci.com/user/for-beginners">Travis CI: Core Concepts for Beginners</a></li>
-<li><a class="reference external" href="https://www.thoughtworks.com/continuous-integration">ThoughtWorks: Continuous Integration</a></li>
-<li><a class="reference external" href="https://docs.python-guide.org/scenarios/ci/">https://docs.python-guide.org/scenarios/ci/</a></li>
+<li><p><a class="reference external" href="https://docs.travis-ci.com/user/for-beginners">Travis CI: Core Concepts for Beginners</a></p></li>
+<li><p><a class="reference external" href="https://www.thoughtworks.com/continuous-integration">ThoughtWorks: Continuous Integration</a></p></li>
+<li><p><a class="reference external" href="https://docs.python-guide.org/scenarios/ci/">https://docs.python-guide.org/scenarios/ci/</a></p></li>
 </ul>
 </div>
 </div>
@@ -324,7 +328,7 @@ a  <a class="reference external" href="https://docs.codecov.io/docs/team-bot">te
         <a href="packaging.html" class="btn btn-neutral float-right" title="Packaging and Distributing HoneyBadgerMPC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="development/reviewing-contributions.html" class="btn btn-neutral" title="Reviewing and merging pull requests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="development/reviewing-contributions.html" class="btn btn-neutral float-left" title="Reviewing and merging pull requests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -350,26 +354,16 @@ a  <a class="reference external" href="https://docs.codecov.io/docs/team-bot">te
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

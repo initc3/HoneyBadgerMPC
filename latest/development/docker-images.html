@@ -1,0 +1,383 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>HoneyBadgerMPC Docker Image &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reviewing and merging pull requests" href="reviewing-contributions.html" />
+    <link rel="prev" title="Contributing new code" href="contributing.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing new code</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">HoneyBadgerMPC Docker Image</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#code-independent-dependencies">Code-independent dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-dependent-and-experimental-dependencies">Code-dependent and experimental dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#guidelines-for-modifying-the-images">Guidelines for modifying the images</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#modifications-to-the-main-honeybadgermpc-image">Modifications to the main HoneyBadgerMPC image</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#build-time">Build time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parent-image-digest">Parent image digest</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-or-modifying-a-core-dependency">Adding, or modifying a core dependency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modifications-of-honeybadgermpc-deps-parent-image">Modifications of honeybadgermpc-deps (parent image)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#using-a-new-parent-image-in-honeybadgermpc-main-image">Using a new parent image in honeybadgermpc (main image)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>HoneyBadgerMPC Docker Image</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/development/docker-images.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="honeybadgermpc-docker-image">
+<h1>HoneyBadgerMPC Docker Image<a class="headerlink" href="#honeybadgermpc-docker-image" title="Permalink to this headline">¶</a></h1>
+<p>The Docker image for HoneyBadgerMPC is roughly made up of two main
+parts:</p>
+<ol class="arabic simple">
+<li><p>HoneyBadgerMPC code-independent dependencies
+(<a class="reference external" href="https://hub.docker.com/repository/docker/initc3/honeybadgermpc-deps">honeybadgermpc-deps</a>).</p></li>
+<li><p>HoneyBadgerMPC code-dependent and experimental dependencies
+(<a class="reference external" href="https://hub.docker.com/repository/docker/initc3/honeybadgermpc">honeybadgermpc</a>).</p></li>
+</ol>
+<p>In addition to distinguishing between dependencies that depend on
+the HoneyBadgerMPC source code from those that do not, it is also
+useful to distinguish between dependencies that can be installed via
+a package management tool like <code class="docutils literal notranslate"><span class="pre">apt</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span></code> from dependencies
+that must be built and installed from their source code.</p>
+<ol class="arabic simple">
+<li><p>Dependencies obtained from a package repository. (Examples:
+<a class="reference external" href="https://www.debian.org/distrib/packages">debian packages</a> or <a class="reference external" href="https://pypi.org/">PyPI</a>.)</p></li>
+<li><p>Dependencies which must be installed from their source code.</p></li>
+</ol>
+<p>Some dependencies that must be installed from their source code can
+take a lot of time to build and in these cases it may be convenient
+to provide standalone Docker images that contain the pre-built binaries
+and headers. The parent image of HoneyBadgerMPC makes use of such
+images:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://hub.docker.com/repository/docker/initc3/flint2">FLINT</a></p></li>
+<li><p><a class="reference external" href="https://hub.docker.com/repository/docker/initc3/ntl">NTL</a></p></li>
+<li><p><a class="reference external" href="https://hub.docker.com/repository/docker/initc3/pbc">PBC</a></p></li>
+<li><p><a class="reference external" href="https://hub.docker.com/repository/docker/initc3/charm-crypto">Charm-crypto</a></p></li>
+<li><p><a class="reference external" href="https://hub.docker.com/repository/docker/initc3/rust-frozen">Rust nightly frozen</a></p></li>
+</ul>
+<div class="section" id="code-independent-dependencies">
+<h2>Code-independent dependencies<a class="headerlink" href="#code-independent-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>The Docker image for HoneyBadgerMPC is built from the parent image
+<a class="reference external" href="https://hub.docker.com/repository/docker/initc3/honeybadgermpc-deps">honeybadgermpc-deps</a>. This parent image contains core
+dependencies that do not need any of the HoneyBadgerMPC code or context
+from the HoneyBadgerMPC source repository. NTL or Rust are examples of
+such dependencies. The <code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code> for the parent image is
+maintained in <a class="reference external" href="https://github.com/initc3/docker-honeybadgermpc-deps">initc3/docker-honeybadgermpc-deps</a>.</p>
+</div>
+<div class="section" id="code-dependent-and-experimental-dependencies">
+<h2>Code-dependent and experimental dependencies<a class="headerlink" href="#code-dependent-and-experimental-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>The HoneyBadgerMPC main image contains dependencies that rely on the
+source code. Examples of such dependencies are the Rust/Python based
+<a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/tree/dev/pairing&lt;Paste&gt;">pairing</a> library and the C++ based asynchromix <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/blob/dev/apps/asynchromix/cpp/compute-power-sums.cpp">compute-power-sums</a>
+program. Dependencies required for integration or experimentation
+purposes can be added to the main image as well. For example,
+<code class="docutils literal notranslate"><span class="pre">solidity</span></code> is part of the main image as it is necessary for an
+integration with the Ethereum testnet (see <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/blob/dev/apps/asynchromix/asynchromix.sol">asynchromix.sol</a> and
+<a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/blob/dev/apps/asynchromix/asynchromix.py">asynchromix.py</a>). The <code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code> for the main image is maintained
+in <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC">initc3/HoneyBadgerMPC</a>.</p>
+</div>
+<div class="section" id="guidelines-for-modifying-the-images">
+<h2>Guidelines for modifying the images<a class="headerlink" href="#guidelines-for-modifying-the-images" title="Permalink to this headline">¶</a></h2>
+<p>Changes to the parent or main Docker image may be needed for various
+reasons. This section presents some suggestions on how to go about to
+perform the necessary changes.</p>
+<div class="section" id="modifications-to-the-main-honeybadgermpc-image">
+<h3>Modifications to the main HoneyBadgerMPC image<a class="headerlink" href="#modifications-to-the-main-honeybadgermpc-image" title="Permalink to this headline">¶</a></h3>
+<p>The main image can be modified by simply modifying the Dockerfile under
+<a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC">initc3/HoneyBadgerMPC</a> and
+making a pull request. See <a class="reference internal" href="contributing.html#contributing-new-code"><span class="std std-ref">Contributing new code</span></a> for help on
+making new contributions to HoneyBadgerMPC.</p>
+<div class="section" id="build-time">
+<h4>Build time<a class="headerlink" href="#build-time" title="Permalink to this headline">¶</a></h4>
+<p>Changes to the main image should ideally preserve or reduce the build
+time since this image is being built on Travis CI for pull requests
+and needs to be built or re-built by those who are developing the
+HoneyBadgerMPC code base.</p>
+</div>
+<div class="section" id="parent-image-digest">
+<h4>Parent image digest<a class="headerlink" href="#parent-image-digest" title="Permalink to this headline">¶</a></h4>
+<p>The parent image digest specified in the <code class="docutils literal notranslate"><span class="pre">FROM</span></code> statements controls
+which version of the parent image will be used. This digest should only
+be changed when that is indeed the intention! See
+<a class="reference internal" href="#use-new-parent-image"><span class="std std-ref">Using a new parent image in honeybadgermpc (main image)</span></a> to modify the parent image version in the
+main image, <a class="reference external" href="https://hub.docker.com/repository/docker/initc3/honeybadgermpc">honeybadgermpc</a>.</p>
+</div>
+</div>
+<div class="section" id="adding-or-modifying-a-core-dependency">
+<h3>Adding, or modifying a core dependency<a class="headerlink" href="#adding-or-modifying-a-core-dependency" title="Permalink to this headline">¶</a></h3>
+<p>For dependencies that can be added via a package manager like <code class="docutils literal notranslate"><span class="pre">apt</span></code>
+or <code class="docutils literal notranslate"><span class="pre">pip</span></code> you can simply add, or update the version of the dependency
+using the package manager.</p>
+<p>For dependencies that must be built from source, adding or modifying
+the dependency can be done in three or four phases:</p>
+<ol class="arabic simple">
+<li><p>Modify the main image, by modifying the <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/blob/dev/Dockerfile">Dockerfile</a>
+under <code class="docutils literal notranslate"><span class="pre">initc3/HoneyBadgerMPC</span></code>.</p></li>
+<li><p>Create a standalone image such as <a class="reference external" href="https://hub.docker.com/repository/docker/initc3/ntl">NTL</a>.</p></li>
+<li><p>Using the standalone image as a stage add the dependency to the main
+or parent image. See <a class="reference external" href="https://docs.docker.com/develop/develop-images/multistage-build/#use-an-external-image-as-a-stage">Use an external image as a “stage”</a>.</p></li>
+<li><p>If adding the dependency to the parent image, then change the
+sha256 digest of the parent image in the <code class="docutils literal notranslate"><span class="pre">FROM</span></code> statements in the
+main image.</p></li>
+</ol>
+<p>A core dependency (that does not depend on the source code of
+HoneyBadgerMPC) can always be added to the main image first, and moved
+to the parent image at a later time. This may be convenient for
+testing, experimentation or troubleshooting purposes.</p>
+<p>Modifying an existing core dependency can also be done in the main
+image. For instance, if the goal was to upgrade an existing dependency,
+like the Rust version, this could be done first in the main image by
+installing the new version and making it the default one.</p>
+</div>
+<div class="section" id="modifications-of-honeybadgermpc-deps-parent-image">
+<h3>Modifications of honeybadgermpc-deps (parent image)<a class="headerlink" href="#modifications-of-honeybadgermpc-deps-parent-image" title="Permalink to this headline">¶</a></h3>
+<p>Modifications to the parent image must be done via a pull request on
+the repository <a class="reference external" href="https://github.com/initc3/docker-honeybadgermpc-deps">initc3/docker-honeybadgermpc-deps</a>.</p>
+<p>Once a pull request is merged, a new image will be built and pushed to
+Docker Hub. When an image is pushed a sha256 digest of the image is
+generated. The sha256 digest is used as an identifier in Dockerfiles
+in <code class="docutils literal notranslate"><span class="pre">FROM</span></code> and <code class="docutils literal notranslate"><span class="pre">--from=</span></code> statements.</p>
+<div class="section" id="using-a-new-parent-image-in-honeybadgermpc-main-image">
+<span id="use-new-parent-image"></span><h4>Using a new parent image in honeybadgermpc (main image)<a class="headerlink" href="#using-a-new-parent-image-in-honeybadgermpc-main-image" title="Permalink to this headline">¶</a></h4>
+<p>In order to use a new parent image in the <a class="reference external" href="https://hub.docker.com/repository/docker/initc3/honeybadgermpc">honeybadgermpc</a>
+image, the sha256 digest in the <code class="docutils literal notranslate"><span class="pre">FROM</span></code> statements:</p>
+<div class="highlight-dockerfile notranslate"><div class="highlight"><pre><span></span><span class="c"># Dockerfile for honeybadgermpc image</span>
+<span class="k">ARG</span> <span class="nv">HBMPC_DEPS_DIGEST</span><span class="o">=</span><span class="s2">&quot;46902d869ea881d7b00b72ff6accf2558a5e15849da5fa5cc722b4ff82a507f8&quot;</span>
+
+<span class="k">FROM</span> <span class="s">initc3/honeybadgermpc-deps@sha256:$HBMPC_DEPS_DIGEST</span>
+</pre></div>
+</div>
+<p>of the <a class="reference external" href="https://github.com/initc3/HoneyBadgerMPC/blob/dev/Dockerfile">HoneyBadgerMPC Dockerfile</a> must point to the targeted parent
+image. Changing the parent image can be done in two ways:</p>
+<ol class="arabic simple">
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">build</span> <span class="pre">--build-arg</span> <span class="pre">HBMPC_DEPS_DIGEST=&lt;new_digest&gt;</span> <span class="pre">...</span></code></p></li>
+<li><p>Changing the default value of <code class="docutils literal notranslate"><span class="pre">HBMPC_DEPS_DIGEST</span></code> in the
+<code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code>.</p></li>
+</ol>
+<p><strong>Image digest generation.</strong>  The image digest is generated when the
+image is pushed to Docker Hub. For <a class="reference external" href="https://hub.docker.com/repository/docker/initc3/honeybadgermpc-deps">honeybadgermpc-deps</a> this
+happens when a pull request is merged in the <code class="docutils literal notranslate"><span class="pre">master</span></code> branch of the
+<a class="reference external" href="https://github.com/initc3/docker-honeybadgermpc-deps">initc3/docker-honeybadgermpc-deps</a> repository.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="reviewing-contributions.html" class="btn btn-neutral float-right" title="Reviewing and merging pull requests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="contributing.html" class="btn btn-neutral float-left" title="Contributing new code" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

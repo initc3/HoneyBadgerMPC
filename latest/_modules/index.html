@@ -17,36 +17,41 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script type="text/javascript" src="../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script type="text/javascript" src="../_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -85,7 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -104,6 +109,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -169,19 +175,12 @@
            <div itemprop="articleBody">
             
   <h1>All modules for which code is available</h1>
-<ul><li><a href="honeybadgermpc/commonsubset_blockchain.html">honeybadgermpc.commonsubset_blockchain</a></li>
-<li><a href="honeybadgermpc/commonsubset_functionality.html">honeybadgermpc.commonsubset_functionality</a></li>
-<li><a href="honeybadgermpc/config.html">honeybadgermpc.config</a></li>
+<ul><li><a href="honeybadgermpc/config.html">honeybadgermpc.config</a></li>
 <li><a href="honeybadgermpc/field.html">honeybadgermpc.field</a></li>
 <li><a href="honeybadgermpc/ipc.html">honeybadgermpc.ipc</a></li>
-<li><a href="honeybadgermpc/passive.html">honeybadgermpc.passive</a></li>
+<li><a href="honeybadgermpc/mpc.html">honeybadgermpc.mpc</a></li>
 <li><a href="honeybadgermpc/polynomial.html">honeybadgermpc.polynomial</a></li>
-<li><a href="honeybadgermpc/rand_batch.html">honeybadgermpc.rand_batch</a></li>
-<li><a href="honeybadgermpc/rand_functionality.html">honeybadgermpc.rand_functionality</a></li>
-<li><a href="honeybadgermpc/rand_protocol.html">honeybadgermpc.rand_protocol</a></li>
 <li><a href="honeybadgermpc/router.html">honeybadgermpc.router</a></li>
-<li><a href="honeybadgermpc/secretshare_functionality.html">honeybadgermpc.secretshare_functionality</a></li>
-<li><a href="honeybadgermpc/triple_refinement.html">honeybadgermpc.triple_refinement</a></li>
 </ul>
 
            </div>
@@ -211,28 +210,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/sphinx_tabs/tabs.js"></script>
-        <script type="text/javascript" src="../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

@@ -17,34 +17,37 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Reviewing and merging pull requests" href="reviewing-contributions.html" />
+    <link rel="next" title="HoneyBadgerMPC Docker Image" href="docker-images.html" />
     <link rel="prev" title="Getting started" href="getting-started.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -83,7 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -125,6 +128,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -194,7 +198,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="contributing-new-code">
-<h1>Contributing new code<a class="headerlink" href="#contributing-new-code" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>Contributing new code<a class="headerlink" href="#contributing-new-code" title="Permalink to this headline">¶</a></h1>
 <p>Since <a class="reference external" href="https://git-scm.com/">git</a>  and <a class="reference external" href="https://help.github.com/">github</a> are used to version and host the code, one needs
 to learn to work with both tools.</p>
 <div class="section" id="suggested-git-github-workflow">
@@ -275,10 +279,10 @@ you make when preparing a pull request. A few references are provided here for
 the time being and as the <code class="docutils literal notranslate"><span class="pre">honeybadgermpc</span></code> project evolves we’ll document
 good practices that are most relevant to the project.</p>
 <ul class="simple">
-<li><a class="reference external" href="https://en.wikipedia.org/wiki/Separation_of_concerns">https://en.wikipedia.org/wiki/Separation_of_concerns</a></li>
-<li><a class="reference external" href="https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages">https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages</a></li>
-<li><a class="reference external" href="https://www.slideshare.net/TarinGamberini/commit-messages-goodpractices">https://www.slideshare.net/TarinGamberini/commit-messages-goodpractices</a></li>
-<li><a class="reference external" href="http://who-t.blogspot.com/2009/12/on-commit-messages.html">http://who-t.blogspot.com/2009/12/on-commit-messages.html</a></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Separation_of_concerns">https://en.wikipedia.org/wiki/Separation_of_concerns</a></p></li>
+<li><p><a class="reference external" href="https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages">https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages</a></p></li>
+<li><p><a class="reference external" href="https://www.slideshare.net/TarinGamberini/commit-messages-goodpractices">https://www.slideshare.net/TarinGamberini/commit-messages-goodpractices</a></p></li>
+<li><p><a class="reference external" href="http://who-t.blogspot.com/2009/12/on-commit-messages.html">http://who-t.blogspot.com/2009/12/on-commit-messages.html</a></p></li>
 </ul>
 </div>
 <div class="section" id="signing-commits">
@@ -287,8 +291,8 @@ good practices that are most relevant to the project.</p>
 <a class="reference external" href="https://help.github.com/articles/signing-commits/">https://help.github.com/articles/signing-commits/</a>.</p>
 <p class="rubric">Resources</p>
 <ul class="simple">
-<li><a class="reference external" href="https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work">https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work</a></li>
-<li><a class="reference external" href="https://softwareengineering.stackexchange.com/questions/212192/what-are-the-advantages-and-disadvantages-of-cryptographically-signing-commits-a">https://softwareengineering.stackexchange.com/questions/212192/what-are-the-advantages-and-disadvantages-of-cryptographically-signing-commits-a</a></li>
+<li><p><a class="reference external" href="https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work">https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work</a></p></li>
+<li><p><a class="reference external" href="https://softwareengineering.stackexchange.com/questions/212192/what-are-the-advantages-and-disadvantages-of-cryptographically-signing-commits-a">https://softwareengineering.stackexchange.com/questions/212192/what-are-the-advantages-and-disadvantages-of-cryptographically-signing-commits-a</a></p></li>
 </ul>
 </div>
 <div class="section" id="making-a-pull-request">
@@ -301,14 +305,19 @@ good practices that are most relevant to the project.</p>
 remote branch that you have based your work on.</p>
 <p>Pull requests go through the following checks:</p>
 <ul class="simple">
-<li>unit tests</li>
-<li>code quality</li>
-<li>documentation quality</li>
-<li>code coverage</li>
+<li><p>unit tests</p></li>
+<li><p>code quality</p></li>
+<li><p>documentation quality</p></li>
+<li><p>code coverage</p></li>
 </ul>
 <p>These checks are performed using <a class="reference external" href="https://docs.travis-ci.com/">Travis CI</a> and <a class="reference external" href="https://codecov.io/">Codecov</a>. These checks are
 there to help keeping the code in good shape and pull requests should ideally
 pass these 4 checks before being merged.</p>
+<p>Ideally, you want your pull request to address one concern, such that you can
+<a class="reference external" href="https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#Squashing-Commits">squash</a> your work into a single commit. An example of a project that uses
+this approach is <a class="reference external" href="https://github.com/google/leveldb#submitting-a-pull-request">google/leveldb</a>.</p>
+<p>If you need help to work with the git <a class="reference external" href="https://git-scm.com/docs/git-rebase">rebase</a> command, see Github Help
+<a class="reference external" href="https://help.github.com/articles/about-git-rebase/">About Git rebase</a>.</p>
 </div>
 </div>
 <div class="section" id="tests">
@@ -332,8 +341,8 @@ set at 89 characters.</p>
 <p>The <a class="reference external" href="http://flake8.pycqa.org/en/latest/index.html">flake8</a> tool is used in the continuous integration phase to check the
 code quality. The configuration file, <code class="docutils literal notranslate"><span class="pre">.flake8</span></code>, is under the project root.</p>
 <div class="admonition tip">
-<p class="first admonition-title">Tip</p>
-<p class="last"><strong>Recommended reading:</strong> The <a class="reference external" href="https://docs.python-guide.org/writing/style/">Code Style</a> section in the
+<p class="admonition-title">Tip</p>
+<p><strong>Recommended reading:</strong> The <a class="reference external" href="https://docs.python-guide.org/writing/style/">Code Style</a> section in the
 <a class="reference external" href="https://docs.python-guide.org/">The Hitchhiker’s Guide to Python!</a>.</p>
 </div>
 </div>
@@ -342,9 +351,9 @@ code quality. The configuration file, <code class="docutils literal notranslate"
 <p><a class="reference external" href="https://www.python.org/dev/peps/pep-0257/">PEP 257</a> is used for docstring conventions. The docstrings are extracted out
 into the documentation with the <a class="reference external" href="http://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html">autodoc</a> Sphinx extension and should be
 valid reStructuredText. Here’s an example of how a function may be documented:</p>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">Use a HoneyBadgerMPC code sample instead of sample shown below.</p>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Use a HoneyBadgerMPC code sample instead of sample shown below.</p>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">send_message</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">recipient</span><span class="p">,</span> <span class="n">message_body</span><span class="p">,</span> <span class="p">[</span><span class="n">priority</span><span class="o">=</span><span class="mi">1</span><span class="p">]):</span>
     <span class="sd">&quot;&quot;&quot;Send a message to a recipient</span>
@@ -364,8 +373,8 @@ valid reStructuredText. Here’s an example of how a function may be documented:
 <p>See Sphinx documentation: <a class="reference external" href="http://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists">info field lists</a>, for more information on how to
 document Python objects.</p>
 <div class="admonition tip">
-<p class="first admonition-title">Tip</p>
-<p class="last"><strong>Recommended reading:</strong> The <a class="reference external" href="https://docs.python-guide.org/writing/documentation/">Documentation</a> section in the
+<p class="admonition-title">Tip</p>
+<p><strong>Recommended reading:</strong> The <a class="reference external" href="https://docs.python-guide.org/writing/documentation/">Documentation</a> section in the
 <a class="reference external" href="https://docs.python-guide.org/">The Hitchhiker’s Guide to Python!</a> is a useful resource.</p>
 </div>
 </div>
@@ -390,56 +399,56 @@ hesitate to ask!</em></p>
 checks fail you can <a class="reference external" href="http://flake8.pycqa.org/en/latest/user/violations.html#in-line-ignoring-errors">ignore the error inline</a> with the
 <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa:</span> <span class="pre">&lt;error</span> <span class="pre">code&gt;</span></code> comment. As an example, say you wanted to ignore
 <code class="docutils literal notranslate"><span class="pre">E221</span></code> (multiple spaces before operator) errors:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coin_recvs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>
-<span class="n">aba_recvs</span>  <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>  <span class="c1"># noqa: E221</span>
-<span class="n">rbc_recvs</span>  <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>  <span class="c1"># noqa: E221</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coin_recvs</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>
+<span class="n">aba_recvs</span>  <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>  <span class="c1"># noqa: E221</span>
+<span class="n">rbc_recvs</span>  <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>  <span class="c1"># noqa: E221</span>
 </pre></div>
 </div>
 <p>See <a class="reference external" href="http://flake8.pycqa.org/en/latest/user/violations.html">Selecting and Ignoring Violations</a> for more information about ignoring
 violations reported by <a class="reference external" href="http://flake8.pycqa.org/en/latest/index.html">flake8</a>.</p>
 <p class="rubric">Error codes</p>
 <ul class="simple">
-<li>flake8: <a class="reference external" href="http://flake8.pycqa.org/en/latest/user/error-codes.html">http://flake8.pycqa.org/en/latest/user/error-codes.html</a></li>
-<li>pycodestyle: <a class="reference external" href="https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes">https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes</a></li>
-<li>pydocstyle: <a class="reference external" href="http://www.pydocstyle.org/en/2.1.1/error_codes.html">http://www.pydocstyle.org/en/2.1.1/error_codes.html</a></li>
+<li><p>flake8: <a class="reference external" href="http://flake8.pycqa.org/en/latest/user/error-codes.html">http://flake8.pycqa.org/en/latest/user/error-codes.html</a></p></li>
+<li><p>pycodestyle: <a class="reference external" href="https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes">https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes</a></p></li>
+<li><p>pydocstyle: <a class="reference external" href="http://www.pydocstyle.org/en/2.1.1/error_codes.html">http://www.pydocstyle.org/en/2.1.1/error_codes.html</a></p></li>
 </ul>
 </div>
 <div class="section" id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
-<div class="admonition-todo admonition" id="index-1">
-<p class="first admonition-title">Todo</p>
-<p class="last">Document how the config works.</p>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">Todo</p>
+<p>Document how the config works.</p>
 </div>
 </div>
 <div class="section" id="logging">
 <h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
-<p>Make use of the <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.7)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module! If you are unsure about whether you
+<p>Make use of the <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.8)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module! If you are unsure about whether you
 should log or print, or when you should log, see <a class="reference external" href="https://docs.python.org/3/howto/logging.html#when-to-use-logging">When to use logging</a>.</p>
 <div class="section" id="important-resources-on-logging">
 <h3>Important resources on logging<a class="headerlink" href="#important-resources-on-logging" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>Python documentation: <a class="reference external" href="https://docs.python.org/3/howto/logging.html">Logging HOWTO</a></li>
-<li>Python documentation: <a class="reference external" href="https://docs.python.org/3/howto/logging-cookbook.html">Logging Cookbook</a></li>
-<li>The Hitchhiker’s Guide to Python!: <a class="reference external" href="https://docs.python-guide.org/writing/logging/">Logging</a></li>
-<li><a class="reference external" href="http://plumberjack.blogspot.com/">Plumber Jack</a> Stuff about Python’s logging package. By <a class="reference external" href="https://github.com/vsajip">Vinay Sajip</a>,
-main author of the <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.7)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module.</li>
+<li><p>Python documentation: <a class="reference external" href="https://docs.python.org/3/howto/logging.html">Logging HOWTO</a></p></li>
+<li><p>Python documentation: <a class="reference external" href="https://docs.python.org/3/howto/logging-cookbook.html">Logging Cookbook</a></p></li>
+<li><p>The Hitchhiker’s Guide to Python!: <a class="reference external" href="https://docs.python-guide.org/writing/logging/">Logging</a></p></li>
+<li><p><a class="reference external" href="http://plumberjack.blogspot.com/">Plumber Jack</a> Stuff about Python’s logging package. By <a class="reference external" href="https://github.com/vsajip">Vinay Sajip</a>,
+main author of the <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.8)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module.</p></li>
 </ul>
 </div>
 </div>
 <div class="section" id="rust-bindings">
 <h2>Rust bindings<a class="headerlink" href="#rust-bindings" title="Permalink to this headline">¶</a></h2>
-<div class="admonition-todo admonition" id="index-2">
-<p class="first admonition-title">Todo</p>
-<p class="last">Document important things to know when contributing to this
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">Todo</p>
+<p>Document important things to know when contributing to this
 component.</p>
 </div>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><a class="reference external" href="https://git-scm.com/book/en/v2">Pro Git Book</a></li>
-<li><a class="reference external" href="https://docs.python-guide.org/">The Hitchhiker’s Guide to Python!</a></li>
-<li><a class="reference external" href="http://www.cs.utexas.edu/users/EWD/transcriptions/EWD04xx/EWD447.html">On the role of scientific thought</a> by Edsger W. Dijkstra</li>
+<li><p><a class="reference external" href="https://git-scm.com/book/en/v2">Pro Git Book</a></p></li>
+<li><p><a class="reference external" href="https://docs.python-guide.org/">The Hitchhiker’s Guide to Python!</a></p></li>
+<li><p><a class="reference external" href="http://www.cs.utexas.edu/users/EWD/transcriptions/EWD04xx/EWD447.html">On the role of scientific thought</a> by Edsger W. Dijkstra</p></li>
 </ul>
 </div>
 </div>
@@ -452,10 +461,10 @@ component.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="reviewing-contributions.html" class="btn btn-neutral float-right" title="Reviewing and merging pull requests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="docker-images.html" class="btn btn-neutral float-right" title="HoneyBadgerMPC Docker Image" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="getting-started.html" class="btn btn-neutral" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="getting-started.html" class="btn btn-neutral float-left" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -481,26 +490,16 @@ component.</p>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

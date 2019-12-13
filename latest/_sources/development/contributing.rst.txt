@@ -1,3 +1,5 @@
+.. _contributing-new-code:
+
 Contributing new code
 =====================
 Since `git`_  and `github`_ are used to version and host the code, one needs
@@ -135,6 +137,14 @@ Pull requests go through the following checks:
 These checks are performed using `Travis CI`_ and `Codecov`_. These checks are
 there to help keeping the code in good shape and pull requests should ideally
 pass these 4 checks before being merged.
+
+Ideally, you want your pull request to address one concern, such that you can
+`squash`_ your work into a single commit. An example of a project that uses
+this approach is `google/leveldb
+<https://github.com/google/leveldb#submitting-a-pull-request>`_.
+
+If you need help to work with the git `rebase`_ command, see Github Help
+`About Git rebase`_.
 
 
 Tests
@@ -280,6 +290,9 @@ References
 .. _jubjub: https://github.com/initc3/HoneyBadgerMPC/tree/jubjub
 .. _make a pull request: https://help.github.com/articles/creating-a-pull-request-from-a-fork/
 .. _Pro Git Book: https://git-scm.com/book/en/v2
+.. _rebase: https://git-scm.com/docs/git-rebase
+.. _squash: https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#Squashing-Commits
+.. _About Git rebase: https://help.github.com/articles/about-git-rebase/
 .. _Travis CI: https://docs.travis-ci.com/
 .. _Codecov: https://codecov.io/
 .. _pep 8: http://pep 8.org/

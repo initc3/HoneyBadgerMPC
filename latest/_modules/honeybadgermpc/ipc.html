@@ -17,36 +17,41 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -85,7 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -104,6 +109,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -171,234 +177,234 @@
            <div itemprop="articleBody">
             
   <h1>Source code for honeybadgermpc.ipc</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">pickle</span>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">struct</span>
-<span class="kn">import</span> <span class="nn">socket</span>
 
-<span class="kn">from</span> <span class="nn">.passive</span> <span class="k">import</span> <span class="n">PassiveMpc</span>
+<span class="kn">from</span> <span class="nn">zmq</span> <span class="kn">import</span> <span class="n">ROUTER</span><span class="p">,</span> <span class="n">DEALER</span><span class="p">,</span> <span class="n">IDENTITY</span>
+<span class="kn">from</span> <span class="nn">zmq.asyncio</span> <span class="kn">import</span> <span class="n">Context</span>
+<span class="kn">from</span> <span class="nn">pickle</span> <span class="kn">import</span> <span class="n">dumps</span><span class="p">,</span> <span class="n">loads</span>
+<span class="kn">from</span> <span class="nn">psutil</span> <span class="kn">import</span> <span class="n">cpu_count</span>
+
+<span class="kn">from</span> <span class="nn">honeybadgermpc.mpc</span> <span class="kn">import</span> <span class="n">Mpc</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.config</span> <span class="kn">import</span> <span class="n">HbmpcConfig</span><span class="p">,</span> <span class="n">ConfigVars</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.utils.misc</span> <span class="kn">import</span> <span class="n">wrap_send</span><span class="p">,</span> <span class="n">subscribe_recv</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.utils.misc</span> <span class="kn">import</span> <span class="n">print_exception_callback</span>
 
 
-<div class="viewcode-block" id="Senders"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.Senders">[docs]</a><span class="k">class</span> <span class="nc">Senders</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queues</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">queues</span> <span class="o">=</span> <span class="n">queues</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+<div class="viewcode-block" id="NodeCommunicator"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator">[docs]</a><span class="k">class</span> <span class="nc">NodeCommunicator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">LAST_MSG</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="Senders.connect"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.Senders.connect">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Setup all connections first before sending messages</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peers_config</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">linger_timeout</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peers_config</span> <span class="o">=</span> <span class="n">peers_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span> <span class="o">=</span> <span class="n">my_id</span>
 
-        <span class="c1"># XXX BEGIN temporary hack</span>
-        <span class="c1"># ``socket.getaddrinfo``, called in open_connection may fail thus causing an</span>
-        <span class="c1"># unhandled exception.</span>
-        <span class="c1"># A connection management mechanism is needed to that failed connections are</span>
-        <span class="c1"># re-tried etc.</span>
-        <span class="c1"># Basically nodes should be capable to join when they try to connect but if late</span>
-        <span class="c1"># it should not crash the whole thing, or more precisely prevent other nodes</span>
-        <span class="c1"># from participating in the protocol.</span>
-        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">addrinfo_list</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">socket</span><span class="o">.</span><span class="n">getaddrinfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ip</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">port</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
-                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queues</span><span class="p">))</span>
-                <span class="p">]</span>
-            <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">gaierror</span><span class="p">:</span>
-                <span class="k">continue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bytes_sent</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">LoggerAdapter</span><span class="p">(</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;benchmark_logger&quot;</span><span class="p">),</span> <span class="p">{</span><span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="n">my_id</span><span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dealer_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_router_task</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linger_timeout</span> <span class="o">=</span> <span class="n">linger_timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zmq_context</span> <span class="o">=</span> <span class="n">Context</span><span class="p">(</span><span class="n">io_threads</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">peers_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_receiver_queue</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sender_queues</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sender_queues</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_receiver_queue</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">break</span>
-        <span class="c1"># XXX END temporary hack</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sender_queues</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
 
-        <span class="n">streams</span> <span class="o">=</span> <span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">open_connection</span><span class="p">(</span>
-                <span class="n">addrinfo_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-                <span class="n">addrinfo_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
-            <span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queues</span><span class="p">))]</span>
-        <span class="n">streams</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">streams</span><span class="p">)</span>
-        <span class="n">writers</span> <span class="o">=</span> <span class="p">[</span><span class="n">stream</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">]</span>
+<div class="viewcode-block" id="NodeCommunicator.send"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span> <span class="k">if</span> <span class="n">node_id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span> <span class="k">else</span> <span class="n">msg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sender_queues</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
-        <span class="c1"># Setup tasks to consume messages from queues</span>
-        <span class="c1"># This is to ensure that messages are delivered in the correct order</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queues</span><span class="p">):</span>
-            <span class="n">recvid</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ip</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
-            <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process_queue</span><span class="p">(</span><span class="n">writers</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">q</span><span class="p">,</span> <span class="n">recvid</span><span class="p">))</span></div>
+<div class="viewcode-block" id="NodeCommunicator.recv"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.recv">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">recv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_receiver_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Senders.process_queue"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.Senders.process_queue">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">process_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">recvid</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">msg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Close the connection&#39;</span><span class="p">)</span>
-                    <span class="n">writer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                    <span class="k">await</span> <span class="n">writer</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
-                    <span class="k">break</span>
-                <span class="c1"># print(&#39;SEND %8s [%2d -&gt; %s]&#39; % (msg[1][0], msg[0], recvid))</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">padded_msg</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span> <span class="o">+</span> <span class="n">data</span>
-                <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">padded_msg</span><span class="p">)</span>
-                <span class="k">await</span> <span class="n">writer</span><span class="o">.</span><span class="n">drain</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">ConnectionResetError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: Connection with peer [</span><span class="si">%s</span><span class="s2">] reset.&quot;</span> <span class="o">%</span> <span class="n">recvid</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ConnectionRefusedError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: Connection with peer [</span><span class="si">%s</span><span class="s2">] refused.&quot;</span> <span class="o">%</span> <span class="n">recvid</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">BrokenPipeError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: Connection with peer [</span><span class="si">%s</span><span class="s2">] broken.&quot;</span> <span class="o">%</span> <span class="n">recvid</span><span class="p">)</span></div>
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setup</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
-<div class="viewcode-block" id="Senders.close"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.Senders.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queues</span><span class="p">:</span>
-            <span class="n">q</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div></div>
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__aexit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">):</span>
+        <span class="c1"># Add None to the sender queues and drain out all the messages.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sender_queues</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sender_queues</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">(</span><span class="n">NodeCommunicator</span><span class="o">.</span><span class="n">LAST_MSG</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_dealer_tasks</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dealer tasks finished.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_router_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Router task cancelled.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zmq_context</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">linger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">linger_timeout</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Total bytes sent out: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytes_sent</span><span class="p">)</span>
 
+<div class="viewcode-block" id="NodeCommunicator._setup"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._setup">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup one router for a party, this acts as a</span>
+        <span class="c1"># server for receiving messages from other parties.</span>
+        <span class="n">router</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zmq_context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">ROUTER</span><span class="p">)</span>
+        <span class="n">router</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;tcp://*:</span><span class="si">{self.peers_config[self.my_id].port}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Start a task to receive messages on this node.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_router_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_recv_loop</span><span class="p">(</span><span class="n">router</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_router_task</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">print_exception_callback</span><span class="p">)</span>
 
-<div class="viewcode-block" id="handle_result"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.handle_result">[docs]</a><span class="k">def</span> <span class="nf">handle_result</span><span class="p">(</span><span class="n">future</span><span class="p">):</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">future</span><span class="o">.</span><span class="n">cancelled</span><span class="p">()</span> <span class="ow">and</span> <span class="n">future</span><span class="o">.</span><span class="n">exception</span><span class="p">():</span>
-        <span class="c1"># Stop the loop otherwise the loop continues to await for the prog to</span>
-        <span class="c1"># finish which will never happen since the recvloop has terminated.</span>
-        <span class="n">loop</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-        <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span></div>
+        <span class="c1"># Setup one dealer per receving party. This is used</span>
+        <span class="c1"># as a client to send messages to other parties.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">peers_config</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">:</span>
+                <span class="n">dealer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zmq_context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">DEALER</span><span class="p">)</span>
+                <span class="c1"># This identity is sent with each message. Setting it to my_id, this is</span>
+                <span class="c1"># used to appropriately route the message. This is not a good idea since</span>
+                <span class="c1"># a node can pretend to send messages on behalf of other nodes.</span>
+                <span class="n">dealer</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">IDENTITY</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+                <span class="n">dealer</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;tcp://</span><span class="si">{self.peers_config[i].ip}</span><span class="s2">:</span><span class="si">{self.peers_config[i].port}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="c1"># Setup a task which reads messages intended for this</span>
+                <span class="c1"># party from a queue and then sends them to this node.</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_node_messages</span><span class="p">(</span>
+                        <span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sender_queues</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">dealer</span><span class="o">.</span><span class="n">send_multipart</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_dealer_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="Listener"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.Listener">[docs]</a><span class="k">class</span> <span class="nc">Listener</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="n">q</span>
-        <span class="n">serverFuture</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">start_server</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handle_client</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">serverTask</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">serverFuture</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
-
-<div class="viewcode-block" id="Listener.handle_client"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.Listener.handle_client">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">handle_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reader</span><span class="p">,</span> <span class="n">writer</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">current_task</span><span class="p">())</span>
-        <span class="c1"># print(&quot;Received new connection&quot;, writer.get_extra_info(&quot;peername&quot;))</span>
+<div class="viewcode-block" id="NodeCommunicator._recv_loop"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._recv_loop">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_recv_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">router</span><span class="p">):</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">raw_msglen</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">recvall</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">raw_msglen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sender_id</span><span class="p">,</span> <span class="n">raw_msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">router</span><span class="o">.</span><span class="n">recv_multipart</span><span class="p">()</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">loads</span><span class="p">(</span><span class="n">raw_msg</span><span class="p">)</span>
+            <span class="c1"># logging.debug(&quot;[RECV] FROM: %s, MSG: %s,&quot;, sender_id, msg)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_receiver_queue</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">sender_id</span><span class="p">),</span> <span class="n">msg</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="NodeCommunicator._process_node_messages"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._process_node_messages">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_process_node_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node_msg_queue</span><span class="p">,</span> <span class="n">send_to_node</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">node_msg_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">msg</span> <span class="ow">is</span> <span class="n">NodeCommunicator</span><span class="o">.</span><span class="n">LAST_MSG</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No more messages to Node: </span><span class="si">%d</span><span class="s2"> can be sent.&quot;</span><span class="p">,</span> <span class="n">node_id</span><span class="p">)</span>
                 <span class="k">break</span>
-            <span class="n">msglen</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">raw_msglen</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">received_raw_msg</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">recvall</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">msglen</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">received_raw_msg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">break</span>
-            <span class="n">received_msg</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">received_raw_msg</span><span class="p">)</span>
-            <span class="c1"># print(&#39;RECV %8s [from %2d]&#39; % (received_msg[1][0], received_msg[0]))</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">received_msg</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Listener.recvall"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.Listener.recvall">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">recvall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reader</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-        <span class="c1"># Helper function to recv n bytes or return None if EOF is hit</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
-        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
-            <span class="n">packet</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span>
-            <span class="n">data</span> <span class="o">+=</span> <span class="n">packet</span>
-        <span class="k">return</span> <span class="n">data</span></div>
-
-<div class="viewcode-block" id="Listener.getMessage"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.Listener.getMessage">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">getMessage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
-
-<div class="viewcode-block" id="Listener.close"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.Listener.close">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">server</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">serverTask</span>
-        <span class="n">server</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="k">await</span> <span class="n">server</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
-            <span class="n">task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span></div></div>
+            <span class="n">raw_msg</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bytes_sent</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_msg</span><span class="p">)</span>
+            <span class="c1"># logging.debug(&quot;[SEND] TO: %d, MSG: %s&quot;, node_id, msg)</span>
+            <span class="k">await</span> <span class="n">send_to_node</span><span class="p">([</span><span class="n">raw_msg</span><span class="p">])</span></div></div>
 
 
-<div class="viewcode-block" id="NodeDetails"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeDetails">[docs]</a><span class="k">class</span> <span class="nc">NodeDetails</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">ip</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span></div>
+<div class="viewcode-block" id="ProcessProgramRunner"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner">[docs]</a><span class="k">class</span> <span class="nc">ProcessProgramRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peers_config</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">mpc_config</span><span class="o">=</span><span class="p">{},</span> <span class="n">linger_timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peers_config</span> <span class="o">=</span> <span class="n">peers_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span> <span class="o">=</span> <span class="n">my_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mpc_config</span> <span class="o">=</span> <span class="n">mpc_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mpc_config</span><span class="p">[</span><span class="n">ConfigVars</span><span class="o">.</span><span class="n">Reconstruction</span><span class="p">]</span> <span class="o">=</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">reconstruction</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_communicator</span> <span class="o">=</span> <span class="n">NodeCommunicator</span><span class="p">(</span><span class="n">peers_config</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">linger_timeout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">progs</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="ProcessProgramRunner.execute"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sid</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">send</span><span class="p">,</span> <span class="n">recv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_send_recv</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">Mpc</span><span class="p">(</span>
+            <span class="n">sid</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">,</span>
+            <span class="n">send</span><span class="p">,</span>
+            <span class="n">recv</span><span class="p">,</span>
+            <span class="n">program</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mpc_config</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">program_result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">future</span><span class="p">):</span>
+            <span class="n">program_result</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
+
+        <span class="n">task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">_run</span><span class="p">())</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">print_exception_callback</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">progs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">program_result</span></div>
+
+<div class="viewcode-block" id="ProcessProgramRunner.get_send_recv"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner.get_send_recv">[docs]</a>    <span class="k">def</span> <span class="nf">get_send_recv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">wrap_send</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span></div>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_communicator</span><span class="o">.</span><span class="fm">__aenter__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subscribe_task</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscribe</span> <span class="o">=</span> <span class="n">subscribe_recv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">node_communicator</span><span class="o">.</span><span class="n">recv</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_communicator</span><span class="o">.</span><span class="n">send</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__aexit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">):</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">progs</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;All programs finished.&quot;</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_communicator</span><span class="o">.</span><span class="fm">__aexit__</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;NodeCommunicator closed.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subscribe_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Subscribe task cancelled.&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="setup_sockets"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.setup_sockets">[docs]</a><span class="k">def</span> <span class="nf">setup_sockets</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
-    <span class="n">senderQueues</span> <span class="o">=</span> <span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
-    <span class="n">sender</span> <span class="o">=</span> <span class="n">Senders</span><span class="p">(</span><span class="n">senderQueues</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-    <span class="n">listenerQueue</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
-    <span class="n">listener</span> <span class="o">=</span> <span class="n">Listener</span><span class="p">(</span><span class="n">listenerQueue</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+<div class="viewcode-block" id="verify_all_connections"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.verify_all_connections">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">verify_all_connections</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">my_id</span><span class="p">):</span>
+    <span class="c1"># Uncomment this if you want to test on multiple processes.</span>
+    <span class="c1"># No need to uncomment this when running across servers</span>
+    <span class="c1"># since the network latency is already present there.</span>
 
-    <span class="k">def</span> <span class="nf">makeSend</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_send</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
-            <span class="c1"># print(&#39;SEND %8s [%2d -&gt; %2d]&#39; % (o[0], i, j))</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
-                <span class="c1"># If attempting to send the message to yourself</span>
-                <span class="c1"># then skip the network stack.</span>
-                <span class="n">listenerQueue</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">o</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">senderQueues</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">o</span><span class="p">))</span>
+    <span class="c1"># logging.debug(&quot;Sleeping for: %d&quot;, my_id)</span>
+    <span class="c1"># await asyncio.sleep(my_id)</span>
 
-        <span class="k">return</span> <span class="n">_send</span>
-
-    <span class="k">def</span> <span class="nf">makeRecv</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
-        <span class="k">async</span> <span class="k">def</span> <span class="nf">_recv</span><span class="p">():</span>
-            <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span> <span class="o">=</span> <span class="k">await</span> <span class="n">listener</span><span class="o">.</span><span class="n">getMessage</span><span class="p">()</span>
-            <span class="c1"># print(&#39;RECV %8s [%2d -&gt; %2d]&#39; % (o[0], i, j))</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_recv</span>
-
-    <span class="k">return</span> <span class="p">(</span><span class="n">makeSend</span><span class="p">(</span><span class="nb">id</span><span class="p">),</span> <span class="n">makeRecv</span><span class="p">(</span><span class="nb">id</span><span class="p">),</span> <span class="n">sender</span><span class="p">,</span> <span class="n">listener</span><span class="p">)</span></div>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">NodeCommunicator</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">my_id</span><span class="p">)</span> <span class="k">as</span> <span class="n">node_communicator</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">node_communicator</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">sender_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">node_communicator</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+            <span class="n">sender_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">sender_ids</span><span class="p">)</span> <span class="o">==</span> <span class="n">n</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sender_ids</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="n">keys</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="o">==</span> <span class="n">my_id</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Verfification completed.&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="runProgramAsProcesses"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.runProgramAsProcesses">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">runProgramAsProcesses</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
-    <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">listener</span> <span class="o">=</span> <span class="n">setup_sockets</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="p">),</span> <span class="nb">id</span><span class="p">)</span>
-    <span class="c1"># Need to give time to the listener coroutine to start</span>
-    <span class="c1">#  or else the sender will get a connection refused.</span>
+<div class="viewcode-block" id="test_mpc_programs"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.test_mpc_programs">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">test_mpc_programs</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">honeybadgermpc.mpc</span> <span class="kn">import</span> <span class="n">test_prog1</span><span class="p">,</span> <span class="n">test_prog2</span><span class="p">,</span> <span class="n">test_batchopening</span>
+    <span class="kn">from</span> <span class="nn">honeybadgermpc.preprocessing</span> <span class="kn">import</span> <span class="n">PreProcessedElements</span>
+    <span class="kn">from</span> <span class="nn">honeybadgermpc.preprocessing</span> <span class="kn">import</span> <span class="n">wait_for_preprocessing</span><span class="p">,</span> <span class="n">preprocessing_done</span>
 
-    <span class="c1"># XXX HACK! Increase wait time. Must find better way if possible -- e.g:</span>
-    <span class="c1"># try/except retry logic ...</span>
-    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">await</span> <span class="n">sender</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">context</span> <span class="o">=</span> <span class="n">PassiveMpc</span><span class="p">(</span><span class="s1">&#39;sid&#39;</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">,</span> <span class="n">program</span><span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">_run</span><span class="p">())</span>
-    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">sender</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="k">await</span> <span class="n">listener</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">results</span></div>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">skip_preprocessing</span><span class="p">:</span>
+        <span class="c1"># Only one party needs to generate the preprocessed elements for testing</span>
+        <span class="k">if</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">my_id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pp_elements</span> <span class="o">=</span> <span class="n">PreProcessedElements</span><span class="p">()</span>
+            <span class="n">pp_elements</span><span class="o">.</span><span class="n">generate_zeros</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">pp_elements</span><span class="o">.</span><span class="n">generate_triples</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">preprocessing_done</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">wait_for_preprocessing</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">with</span> <span class="n">ProcessProgramRunner</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">)</span> <span class="k">as</span> <span class="n">runner</span><span class="p">:</span>
+        <span class="n">test_prog1</span>  <span class="c1"># r1 = runner.execute(&quot;0&quot;, test_prog1)</span>
+        <span class="n">r2</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="n">test_prog2</span><span class="p">)</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="n">test_batchopening</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">r2</span><span class="p">,</span> <span class="n">r3</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">results</span></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">.passive</span> <span class="k">import</span> <span class="n">generate_test_zeros</span><span class="p">,</span> <span class="n">generate_test_triples</span>
-    <span class="kn">from</span> <span class="nn">.passive</span> <span class="k">import</span> <span class="n">test_prog1</span><span class="p">,</span> <span class="n">test_prog2</span>
-    <span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">ConfigurationError</span>
-    <span class="kn">from</span> <span class="nn">.config</span> <span class="k">import</span> <span class="n">load_config</span>
-
-    <span class="n">configfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HBMPC_CONFIG&#39;</span><span class="p">)</span>
-
-    <span class="c1"># override configfile if passed to command</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">configfile</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-        <span class="k">pass</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">configfile</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">ConfigurationError</span><span class="p">(</span><span class="s1">&#39;Environment variable `HBMPC_CONFIG` must be set&#39;</span>
-                                 <span class="s1">&#39; or a config file must be given as first argument.&#39;</span><span class="p">)</span>
-
-    <span class="n">config_dict</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">configfile</span><span class="p">)</span>
-    <span class="n">N</span> <span class="o">=</span> <span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">]</span>
-    <span class="n">t</span> <span class="o">=</span> <span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span>
-    <span class="n">nodeid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;nodeid&#39;</span><span class="p">])</span>
-    <span class="n">host</span> <span class="o">=</span> <span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">]</span>
-    <span class="n">port</span> <span class="o">=</span> <span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">]</span>
-    <span class="n">network_info</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="nb">int</span><span class="p">(</span><span class="n">peerid</span><span class="p">):</span> <span class="n">NodeDetails</span><span class="p">(</span><span class="n">addrinfo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">addrinfo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">for</span> <span class="n">peerid</span><span class="p">,</span> <span class="n">addrinfo</span> <span class="ow">in</span> <span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;peers&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-    <span class="p">}</span>
-    <span class="n">network_info</span><span class="p">[</span><span class="n">nodeid</span><span class="p">]</span> <span class="o">=</span> <span class="n">NodeDetails</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
-
-    <span class="c1"># Only one party needs to generate the initial shares</span>
-    <span class="k">if</span> <span class="n">nodeid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating random shares of zero in sharedata/&#39;</span><span class="p">)</span>
-        <span class="n">generate_test_zeros</span><span class="p">(</span><span class="s1">&#39;sharedata/test_zeros&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating random shares of triples in sharedata/&#39;</span><span class="p">)</span>
-        <span class="n">generate_test_triples</span><span class="p">(</span><span class="s1">&#39;sharedata/test_triples&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+    <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">load_config</span><span class="p">()</span>
 
     <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">())</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
-    <span class="n">loop</span><span class="o">.</span><span class="n">set_debug</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span>
-            <span class="n">runProgramAsProcesses</span><span class="p">(</span><span class="n">test_prog1</span><span class="p">,</span> <span class="n">network_info</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">nodeid</span><span class="p">))</span>
-        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span>
-            <span class="n">runProgramAsProcesses</span><span class="p">(</span><span class="n">test_prog2</span><span class="p">,</span> <span class="n">network_info</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">nodeid</span><span class="p">))</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="c1"># loop.run_until_complete(</span>
+    <span class="c1">#     verify_all_connections(HbmpcConfig.peers, HbmpcConfig.N, HbmpcConfig.my_id))</span>
+    <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span>
+        <span class="n">test_mpc_programs</span><span class="p">(</span>
+            <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">peers</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">my_id</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
 </pre></div>
 
            </div>
@@ -428,28 +434,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

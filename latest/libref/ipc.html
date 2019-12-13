@@ -17,34 +17,37 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="config" href="config.html" />
     <link rel="prev" title="router" href="router.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -83,7 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -114,6 +117,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -187,71 +191,65 @@
   <div class="section" id="module-honeybadgermpc.ipc">
 <span id="ipc"></span><h1>ipc<a class="headerlink" href="#module-honeybadgermpc.ipc" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="honeybadgermpc.ipc.Listener">
-<em class="property">class </em><code class="descclassname">honeybadgermpc.ipc.</code><code class="descname">Listener</code><span class="sig-paren">(</span><em>q</em>, <em>port</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#Listener"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.Listener" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<dl class="method">
-<dt id="honeybadgermpc.ipc.Listener.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#Listener.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.Listener.close" title="Permalink to this definition">¶</a></dt>
+<dt id="honeybadgermpc.ipc.NodeCommunicator">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.ipc.</code><code class="sig-name descname">NodeCommunicator</code><span class="sig-paren">(</span><em class="sig-param">peers_config</em>, <em class="sig-param">my_id</em>, <em class="sig-param">linger_timeout</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#NodeCommunicator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.NodeCommunicator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="attribute">
+<dt id="honeybadgermpc.ipc.NodeCommunicator.LAST_MSG">
+<code class="sig-name descname">LAST_MSG</code><em class="property"> = None</em><a class="headerlink" href="#honeybadgermpc.ipc.NodeCommunicator.LAST_MSG" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="honeybadgermpc.ipc.Listener.getMessage">
-<code class="descname">getMessage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#Listener.getMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.Listener.getMessage" title="Permalink to this definition">¶</a></dt>
+<dt id="honeybadgermpc.ipc.NodeCommunicator._process_node_messages">
+<em class="property">async </em><code class="sig-name descname">_process_node_messages</code><span class="sig-paren">(</span><em class="sig-param">node_id</em>, <em class="sig-param">node_msg_queue</em>, <em class="sig-param">send_to_node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#NodeCommunicator._process_node_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.NodeCommunicator._process_node_messages" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="honeybadgermpc.ipc.Listener.handle_client">
-<code class="descname">handle_client</code><span class="sig-paren">(</span><em>reader</em>, <em>writer</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#Listener.handle_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.Listener.handle_client" title="Permalink to this definition">¶</a></dt>
+<dt id="honeybadgermpc.ipc.NodeCommunicator._recv_loop">
+<em class="property">async </em><code class="sig-name descname">_recv_loop</code><span class="sig-paren">(</span><em class="sig-param">router</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#NodeCommunicator._recv_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.NodeCommunicator._recv_loop" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="honeybadgermpc.ipc.Listener.recvall">
-<code class="descname">recvall</code><span class="sig-paren">(</span><em>reader</em>, <em>n</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#Listener.recvall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.Listener.recvall" title="Permalink to this definition">¶</a></dt>
+<dt id="honeybadgermpc.ipc.NodeCommunicator._setup">
+<em class="property">async </em><code class="sig-name descname">_setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#NodeCommunicator._setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.NodeCommunicator._setup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.ipc.NodeCommunicator.recv">
+<em class="property">async </em><code class="sig-name descname">recv</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#NodeCommunicator.recv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.NodeCommunicator.recv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="honeybadgermpc.ipc.NodeCommunicator.send">
+<code class="sig-name descname">send</code><span class="sig-paren">(</span><em class="sig-param">node_id</em>, <em class="sig-param">msg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#NodeCommunicator.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.NodeCommunicator.send" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="honeybadgermpc.ipc.NodeDetails">
-<em class="property">class </em><code class="descclassname">honeybadgermpc.ipc.</code><code class="descname">NodeDetails</code><span class="sig-paren">(</span><em>ip</em>, <em>port</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#NodeDetails"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.NodeDetails" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="honeybadgermpc.ipc.Senders">
-<em class="property">class </em><code class="descclassname">honeybadgermpc.ipc.</code><code class="descname">Senders</code><span class="sig-paren">(</span><em>queues</em>, <em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#Senders"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.Senders" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dt id="honeybadgermpc.ipc.ProcessProgramRunner">
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.ipc.</code><code class="sig-name descname">ProcessProgramRunner</code><span class="sig-paren">(</span><em class="sig-param">peers_config</em>, <em class="sig-param">n</em>, <em class="sig-param">t</em>, <em class="sig-param">my_id</em>, <em class="sig-param">mpc_config={}</em>, <em class="sig-param">linger_timeout=2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#ProcessProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.ProcessProgramRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="method">
-<dt id="honeybadgermpc.ipc.Senders.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#Senders.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.Senders.close" title="Permalink to this definition">¶</a></dt>
+<dt id="honeybadgermpc.ipc.ProcessProgramRunner.execute">
+<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param">sid</em>, <em class="sig-param">program</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#ProcessProgramRunner.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.ProcessProgramRunner.execute" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="honeybadgermpc.ipc.Senders.connect">
-<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#Senders.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.Senders.connect" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="honeybadgermpc.ipc.Senders.process_queue">
-<code class="descname">process_queue</code><span class="sig-paren">(</span><em>writer</em>, <em>q</em>, <em>recvid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#Senders.process_queue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.Senders.process_queue" title="Permalink to this definition">¶</a></dt>
+<dt id="honeybadgermpc.ipc.ProcessProgramRunner.get_send_recv">
+<code class="sig-name descname">get_send_recv</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#ProcessProgramRunner.get_send_recv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.ProcessProgramRunner.get_send_recv" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="function">
-<dt id="honeybadgermpc.ipc.handle_result">
-<code class="descclassname">honeybadgermpc.ipc.</code><code class="descname">handle_result</code><span class="sig-paren">(</span><em>future</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#handle_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.handle_result" title="Permalink to this definition">¶</a></dt>
+<dt id="honeybadgermpc.ipc.test_mpc_programs">
+<em class="property">async </em><code class="sig-prename descclassname">honeybadgermpc.ipc.</code><code class="sig-name descname">test_mpc_programs</code><span class="sig-paren">(</span><em class="sig-param">peers</em>, <em class="sig-param">n</em>, <em class="sig-param">t</em>, <em class="sig-param">my_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#test_mpc_programs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.test_mpc_programs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="honeybadgermpc.ipc.runProgramAsProcesses">
-<code class="descclassname">honeybadgermpc.ipc.</code><code class="descname">runProgramAsProcesses</code><span class="sig-paren">(</span><em>program</em>, <em>config</em>, <em>t</em>, <em>id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#runProgramAsProcesses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.runProgramAsProcesses" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="honeybadgermpc.ipc.setup_sockets">
-<code class="descclassname">honeybadgermpc.ipc.</code><code class="descname">setup_sockets</code><span class="sig-paren">(</span><em>config</em>, <em>n</em>, <em>id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#setup_sockets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.setup_sockets" title="Permalink to this definition">¶</a></dt>
+<dt id="honeybadgermpc.ipc.verify_all_connections">
+<em class="property">async </em><code class="sig-prename descclassname">honeybadgermpc.ipc.</code><code class="sig-name descname">verify_all_connections</code><span class="sig-paren">(</span><em class="sig-param">peers</em>, <em class="sig-param">n</em>, <em class="sig-param">my_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/ipc.html#verify_all_connections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.verify_all_connections" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -267,7 +265,7 @@
         <a href="config.html" class="btn btn-neutral float-right" title="config" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="router.html" class="btn btn-neutral" title="router" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="router.html" class="btn btn-neutral float-left" title="router" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -293,26 +291,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

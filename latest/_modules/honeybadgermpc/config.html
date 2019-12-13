@@ -17,36 +17,41 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -85,7 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -104,6 +109,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -171,7 +177,8 @@
            <div itemprop="articleBody">
             
   <h1>Source code for honeybadgermpc.config</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Module for ``honeybadgermpc``&#39;s configuration.</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module for ``honeybadgermpc``&#39;s configuration.</span>
 
 <span class="sd">This module can be used to:</span>
 
@@ -179,42 +186,111 @@
 <span class="sd">* load a configuration</span>
 <span class="sd">* validate a comfiguration</span>
 
-<span class="sd">example of config dict:</span>
-
-<span class="sd">.. code-block:: python</span>
-
-<span class="sd">    {</span>
-<span class="sd">        &#39;N&#39;: 4,</span>
-<span class="sd">        &#39;t&#39;: 1,</span>
-<span class="sd">        &#39;nodeid&#39;: &#39;0&#39;,</span>
-<span class="sd">        &#39;host&#39;: &#39;hbmpc_node_0&#39;,</span>
-<span class="sd">        &#39;port&#39;: 23264,</span>
-<span class="sd">        &#39;peers&#39;: {</span>
-<span class="sd">            &#39;1&#39;: hbmpc_node_1:23265,</span>
-<span class="sd">            &#39;2&#39;: hbmpc_node_2:23266,</span>
-<span class="sd">            &#39;3&#39;: hbmpc_node_3:23267,</span>
-<span class="sd">        },</span>
-<span class="sd">    }</span>
+<span class="sd">Sample config can be found at: conf/sample.ini</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">configparser</span> <span class="k">import</span> <span class="n">ConfigParser</span>
+
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.reed_solomon</span> <span class="kn">import</span> <span class="n">Algorithm</span> <span class="k">as</span> <span class="n">RSAlgorithm</span>
 
 
-<div class="viewcode-block" id="load_config"><a class="viewcode-back" href="../../libref/config.html#honeybadgermpc.config.load_config">[docs]</a><span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read a configuration file given by ``path`` and return a :obj:`dict`.&quot;&quot;&quot;</span>
-    <span class="n">cfgparser</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+<div class="viewcode-block" id="NodeDetails"><a class="viewcode-back" href="../../libref/config.html#honeybadgermpc.config.NodeDetails">[docs]</a><span class="k">class</span> <span class="nc">NodeDetails</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">ip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span></div>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_object</span><span class="p">:</span>
-        <span class="n">cfgparser</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
 
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="n">cfgparser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="n">cfgparser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;nodeid&#39;</span><span class="p">:</span> <span class="n">cfgparser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;addrinfo&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="n">cfgparser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;addrinfo&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="n">cfgparser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s1">&#39;addrinfo&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;peers&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfgparser</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="s1">&#39;peers&#39;</span><span class="p">)),</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="n">config</span></div>
+<div class="viewcode-block" id="ConfigVars"><a class="viewcode-back" href="../../libref/config.html#honeybadgermpc.config.ConfigVars">[docs]</a><span class="k">class</span> <span class="nc">ConfigVars</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">Reconstruction</span> <span class="o">=</span> <span class="s2">&quot;reconstruction&quot;</span></div>
+
+
+<div class="viewcode-block" id="ReconstructionConfig"><a class="viewcode-back" href="../../libref/config.html#honeybadgermpc.config.ReconstructionConfig">[docs]</a><span class="k">class</span> <span class="nc">ReconstructionConfig</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">induce_faults</span><span class="p">,</span> <span class="n">decoding_algorithm</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">induce_faults</span> <span class="o">=</span> <span class="n">induce_faults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoding_algorithm</span> <span class="o">=</span> <span class="n">decoding_algorithm</span>
+
+<div class="viewcode-block" id="ReconstructionConfig.default"><a class="viewcode-back" href="../../libref/config.html#honeybadgermpc.config.ReconstructionConfig.default">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">induce_faults</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">decoding_algorithm</span><span class="o">=</span><span class="n">RSAlgorithm</span><span class="o">.</span><span class="n">GAO</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ReconstructionConfig.from_json"><a class="viewcode-back" href="../../libref/config.html#honeybadgermpc.config.ReconstructionConfig.from_json">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">json_config</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">default</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;induce_faults&quot;</span> <span class="ow">in</span> <span class="n">json_config</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">induce_faults</span> <span class="o">=</span> <span class="n">json_config</span><span class="p">[</span><span class="s2">&quot;induce_faults&quot;</span><span class="p">]</span>
+
+        <span class="n">decoding_algorithms</span> <span class="o">=</span> <span class="p">[</span><span class="n">RSAlgorithm</span><span class="o">.</span><span class="n">WELCH_BERLEKAMP</span><span class="p">,</span> <span class="n">RSAlgorithm</span><span class="o">.</span><span class="n">GAO</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;decoding_algorithm&quot;</span> <span class="ow">in</span> <span class="n">json_config</span><span class="p">:</span>
+            <span class="n">decoding_algorithm</span> <span class="o">=</span> <span class="n">json_config</span><span class="p">[</span><span class="s2">&quot;decoding_algorithm&quot;</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">decoding_algorithm</span> <span class="ow">in</span> <span class="n">decoding_algorithms</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;decoding_algorithm must be in </span><span class="si">{decoding_algorithms}</span><span class="s2">&quot;</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">decoding_algorithm</span> <span class="o">=</span> <span class="n">json_config</span><span class="p">[</span><span class="s2">&quot;decoding_algorithm&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">res</span></div></div>
+
+
+<div class="viewcode-block" id="HbmpcConfig"><a class="viewcode-back" href="../../libref/config.html#honeybadgermpc.config.HbmpcConfig">[docs]</a><span class="k">class</span> <span class="nc">HbmpcConfig</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">my_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">peers</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">skip_preprocessing</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">extras</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reconstruction</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="HbmpcConfig.load_config"><a class="viewcode-back" href="../../libref/config.html#honeybadgermpc.config.HbmpcConfig.load_config">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">load_config</span><span class="p">():</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Runs an HBMPC program.&quot;</span><span class="p">)</span>
+
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;-d&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--distributed&quot;</span><span class="p">,</span>
+            <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;is_dist&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Indicates that the program is being run in a distributed setting. </span><span class="se">\</span>
+<span class="s2">                This will validate all `default` and `required` parameters.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--config-file&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;config_file_path&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path from where to load the HBMPC config file.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">is_dist</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">config_file_path</span><span class="p">))</span>
+
+            <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">]</span>
+            <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">]</span>
+            <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">my_id</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;my_id&quot;</span><span class="p">]</span>
+            <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">peers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">peerid</span><span class="p">:</span> <span class="n">NodeDetails</span><span class="p">(</span><span class="n">addrinfo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">addrinfo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">peerid</span><span class="p">,</span> <span class="n">addrinfo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;peers&quot;</span><span class="p">])</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="s2">&quot;skip_preprocessing&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">skip_preprocessing</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;skip_preprocessing&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;extra&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">extras</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;extra&quot;</span><span class="p">]</span>
+
+            <span class="n">reconstruction_data</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="s2">&quot;reconstruction&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="n">reconstruction_data</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;reconstruction&quot;</span><span class="p">]</span>
+
+            <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">reconstruction</span> <span class="o">=</span> <span class="n">ReconstructionConfig</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span>
+                <span class="n">reconstruction_data</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Ensure the required values are set before this method terminates</span>
+            <span class="k">assert</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">my_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Node Id: missing&quot;</span>
+            <span class="k">assert</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">N</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;N: missing&quot;</span>
+            <span class="k">assert</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">t</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;t: missing&quot;</span>
+            <span class="k">assert</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">peers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;peers: missing&quot;</span></div></div>
 </pre></div>
 
            </div>
@@ -244,28 +320,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

@@ -17,36 +17,41 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -85,7 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -104,6 +109,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -172,37 +178,110 @@
             
   <h1>Source code for honeybadgermpc.router</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.utils.typecheck</span> <span class="kn">import</span> <span class="n">TypeCheck</span>
 
 
-<div class="viewcode-block" id="simple_router"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.simple_router">[docs]</a><span class="k">def</span> <span class="nf">simple_router</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+<div class="viewcode-block" id="Router"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router">[docs]</a><span class="k">class</span> <span class="nc">Router</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Builds a set of connected channels</span>
-<span class="sd">    @return (receives, sends)</span>
+<span class="sd">    Base class for Router objects defining the recv and send methods.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Create a mailbox for each party</span>
-    <span class="n">mbox</span> <span class="o">=</span> <span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
 
-    <span class="k">def</span> <span class="nf">makeSend</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_send</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
-            <span class="c1"># print(&#39;SEND %8s [%2d -&gt; %2d]&#39; % (o, i, j))</span>
-            <span class="c1"># delay = random.random() * 1.0</span>
-            <span class="c1"># asyncio.get_event_loop().call_later(delay, mbox[j].put_nowait,(i,o))</span>
-            <span class="n">mbox</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">o</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">_send</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_parties</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">num_parties</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sends</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_sends</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recvs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_recvs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">broadcasts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_broadcasts</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">debug</span>
 
-    <span class="k">def</span> <span class="nf">makeRecv</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
-        <span class="k">async</span> <span class="k">def</span> <span class="nf">_recv</span><span class="p">():</span>
-            <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span> <span class="o">=</span> <span class="k">await</span> <span class="n">mbox</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-            <span class="c1"># print(&#39;RECV %8s [%2d -&gt; %2d]&#39; % (o, i, j))</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_recv</span>
+<div class="viewcode-block" id="Router.recv"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router.recv">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">recv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Receives a message from player with id `player_id`</span>
 
-    <span class="n">sends</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">receives</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
-        <span class="n">sends</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">makeSend</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-        <span class="n">receives</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">makeRecv</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">sends</span><span class="p">,</span> <span class="n">receives</span><span class="p">)</span></div>
+<span class="sd">        args:</span>
+<span class="sd">            player_id (int): Id of the receiving player</span>
+
+<span class="sd">        outputs:</span>
+<span class="sd">            returns the first message that arrives for the given player</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Router.send"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router.send">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dest_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Sends a message to player with id `dest` from `player_id`</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            player_id (int): Id of the sending player</span>
+<span class="sd">            dest_id (int): Id of the receiving player</span>
+<span class="sd">            message (object): Message to send to dest_id</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Router.broadcast"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router.broadcast">[docs]</a>    <span class="nd">@TypeCheck</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Sends a message from player to all other players</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            player_id (int): Id of the broadcasting player</span>
+<span class="sd">            message (object): Message to broadcast</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">dest_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">player_id</span><span class="p">,</span> <span class="n">dest_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Router._make_recvs"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router._make_recvs">[docs]</a>    <span class="k">def</span> <span class="nf">_make_recvs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recv</span><span class="p">,</span> <span class="n">player_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">player_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="Router._make_sends"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router._make_sends">[docs]</a>    <span class="k">def</span> <span class="nf">_make_sends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">,</span> <span class="n">player_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">player_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="Router._make_broadcasts"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router._make_broadcasts">[docs]</a>    <span class="k">def</span> <span class="nf">_make_broadcasts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">broadcast</span><span class="p">,</span> <span class="n">player_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">player_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span></div></div>
+
+
+<div class="viewcode-block" id="SimpleRouter"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.SimpleRouter">[docs]</a><span class="k">class</span> <span class="nc">SimpleRouter</span><span class="p">(</span><span class="n">Router</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Simple router which uses queues as a mechanism for sending messages between players</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@TypeCheck</span><span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_parties</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">num_parties</span><span class="p">)</span>
+
+        <span class="c1"># Mailboxes for each party</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queues</span> <span class="o">=</span> <span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_parties</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="SimpleRouter.recv"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.SimpleRouter.recv">[docs]</a>    <span class="nd">@TypeCheck</span><span class="p">()</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">recv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Retrieves a message for player_id.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            player_id(int): id of player to receive message</span>
+
+<span class="sd">        outputs:</span>
+<span class="sd">            Returns the first message received for the given player</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queues</span><span class="p">[</span><span class="n">player_id</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received </span><span class="si">{message}</span><span class="s2"> [</span><span class="si">{player_id}</span><span class="s2">&lt;-</span><span class="si">{source_id}</span><span class="s2">]&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimpleRouter.send"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.SimpleRouter.send">[docs]</a>    <span class="nd">@TypeCheck</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dest_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Sends  message from player_id to dest_id</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            player_id (int): Player sending message</span>
+<span class="sd">            dest_id (int): Player receiving message</span>
+<span class="sd">            message (object): Message to send to other player</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queues</span><span class="p">[</span><span class="n">dest_id</span><span class="p">]</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">((</span><span class="n">player_id</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sent </span><span class="si">{message}</span><span class="s2"> [</span><span class="si">{player_id}</span><span class="s2">-&gt;</span><span class="si">{dest_id}</span><span class="s2">]&quot;</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>
@@ -232,28 +311,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
-        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.2.10/tab.min.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

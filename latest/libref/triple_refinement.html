@@ -17,34 +17,37 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="rand" href="rand.html" />
     <link rel="prev" title="commonsubset" href="commonsubset.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -83,7 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -114,6 +117,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../development/getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
@@ -184,40 +188,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-honeybadgermpc.triple_refinement">
-<span id="triple-refinement"></span><h1>triple_refinement<a class="headerlink" href="#module-honeybadgermpc.triple_refinement" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
-<dt id="honeybadgermpc.triple_refinement.batchBeaver">
-<code class="descclassname">honeybadgermpc.triple_refinement.</code><code class="descname">batchBeaver</code><span class="sig-paren">(</span><em>context</em>, <em>a</em>, <em>b</em>, <em>x</em>, <em>y</em>, <em>z</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/triple_refinement.html#batchBeaver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.triple_refinement.batchBeaver" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="honeybadgermpc.triple_refinement.getExtrapolatedValues">
-<code class="descclassname">honeybadgermpc.triple_refinement.</code><code class="descname">getExtrapolatedValues</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>d</em>, <em>omega</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/triple_refinement.html#getExtrapolatedValues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.triple_refinement.getExtrapolatedValues" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="honeybadgermpc.triple_refinement.refineTriples">
-<code class="descclassname">honeybadgermpc.triple_refinement.</code><code class="descname">refineTriples</code><span class="sig-paren">(</span><em>context</em>, <em>a_dirty</em>, <em>b_dirty</em>, <em>c_dirty</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/triple_refinement.html#refineTriples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.triple_refinement.refineTriples" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method takes dirty triples and refines them.</p>
-<dl class="docutils">
-<dt>Arguments:</dt>
-<dd>context {PassiveMpc} – MPC context.
-a_dirty {list[Share]} – Shares of first part of the triples.
-b_dirty {list[Share]} – Shares of second part of the triples.
-c_dirty {list[Share]} – Shares of first*second part of the triples.</dd>
-<dt>Returns:</dt>
-<dd>list[Share] – Shares of first part of the refined triples.
-list[Share] – Shares of second part of the refined triples.
-list[Share] – Shares of first*second part of the refined triples.</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="honeybadgermpc.triple_refinement.renameAndUnpackInputs">
-<code class="descclassname">honeybadgermpc.triple_refinement.</code><code class="descname">renameAndUnpackInputs</code><span class="sig-paren">(</span><em>_a</em>, <em>_b</em>, <em>_c</em>, <em>d</em>, <em>m</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/honeybadgermpc/triple_refinement.html#renameAndUnpackInputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.triple_refinement.renameAndUnpackInputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+  <div class="section" id="triple-refinement">
+<h1>triple_refinement<a class="headerlink" href="#triple-refinement" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -231,7 +203,7 @@ list[Share] – Shares of first*second part of the refined triples.</dd>
         <a href="rand.html" class="btn btn-neutral float-right" title="rand" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="commonsubset.html" class="btn btn-neutral" title="commonsubset" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="commonsubset.html" class="btn btn-neutral float-left" title="commonsubset" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -257,26 +229,16 @@ list[Share] – Shares of first*second part of the refined triples.</dd>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

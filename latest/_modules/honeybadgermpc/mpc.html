@@ -1,0 +1,614 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>honeybadgermpc.mpc &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script type="text/javascript" src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/acs-evm.html">Running ACS with an EVM blockchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/passive.html">Running passive examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Library Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>honeybadgermpc.mpc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for honeybadgermpc.mpc</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">honeybadgermpc.progs.mixins.dataflow</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Share</span><span class="p">,</span>
+    <span class="n">ShareArray</span><span class="p">,</span>
+    <span class="n">ShareFuture</span><span class="p">,</span>
+    <span class="n">GFElementFuture</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="kn">import</span> <span class="n">polynomials_over</span>
+<span class="kn">from</span> <span class="nn">.field</span> <span class="kn">import</span> <span class="n">GF</span><span class="p">,</span> <span class="n">GFElement</span>
+<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="kn">import</span> <span class="n">EvalPoint</span>
+<span class="kn">from</span> <span class="nn">.router</span> <span class="kn">import</span> <span class="n">SimpleRouter</span>
+<span class="kn">from</span> <span class="nn">.program_runner</span> <span class="kn">import</span> <span class="n">ProgramRunner</span>
+<span class="kn">from</span> <span class="nn">.robust_reconstruction</span> <span class="kn">import</span> <span class="n">robust_reconstruct</span>
+<span class="kn">from</span> <span class="nn">.batch_reconstruction</span> <span class="kn">import</span> <span class="n">batch_reconstruct</span>
+<span class="kn">from</span> <span class="nn">.elliptic_curve</span> <span class="kn">import</span> <span class="n">Subgroup</span>
+<span class="kn">from</span> <span class="nn">.preprocessing</span> <span class="kn">import</span> <span class="n">PreProcessedElements</span>
+<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">ConfigVars</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">HoneyBadgerMPCError</span>
+<span class="kn">from</span> <span class="nn">.utils.misc</span> <span class="kn">import</span> <span class="n">print_exception_callback</span>
+
+
+<div class="viewcode-block" id="Mpc"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.Mpc">[docs]</a><span class="k">class</span> <span class="nc">Mpc</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">sid</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">myid</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">preproc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">prog_args</span>
+    <span class="p">):</span>
+        <span class="c1"># Parameters for robust MPC</span>
+        <span class="c1"># Note: tolerates min(t,N-t) crash faults</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span>
+        <span class="k">assert</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sid</span> <span class="o">=</span> <span class="n">sid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">myid</span> <span class="o">=</span> <span class="n">myid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">GF</span><span class="p">(</span><span class="n">Subgroup</span><span class="o">.</span><span class="n">BLS12_381</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poly</span> <span class="o">=</span> <span class="n">polynomials_over</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preproc</span> <span class="o">=</span> <span class="n">preproc</span> <span class="k">if</span> <span class="n">preproc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">PreProcessedElements</span><span class="p">()</span>
+
+        <span class="c1"># send(j, o): sends object o to party j with (current sid)</span>
+        <span class="c1"># recv(): returns (j, o) from party j</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span> <span class="o">=</span> <span class="n">send</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recv</span> <span class="o">=</span> <span class="n">recv</span>
+
+        <span class="c1"># An Mpc program should only depend on common parameters,</span>
+        <span class="c1"># and the values of opened shares. Opened shares will be</span>
+        <span class="c1"># assigned an ID based on the order that share is encountered.</span>
+        <span class="c1"># So the protocol must encounter the shares in the same order.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prog</span> <span class="o">=</span> <span class="n">prog</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prog_args</span> <span class="o">=</span> <span class="n">prog_args</span>
+
+        <span class="c1"># Counter that increments by 1 every time you access it</span>
+        <span class="c1"># This will be used to assign ids to shares.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_share_id</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Store opened shares until ready to reconstruct</span>
+        <span class="c1"># playerid =&gt; { [shareid =&gt; Future share] }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_share_buffers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">defaultdict</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+        <span class="c1"># Batch reconstruction is handled slightly differently,</span>
+        <span class="c1"># We&#39;ll create a separate queue for received values</span>
+        <span class="c1"># { shareid =&gt; Queue() }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sharearray_buffers</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">)</span>
+
+        <span class="c1"># Dynamically create concrete subclasses of the classes using ourself as</span>
+        <span class="c1"># their context property</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Share</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s2">&quot;Share&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">Share</span><span class="p">,),</span> <span class="p">{</span><span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ShareFuture</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s2">&quot;ShareFuture&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">ShareFuture</span><span class="p">,),</span> <span class="p">{</span><span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ShareArray</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s2">&quot;ShareArray&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">ShareArray</span><span class="p">,),</span> <span class="p">{</span><span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">GFElementFuture</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span>
+            <span class="s2">&quot;GFElementFuture&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">GFElementFuture</span><span class="p">,),</span> <span class="p">{</span><span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="p">}</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Mpc._get_share_id"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.Mpc._get_share_id">[docs]</a>    <span class="k">def</span> <span class="nf">_get_share_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a monotonically increasing int value</span>
+<span class="sd">        each time this is called</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">share_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_share_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_share_id</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">share_id</span></div>
+
+<div class="viewcode-block" id="Mpc.call_mixin"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.Mpc.call_mixin">[docs]</a>    <span class="k">def</span> <span class="nf">call_mixin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convenience method to check if a mixin is present, and call it if so</span>
+<span class="sd">        args:</span>
+<span class="sd">            name(str): Name of the mixin to call</span>
+<span class="sd">            args(list): arguments to pass to the call to the mixin</span>
+<span class="sd">            kwargs(dict): named arguments to pass to the call to the mixin</span>
+
+<span class="sd">        outputs:</span>
+<span class="sd">            future that resolves to the result of calling the mixin operation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mixin </span><span class="si">{name}</span><span class="s2"> not present!&quot;</span><span class="p">)</span>
+
+        <span class="n">task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">print_exception_callback</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">task</span></div>
+
+<div class="viewcode-block" id="Mpc.open_share"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.Mpc.open_share">[docs]</a>    <span class="k">def</span> <span class="nf">open_share</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">share</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Given secret-shared value share, open the value by</span>
+<span class="sd">        broadcasting our local share, and then receive the likewise</span>
+<span class="sd">        broadcasted local shares from other nodes, and finally reconstruct</span>
+<span class="sd">        the secret shared value.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            share (Share): Secret shared value to open</span>
+
+<span class="sd">        outputs:</span>
+<span class="sd">            Future that resolves to the plaintext value of the share.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">()</span>
+
+        <span class="c1"># Choose the shareid based on the order this is called</span>
+        <span class="n">shareid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_share_id</span><span class="p">()</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+        <span class="n">degree</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">share</span><span class="o">.</span><span class="n">t</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">share</span><span class="o">.</span><span class="n">t</span>
+
+        <span class="c1"># Broadcast share</span>
+        <span class="k">for</span> <span class="n">dest</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">value_to_share</span> <span class="o">=</span> <span class="n">share</span><span class="o">.</span><span class="n">v</span>
+
+            <span class="c1"># Send random data if meant to induce faults</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">ConfigVars</span><span class="o">.</span><span class="n">Reconstruction</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">ConfigVars</span><span class="o">.</span><span class="n">Reconstruction</span><span class="p">]</span><span class="o">.</span><span class="n">induce_faults</span>
+            <span class="p">):</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;[FAULT][RobustReconstruct] Sending random share.&quot;</span><span class="p">)</span>
+                <span class="n">value_to_share</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+
+            <span class="c1"># &#39;S&#39; is for single shares</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="n">shareid</span><span class="p">,</span> <span class="n">value_to_share</span><span class="p">))</span>
+
+        <span class="c1"># Set up the buffer of received shares</span>
+        <span class="n">share_buffer</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_share_buffers</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">shareid</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)]</span>
+
+        <span class="n">point</span> <span class="o">=</span> <span class="n">EvalPoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">use_omega_powers</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Create polynomial that reconstructs the shared value by evaluating at 0</span>
+        <span class="n">reconstruction</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+            <span class="n">robust_reconstruct</span><span class="p">(</span><span class="n">share_buffer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">degree</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="n">p</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Robust reconstruction for share (id: </span><span class="si">{shareid}</span><span class="s2">) &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;failed with errors: </span><span class="si">{errors}</span><span class="s2">!&quot;</span>
+                <span class="p">)</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span>
+                    <span class="n">HoneyBadgerMPCError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to open share with id </span><span class="si">{shareid}</span><span class="s2">!&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span>
+
+        <span class="n">reconstruction</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+
+        <span class="c1"># Return future that will resolve to reconstructed point</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="Mpc.open_share_array"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.Mpc.open_share_array">[docs]</a>    <span class="k">def</span> <span class="nf">open_share_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sharearray</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Given array of secret shares, opens them in a batch</span>
+<span class="sd">        and returns their plaintext values.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            sharearray (ShareArray): shares to open</span>
+
+<span class="sd">        outputs:</span>
+<span class="sd">            Future, which will resolve to an array of GFElements</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sharearray</span><span class="o">.</span><span class="n">_shares</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">([])</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+        <span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="n">elements</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Batch reconstruction for share_array (id: </span><span class="si">{shareid}</span><span class="s2">) failed!&quot;</span>
+                <span class="p">)</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span><span class="n">HoneyBadgerMPCError</span><span class="p">(</span><span class="s2">&quot;Batch reconstruction failed!&quot;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+
+        <span class="n">shareid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_share_id</span><span class="p">()</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+        <span class="n">degree</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">sharearray</span><span class="o">.</span><span class="n">t</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sharearray</span><span class="o">.</span><span class="n">t</span>
+
+        <span class="c1"># Creates unique send function based on the share to open</span>
+        <span class="k">def</span> <span class="nf">_send</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+            <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">share</span><span class="p">)</span> <span class="o">=</span> <span class="n">o</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">shareid</span><span class="p">,</span> <span class="n">share</span><span class="p">))</span>
+
+        <span class="c1"># Receive function from the respective queue for this node</span>
+        <span class="n">_recv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sharearray_buffers</span><span class="p">[</span><span class="n">shareid</span><span class="p">]</span><span class="o">.</span><span class="n">get</span>
+
+        <span class="c1"># Generate reconstructed array of shares</span>
+        <span class="n">reconstructed</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+            <span class="n">batch_reconstruct</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">v</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sharearray</span><span class="o">.</span><span class="n">_shares</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="p">,</span>
+                <span class="n">t</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">myid</span><span class="p">,</span>
+                <span class="n">_send</span><span class="p">,</span>
+                <span class="n">_recv</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ConfigVars</span><span class="o">.</span><span class="n">Reconstruction</span><span class="p">),</span>
+                <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">degree</span><span class="o">=</span><span class="n">degree</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">reconstructed</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="Mpc._run"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.Mpc._run">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Run receive loop as background task, until self.prog finishes</span>
+        <span class="c1"># Cancel the background task, even if there&#39;s an exception</span>
+        <span class="n">bgtask</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_recvloop</span><span class="p">())</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">prog_args</span><span class="p">))</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait</span><span class="p">((</span><span class="n">bgtask</span><span class="p">,</span> <span class="n">result</span><span class="p">),</span> <span class="n">return_when</span><span class="o">=</span><span class="n">asyncio</span><span class="o">.</span><span class="n">FIRST_COMPLETED</span><span class="p">)</span>
+
+        <span class="c1"># bgtask should not exit early-- this should correspond to an error</span>
+        <span class="k">if</span> <span class="n">bgtask</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Background task finished before prog&quot;</span><span class="p">)</span>
+
+            <span class="n">bg_exception</span> <span class="o">=</span> <span class="n">bgtask</span><span class="o">.</span><span class="n">exception</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">bg_exception</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">HoneyBadgerMPCError</span><span class="p">(</span><span class="s2">&quot;background task finished before prog!&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">bg_exception</span>
+
+        <span class="n">bgtask</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">result</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Mpc._recvloop"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.Mpc._recvloop">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_recvloop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Background task to continually receive incoming shares, and</span>
+<span class="sd">        put the received share in the appropriate buffer. In the case</span>
+<span class="sd">        of a single share this puts it into self._share_buffers, otherwise,</span>
+<span class="sd">        it gets enqueued in the appropriate self._sharearray_buffers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">shareid</span><span class="p">,</span> <span class="n">share</span><span class="p">))</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+
+            <span class="c1"># Sort into single or batch</span>
+            <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="s2">&quot;S&quot;</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">share</span><span class="p">)</span> <span class="ow">is</span> <span class="n">GFElement</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span>
+                <span class="n">buf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_share_buffers</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+                <span class="c1"># Assert there is not an R1 or R2 value either</span>
+                <span class="k">assert</span> <span class="n">shareid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sharearray_buffers</span>
+
+                <span class="c1"># Assert that there is not an element already</span>
+                <span class="k">if</span> <span class="n">buf</span><span class="p">[</span><span class="n">shareid</span><span class="p">]</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;redundant share: </span><span class="si">{j}</span><span class="s2"> {(tag, shareid)}&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received a redundant share: </span><span class="si">{shareid}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">buf</span><span class="p">[</span><span class="n">shareid</span><span class="p">]</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">share</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;R1&quot;</span><span class="p">,</span> <span class="s2">&quot;R2&quot;</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">share</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span>
+
+                <span class="c1"># Assert there is not an &#39;S&#39; value here</span>
+                <span class="k">assert</span> <span class="n">shareid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_share_buffers</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+                <span class="c1"># Forward to the right queue</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sharearray_buffers</span><span class="p">[</span><span class="n">shareid</span><span class="p">]</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">share</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
+
+<div class="viewcode-block" id="TaskProgramRunner"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.TaskProgramRunner">[docs]</a><span class="k">class</span> <span class="nc">TaskProgramRunner</span><span class="p">(</span><span class="n">ProgramRunner</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">router</span> <span class="o">=</span> <span class="n">SimpleRouter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TaskProgramRunner.add"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.TaskProgramRunner.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">Mpc</span><span class="p">(</span>
+                <span class="s2">&quot;mpc:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">counter</span><span class="p">,),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span>
+                <span class="n">i</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="n">sends</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="n">recvs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">program</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">_run</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="TaskProgramRunner.join"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.TaskProgramRunner.join">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span></div></div>
+
+
+<span class="c1">###############</span>
+<span class="c1"># Test programs</span>
+<span class="c1">###############</span>
+
+
+<div class="viewcode-block" id="test_batchopening"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.test_batchopening">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">test_batchopening</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+    <span class="c1"># Demonstrates use of ShareArray batch interface</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">preproc</span><span class="o">.</span><span class="n">get_zero</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">+</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)]</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">ShareArray</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+    <span class="n">xs_</span> <span class="o">=</span> <span class="k">await</span> <span class="n">xs</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">xs_</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">i</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] Finished batch opening&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,))</span>
+    <span class="k">return</span> <span class="n">xs_</span></div>
+
+
+<div class="viewcode-block" id="test_prog1"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.test_prog1">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">test_prog1</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+    <span class="c1"># Example of Beaver multiplication</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">preproc</span><span class="o">.</span><span class="n">get_zero</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">+</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># x = context.Share(10)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">preproc</span><span class="o">.</span><span class="n">get_zero</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">+</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+    <span class="c1"># y = context.Share(15)</span>
+
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">ab</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">preproc</span><span class="o">.</span><span class="n">get_triples</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+    <span class="c1"># assert await a.open() * await b.open() == await ab.open()</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">d</span>
+    <span class="k">await</span> <span class="n">e</span>
+
+    <span class="c1"># This is a random share of x*y</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(d): {type(d)}&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(b): {type(b)}&quot;</span><span class="p">)</span>
+    <span class="n">xy</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="n">e</span> <span class="o">+</span> <span class="n">d</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">e</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">ab</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(x): {type(x)}&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(y): {type(y)}&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(xy): {type(xy)}&quot;</span><span class="p">)</span>
+    <span class="n">x_</span><span class="p">,</span> <span class="n">y_</span><span class="p">,</span> <span class="n">xy_</span> <span class="o">=</span> <span class="k">await</span> <span class="n">x</span><span class="o">.</span><span class="n">open</span><span class="p">(),</span> <span class="k">await</span> <span class="n">y</span><span class="o">.</span><span class="n">open</span><span class="p">(),</span> <span class="k">await</span> <span class="n">xy</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">x_</span> <span class="o">*</span> <span class="n">y_</span> <span class="o">==</span> <span class="n">xy_</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{context.myid}</span><span class="s2">] Finished </span><span class="si">{x_}</span><span class="s2">, </span><span class="si">{y_}</span><span class="s2">, </span><span class="si">{xy_}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="test_prog2"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.test_prog2">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">test_prog2</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+    <span class="n">shares</span> <span class="o">=</span> <span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">preproc</span><span class="o">.</span><span class="n">get_zero</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">share</span> <span class="ow">in</span> <span class="n">shares</span><span class="p">[:</span><span class="mi">100</span><span class="p">]:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="k">await</span> <span class="n">share</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] Finished&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,))</span>
+
+    <span class="c1"># Batch version</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">ShareArray</span><span class="p">(</span><span class="n">shares</span><span class="p">[:</span><span class="mi">100</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="k">await</span> <span class="n">arr</span><span class="o">.</span><span class="n">open</span><span class="p">():</span>
+        <span class="k">assert</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">s</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] Finished batch&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,))</span></div>
+
+
+<div class="viewcode-block" id="handle_async_exception"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.handle_async_exception">[docs]</a><span class="k">def</span> <span class="nf">handle_async_exception</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;handle_async_exception: </span><span class="si">{ctx}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="c1"># Run some test cases</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">pp_elements</span> <span class="o">=</span> <span class="n">PreProcessedElements</span><span class="p">()</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating random shares of zero in sharedata/&quot;</span><span class="p">)</span>
+    <span class="n">pp_elements</span><span class="o">.</span><span class="n">generate_zeros</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating random shares in sharedata/&quot;</span><span class="p">)</span>
+    <span class="n">pp_elements</span><span class="o">.</span><span class="n">generate_rands</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating random shares of triples in sharedata/&quot;</span><span class="p">)</span>
+    <span class="n">pp_elements</span><span class="o">.</span><span class="n">generate_triples</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">())</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+    <span class="c1"># loop.set_exception_handler(handle_async_exception)</span>
+    <span class="c1"># loop.set_debug(True)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Start&quot;</span><span class="p">)</span>
+        <span class="n">program_runner</span> <span class="o">=</span> <span class="n">TaskProgramRunner</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">program_runner</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">test_prog1</span><span class="p">)</span>
+        <span class="n">program_runner</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">test_prog2</span><span class="p">)</span>
+        <span class="n">program_runner</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">test_batchopening</span><span class="p">)</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">program_runner</span><span class="o">.</span><span class="n">join</span><span class="p">())</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

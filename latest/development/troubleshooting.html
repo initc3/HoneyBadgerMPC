@@ -17,33 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="prev" title="Packaging and Distributing HoneyBadgerMPC" href="../packaging.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -82,7 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
@@ -101,13 +104,14 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-images.html">HoneyBadgerMPC Docker Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reviewing-contributions.html">Reviewing and merging pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ci.html">Continuous integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#debugging-asyncio">Debugging <code class="docutils literal notranslate"><span class="pre">asyncio</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sys-path-pythonpath-issues"><code class="docutils literal notranslate"><span class="pre">sys.path</span></code>/<code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> issues</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#modulenotfounderror"><code class="docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sys-path-pythonpath-issues"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code>/<code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#modulenotfounderror"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#relevant-links">Relevant links</a></li>
 </ul>
 </li>
@@ -192,9 +196,9 @@ use the <cite>Makefile</cite> to remove such files:</p>
 <h2>Debugging <code class="docutils literal notranslate"><span class="pre">asyncio</span></code><a class="headerlink" href="#debugging-asyncio" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="sys-path-pythonpath-issues">
-<h2><a class="reference external" href="https://docs.python.org/3/library/sys.html#sys.path" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a>/<span class="target" id="index-0"></span><a class="reference external" href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH" title="(in Python v3.7)"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a> issues<a class="headerlink" href="#sys-path-pythonpath-issues" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference external" href="https://docs.python.org/3/library/sys.html#sys.path" title="(in Python v3.8)"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a>/<span class="target" id="index-0"></span><a class="reference external" href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH" title="(in Python v3.8)"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a> issues<a class="headerlink" href="#sys-path-pythonpath-issues" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="modulenotfounderror">
-<h3><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ModuleNotFoundError" title="(in Python v3.7)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a><a class="headerlink" href="#modulenotfounderror" title="Permalink to this headline">¶</a></h3>
+<h3><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ModuleNotFoundError" title="(in Python v3.8)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a><a class="headerlink" href="#modulenotfounderror" title="Permalink to this headline">¶</a></h3>
 <p>If you get an error similar to,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>    @fixture
     def GaloisField<span class="o">()</span>:
@@ -218,9 +222,9 @@ that the project is installed in <a class="reference external" href="https://pac
 <div class="section" id="relevant-links">
 <h3>Relevant links<a class="headerlink" href="#relevant-links" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><a class="reference external" href="https://stackoverflow.com/questions/10253826/path-issue-with-pytest-importerror-no-module-named-yadayadayada">stackoverflow: PATH issue with pytest ‘ImportError: No module named YadaYadaYada’</a></li>
-<li><a class="reference external" href="https://docs.pytest.org/en/latest/pythonpath.html">pytest import mechanisms and sys.path/PYTHONPATH</a></li>
-<li><a class="reference external" href="https://docs.pytest.org/en/latest/goodpractices.html">pytest Good Integration Practices</a></li>
+<li><p><a class="reference external" href="https://stackoverflow.com/questions/10253826/path-issue-with-pytest-importerror-no-module-named-yadayadayada">stackoverflow: PATH issue with pytest ‘ImportError: No module named YadaYadaYada’</a></p></li>
+<li><p><a class="reference external" href="https://docs.pytest.org/en/latest/pythonpath.html">pytest import mechanisms and sys.path/PYTHONPATH</a></p></li>
+<li><p><a class="reference external" href="https://docs.pytest.org/en/latest/goodpractices.html">pytest Good Integration Practices</a></p></li>
 </ul>
 </div>
 </div>
@@ -235,7 +239,7 @@ that the project is installed in <a class="reference external" href="https://pac
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="../packaging.html" class="btn btn-neutral" title="Packaging and Distributing HoneyBadgerMPC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../packaging.html" class="btn btn-neutral float-left" title="Packaging and Distributing HoneyBadgerMPC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -261,26 +265,16 @@ that the project is installed in <a class="reference external" href="https://pac
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
