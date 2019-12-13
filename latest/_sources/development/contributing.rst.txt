@@ -248,12 +248,6 @@ violations reported by `flake8`_.
 * pydocstyle: http://www.pydocstyle.org/en/2.1.1/error_codes.html
 
 
-Configuration
--------------
-
-.. todo:: Document how the config works.
-
-
 Logging
 -------
 Make use of the :mod:`logging` module! If you are unsure about whether you
