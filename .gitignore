@@ -138,3 +138,6 @@ sharedata/
 
 # Emacs save
 \#*#
+
+.ci/deploy_key
+.ci/deploy_key.pub
