@@ -1,13 +1,39 @@
 os: linux
-dist: xenial
+dist: bionic
 language: python
 cache: pip
 python: 3.7
-sudo: true
 services:
-  - docker
+- docker
+
+env:
+  global:
+  - COMMIT: ${TRAVIS_COMMIT::8}
+  - IMAGE_TAG: initc3/honeybadgermpc:$COMMIT
+  - DOCS_DEPLOY_BRANCH: "publish-docs-to-github-pages"
+  - secure: QTccme0LHTuALhetGzNOYsdAq/W/xGMwQY3YySonDrRV/zzMxuHrlNpc4pxIv1Y8FFj2e+TRP1kVrAThtna7Ec1aGorIZsuwRq9uZfCa3EVYgFq6AfzOO7darSO7MHedN8dXG1A0SoNhDJRG0QjrlppuBcIXLH/Pl0ej8I0wZXOSzQS7Ab1T/FH+JksjqUDCa7PqS/WhPDYl9gD1ONbnihCZTu1QDP6pfzEH68nBKJ9zzCEK7ixI7IReYjMqz5ZMiUb6tTOcPl1Azh7ITDTC7Ujm3wYm8a6xjjeHeZWjisnT9SNy0tiPVBGNfH2aEz8sooFf8ZUdhQ3d8mF7TMl6ZuprwByhK8y27W5ZPESMb2pfptbpV0Xv0cPy0/jfVmx9+7UisNUZ/uolWDdSZWWfOyR177gFe0GCU8Ll9n1sIFunI+I63J0EUToUyfjO0fTQQZrjTN8cc6E2bf7eUDw3PwJiRWH7Nr7KiZuoLd1AijVyQQA0ZXPel4j8DEDi3hI+A4qbX2kn3cHxRJZbH9ZSQUejN9X9PhJgNsWFih0D/7rB3xChcwOtAgrVKoqqcTuyahCWmmax0xUgg1gGrbqiV3CYsDrayxwp1v24mEfpEbVJkaIWVRR5RkmBCNqPBlcr0LVwD5W5qj90rBzejh6xiRljpcWCtjJpvjMmxGu62lU=
+  - secure: uQhAkC4bGt0rBHItjnDl3A8B6HJGaXQWRggHn9GQHBFJ/mpECwOUBYwy2nPiunWBZLrFLI/JsF3YLNE/9zxEIA6Zhr43qqNQv3oaimHCKTTL2Jd+xDQ+eR3cMX0N37C6CFscsGO+7FLRDiyuAYSQv/CTUEFG6jKLHh27vTj+4ZtVYrvgFoERUAald0JDjCoyQhg7BAvyghX9usCAKnqYyd9bNp4PDNy0YiNPYqBr1RATUoXM2et7kr8w7R1e3DmQSNiVxTTQ7XplLD3x780w/u/givPaiTdEg6aeTBhN5BQ/quF51y4z7kEtkfBv59IzkNfNssFWlKrN8bh9U+fHVl96b+2ru85UifoYRbjNoL1NsaSWSsyLJ7Y+GvXB0NfaDnrwu60NAsMwmaUcSD1G/BFIGiLrS07FJdXqa5MtxE68vox+B6uIhgDmvEi0RcuoRMTkXak5H5HDQVPfiKYqFp2o/D9aRPpCVxLKyhqeSYz0KAEB8HFNBfMWzrZj5YRxif2MKf1+nZah+w+enBPz3evD43E6sD9kSKdWHdDCMY5ELtaqt9+CViiQZ9+vgrQ9cYDROynGedFzhak1HR4GqKu01GB8tZJm/dPnE6ARX/icgr4CpwAP8K6oFyZ1aAzrv86e7zBeZItH78sp7vjoAUn2oeQNsqf65YLOGCed/S0=
+
+stages:
+- name: Build Docker Image
+  if: |
+    type = push AND repo = initc3/HoneyBadgerMPC OR \
+    type = pull_request AND head_repo = initc3/HoneyBadgerMPC
+- name: Build and Publish Documentation
+  if: |
+    repo = initc3/HoneyBadgerMPC AND \
+    type = push AND \
+    branch = "publish-docs-to-github-pages"
+- Test
+- Linting
+
 jobs:
   include:
+  - stage: Build Docker Image
+    install: skip
+    env:
+    - SETUP_EXTRAS: "tests,docs"
+    script: .ci/build-and-push-image.sh
   - stage: Linting
     name: Black
     install: pip install black
@@ -19,15 +45,34 @@ jobs:
     install: pip install doc8 pygments
     script: doc8 docs/
   - stage: Test
-    name: Sphinx Tests
-    install: docker build -t hbmpc-tests --build-arg SETUP_EXTRAS="docs" --target tests .
-    script: docker run -it hbmpc-tests sphinx-build -M html docs docs/_build -c docs -W
-    after_success: skip
-  - name: Unit Tests
-    install:
-      - pip install --upgrade codecov
-      - docker build -t hbmpc-tests --build-arg SETUP_EXTRAS="tests" --target tests .
-    script: docker run -it hbmpc-tests pytest -v --cov --cov-report=term-missing --cov-report=xml -Wignore::DeprecationWarning -nauto
-    after_success:
-      - docker cp $(docker ps -alq --format "{{.Names}}"):/usr/src/HoneyBadgerMPC/coverage.xml .
-      - codecov -v
+    name: Unit Tests
+    env:
+    - SETUP_EXTRAS: "tests"
+    install: .ci/pull-or-build-image.sh
+    script: .ci/run-tests.sh
+    after_success: .ci/upload-coverage-report.sh
+  - if: |
+      type = pull_request OR \
+      repo != initc3/HoneyBadgerMPC OR \
+      branch != "publish-docs-to-github-pages"
+    name: Build Documentation
+    env:
+    - SETUP_EXTRAS: "docs"
+    install: .ci/pull-or-build-image.sh
+    script: .ci/build-docs.sh
+  - stage: Build and Publish Documentation
+    env:
+    - DOCS_DEPLOY_KEY_LABEL: "63cc0c40c9de"
+    - SETUP_EXTRAS: "docs"
+    install: .ci/pull-or-build-image.sh
+    script: .ci/build-docs.sh
+    after_success: .ci/copy-docs-from-container.sh
+    deploy:
+      skip_cleanup: true
+      provider: script
+      script: .ci/publish-docs.sh
+      # Redundant with stage condition; consider removing or keep for extra protection?
+      on:
+        repo: initc3/HoneyBadgerMPC
+        branch: "publish-docs-to-github-pages"
+        type: push
