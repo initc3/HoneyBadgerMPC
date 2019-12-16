@@ -25,7 +25,7 @@ stages:
   if: |
     repo = initc3/HoneyBadgerMPC AND \
     type = push AND \
-    branch = dev
+    branch = env(DOCS_DEPLOY_BRANCH)
 
 jobs:
   include:
@@ -54,7 +54,7 @@ jobs:
   - if: |
       type = pull_request OR \
       repo != initc3/HoneyBadgerMPC OR \
-      branch != dev
+      branch != env(DOCS_DEPLOY_BRANCH)
     name: Build Documentation
     env:
     - SETUP_EXTRAS: "docs"
@@ -74,5 +74,5 @@ jobs:
       # Redundant with stage condition; consider removing or keep for extra protection?
       on:
         repo: initc3/HoneyBadgerMPC
-        branch: dev
+        branch: env(DOCS_DEPLOY_BRANCH)
         type: push
