@@ -1,0 +1,36 @@
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+      - image: initc3/honeybadgermpc-deps@sha256:46902d869ea881d7b00b72ff6accf2558a5e15849da5fa5cc722b4ff82a507f8
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - cache-pip-{{ .Branch }}
+            # fallback to using the latest cache if no exact match is found
+            - cache-pip-
+
+      - run:
+          name: install dependencies
+          # The "--editable" option is needed until we resolve issue #377.
+          # See https://github.com/initc3/HoneyBadgerMPC/issues/377 for more info.
+          command: pip install --editable .[docs]
+
+      - save_cache:
+          paths:
+            - "/opt/venv"
+            - "~/.cache/pip"
+          key: cache-pip-{{ .Branch }}-{{ .BuildNum }}
+
+      - run:
+          name: build docs
+          command: sphinx-build -M html docs docs/_build -c docs -W
+      - store_artifacts:
+          path: docs/_build/html
+          destination: docs
