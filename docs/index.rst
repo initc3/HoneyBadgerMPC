@@ -18,12 +18,9 @@
     performance
     roadmap
 
-.. toctree::
-    :maxdepth: 1
-    :caption: Guides
-
-    guides/acs-evm
-    guides/passive
+.. .. toctree::
+..     :maxdepth: 1
+..     :caption: Guides
 
 .. .. note:: A tutorial should show some primary use cases in more detail. The
     reader will follow a step-by-step procedure to set-up a working prototype.
