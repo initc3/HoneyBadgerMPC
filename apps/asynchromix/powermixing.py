@@ -96,7 +96,7 @@ async def phase3(context, **kwargs):
 
 
 async def async_mixing(n, t, k):
-    from .solver.solver import solve
+    from apps.asynchromix.solver.solver import solve
     from honeybadgermpc.utils.task_pool import TaskPool
 
     pr1 = TaskProgramRunner(n, t)
@@ -130,7 +130,7 @@ async def build_powermixing_cpp_code():
 
 
 async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
-    from .solver.solver import solve
+    from apps.asynchromix.solver.solver import solve
     from honeybadgermpc.ipc import ProcessProgramRunner
     from honeybadgermpc.utils.task_pool import TaskPool
 
