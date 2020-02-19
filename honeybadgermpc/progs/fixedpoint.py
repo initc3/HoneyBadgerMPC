@@ -11,6 +11,11 @@ from honeybadgermpc.progs.mixins.share_arithmetic import MixinConstants, BeaverM
 
 
 config = {MixinConstants.MultiplyShare: BeaverMultiply()}
+"""
+Secure Computation With Fixed-Point Numbers
+Catrina and Saxena
+http://www.ifca.ai/pub/fc10/31_47.pdf
+"""
 
 
 # Fixed Point parameters
