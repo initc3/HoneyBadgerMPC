@@ -215,12 +215,13 @@ class G1:
 
     # length determines how many G1 values to return
     @staticmethod
-    def hash(bytestr, length=1):
+    def hash(bytestr, length=None):
         assert type(bytestr) is bytes
         hashout = sha256(bytestr).hexdigest()
         seed = [int(hashout[i : i + 8], 16) for i in range(0, 64, 8)]
-        if length == 1:
+        if length is None:
             return G1.rand(seed)
+        assert type(length) is int
         out = [G1.rand(seed)]
         for j in range(0, length - 1):
             bytestr += b"x42"
@@ -419,12 +420,13 @@ class G2:
 
     # length determines how many G2 values to return
     @staticmethod
-    def hash(bytestr, length=1):
+    def hash(bytestr, length=None):
         assert type(bytestr) is bytes
         hashout = sha256(bytestr).hexdigest()
         seed = [int(hashout[i : i + 8], 16) for i in range(0, 64, 8)]
-        if length == 1:
+        if length is None:
             return G2.rand(seed)
+        assert type(length) is int
         out = [G2.rand(seed)]
         for j in range(0, length - 1):
             bytestr += b"x42"
