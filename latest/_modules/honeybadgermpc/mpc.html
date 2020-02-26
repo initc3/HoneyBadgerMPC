@@ -172,26 +172,27 @@
            <div itemprop="articleBody">
             
   <h1>Source code for honeybadgermpc.mpc</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">honeybadgermpc.progs.mixins.dataflow</span> <span class="kn">import</span> <span class="p">(</span>
+<span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">from</span> <span class="nn">honeybadgermpc.progs.mixins.dataflow</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GFElementFuture</span><span class="p">,</span>
     <span class="n">Share</span><span class="p">,</span>
     <span class="n">ShareArray</span><span class="p">,</span>
     <span class="n">ShareFuture</span><span class="p">,</span>
-    <span class="n">GFElementFuture</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="kn">import</span> <span class="n">polynomials_over</span>
+
+<span class="kn">from</span> <span class="nn">.batch_reconstruction</span> <span class="kn">import</span> <span class="n">batch_reconstruct</span>
+<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">ConfigVars</span>
+<span class="kn">from</span> <span class="nn">.elliptic_curve</span> <span class="kn">import</span> <span class="n">Subgroup</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">HoneyBadgerMPCError</span>
 <span class="kn">from</span> <span class="nn">.field</span> <span class="kn">import</span> <span class="n">GF</span><span class="p">,</span> <span class="n">GFElement</span>
-<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="kn">import</span> <span class="n">EvalPoint</span>
-<span class="kn">from</span> <span class="nn">.router</span> <span class="kn">import</span> <span class="n">SimpleRouter</span>
+<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="kn">import</span> <span class="n">EvalPoint</span><span class="p">,</span> <span class="n">polynomials_over</span>
+<span class="kn">from</span> <span class="nn">.preprocessing</span> <span class="kn">import</span> <span class="n">PreProcessedElements</span>
 <span class="kn">from</span> <span class="nn">.program_runner</span> <span class="kn">import</span> <span class="n">ProgramRunner</span>
 <span class="kn">from</span> <span class="nn">.robust_reconstruction</span> <span class="kn">import</span> <span class="n">robust_reconstruct</span>
-<span class="kn">from</span> <span class="nn">.batch_reconstruction</span> <span class="kn">import</span> <span class="n">batch_reconstruct</span>
-<span class="kn">from</span> <span class="nn">.elliptic_curve</span> <span class="kn">import</span> <span class="n">Subgroup</span>
-<span class="kn">from</span> <span class="nn">.preprocessing</span> <span class="kn">import</span> <span class="n">PreProcessedElements</span>
-<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">ConfigVars</span>
-<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">HoneyBadgerMPCError</span>
+<span class="kn">from</span> <span class="nn">.router</span> <span class="kn">import</span> <span class="n">SimpleRouter</span>
 <span class="kn">from</span> <span class="nn">.utils.misc</span> <span class="kn">import</span> <span class="n">print_exception_callback</span>
 
 

@@ -172,18 +172,22 @@
            <div itemprop="articleBody">
             
   <h1>Source code for honeybadgermpc.ipc</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">asyncio</span>
-
-<span class="kn">from</span> <span class="nn">zmq</span> <span class="kn">import</span> <span class="n">ROUTER</span><span class="p">,</span> <span class="n">DEALER</span><span class="p">,</span> <span class="n">IDENTITY</span>
-<span class="kn">from</span> <span class="nn">zmq.asyncio</span> <span class="kn">import</span> <span class="n">Context</span>
+<span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">pickle</span> <span class="kn">import</span> <span class="n">dumps</span><span class="p">,</span> <span class="n">loads</span>
+
 <span class="kn">from</span> <span class="nn">psutil</span> <span class="kn">import</span> <span class="n">cpu_count</span>
 
+<span class="kn">from</span> <span class="nn">zmq</span> <span class="kn">import</span> <span class="n">DEALER</span><span class="p">,</span> <span class="n">IDENTITY</span><span class="p">,</span> <span class="n">ROUTER</span>
+<span class="kn">from</span> <span class="nn">zmq.asyncio</span> <span class="kn">import</span> <span class="n">Context</span>
+
+<span class="kn">from</span> <span class="nn">honeybadgermpc.config</span> <span class="kn">import</span> <span class="n">ConfigVars</span><span class="p">,</span> <span class="n">HbmpcConfig</span>
 <span class="kn">from</span> <span class="nn">honeybadgermpc.mpc</span> <span class="kn">import</span> <span class="n">Mpc</span>
-<span class="kn">from</span> <span class="nn">honeybadgermpc.config</span> <span class="kn">import</span> <span class="n">HbmpcConfig</span><span class="p">,</span> <span class="n">ConfigVars</span>
-<span class="kn">from</span> <span class="nn">honeybadgermpc.utils.misc</span> <span class="kn">import</span> <span class="n">wrap_send</span><span class="p">,</span> <span class="n">subscribe_recv</span>
-<span class="kn">from</span> <span class="nn">honeybadgermpc.utils.misc</span> <span class="kn">import</span> <span class="n">print_exception_callback</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.utils.misc</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">print_exception_callback</span><span class="p">,</span>
+    <span class="n">subscribe_recv</span><span class="p">,</span>
+    <span class="n">wrap_send</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="NodeCommunicator"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator">[docs]</a><span class="k">class</span> <span class="nc">NodeCommunicator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
