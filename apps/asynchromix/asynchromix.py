@@ -52,8 +52,30 @@ async def wait_for_receipt(w3, tx_hash):
 ########
 
 
-class AsynchromixClient(object):
+class AsynchromixClient:
+    """An Asynchromix client sends "masked" messages to an Ethereum contract.
+    ...
+    """
+
     def __init__(self, sid, myid, send, recv, w3, contract, req_mask):
+        """
+        Parameters
+        ----------
+        sid: int
+            Session id.
+        myid: int
+            Client id.
+        send:
+            Function used to send messages. Not used?
+        recv:
+            Function used to receive messages. Not used?
+        w3:
+            Connection instance to an Ethereum node.
+        contract:
+            Contract instance on the Ethereum blockchain.
+        req_mask:
+            Function used to request an input mask from a server.
+        """
         self.sid = sid
         self.myid = myid
         self.contract = contract
@@ -66,7 +88,8 @@ class AsynchromixClient(object):
         contract_concise = ConciseContract(self.contract)
         await asyncio.sleep(60)  # give the servers a head start
         # Client sends several batches of messages then quits
-        for epoch in range(1000):
+        # for epoch in range(1000):
+        for epoch in range(10):
             logging.info(f"[Client] Starting Epoch {epoch}")
             receipts = []
             for i in range(32):
@@ -125,13 +148,13 @@ class AsynchromixClient(object):
         # Step 3. Fetch the input mask from the servers
         inputmask = await self._get_inputmask(inputmask_idx)
         message = int.from_bytes(m.encode(), "big")
-        maskedinput = message + inputmask
-        maskedinput_bytes = self.w3.toBytes(hexstr=hex(maskedinput.value))
-        maskedinput_bytes = maskedinput_bytes.rjust(32, b"\x00")
+        masked_message = message + inputmask
+        masked_message_bytes = self.w3.toBytes(hexstr=hex(masked_message.value))
+        masked_message_bytes = masked_message_bytes.rjust(32, b"\x00")
 
         # Step 4. Publish the masked input
         tx_hash = self.contract.functions.submit_message(
-            inputmask_idx, maskedinput_bytes
+            inputmask_idx, masked_message_bytes
         ).transact({"from": self.w3.eth.accounts[0]})
         tx_receipt = await wait_for_receipt(self.w3, tx_hash)
 
@@ -142,19 +165,42 @@ class AsynchromixClient(object):
 
 
 class AsynchromixServer(object):
+    """Asynchromix server class to ..."""
+
     def __init__(self, sid, myid, send, recv, w3, contract):
+        """
+        Parameters
+        ----------
+        sid: int
+            Session id.
+        myid: int
+            Client id.
+        send:
+            Function used to send messages.
+        recv:
+            Function used to receive messages.
+        w3:
+            Connection instance to an Ethereum node.
+        contract:
+            Contract instance on the Ethereum blockchain.
+        """
         self.sid = sid
         self.myid = myid
         self.contract = contract
         self.w3 = w3
+
         self._task1a = asyncio.ensure_future(self._offline_inputmasks_loop())
         self._task1a.add_done_callback(print_exception_callback)
+
         self._task1b = asyncio.ensure_future(self._offline_mixes_loop())
         self._task1b.add_done_callback(print_exception_callback)
+
         self._task2 = asyncio.ensure_future(self._client_request_loop())
         self._task2.add_done_callback(print_exception_callback)
+
         self._task3 = asyncio.ensure_future(self._mixing_loop())
         self._task3.add_done_callback(print_exception_callback)
+
         self._task4 = asyncio.ensure_future(self._mixing_initiate_loop())
         self._task4.add_done_callback(print_exception_callback)
 
@@ -186,7 +232,7 @@ class AsynchromixServer(object):
     The bits and triples are consumed by each mixing epoch.
 
     The input masks may be claimed at a different rate than
-    than the mixing epochs so they are replenished in a separate
+    the mixing epochs so they are replenished in a separate
     task
     """
 
@@ -326,13 +372,13 @@ class AsynchromixServer(object):
             # 3.b. Collect the inputs
             inputs = []
             for idx in range(epoch * K, (epoch + 1) * K):
-                # Get the public input
-                masked_input, inputmask_idx = contract_concise.input_queue(idx)
-                masked_input = field(int.from_bytes(masked_input, "big"))
-                # Get the input masks
+                # Get the public input (masked message)
+                masked_message_bytes, inputmask_idx = contract_concise.input_queue(idx)
+                masked_message = field(int.from_bytes(masked_message_bytes, "big"))
+                # Get the input mask
                 inputmask = self._inputmasks[inputmask_idx]
 
-                m_share = masked_input - inputmask
+                m_share = masked_message - inputmask
                 inputs.append(m_share)
 
             # 3.c. Collect the preprocessing
