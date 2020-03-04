@@ -12,7 +12,7 @@ coverage:
         threshold: 10%
     patch:
       default:
-        threshold: 50%
+        threshold: 95%
 
   ignore:
     - "docs/*"
