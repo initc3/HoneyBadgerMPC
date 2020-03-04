@@ -1,0 +1,84 @@
+
+version: '3.7'
+
+services:
+  setup:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../conf:/usr/src/HoneyBadgerMPC/conf
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - ../../sharedata:/usr/src/HoneyBadgerMPC/sharedata
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    command: ["python", "apps/tutorial/fakepreprocessing.py"]
+  node0:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../conf:/usr/src/HoneyBadgerMPC/conf
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - ../../sharedata:/usr/src/HoneyBadgerMPC/sharedata
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    # command: ["python", "apps/tutorial/hbmpc-tutorial-2.py", "-d", "-f", "apps/tutorial/conf/local.0.json"]
+    command: >
+        bash -c "sh scripts/latency-control.sh start 20ms 5ms
+        && python apps/tutorial/hbmpc-tutorial-2.py -d -f apps/tutorial/conf/local.0.json"
+  node1:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../conf:/usr/src/HoneyBadgerMPC/conf
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - ../../sharedata:/usr/src/HoneyBadgerMPC/sharedata
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    # command: ["python", "apps/tutorial/hbmpc-tutorial-2.py", "-d", "-f", "apps/tutorial/conf/local.1.json"]
+    command: >
+        bash -c "sh scripts/latency-control.sh start 20ms 5ms
+        && python apps/tutorial/hbmpc-tutorial-2.py -d -f apps/tutorial/conf/local.1.json"
+  node2:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../conf:/usr/src/HoneyBadgerMPC/conf
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - ../../sharedata:/usr/src/HoneyBadgerMPC/sharedata
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    # command: ["python", "apps/tutorial/hbmpc-tutorial-2.py", "-d", "-f", "apps/tutorial/conf/local.2.json"]
+    command: >
+        bash -c "sh scripts/latency-control.sh start 20ms 5ms
+        && python apps/tutorial/hbmpc-tutorial-2.py -d -f apps/tutorial/conf/local.2.json"
+  node3:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../conf:/usr/src/HoneyBadgerMPC/conf
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - ../../sharedata:/usr/src/HoneyBadgerMPC/sharedata
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    # command: ["python", "apps/tutorial/hbmpc-tutorial-2.py", "-d", "-f", "apps/tutorial/conf/local.3.json"]
+    command: >
+        bash -c "sh scripts/latency-control.sh start 20ms 5ms
+        && python apps/tutorial/hbmpc-tutorial-2.py -d -f apps/tutorial/conf/local.3.json"

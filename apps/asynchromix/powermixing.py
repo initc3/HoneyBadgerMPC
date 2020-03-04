@@ -168,6 +168,7 @@ async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
 if __name__ == "__main__":
     from honeybadgermpc.config import HbmpcConfig
 
+    logging.info("Running powermixing app ...")
     HbmpcConfig.load_config()
 
     run_id = HbmpcConfig.extras["run_id"]
@@ -181,6 +182,10 @@ if __name__ == "__main__":
 
     try:
         if not HbmpcConfig.skip_preprocessing:
+            logging.info(
+                "Running preprocessing.\n"
+                'To skip preprocessing phase set "skip_preprocessing" config to true.'
+            )
             # Need to keep these fixed when running on processes.
             field = GF(Subgroup.BLS12_381)
             a_s = [field(i) for i in range(1000 + k, 1000, -1)]
@@ -191,6 +196,11 @@ if __name__ == "__main__":
                 pp_elements.preprocessing_done()
             else:
                 loop.run_until_complete(pp_elements.wait_for_preprocessing())
+        else:
+            logging.info(
+                "Skipping preprocessing.\n"
+                'To run preprocessing phase set "skip_preprocessing" config to false.'
+            )
 
         loop.run_until_complete(
             async_mixing_in_processes(

@@ -13,7 +13,17 @@ DESCRIPTION = "honeybadgermpc"
 REQUIRES_PYTHON = ">=3.7.0"
 VERSION = None
 
-REQUIRED = ["gmpy2", "zfec", "pycrypto", "cffi", "psutil", "pyzmq"]
+REQUIRED = [
+    "aiohttp",
+    "gmpy2",
+    "zfec",
+    "pycrypto",
+    "cffi",
+    "psutil",
+    "pyzmq",
+    "tenacity",
+    "toml",
+]
 
 TESTS_REQUIRES = [
     "black",
@@ -37,6 +47,8 @@ DEV_REQUIRES = ["ipdb", "ipython"]
 DOCS_REQUIRE = [
     "Sphinx",
     "sphinx-autobuild",
+    "sphinxcontrib-bibtex",
+    "sphinxcontrib-soliditydomain",
     "sphinx_rtd_theme",
     "sphinx_tabs",
     "doc8",
@@ -44,7 +56,17 @@ DOCS_REQUIRE = [
     "recommonmark",
 ]
 
-ETH_REQUIRES = ["web3", "ethereum"]
+ETH_REQUIRES = [
+    "bitcoin",
+    "eth_tester",
+    "ethereum",
+    "lark-parser",
+    "plyvel",
+    "py-evm",
+    "ratl @ git+https://github.com/ratelang/ratel.git",
+    "pytest-ratl @ git+https://github.com/ratelang/pytest-ratl.git",
+    "web3",
+]
 
 AWS_REQUIRES = ["boto3", "paramiko"]
 

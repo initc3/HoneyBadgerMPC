@@ -1,0 +1,106 @@
+version: '3.7'
+
+services:
+  eth.blockchain.io:
+    container_name: eth.blockchain.io
+    image: trufflesuite/ganache-cli
+    command: --accounts 50 --blockTime 1 > acctKeys.json 2>&1
+
+  hbmpc.coordinator.io:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ./configs/hbmpc.coordinator.io.toml:/root/.coordinator/config.toml
+      - ./public-data:/root/.coordinator/public
+      - ./contract.rl:/root/.coordinator/contract.rl
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    depends_on:
+      - eth.blockchain.io
+    command: ["./apps/toolkit/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/toolkit/coordinator.py"]
+
+  hbmpc.peer0.io:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ./configs/hbmpc.peer0.io.toml:/root/.hbmpc/config.toml
+      - ./public-data:/root/.hbmpc/public
+      - ./contract.rl:/root/.hbmpc/contract.rl
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    depends_on:
+      - hbmpc.coordinator.io
+    command: ["./apps/toolkit/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/auctions/server.py"]
+
+  hbmpc.peer1.io:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ./configs/hbmpc.peer1.io.toml:/root/.hbmpc/config.toml
+      - ./public-data:/root/.hbmpc/public
+      - ./contract.rl:/root/.hbmpc/contract.rl
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    depends_on:
+      - hbmpc.coordinator.io
+    command: ["./apps/toolkit/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/auctions/server.py"]
+
+  hbmpc.peer2.io:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ./configs/hbmpc.peer2.io.toml:/root/.hbmpc/config.toml
+      - ./public-data:/root/.hbmpc/public
+      - ./contract.rl:/root/.hbmpc/contract.rl
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    depends_on:
+      - hbmpc.coordinator.io
+    command: ["./apps/toolkit/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/auctions/server.py"]
+
+  hbmpc.peer3.io:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ./configs/hbmpc.peer3.io.toml:/root/.hbmpc/config.toml
+      - ./public-data:/root/.hbmpc/public
+      - ./contract.rl:/root/.hbmpc/contract.rl
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    depends_on:
+      - hbmpc.coordinator.io
+    command: ["./apps/toolkit/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/auctions/server.py"]
+
+  hbmpc.client.io:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ./configs/hbmpc.client.io.toml:/root/.hbmpc/config.toml
+      - ./contract.rl:/root/.hbmpc/contract.rl
+      - ./public-data:/root/.hbmpc/public
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
+    depends_on:
+      - hbmpc.peer0.io
+      - hbmpc.peer1.io
+      - hbmpc.peer2.io
+      - hbmpc.peer3.io
+    command: ["./apps/toolkit/wait-for-it.sh", "hbmpc.peer3.io:8080", "--", "python", "apps/auctions/client.py", "--config-file", "~/.hbmpc/config.toml"]

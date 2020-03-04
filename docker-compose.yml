@@ -15,7 +15,9 @@ services:
       - ./logs:/var/log/hbmpc
       - ./aws:/usr/src/HoneyBadgerMPC/aws
       - ./conf:/usr/src/HoneyBadgerMPC/conf
+      - ./contracts:/usr/src/HoneyBadgerMPC/contracts
       - ./docs:/usr/src/HoneyBadgerMPC/docs
+      - ./doc8.ini:/usr/src/HoneyBadgerMPC/doc8.ini
       - ./honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
       - ./scripts:/usr/src/HoneyBadgerMPC/scripts
       - ./tests:/usr/src/HoneyBadgerMPC/tests
@@ -32,3 +34,6 @@ services:
       - ./pairing/setup.py:/usr/src/HoneyBadgerMPC/pairing/setup.py
       - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
     command: pytest -v --cov=honeybadgermpc
+    environment:
+      # FIXME temporary, should be in developer settings
+      PYTHONBREAKPOINT: ipdb.set_trace

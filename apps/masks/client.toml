@@ -1,0 +1,44 @@
+# Client configuation
+
+# the context is used to evaluate relative file paths
+context = "."
+
+id = "client"
+session_id = "sid"
+eth_address = ''
+
+# MPC network params
+n = 4
+t = 1
+
+# Ethereum blockchain
+[eth]
+rpc_host = "blockchain"
+rpc_port = 8545
+
+# contract
+# the contract file path can be relative or absolute
+contract_path = "~/.hbmpc/contract.sol"
+contract_name = "MpcCoordinator"
+public_data_dir = "public-data"
+
+# MPC servers
+[[servers]]
+id = 0
+host = "mpcnet"
+port = 8080
+
+[[servers]]
+id = 1
+host = "mpcnet"
+port = 8081
+
+[[servers]]
+id = 2
+host = "mpcnet"
+port = 8082
+
+[[servers]]
+id = 3
+host = "mpcnet"
+port = 8083

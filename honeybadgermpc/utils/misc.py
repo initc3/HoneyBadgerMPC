@@ -3,6 +3,7 @@ import logging
 import traceback
 from asyncio import Queue
 from collections import defaultdict
+from functools import partial
 from typing import Callable
 
 from .typecheck import TypeCheck
@@ -17,6 +18,12 @@ def print_exception_callback(future):
             raise ex
 
 
+def _create_task(coro, *, name=None):
+    task = asyncio.ensure_future(coro)
+    task.add_done_callback(print_exception_callback)
+    return task
+
+
 @TypeCheck()
 def wrap_send(tag: str, send: Callable):  # noqa: F821
     """Given a `send` function which takes a destination and message,
@@ -24,6 +31,7 @@ def wrap_send(tag: str, send: Callable):  # noqa: F821
     """
 
     def _send(dest, message):
+        logging.debug(f"sending to: {dest}, tag: {tag}, message {message}")
         send(dest, (tag, message))
 
     return _send
@@ -91,11 +99,13 @@ def subscribe_recv(recv):
             # Whenever we receive a share array, directly put it in the
             # appropriate queue for that round
             j, (tag, o) = await recv()
+            logging.debug(f"received tag: {tag}")
             tag_table[tag].put_nowait((j, o))
 
     def subscribe(tag):
         # TODO: make this raise an exception
         # Ensure that this tag has not been subscribed to already
+        logging.debug(f"subscribing to tag: {tag}")
         assert tag not in taken
         taken.add(tag)
 
@@ -104,3 +114,12 @@ def subscribe_recv(recv):
 
     _task = asyncio.create_task(_recv_loop())
     return _task, subscribe
+
+
+def _get_send_recv(tag, *, send, subscribe):
+    return wrap_send(tag, send), subscribe(tag)
+
+
+def _get_pubsub_channel(send, recv):
+    sub_task, sub = subscribe_recv(recv)
+    return sub_task, partial(_get_send_recv, send=send, subscribe=sub)

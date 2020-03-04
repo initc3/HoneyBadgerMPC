@@ -6,6 +6,7 @@ RUN make -C /usr/src/apps/asynchromix/cpp
 
 FROM initc3/honeybadgermpc-deps@sha256:$HBMPC_DEPS_DIGEST AS pre-tests
 
+RUN pip install --upgrade pip
 COPY pairing /usr/src/pairing
 RUN pip install -v /usr/src/pairing/
 

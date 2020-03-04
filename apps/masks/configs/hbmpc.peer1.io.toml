@@ -1,0 +1,47 @@
+# MPC server configuation
+
+# the context is used to evaluate relative file paths
+context = "."
+config_path = "~/.hbmpc/config.toml"
+
+id = 1
+host = "hbmpc.peer1.io"
+http_port = 8080
+mpc_port = 7000
+
+# MPC network params
+n = 4
+t = 1
+
+# Ethereum blockchain
+[eth]
+rpc_host = "eth.blockchain.io"
+rpc_port = 8545
+
+# contract
+# the contract file path can be relative or absolute
+[contract]
+#path = "~/.hbmpc/contract.sol"
+#lang = "solitdity"
+path = "~/.hbmpc/contract.rl"
+lang = "ratel"
+name = "MpcCoordinator"
+
+# MPC peers 
+[[peers]]
+id = 0
+host = "hbmpc.peer0.io"
+http_port = 8080
+mpc_port = 7000
+
+[[peers]]
+id = 2
+host = "hbmpc.peer2.io"
+http_port = 8080
+mpc_port = 7000
+
+[[peers]]
+id = 3
+host = "hbmpc.peer3.io"
+http_port = 8080
+mpc_port = 7000

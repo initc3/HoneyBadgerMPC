@@ -232,6 +232,10 @@ async def generate_bits(n, t, k, my_id, _send, _recv, field):
     return result
 
 
+async def generate_intershardmasks():
+    raise NotImplementedError
+
+
 ########################
 # Process runner
 ########################

@@ -19,10 +19,13 @@ async def batch_switch(ctx, xs, ys, n):
     return t1s, t2s
 
 
-async def iterated_butterfly_network(ctx, inputs, k):
+async def iterated_butterfly_network(ctx, inputs, k=None):
     # This runs O(log k) iterations of the butterfly permutation network,
     # each of which has log k elements. The total number of switches is
     # k (log k)^2
+    inputs = tuple(inputs)
+    if k is None:
+        k = len(inputs)
     assert k == len(inputs)
     assert k & (k - 1) == 0, "Size of input must be a power of 2"
     bench_logger = logging.LoggerAdapter(

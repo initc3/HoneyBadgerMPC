@@ -44,6 +44,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
@@ -51,6 +52,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_tabs.tabs",
     "recommonmark",
+    "sphinxcontrib.bibtex",
+    "sphinxcontrib.soliditydomain",
 ]
 
 autodoc_default_options = {
@@ -58,7 +61,7 @@ autodoc_default_options = {
     "undoc-members": None,
     "private-members": None,
     "inherited-members": None,
-    "show-inheritance": None,
+    # "show-inheritance": None,
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -107,7 +110,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
+html_static_path = ["_static"]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

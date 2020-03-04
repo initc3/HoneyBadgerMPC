@@ -254,27 +254,14 @@ def create_clear_share(ctx, x):
     return FixedPoint(ctx, ctx.Share(x * 2 ** 32))
 
 
-async def prog(ctx):
-    ctx.preproc = FakePreProcessedElements()
-
+async def prog(ctx, *, balances=None, bids=None):
     price = create_clear_share(ctx, 3)
 
-    balances = {}
-    balances["0x125"] = {
-        "eth": create_clear_share(ctx, 15),
-        "erc20": create_clear_share(ctx, 1),
-    }
-    balances["0x127"] = {
-        "eth": create_clear_share(ctx, 18),
-        "erc20": create_clear_share(ctx, 0),
-    }
-    balances["0x128"] = {
-        "eth": create_clear_share(ctx, 2),
-        "erc20": create_clear_share(ctx, 3),
-    }
-    balances["0x129"] = {
-        "eth": create_clear_share(ctx, 0),
-        "erc20": create_clear_share(ctx, 15),
+    balances = {
+        addr: {
+            coin: create_clear_share(ctx, balance) for coin, balance in wallet.items()
+        }
+        for addr, wallet in balances.items()
     }
 
     _balances = [
@@ -282,11 +269,7 @@ async def prog(ctx):
     ]
     logging.info(f"balances initial {_balances}")
 
-    bids = []
-    bids.append(["0x125", create_secret_share(ctx, 5)])
-    bids.append(["0x127", create_secret_share(ctx, 7)])
-    bids.append(["0x128", create_secret_share(ctx, -3)])
-    bids.append(["0x129", create_secret_share(ctx, -11)])
+    bids = [(addr, create_secret_share(ctx, bid)) for addr, bid in bids]
     buys, sells = await compute_bids(ctx, balances, bids, price)
 
     _buys = [await x[1].open() for x in buys]
@@ -323,7 +306,7 @@ async def prog(ctx):
     logging.info(f"[{ctx.myid}] done")
 
 
-async def dark_pewl():
+async def dark_pewl(*, balances=None, bids=None):
     n, t = 4, 1
     k = 10000
     pp = FakePreProcessedElements()
@@ -331,16 +314,35 @@ async def dark_pewl():
     pp.generate_triples(k, n, t)
     pp.generate_bits(k, n, t)
     program_runner = TaskProgramRunner(n, t, config)
-    program_runner.add(prog)
+    program_runner.add(prog, balances=balances, bids=bids)
     results = await program_runner.join()
     return results
 
 
-def main():
+def main(*, balances=None, bids=None):
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(dark_pewl())
+    loop.run_until_complete(dark_pewl(balances=balances, bids=bids))
 
 
 if __name__ == "__main__":
-    main()
+    # import random
+
+    addresses = tuple("0x1{i}" for i in range(32, 64))
+
+    balances = {
+        addresses[0]: {"eth": 15, "erc20": 1},
+        addresses[1]: {"eth": 18, "erc20": 0},
+        addresses[2]: {"eth": 2, "erc20": 3},
+        addresses[3]: {"eth": 0, "erc20": 15},
+    }
+    # balances.update({addr: {"eth": 100, "erc20": 100} for addr in addresses[4:]})
+    bids = [
+        (addresses[0], 5),
+        (addresses[1], 7),
+        (addresses[2], -3),
+        (addresses[3], -11),
+    ]
+    # bids.extend(((addr, random.randint(-10, 10)) for addr in addresses[4:]))
+
+    main(balances=balances, bids=bids)

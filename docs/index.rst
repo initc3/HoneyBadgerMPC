@@ -28,12 +28,13 @@
     :maxdepth: 1
     :caption: Apps
 
-    apps/auctions
+    apps/index
 
 .. toctree::
     :maxdepth: 1
     :caption: Integrations
 
+    integrations/eth
     integrations/hyperledger-fabric
 
 .. toctree::

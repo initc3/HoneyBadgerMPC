@@ -12,6 +12,7 @@ Sample config can be found at: conf/sample.ini
 
 import json
 from argparse import ArgumentParser
+from pathlib import Path
 
 from honeybadgermpc.reed_solomon import Algorithm as RSAlgorithm
 
@@ -94,7 +95,16 @@ class HbmpcConfig(object):
         args = parser.parse_args()
 
         if args.is_dist:
-            config = json.load(open(args.config_file_path))
+            print(f"config file: {args.config_file_path}")
+            project_dir = Path(__file__).resolve().parent.parent
+            print(f"project dir: {project_dir}")
+            config_file_path = project_dir.joinpath(args.config_file_path).resolve()
+
+            print(config_file_path)
+
+            with open(config_file_path) as config_file:
+                print(config_file)
+                config = json.load(config_file)
 
             HbmpcConfig.N = config["N"]
             HbmpcConfig.t = config["t"]
