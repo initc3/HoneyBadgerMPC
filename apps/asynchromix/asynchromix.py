@@ -12,6 +12,7 @@ from ethereum.tools._solidity import compile_code as compile_source
 
 from web3 import HTTPProvider, Web3
 from web3.contract import ConciseContract
+from web3.exceptions import TransactionNotFound
 
 from apps.asynchromix.butterfly_network import iterated_butterfly_network
 
@@ -36,7 +37,10 @@ field = GF(Subgroup.BLS12_381)
 
 async def wait_for_receipt(w3, tx_hash):
     while True:
-        tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
+        try:
+            tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
+        except TransactionNotFound:
+            tx_receipt = None
         if tx_receipt is not None:
             break
         await asyncio.sleep(5)
@@ -349,18 +353,28 @@ class AsynchromixServer(object):
                 pp_elements._init_data_dir()
 
                 # Overwrite triples and one_minus_ones
-                for kind, elems in zip(("triples", "one_minus_one"), (triples, bits)):
+                logging.info("overwriting triples and one_minus_ones")
+                for kind, elems in zip(("triples", "one_minus_ones"), (triples, bits)):
                     if kind == "triples":
                         elems = flatten_lists(elems)
                     elems = [e.value for e in elems]
 
-                    mixin = pp_elements.mixins[kind]
+                    # mixin = pp_elements.mixins[kind]
+                    mixin = getattr(pp_elements, f"_{kind}")
                     mixin_filename = mixin.build_filename(ctx.N, ctx.t, ctx.myid)
+                    logging.info(
+                        f"writing preprocessed {kind} to file {mixin_filename}"
+                    )
+                    logging.info(f"number of elements is: {len(elems)}")
                     mixin._write_preprocessing_file(
                         mixin_filename, ctx.t, ctx.myid, elems, append=False
                     )
 
-                pp_elements._init_mixins()
+                # FIXME Not sure what this is supposed to be ...
+                # the method does not exist.
+                # pp_elements._init_mixins()
+                pp_elements._triples._refresh_cache()
+                pp_elements._one_minus_ones._refresh_cache()
 
                 logging.info(f"[{ctx.myid}] Running permutation network")
                 inps = list(map(ctx.Share, inputs))
@@ -419,9 +433,17 @@ class AsynchromixServer(object):
                 await asyncio.sleep(5)
 
             # Step 4.b. Call initiate mix
-            tx_hash = self.contract.functions.initiate_mix().transact(
-                {"from": self.w3.eth.accounts[0]}
-            )
+            try:
+                tx_hash = self.contract.functions.initiate_mix().transact(
+                    {"from": self.w3.eth.accounts[0]}
+                )
+            except ValueError as err:
+                logging.info("\n")
+                logging.info(79 * "*")
+                logging.info(err)
+                logging.info(79 * "*")
+                logging.info("\n")
+                continue
             tx_receipt = await wait_for_receipt(self.w3, tx_hash)
             rich_logs = self.contract.events.MixingEpochInitiated().processReceipt(
                 tx_receipt
@@ -484,6 +506,7 @@ async def main_loop(w3):
     ]
 
     # Step 3. Create the client
+    # TODO communicate with server instead of fetching from list of servers
     async def req_mask(i, idx):
         # client requests input mask {idx} from server {i}
         return servers[i]._inputmasks[idx]
