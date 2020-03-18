@@ -24,7 +24,18 @@ from .utils.misc import print_exception_callback
 
 class Mpc(object):
     def __init__(
-        self, sid, n, t, myid, send, recv, prog, config, preproc=None, **prog_args
+        self,
+        sid,
+        n,
+        t,
+        myid,
+        send,
+        recv,
+        prog,
+        config,
+        preproc=None,
+        shard_id=None,
+        **prog_args,
     ):
         # Parameters for robust MPC
         # Note: tolerates min(t,N-t) crash faults
@@ -38,6 +49,7 @@ class Mpc(object):
         self.poly = polynomials_over(self.field)
         self.config = config
         self.preproc = preproc if preproc is not None else PreProcessedElements()
+        self.shard_id = shard_id
 
         # send(j, o): sends object o to party j with (current sid)
         # recv(): returns (j, o) from party j
@@ -286,21 +298,50 @@ class TaskProgramRunner(ProgramRunner):
         self.loop = asyncio.get_event_loop()
         self.router = SimpleRouter(self.N)
 
-    def add(self, program, **kwargs):
-        for i in range(self.N):
+    def add(self, program, *, shard_id=None, **kwargs):
+        """Creates an :class:`Mpc` instance for the given program and
+        adds it to a list of tasks to run.
+
+        Parameters
+        ----------
+        program:
+            The MPC program to run.
+        shard_id:
+            The shard_id of the MPC subnetwork to run. If not `None` indicates
+            that we are in a sharded network. Defaults to None, i.e. non-sharded
+            network.
+
+        Optional keyword arguments will be passed to the :class:`Mpc` class.
+        """
+
+        def f(i):
+            return i
+
+        def g(i):
+            return f"{shard_id}:{i}"
+
+        # get_myid = f if shard_id is None else g
+
+        for myid in range(self.N):
+            # myid = f"{shard_id}:{i}" if shard_id is not None else i
+            # myid = get_myid(i)
             context = Mpc(
                 "mpc:%d" % (self.counter,),
                 self.N,
                 self.t,
-                i,
-                self.router.sends[i],
-                self.router.recvs[i],
+                myid,
+                self.router.sends[myid],
+                self.router.recvs[myid],
                 program,
                 self.config,
+                shard_id=shard_id,
                 **kwargs,
             )
             self.tasks.append(self.loop.create_task(context._run()))
         self.counter += 1
+
+    def add_to_shard(self, program, shard_id, **kwargs):
+        self.add(program, shard_id=shard_id, **kwargs)
 
     async def join(self):
         return await asyncio.gather(*self.tasks)

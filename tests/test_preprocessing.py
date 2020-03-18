@@ -3,7 +3,7 @@ import asyncio
 from pytest import mark
 
 from honeybadgermpc.mpc import TaskProgramRunner
-from honeybadgermpc.preprocessing import PreProcessedElements
+from honeybadgermpc.preprocessing import PreProcessedElements, PreProcessingConstants
 
 
 @mark.asyncio
@@ -168,3 +168,91 @@ async def test_get_share_bits():
     program_runner = TaskProgramRunner(n, t)
     program_runner.add(_prog)
     await program_runner.join()
+
+
+@mark.asyncio
+async def test_get_intershard_masks():
+    k, n, t = 100, 4, 1
+    shards = (3, 8)
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_intershard_masks(
+        k, n, t, shard_1_id=shards[0], shard_2_id=shards[1]
+    )
+    intershard_masks = pp_elements._intershard_masks
+    # check that all masks are there
+    assert all(
+        (f"{i}-{s}", n, t) in intershard_masks.count for i in range(n) for s in shards
+    )
+    num_masks = 2
+    masks_3 = []
+    masks_8 = []
+
+    # TODO
+    # * simplify the 2 progs, and
+    # * if possible only have one def, parametrized with the shard id
+    # * also: can the shard be accessed via the ctx object instead? The main
+    #   point is that information seems to be redundant ... if the ctx has
+    #   access to the shard id then perhaps no need to pass it to the method
+    #  `get_intershard_masks()`
+    async def _prog3(ctx):
+        for _ in range(num_masks):
+            mask_share = ctx.preproc.get_intershard_masks(ctx, shards[0])
+            mask = await mask_share.open()
+            masks_3.append(mask)
+
+    async def _prog8(ctx):
+        for _ in range(num_masks):
+            mask_share = ctx.preproc.get_intershard_masks(ctx, shards[1])
+            mask = await mask_share.open()
+            masks_8.append(mask)
+
+    program_runner = TaskProgramRunner(n, t)
+    program_runner.add(_prog3, shard_id=shards[0])
+    await program_runner.join()
+    program_runner.add(_prog8, shard_id=shards[1])
+    await program_runner.join()
+    print(f"\nmasks for shard 3: {masks_3}")
+    print(f"len of masks: {len(masks_3)}")
+    print(f"\nmasks for shard 8: {masks_8}")
+    print(f"len of masks: {len(masks_8)}")
+    assert masks_3 == masks_8
+
+
+def test_generate_intershard_masks():
+    k, n, t = 100, 4, 1
+    shards = (3, 8)
+    pp_elements = PreProcessedElements()
+    pp_elements.generate_intershard_masks(
+        k, n, t, shard_1_id=shards[0], shard_2_id=shards[1]
+    )
+    intershard_masks = pp_elements._intershard_masks
+    # check the cache and count
+    cache = intershard_masks.cache
+    count = intershard_masks.count
+    assert len(cache) == 2 * n  # there are 2 shards with n servers in each
+    # Check that the cache contains all expected keys. A key is a 3-tuple made
+    # from (context_id, n, t), The context_id is made from "{i}-{shard_id}".
+    assert all((f"{i}-{s}", n, t) in cache for i in range(n) for s in shards)
+    assert all(len(tuple(elements)) == k for elements in cache.values())
+    assert all(c == k for c in count.values())
+    assert all((f"{i}-{s}", n, t) in count for i in range(n) for s in shards)
+    # check all the expected files have been created
+    data_dir_path = intershard_masks.data_dir_path
+    for shard_index, shard_id in enumerate(shards):
+        other_shard = shards[1 - shard_index]
+        for node_id in range(n):
+            node_path = data_dir_path.joinpath(f"{node_id}-{shard_id}")
+            assert node_path.exists()
+            csm_path = node_path.joinpath(intershard_masks.preprocessing_name)
+            assert csm_path.exists()
+            file_path = csm_path.joinpath(
+                f"{n}_{t}-{shard_id}_{other_shard}"
+            ).with_suffix(PreProcessingConstants.SHARE_FILE_EXT.value)
+            assert file_path.exists()
+            with file_path.open() as f:
+                _lines = f.readlines()
+            lines = [int(line) for line in _lines]
+            assert len(lines) == 3 + k  # modulus, degree t, n, k
+            assert lines[0] == intershard_masks.field.modulus
+            assert lines[1] == t
+            assert lines[2] == node_id
