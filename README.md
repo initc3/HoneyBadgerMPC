@@ -1,4 +1,5 @@
-# Test
+# Test from local repo
+# Test from Web GUI
 # HoneyBadgerMPC
 
 [![Travis branch](https://img.shields.io/travis/initc3/HoneyBadgerMPC/dev.svg)](https://travis-ci.org/initc3/HoneyBadgerMPC)
