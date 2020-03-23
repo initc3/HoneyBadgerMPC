@@ -94,4 +94,4 @@ Work on HoneyBadgerMPC has been funded in part by grants from:
  - Initiative for Cryptocurrencies and Contracts [(IC3)](https://www.initc3.org/)
  - [Center for Cognitive Systems and Research](https://c3sr.com/)
  - National Science Foundation ([#1801321](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1801321), [#1943499](https://nsf.gov/awardsearch/showAward?AWD_ID=1943499))
- - Cyber Resilient Energy Consortium [(CREDC)](https://iti.illinois.edu/research/energy-systems/cyber-resilient-energy-delivery-consortium-credc)
+ - Cyber Resilient Energy Delivery Consortium [(CREDC)](https://iti.illinois.edu/research/energy-systems/cyber-resilient-energy-delivery-consortium-credc)
