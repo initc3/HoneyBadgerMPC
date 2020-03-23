@@ -85,8 +85,13 @@ The following integration ideas have been explored so far:
 ### [Library Documentation](/docs)
 The HoneyBadgerMPC library documentation is under the [docs/](docs/) directory.
 
-## [Changelog](CHANGELOG.md)
-See [CHANGELOG.md](CHANGELOG.md).
-
 ### [Contributing to HoneyBadgerMPC](CONTRIBUTING.md)
 This is an open project we welcome contributions from others. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started!
+
+### Acknowledgements
+See [CHANGELOG.md](CHANGELOG.md) for credits to individual contributors.
+Work on HoneyBadgerMPC has been funded in part by grants from:
+ - Initiative for Cryptocurrencies and Contracts [(IC3)](https://www.initc3.org/)
+ - [Center for Cognitive Systems and Research](https://c3sr.com/)
+ - National Science Foundation ([#1801321](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1801321), [#1943499](https://nsf.gov/awardsearch/showAward?AWD_ID=1943499))
+ - Cyber Resilient Energy Consortium [(CREDC)](https://iti.illinois.edu/research/energy-systems/cyber-resilient-energy-delivery-consortium-credc)
