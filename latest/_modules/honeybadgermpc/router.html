@@ -261,7 +261,7 @@
         <span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queues</span><span class="p">[</span><span class="n">player_id</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received </span><span class="si">{message}</span><span class="s2"> [</span><span class="si">{player_id}</span><span class="s2">&lt;-</span><span class="si">{source_id}</span><span class="s2">]&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">player_id</span><span class="si">}</span><span class="s2">&lt;-</span><span class="si">{</span><span class="n">source_id</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span></div>
 
@@ -277,7 +277,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_queues</span><span class="p">[</span><span class="n">dest_id</span><span class="p">]</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">((</span><span class="n">player_id</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sent </span><span class="si">{message}</span><span class="s2"> [</span><span class="si">{player_id}</span><span class="s2">-&gt;</span><span class="si">{dest_id}</span><span class="s2">]&quot;</span><span class="p">)</span></div></div>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sent </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">player_id</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">dest_id</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

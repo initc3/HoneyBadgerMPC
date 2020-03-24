@@ -266,7 +266,7 @@
 <span class="sd">            future that resolves to the result of calling the mixin operation</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mixin </span><span class="si">{name}</span><span class="s2"> not present!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mixin </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> not present!&quot;</span><span class="p">)</span>
 
         <span class="n">task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
         <span class="n">task</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">print_exception_callback</span><span class="p">)</span>
@@ -321,11 +321,11 @@
             <span class="n">p</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Robust reconstruction for share (id: </span><span class="si">{shareid}</span><span class="s2">) &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;failed with errors: </span><span class="si">{errors}</span><span class="s2">!&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Robust reconstruction for share (id: </span><span class="si">{</span><span class="n">shareid</span><span class="si">}</span><span class="s2">) &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;failed with errors: </span><span class="si">{</span><span class="n">errors</span><span class="si">}</span><span class="s2">!&quot;</span>
                 <span class="p">)</span>
                 <span class="n">res</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span>
-                    <span class="n">HoneyBadgerMPCError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to open share with id </span><span class="si">{shareid}</span><span class="s2">!&quot;</span><span class="p">)</span>
+                    <span class="n">HoneyBadgerMPCError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to open share with id </span><span class="si">{</span><span class="n">shareid</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">res</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span>
@@ -354,7 +354,7 @@
             <span class="n">elements</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Batch reconstruction for share_array (id: </span><span class="si">{shareid}</span><span class="s2">) failed!&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Batch reconstruction for share_array (id: </span><span class="si">{</span><span class="n">shareid</span><span class="si">}</span><span class="s2">) failed!&quot;</span>
                 <span class="p">)</span>
                 <span class="n">res</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span><span class="n">HoneyBadgerMPCError</span><span class="p">(</span><span class="s2">&quot;Batch reconstruction failed!&quot;</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
@@ -434,8 +434,8 @@
 
                 <span class="c1"># Assert that there is not an element already</span>
                 <span class="k">if</span> <span class="n">buf</span><span class="p">[</span><span class="n">shareid</span><span class="p">]</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;redundant share: </span><span class="si">{j}</span><span class="s2"> {(tag, shareid)}&quot;</span><span class="p">)</span>
-                    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received a redundant share: </span><span class="si">{shareid}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;redundant share: </span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">shareid</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received a redundant share: </span><span class="si">{</span><span class="n">shareid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
                 <span class="n">buf</span><span class="p">[</span><span class="n">shareid</span><span class="p">]</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">share</span><span class="p">)</span>
 
@@ -512,17 +512,17 @@
     <span class="k">await</span> <span class="n">e</span>
 
     <span class="c1"># This is a random share of x*y</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(d): {type(d)}&quot;</span><span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(b): {type(b)}&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(d): </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(b): </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">xy</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="n">e</span> <span class="o">+</span> <span class="n">d</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">e</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">ab</span>
 
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(x): {type(x)}&quot;</span><span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(y): {type(y)}&quot;</span><span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(xy): {type(xy)}&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(x): </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(y): </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(xy): </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">x_</span><span class="p">,</span> <span class="n">y_</span><span class="p">,</span> <span class="n">xy_</span> <span class="o">=</span> <span class="k">await</span> <span class="n">x</span><span class="o">.</span><span class="n">open</span><span class="p">(),</span> <span class="k">await</span> <span class="n">y</span><span class="o">.</span><span class="n">open</span><span class="p">(),</span> <span class="k">await</span> <span class="n">xy</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
     <span class="k">assert</span> <span class="n">x_</span> <span class="o">*</span> <span class="n">y_</span> <span class="o">==</span> <span class="n">xy_</span>
 
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{context.myid}</span><span class="s2">] Finished </span><span class="si">{x_}</span><span class="s2">, </span><span class="si">{y_}</span><span class="s2">, </span><span class="si">{xy_}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="si">}</span><span class="s2">] Finished </span><span class="si">{</span><span class="n">x_</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">y_</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">xy_</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="test_prog2"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.test_prog2">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">test_prog2</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
@@ -540,7 +540,7 @@
 
 
 <div class="viewcode-block" id="handle_async_exception"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.mpc.handle_async_exception">[docs]</a><span class="k">def</span> <span class="nf">handle_async_exception</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;handle_async_exception: </span><span class="si">{ctx}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;handle_async_exception: </span><span class="si">{</span><span class="n">ctx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
 <span class="c1"># Run some test cases</span>
