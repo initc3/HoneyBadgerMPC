@@ -44,12 +44,15 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx_tabs.tabs",
     "m2r",
+    "sphinxcontrib.bibtex",
+    "sphinxcontrib.soliditydomain",
 ]
 
 autodoc_default_options = {
@@ -57,7 +60,7 @@ autodoc_default_options = {
     "undoc-members": None,
     "private-members": None,
     "inherited-members": None,
-    "show-inheritance": None,
+    # "show-inheritance": None,
 }
 
 # Add any paths that contain templates here, relative to this directory.

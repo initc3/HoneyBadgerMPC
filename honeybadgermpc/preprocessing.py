@@ -17,6 +17,10 @@ from .field import GF
 from .ntl import vandermonde_batch_evaluate
 from .polynomial import polynomials_over
 
+logger = logging.getLogger(__name__)
+# FIXME move log level setting to an entrypoint (e.g. __init__ or an app main entry)
+logger.setLevel(os.environ.get("HBMPC_LOGLEVEL", logging.INFO))
+
 
 class PreProcessingConstants(Enum):
     SHARED_DATA_DIR = "sharedata/"
@@ -28,7 +32,7 @@ class PreProcessingConstants(Enum):
     BITS = "bits"
     POWERS = "powers"
     SHARES = "share"
-    ONE_MINUS_ONE = "one_minus_one"
+    ONE_MINUS_ONES = "one_minus_ones"
     DOUBLE_SHARES = "double_shares"
     SHARE_BITS = "share_bits"
 
@@ -99,7 +103,10 @@ class PreProcessingMixin(ABC):
         key = (context.myid, context.N, context.t)
 
         to_return, used = self._get_value(context, key, *args, **kwargs)
+        logger.debug(f'got value "{to_return}" and used "{used}"')
+        logger.debug(f"decrement count by {used}")
         self.count[key] -= used
+        logger.debug(f"count is now: {self.count}")
 
         return to_return
 
@@ -123,7 +130,7 @@ class PreProcessingMixin(ABC):
             return values[3:]
 
     def _write_preprocessing_file(
-        self, file_name, degree, context_id, values, append=False
+        self, file_name, degree, context_id, values, append=False, refresh_cache=False
     ):
         """ Write the values to the preprocessing file given by the filename.
         When append is true, this will append to an existing file, otherwise, it will
@@ -148,6 +155,8 @@ class PreProcessingMixin(ABC):
 
         print(*values, file=f, sep="\n")
         f.close()
+        if refresh_cache:
+            self._refresh_cache()
 
     def build_filename(self, n, t, context_id, prefix=None):
         """ Given a file prefix, and metadata, return the filename to put
@@ -189,6 +198,10 @@ class PreProcessingMixin(ABC):
         """ Refreshes the cache by reading in sharedata files, and
         updating the cache values and count variables.
         """
+        logger.debug(f"(- {self.preprocessing_name} -) refreshing cache")
+        logger.debug(
+            f"(- {self.preprocessing_name} -) before cache refresh, count is: {dict(self.count)}"
+        )
         self.cache = defaultdict(chain)
         self.count = defaultdict(int)
 
@@ -207,6 +220,10 @@ class PreProcessingMixin(ABC):
 
             self.cache[key] = chain(values)
             self.count[key] = len(values)
+
+        logger.debug(
+            f"(- {self.preprocessing_name} -) after cache refresh, count is: {dict(self.count)}"
+        )
 
     def _write_polys(self, n, t, polys, append=False, prefix=None):
         """ Given a file prefix, a list of polynomials, and associated n, t values,
@@ -410,7 +427,7 @@ class RandomPreProcessing(PreProcessingMixin):
 
     def _get_value(self, context, key, t=None):
         t = t if t is not None else context.t
-        assert self.count[key] >= 1
+        assert self.count[key] >= 1, f"key is: {key}\ncount is: {self.count}\n"
         return context.Share(next(self.cache[key]), t), 1
 
 
@@ -426,9 +443,12 @@ class SimplePreProcessing(PreProcessingMixin):
         assert self.count[key] >= self._preprocessing_stride, (
             f"Expected "
             f"{self._preprocessing_stride} elements of {self.preprocessing_name}, "
-            f"but found only {self.count[key]}"
+            f"but found only {self.count[key]}\n"
+            f"key is: {key}\n"
+            f"count is: {self.count}\n"
         )
 
+        logger.debug("getting value ...")
         values = tuple(
             context.Share(next(self.cache[key]))
             for _ in range(self._preprocessing_stride)
@@ -487,7 +507,7 @@ class BitPreProcessing(SimplePreProcessing):
 
 
 class SignedBitPreProcessing(SimplePreProcessing):
-    preprocessing_name = PreProcessingConstants.ONE_MINUS_ONE.value
+    preprocessing_name = PreProcessingConstants.ONE_MINUS_ONES.value
     _preprocessing_stride = 1
 
     def _generate_polys(self, k, n, t):
@@ -572,11 +592,12 @@ class PreProcessedElements:
     def clear_preprocessing(self):
         """ Delete all things from the preprocessing folder
         """
+        logger.debug(
+            f"Deleting all files from preprocessing folder: {self.data_directory}"
+        )
         rmtree(
             self.data_directory,
-            onerror=lambda f, p, e: logging.debug(
-                f"Error deleting data directory: {e}"
-            ),
+            onerror=lambda f, p, e: logger.debug(f"Error deleting data directory: {e}"),
         )
 
         self._init_data_dir()
@@ -585,7 +606,7 @@ class PreProcessedElements:
         """ Block until the ready file is created
         """
         while not os.path.exists(self._ready_file):
-            logging.info(f"waiting for preprocessing {self._ready_file}")
+            logger.debug(f"waiting for preprocessing {self._ready_file}")
             await asyncio.sleep(timeout)
 
     def preprocessing_done(self):
