@@ -1,3 +1,5 @@
+"""Volume Matching Auction : buy and sell orders are matched only on volume while price is determined by reference to some external market."""
+
 import asyncio
 import logging
 import subprocess
@@ -18,45 +20,54 @@ from honeybadgermpc.preprocessing import PreProcessedElements
 from honeybadgermpc.router import SimpleRouter
 
 
-def create_and_deploy_contract(
-    w3, *, deployer_addr, contract_name, contract_filepath, mpc_addrs, n=4, t=1
-):
-    """Create and deploy the contract.
+def compile_contract_source(filepath):
+    """Compiles the contract located in given file path.
+
+    filepath : str
+        File path to the contract.
+    """
+    with open(filepath, "r") as f:
+        source = f.read()
+    return compile_source(source)
+
+
+def deploy_contract(w3, *, abi, bytecode, deployer, args=(), kwargs=None):
+    """Deploy the contract.
 
     Parameters
     ----------
     w3 :
         Web3-based connection to an Ethereum network.
-    deployer_addr : str
+    abi :
+        ABI of the contract to deploy.
+    bytecode :
+        Bytecode of the contract to deploy.
+    deployer : str
         Ethereum address of the deployer. The deployer is the one
         making the transaction to deploy the contract, meaning that
         the costs of the transaction to deploy the contract are consumed
-        from the ``deployer_address``.
-    contract_name : str
-        Name of the contract to be created.
-    contract_filepath : str
-        Path of the Solidity contract file.
-    mpc_addrs : list or tuple
-        Ethereum addresses of the MPC servers.
-    n : int
-        Number of MPC servers.
-    t : int
-        Maximum number of MPC servers that may be arbitrarily faulty
-        (aka byzantine).
+        from the ``deployer`` address.
+    args : tuple, optional
+        Positional arguments to be passed to the contract constructor.
+        Defaults to ``()``.
+    kwargs : dict, optional
+        Keyword arguments to be passed to the contract constructor.
+        Defaults to ``{}``.
 
     Returns
     -------
     contract_address: str
         Contract address in hexadecimal format.
-    abi:
-        Contract abi.
+
+    Raises
+    ------
+    ValueError
+        If the contract deployment failed.
     """
-    compiled_sol = compile_source(open(contract_filepath).read())
-    contract_interface = compiled_sol[f"<stdin>:{contract_name}"]
-    contract_class = w3.eth.contract(
-        abi=contract_interface["abi"], bytecode=contract_interface["bin"]
-    )
-    tx_hash = contract_class.constructor(mpc_addrs, t).transact({"from": deployer_addr})
+    if kwargs is None:
+        kwargs = {}
+    contract_class = w3.eth.contract(abi=abi, bytecode=bytecode)
+    tx_hash = contract_class.constructor(*args, **kwargs).transact({"from": deployer})
 
     # Get tx receipt to get contract address
     tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
@@ -66,8 +77,52 @@ def create_and_deploy_contract(
         err_msg = "code was empty 0x, constructor may have run out of gas"
         logging.critical(err_msg)
         raise ValueError(err_msg)
+    return contract_address
 
+
+def create_and_deploy_contract(
+    w3, *, deployer, contract_name, contract_filepath, args=(), kwargs=None
+):
+    """Create and deploy the contract.
+
+    Parameters
+    ----------
+    w3 :
+        Web3-based connection to an Ethereum network.
+    deployer : str
+        Ethereum address of the deployer. The deployer is the one
+        making the transaction to deploy the contract, meaning that
+        the costs of the transaction to deploy the contract are consumed
+        from the ``deployer`` address.
+    contract_name : str
+        Name of the contract to be created.
+    contract_filepath : str
+        Path of the Solidity contract file.
+    args : tuple, optional
+        Positional arguments to be passed to the contract constructor.
+        Defaults to ``()``.
+    kwargs : dict, optional
+        Keyword arguments to be passed to the contract constructor.
+        Defaults to ``None``.
+
+    Returns
+    -------
+    contract_address: str
+        Contract address in hexadecimal format.
+    abi:
+        Contract abi.
+    """
+    compiled_sol = compile_contract_source(contract_filepath)
+    contract_interface = compiled_sol[f"<stdin>:{contract_name}"]
     abi = contract_interface["abi"]
+    contract_address = deploy_contract(
+        w3,
+        abi=abi,
+        bytecode=contract_interface["bin"],
+        deployer=deployer,
+        args=args,
+        kwargs=kwargs,
+    )
     return contract_address, abi
 
 
@@ -117,16 +172,14 @@ def run_and_terminate_process(*args, **kwargs):
 
 def run_eth(*, contract_name, contract_filepath, n=4, t=1):
     w3 = Web3(HTTPProvider())  # Connect to localhost:8545
-    deployer_addr = w3.eth.accounts[49]
+    deployer = w3.eth.accounts[49]
     mpc_addrs = w3.eth.accounts[:n]
     contract_address, abi = create_and_deploy_contract(
         w3,
-        deployer_addr=deployer_addr,
+        deployer=deployer,
         contract_name=contract_name,
         contract_filepath=contract_filepath,
-        mpc_addrs=mpc_addrs,
-        n=n,
-        t=t,
+        args=(mpc_addrs, t),
     )
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
