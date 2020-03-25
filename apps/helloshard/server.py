@@ -31,21 +31,21 @@ class Server:
     -----
     preprocessing
     ^^^^^^^^^^^^^
-    1. (inner-shard communication) generate input masks via randousha
-       (requires innershard collab with other nodes)
+    1. (intra-shard communication) generate input masks via randousha
+       (requires intrashard collab with other nodes)
     2. (inter-shard communication) generate intershard masks via
        randousha (requires intershard collab with other nodes)
 
     consume secret from client
     ^^^^^^^^^^^^^^^^^^^^^^^^^^
     1. (blockchain state read) consume a client's secret from a contract
-    2. (inner-shard communication) unmask the secret in a MPC with
+    2. (intra-shard communication) unmask the secret in a MPC with
        nodes of its shard
 
     produce masked message for other shard
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     1. mask the client message with an intershard mask share
-    2. (inner-shard communication) open the masked share to get the
+    2. (intra-shard communication) open the masked share to get the
        intershard masked message
     3. (blockchain state write) submit the intershard masked message to
        the contract
