@@ -24,6 +24,7 @@ services:
       - ./Makefile:/usr/src/HoneyBadgerMPC/Makefile
       - ./pytest.ini:/usr/src/HoneyBadgerMPC/pytest.ini
       - ./setup.py:/usr/src/HoneyBadgerMPC/setup.py
+      - ./setup.cfg:/usr/src/HoneyBadgerMPC/setup.cfg
       - ./pairing/pypairing/__init__.py:/usr/src/HoneyBadgerMPC/pairing/pypairing/__init__.py
       - ./pairing/src:/usr/src/HoneyBadgerMPC/pairing/src
       - ./pairing/benches:/usr/src/HoneyBadgerMPC/pairing/benches

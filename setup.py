@@ -39,6 +39,7 @@ DOCS_REQUIRE = [
     "sphinx_rtd_theme",
     "sphinx_tabs",
     "doc8",
+    "pydocstyle",
     "recommonmark",
 ]
 

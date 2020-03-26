@@ -41,7 +41,10 @@ jobs:
   - name: Flake8
     install: pip install flake8 pep8-naming flake8-import-order
     script: flake8 --count
-  - name: Doc8
+  - name: Docstrings
+    install: pip install pydocstyle
+    script: pydocstyle --count apps/ aws/ honeybadgermpc/
+  - name: Doc8 - rst files
     install: pip install doc8 pygments
     script: doc8 docs/
   - stage: Test
