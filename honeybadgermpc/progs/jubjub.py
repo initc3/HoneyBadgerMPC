@@ -11,7 +11,7 @@ class SharedPoint(object):
     Represents a point with optimized operatons over Edward's curves.
     This is the 'shared' version of this class, which does deal with shares
     Math operations derived from
-    https://en.wikipedia.org/wiki/Twisted_Edwards_curve#Addition_on_twisted_Edwards_curves # noqa: E501
+    https://en.wikipedia.org/wiki/Twisted_Edwards_curve#Addition_on_twisted_Edwards_curves # noqa: W505
     """
 
     def __init__(self, context: Mpc, xs, ys, curve: Jubjub = Jubjub()):

@@ -190,15 +190,16 @@ class Stager(object):
         remote_cache: bool,
         exact: bool,
     ):
-        """ Given a goal target, build all stages up until and including the specified target
-        and tag the images using the provided build tags.
+        """ Given a goal target, build all stages up until and including
+        the specified target and tag the images using the provided build tags.
 
         args:
             end_target (str): Final target to build an image for
             build_tags (list): List of tags to tag the built images with
             cache (bool): Whether or not to utilize caching while building
             cache_tags (list): List of tags to try when caching
-            remote_cache (bool): When true, download the most recent version of cache images
+            remote_cache (bool): When true, download the most recent
+                version of cache images
             exact (bool): When true, build only the specified target but
                 with full caching as specified.
         """
@@ -379,7 +380,8 @@ def main():
         "\ne.g. If you wanted to re-tag repo:A as repo:B, this flag should be 'A'",
     )
 
-    # TODO: add argument for --exclude to exclude some target:tag combos from being used to cache to the build command.
+    # TODO: add argument for --exclude to exclude some target:tag
+    # combos from being used to cache to the build command.
     builder = subparsers.add_parser(
         "build",
         parents=[target_parser],

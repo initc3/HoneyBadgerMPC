@@ -23,8 +23,11 @@ http://www.ifca.ai/pub/fc10/31_47.pdf
 
 F = 32  # The precision (binary bits)
 """
-This implementation of the library is not completely hiding. This leaks information about the bits used in computation which is determinied by the security parameter Kappa.
-In particular, we leak O(1/(2^Kappa)) information theorotic bits per operation on a floating point secret.
+This implementation of the library is not completely hiding. This leaks
+information about the bits used in computation which is determinied by
+the security parameter Kappa.
+In particular, we leak O(1/(2^Kappa)) information theorotic bits per
+operation on a floating point secret.
 """
 KAPPA = 32  # Statistical security parameter
 K = 64  # Total number of padding bits ()
@@ -41,8 +44,8 @@ Throughout the code:
 
 
 # General (non MPC) fixed point functions
-""" Change a function to fixed point form. In general when we are dealing with fixed points, it
-is convert them back to fixed form.
+""" Change a function to fixed point form. In general when we are
+dealing with fixed points, it is convert them back to fixed form.
 
 2.5 with f = 32 goes to 2.5* 2**32 which is an int.
 Note that this function always rounds down the error
@@ -96,7 +99,8 @@ async def random2m(ctx, m):
 
 
 """
-truncate `m` least significant bits from x. `k` is the total of number of bits we are representing.
+truncate `m` least significant bits from x. `k` is the total of number
+of bits we are representing.
 Return the shares of the trancated number,
 """
 
@@ -117,8 +121,10 @@ async def trunc_pr(ctx, x, k, m):
 
 
 """
-Add a_bits and b_bits vectors and return the final carry bit. This is used in substracting numbers `a` and `b`
-If the `a` + (1^n - `b`) has a carry bit then a > b. where 1^n represents the all one vector.
+Add a_bits and b_bits vectors and return the final carry bit. This is
+used in substracting numbers `a` and `b`
+If the `a` + (1^n - `b`) has a carry bit then a > b. where 1^n
+represents the all one vector.
 """
 
 
@@ -148,7 +154,8 @@ async def get_carry_bit(ctx, a_bits, b_bits, low_carry_bit=1):
 This is used in substracting numbers `a` and `b_bits`.
 a is a known public number and b_bits is a secret shared array.
 This algorithm computes whether a + int(1^n - b) has a carry bit.
-In other words, we check whether number created from the secret shared bit decompation of the b_bits,
+In other words, we check whether number created from the secret shared
+bit decompation of the b_bits,
 `b` is less than publically known `a`.
 """
 
@@ -188,7 +195,8 @@ async def div2m(ctx, x, k, m):
 
 """
 Given the secret shared [x] calcuate the secret shares of [x%2^m] for known  public m.
-This is calcuated by first calculating the value of [x//2^m] usiinig div2m and substracting that from [x]
+This is calcuated by first calculating the value of [x//2^m] usiinig
+div2m and substracting that from [x]
 
 
 This function takes in as arugment secret shares [x] of a floating point number,

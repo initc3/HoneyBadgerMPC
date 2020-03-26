@@ -64,7 +64,8 @@ class Router(ABC):
 
 
 class SimpleRouter(Router):
-    """ Simple router which uses queues as a mechanism for sending messages between players
+    """ Simple router which uses queues as a mechanism for sending
+    messages between players
     """
 
     @TypeCheck()

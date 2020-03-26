@@ -1,6 +1,7 @@
 [flake8]
 max_line_length=89
-exclude = 
+max_doc_length=89
+exclude =
 	charm/,
 	.eggs/,
         apps/tutorial/
