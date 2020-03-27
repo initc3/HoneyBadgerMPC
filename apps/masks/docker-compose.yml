@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+  ganache:
+    container_name: ganache
+    image: trufflesuite/ganache-cli
+    command: --accounts 50 --blockTime 1 > acctKeys.json 2>&1
+  simulation:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/honeybadgermpc/honeybadgermpc
+    depends_on:
+      - ganache
+    command: python apps/masks/simulation.py

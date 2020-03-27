@@ -61,8 +61,11 @@ def run_and_terminate_process(*args, **kwargs):
         logging.info("done")
 
 
-def run_eth(*, contract_name, contract_filepath, n=4, t=1):
-    w3 = Web3(HTTPProvider())  # Connect to localhost:8545
+def run_eth(
+    *, contract_name, contract_filepath, n=4, t=1, eth_rpc_hostname, eth_rpc_port,
+):
+    w3_endpoint_uri = f"http://{eth_rpc_hostname}:{eth_rpc_port}"
+    w3 = Web3(HTTPProvider(w3_endpoint_uri))  # Connect to localhost:8545
     deployer = w3.eth.accounts[49]
     mpc_addrs = w3.eth.accounts[:n]
     contract_address, abi = create_and_deploy_contract(
@@ -86,16 +89,28 @@ def run_eth(*, contract_name, contract_filepath, n=4, t=1):
         loop.close()
 
 
-def main(contract_name=None, contract_filepath=None, n=4, t=1):
+def main(
+    contract_name=None,
+    contract_filepath=None,
+    n=4,
+    t=1,
+    eth_rpc_hostname="localhost",
+    eth_rpc_port=8545,
+):
     import time
 
-    cmd = "ganache-cli -p 8545 --accounts 50 --blockTime 1 > acctKeys.json 2>&1"
-    logging.info(f"Running {cmd}")
-    with run_and_terminate_process(cmd, shell=True):
-        time.sleep(5)
-        run_eth(
-            contract_name=contract_name, contract_filepath=contract_filepath, n=n, t=t
-        )
+    # cmd = "ganache-cli -p 8545 --accounts 50 --blockTime 1 > acctKeys.json 2>&1"
+    # logging.info(f"Running {cmd}")
+    # with run_and_terminate_process(cmd, shell=True):
+    time.sleep(5)
+    run_eth(
+        contract_name=contract_name,
+        contract_filepath=contract_filepath,
+        n=n,
+        t=t,
+        eth_rpc_hostname=eth_rpc_hostname,
+        eth_rpc_port=eth_rpc_port,
+    )
 
 
 if __name__ == "__main__":
@@ -104,4 +119,11 @@ if __name__ == "__main__":
     contract_filename = "contract.sol"
     contract_filepath = Path(__file__).resolve().parent.joinpath(contract_filename)
     n, t = 4, 1
-    main(contract_name=contract_name, contract_filepath=contract_filepath, n=4, t=1)
+    main(
+        contract_name=contract_name,
+        contract_filepath=contract_filepath,
+        n=4,
+        t=1,
+        eth_rpc_hostname="ganache",
+        eth_rpc_port=8545,
+    )
