@@ -14,7 +14,10 @@ class SharedPoint(object):
     https://en.wikipedia.org/wiki/Twisted_Edwards_curve#Addition_on_twisted_Edwards_curves # noqa: W505
     """
 
-    def __init__(self, context: Mpc, xs, ys, curve: Jubjub = Jubjub()):
+    def __init__(self, context: Mpc, xs, ys, curve: Jubjub = None):
+        if curve is None:
+            curve = Jubjub()
+
         assert isinstance(curve, Jubjub)
 
         self.context = context

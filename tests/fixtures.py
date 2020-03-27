@@ -166,7 +166,10 @@ def _preprocess(n, t, k, to_generate):
             raise ValueError(f"{kind} must be manually preprocessed")
 
 
-def _build_config(mixins=[]):
+def _build_config(mixins=None):
+    if mixins is None:
+        mixins = []
+
     config = {}
 
     for mixin in mixins:
@@ -180,7 +183,12 @@ def _build_config(mixins=[]):
 
 @fixture
 def test_runner():
-    async def _test_runner(prog, n=4, t=1, to_generate=[], k=1000, mixins=[]):
+    async def _test_runner(prog, n=4, t=1, to_generate=None, k=1000, mixins=None):
+        if to_generate is None:
+            to_generate = []
+        if mixins is None:
+            mixins = []
+
         _preprocess(n, t, k, to_generate)
 
         config = _build_config(mixins)

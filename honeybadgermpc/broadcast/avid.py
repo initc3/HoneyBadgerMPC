@@ -135,10 +135,12 @@ class AVID:
 
         # leader handling
         if pid == self.leader:
-            # The leader erasure encodes the input, sending one strip to each participant
+            # The leader erasure encodes the input,
+            # sending one strip to each participant
             assert len(input_list) == self.input_size
 
-            # construct the stripe list which contains the stripes for party 1 to party n
+            # construct the stripe list which contains
+            # the stripes for party 1 to party n
             stripes_list = [None] * self.input_size
             mt_list = [None] * self.input_size
             roothash_list = [None] * self.input_size

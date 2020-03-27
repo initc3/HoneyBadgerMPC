@@ -11,9 +11,14 @@ class Jubjub(object):
     """
 
     Field = GF(Subgroup.BLS12_381)
+    field_minus_one = Field(-1)
+    field_10240 = Field(10240)
+    field_10241 = Field(10241)
 
     def __init__(
-        self, a: GFElement = Field(-1), d: GFElement = -(Field(10240) / Field(10241))
+        self,
+        a: GFElement = field_minus_one,
+        d: GFElement = -(field_10240 / field_10241),
     ):
         self.a = a
         self.d = d
@@ -49,7 +54,10 @@ class Point(object):
     This is the 'local' version of this class, that doesn't deal with shares
     """
 
-    def __init__(self, x: int, y: int, curve: Jubjub = Jubjub()):
+    def __init__(self, x: int, y: int, curve: Jubjub = None):
+        if curve is None:
+            curve = Jubjub()
+
         if not isinstance(curve, Jubjub):
             raise Exception(
                 f"Could not create Point-- given curve \

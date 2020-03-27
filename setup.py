@@ -18,6 +18,7 @@ REQUIRED = ["gmpy2", "zfec", "pycrypto", "cffi", "psutil", "pyzmq"]
 TESTS_REQUIRES = [
     "black",
     "flake8",
+    "flake8-bugbear",
     "flake8-import-order",
     "pep8-naming",
     "pytest",

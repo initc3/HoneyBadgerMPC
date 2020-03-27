@@ -147,7 +147,7 @@ class Stager(object):
         build_tag: str,
         cache: bool,
         cache_tags: list,
-        cache_skip: list = [],
+        cache_skip: list = None,
     ) -> bool:
         """ Build the image with the given target and build_tag.
 
@@ -162,6 +162,9 @@ class Stager(object):
         TODO: Allow for CLI access for cache_skip
         """
         assert len(cache_tags) > 0
+
+        if cache_skip is None:
+            cache_skip = []
 
         repo_name = self._build_repo_name(target, build_tag)
 
@@ -207,7 +210,10 @@ class Stager(object):
 
         logger.info(
             f"Building all images until target {end_target} with tags {build_tags}. "
-            f"\nCache: {cache}; remote_cache: {remote_cache}; exact: {exact}; cache_tags: {cache_tags}"
+            f"\nCache: {cache}; "
+            f"remote_cache: {remote_cache}; "
+            f"exact: {exact}; "
+            f"cache_tags: {cache_tags}"
         )
 
         if len(build_tags) == 0:
@@ -279,7 +285,10 @@ class ComposeStager(Stager):
             "cache_from"
         ] = cached_images
 
-        build_command = f'echo "{yaml.dump(build_content)}" | docker-compose -f - build honeybadgermpc'
+        build_command = (
+            f'echo "{yaml.dump(build_content)}" | '
+            f"docker-compose -f - build honeybadgermpc"
+        )
         if not cache:
             build_command = f"{build_command} --no-cache"
 
@@ -369,7 +378,8 @@ def main():
         parents=[target_parser],
         description="Tag a docker image and all preceeding images with a provided tag.",
         help="Tag a docker image and all preceeding images with a provided tag."
-        "\ne.g. ./scripts/stager.py tag -b newest -s latest to tag repo:newest as repo:latest",
+        "\ne.g. ./scripts/stager.py tag -b newest -s latest to "
+        "tag repo:newest as repo:latest",
     )
     tagger.add_argument(
         "-s",
@@ -403,8 +413,9 @@ def main():
         default="local",
         choices=["none", "local", "remote"],
         help="Level of caching to use when building docker images. "
-        "'none' disables caching, 'local' uses whatever is currently cached on disk, and "
-        "'remote' warms up the cache by fetching the remote version of the image before building.",
+        "'none' disables caching, 'local' uses whatever is currently cached on disk, "
+        "and 'remote' warms up the cache by fetching the "
+        "remote version of the image before building.",
     )
 
     builder.add_argument(
