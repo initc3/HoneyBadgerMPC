@@ -115,12 +115,12 @@ class NodeCommunicator(object):
 
 
 class ProcessProgramRunner(object):
-    def __init__(self, peers_config, n, t, my_id, mpc_config={}, linger_timeout=2):
+    def __init__(self, peers_config, n, t, my_id, mpc_config=None, linger_timeout=2):
         self.peers_config = peers_config
         self.n = n
         self.t = t
         self.my_id = my_id
-        self.mpc_config = mpc_config
+        self.mpc_config = mpc_config if mpc_config is not None else {}
         self.mpc_config[ConfigVars.Reconstruction] = HbmpcConfig.reconstruction
 
         self.node_communicator = NodeCommunicator(peers_config, my_id, linger_timeout)
@@ -183,7 +183,7 @@ async def verify_all_connections(peers, n, my_id):
             node_communicator.send(i, i)
         sender_ids = set()
         keys = set()
-        for i in range(n):
+        for _ in range(n):
             msg = await node_communicator.recv()
             sender_ids.add(msg[0])
             keys.add(msg[1])

@@ -12,7 +12,10 @@ from aws.ec2Manager import EC2Manager
 from aws.s3Manager import S3Manager
 
 
-def get_instance_configs(instance_ips, extra={}):
+def get_instance_configs(instance_ips, extra=None):
+    if extra is None:
+        extra = {}
+
     port = AwsConfig.MPC_CONFIG.PORT
     num_faulty_nodes = AwsConfig.MPC_CONFIG.NUM_FAULTY_NODES
     instance_configs = [None] * len(instance_ips)

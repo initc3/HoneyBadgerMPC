@@ -2,8 +2,16 @@ import json
 import os
 import sys
 
+# NOTE About `# noqa B903`. B903 is an opinionated warning.
+# See https://github.com/PyCQA/flake8-bugbear#opinionated-warnings:
+# Use collections.namedtuple (or typing.NamedTuple) for data classes
+# that only set attributes in an __init__ method, and do nothing else.
+# If the attributes should be mutable, define the attributes in
+# __slots__ to save per-instance memory and to prevent accidentally
+# creating additional attributes on instances.
 
-class RegionConfig(object):
+
+class RegionConfig(object):  # noqa B903
     def __init__(self, vm_count, sg_ids, image_id, key_name, key_file_path):
         self.VM_COUNT = vm_count
         self.SECURITY_GROUP_IDS = sg_ids
@@ -12,7 +20,7 @@ class RegionConfig(object):
         self.KEY_NAME = key_name
 
 
-class MPCConfig(object):
+class MPCConfig(object):  # noqa B903
     def __init__(self, command, t, k, port, num_triples, n, num_faulty_nodes):
         self.COMMAND = command
         self.T = t

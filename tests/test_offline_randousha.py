@@ -23,7 +23,7 @@ async def test_randousha(test_router, polynomial, galois_field, n, k):
     random_values = []
     eval_point = EvalPoint(galois_field, n, use_omega_powers=False)
     decoder = DecoderFactory.get(eval_point, Algorithm.VANDERMONDE)
-    for i, shares in enumerate(zip(*shares_per_party)):
+    for shares in zip(*shares_per_party):
         shares_t, shares_2t = zip(*shares)
         poly_t = polynomial(decoder.decode(list(range(n)), shares_t))
         poly_2t = polynomial(decoder.decode(list(range(n)), shares_2t))

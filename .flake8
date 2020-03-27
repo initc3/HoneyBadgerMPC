@@ -1,9 +1,11 @@
 [flake8]
-max_line_length=89
+max_line_length=80
 max_doc_length=89
 exclude =
 	charm/,
 	.eggs/,
         apps/tutorial/
 ignore = E203, E266, E501, W503
+max-complexity = 45
+select = B,C,E,F,W,T4,B9
 application_import_names = apps,honeybadgermpc,lib_solver

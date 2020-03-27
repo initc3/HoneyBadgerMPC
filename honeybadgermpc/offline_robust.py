@@ -99,7 +99,7 @@ class PreProcessingBase(ABC):
             await asyncio.sleep(PreProcessingBase.PERIOD_IN_SECONDS)
 
     async def _get_output_batch(self, group_size=1):
-        for i in range(self.batch_size):
+        for _ in range(self.batch_size):
             batch = []
             while True:
                 value = await self.avss_value_processor.get()

@@ -514,7 +514,7 @@ async def main_loop(w3):
     client = AsynchromixClient("sid", "client", None, None, w3, contract, req_mask)
 
     # Step 4. Wait for conclusion
-    for i, server in enumerate(servers):
+    for server in servers:
         await server.join()
     await client.join()
 

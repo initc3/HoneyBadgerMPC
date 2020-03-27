@@ -278,10 +278,10 @@ class Mpc(object):
 
 
 class TaskProgramRunner(ProgramRunner):
-    def __init__(self, n, t, config={}):
+    def __init__(self, n, t, config=None):
         self.N, self.t = n, t
         self.counter = 0
-        self.config = config
+        self.config = config if config is not None else {}
         self.tasks = []
         self.loop = asyncio.get_event_loop()
         self.router = SimpleRouter(self.N)

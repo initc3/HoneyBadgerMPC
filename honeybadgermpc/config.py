@@ -16,7 +16,16 @@ from argparse import ArgumentParser
 from honeybadgermpc.reed_solomon import Algorithm as RSAlgorithm
 
 
-class NodeDetails(object):
+# NOTE About `# noqa B903`. B903 is an opinionated warning.
+# See https://github.com/PyCQA/flake8-bugbear#opinionated-warnings:
+# Use collections.namedtuple (or typing.NamedTuple) for data classes
+# that only set attributes in an __init__ method, and do nothing else.
+# If the attributes should be mutable, define the attributes in
+# __slots__ to save per-instance memory and to prevent accidentally
+# creating additional attributes on instances.
+
+
+class NodeDetails(object):  # noqa B903
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port

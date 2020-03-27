@@ -101,7 +101,7 @@ class TypeCheck(object):
         else:
             return self._validate_argument(name, value, t_eval, local_dict)
 
-    def _validate_argument(self, name, value, annotation, local_dict={}):
+    def _validate_argument(self, name, value, annotation, local_dict=None):
         """ Validate the type constraint for a single name, value, annotation pair.
         Raise an assertion if the argument fails validation.
 
@@ -112,6 +112,9 @@ class TypeCheck(object):
             local_dict (dict): Mapping of argument names to values to use when
                 evaluating string annotations.
         """
+        if local_dict is None:
+            local_dict = {}
+
         if annotation in (Parameter.empty, Signature.empty):
             return True
 
@@ -221,8 +224,8 @@ class TypeCheck(object):
             )
 
     def _check_return_value(self, return_value):
-        """ Checks the correctness of the return value of the function being typechecked.
-        An assertion is raised if it is incorrect.
+        """ Checks the correctness of the return value of the function being
+        typechecked. An assertion is raised if it is incorrect.
 
         args:
             return_value (object): Value returned by the function invocation.

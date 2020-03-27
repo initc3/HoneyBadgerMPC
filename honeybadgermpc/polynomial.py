@@ -29,6 +29,8 @@ def polynomials_over(field):
     if field in _poly_cache:
         return _poly_cache[field]
 
+    zero_field = field(0)
+
     class Polynomial(object):
         def __init__(self, coeffs):
             self.coeffs = list(strip_trailing_zeros(coeffs))
@@ -63,7 +65,7 @@ def polynomials_over(field):
             return type(other) is Polynomial and other.coeffs == self.coeffs
 
         @classmethod
-        def interpolate_at(cls, shares, x_recomb=field(0)):
+        def interpolate_at(cls, shares, x_recomb=zero_field):
             # shares are in the form (x, y=f(x))
             if type(x_recomb) is int:
                 x_recomb = field(x_recomb)
@@ -450,6 +452,6 @@ if __name__ == "__main__":
         logging.info(f"{omega**i} {x3[i]}")
 
     logging.info("How many omegas are there?")
-    for i in range(10):
+    for _ in range(10):
         omega = get_omega(field, 2 ** 20)
         logging.info(f"{omega} {omega**(2**17)}")

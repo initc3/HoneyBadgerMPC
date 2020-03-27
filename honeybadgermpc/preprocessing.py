@@ -217,7 +217,8 @@ class PreProcessingMixin(ABC):
             n: number of nodes this is preprocessing for
             t: number of faults tolerated by this preprocessing
             polys: polynomials corresponding to secret share values to write
-            append: Whether or not to append shares to an existing file, or to overwrite.
+            append: Whether or not to append shares to an existing file, or
+                to overwrite.
         """
         polys = [[coeff.value for coeff in poly.coeffs] for poly in polys]
         all_values = vandermonde_batch_evaluate(
