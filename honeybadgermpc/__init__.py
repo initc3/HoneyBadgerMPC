@@ -14,4 +14,4 @@ with open(CURRENT_DIR / "logging.yaml", "r") as f:
     os.makedirs(ROOT_DIR / "benchmark-logs", exist_ok=True)
     logging_config = yaml.safe_load(f.read())
     logging.config.dictConfig(logging_config)
-    logging.getLogger("asyncio").setLevel(logging.WARNING)
+    logging.getLogger("asyncio").setLevel(logging.INFO)

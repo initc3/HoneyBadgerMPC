@@ -2,9 +2,11 @@ import asyncio
 import logging
 import time
 
+from aiohttp import web
+
 from web3.contract import ConciseContract
 
-from apps.utils import wait_for_receipt
+from apps.utils import fetch_contract, wait_for_receipt
 
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.field import GF
@@ -22,7 +24,18 @@ field = GF(Subgroup.BLS12_381)
 class Server:
     """MPC server class to ..."""
 
-    def __init__(self, sid, myid, send, recv, w3, contract):
+    def __init__(
+        self,
+        sid,
+        myid,
+        send,
+        recv,
+        w3,
+        *,
+        contract_context,
+        http_host="0.0.0.0",
+        http_port=8080,
+    ):
         """
         Parameters
         ----------
@@ -36,15 +49,20 @@ class Server:
             Function used to receive messages.
         w3:
             Connection instance to an Ethereum node.
-        contract:
-            Contract instance on the Ethereum blockchain.
+        contract_context: dict
+            Contract attributes needed to interact with the contract
+            using web3. Should contain the address, name and source code
+            file path.
         """
         self.sid = sid
         self.myid = myid
-        self.contract = contract
+        self._contract_context = contract_context
+        self.contract = fetch_contract(w3, **contract_context)
         self.w3 = w3
         self._init_tasks()
         self._subscribe_task, subscribe = subscribe_recv(recv)
+        self._http_host = http_host
+        self._http_port = http_port
 
         def _get_send_recv(tag):
             return wrap_send(tag, send), subscribe(tag)
@@ -61,6 +79,8 @@ class Server:
         self._task3.add_done_callback(print_exception_callback)
         self._task4 = asyncio.ensure_future(self._mpc_initiate_loop())
         self._task4.add_done_callback(print_exception_callback)
+        # self._http_server = asyncio.create_task(self._client_request_loop())
+        # self._http_server.add_done_callback(print_exception_callback)
 
     async def join(self):
         await self._task1
@@ -68,6 +88,8 @@ class Server:
         await self._task3
         await self._task4
         await self._subscribe_task
+        # await self._http_server
+        await self._client_request_loop()
 
     #######################
     # Step 1. Offline Phase
@@ -130,11 +152,40 @@ class Server:
             # Increment the preprocessing round and continue
             preproc_round += 1
 
+    ##################################
+    # Web server for input mask shares
+    ##################################
+
     async def _client_request_loop(self):
-        # Task 2. Handling client input
-        # TODO: if a client requests a share,
-        # check if it is authorized and if so send it along
-        pass
+        """ Task 2. Handling client input
+
+        .. todo:: if a client requests a share, check if it is
+            authorized and if so send it along
+
+        """
+        routes = web.RouteTableDef()
+
+        @routes.get("/inputmasks/{idx}")
+        async def _handler(request):
+            idx = int(request.match_info.get("idx"))
+            inputmask = self._inputmasks[idx]
+            data = {
+                "inputmask": inputmask,
+                "server_id": self.myid,
+                "server_port": self._http_port,
+            }
+            return web.json_response(data)
+
+        app = web.Application()
+        app.add_routes(routes)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, host=self._http_host, port=self._http_port)
+        await site.start()
+        print(f"======= Serving on http://{self._http_host}:{self._http_port}/ ======")
+        # pause here for very long time by serving HTTP requests and
+        # waiting for keyboard interruption
+        await asyncio.sleep(100 * 3600)
 
     async def _mpc_loop(self):
         # Task 3. Participating in MPC epochs

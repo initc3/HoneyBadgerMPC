@@ -29,6 +29,24 @@ def compile_contract_source(filepath):
     return compile_source(source)
 
 
+def get_contract_interface(*, contract_name, contract_filepath):
+    compiled_sol = compile_contract_source(contract_filepath)
+    try:
+        contract_interface = compiled_sol[f"<stdin>:{contract_name}"]
+    except KeyError:
+        logging.error(f"Contract {contract_name} not found")
+        raise
+
+    return contract_interface
+
+
+def get_contract_abi(*, contract_name, contract_filepath):
+    ci = get_contract_interface(
+        contract_name=contract_name, contract_filepath=contract_filepath
+    )
+    return ci["abi"]
+
+
 def deploy_contract(w3, *, abi, bytecode, deployer, args=(), kwargs=None):
     """Deploy the contract.
 
@@ -122,3 +140,33 @@ def create_and_deploy_contract(
         kwargs=kwargs,
     )
     return contract_address, abi
+
+
+def get_contract_address(filepath):
+    with open(filepath, "r") as f:
+        line = f.readline()
+    contract_address = line.strip()
+    return contract_address
+
+
+def fetch_contract(w3, *, address, name, filepath):
+    """Fetch a contract using the given web3 connection, and contract
+    attributes.
+
+    Parameters
+    ----------
+    address : str
+        Ethereum address of the contract.
+    name : str
+        Name of the contract.
+    filepath : str
+        File path to the source code of the contract.
+
+    Returns
+    -------
+    web3.contract.Contract
+        The ``web3`` ``Contract`` object.
+    """
+    abi = get_contract_abi(contract_name=name, contract_filepath=filepath)
+    contract = w3.eth.contract(address=address, abi=abi)
+    return contract
