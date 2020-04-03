@@ -15,4 +15,4 @@ $ make run
 
 You should then see something like:
 
-![screenshot](./screenshot-tmux.png)
+![example](./example-tmux.png)
