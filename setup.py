@@ -13,7 +13,7 @@ DESCRIPTION = "honeybadgermpc"
 REQUIRES_PYTHON = ">=3.7.0"
 VERSION = None
 
-REQUIRED = ["aiohttp", "gmpy2", "zfec", "pycrypto", "cffi", "psutil", "pyzmq"]
+REQUIRED = ["aiohttp", "gmpy2", "zfec", "pycrypto", "cffi", "psutil", "pyzmq", "toml"]
 
 TESTS_REQUIRES = [
     "black",

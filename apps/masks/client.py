@@ -1,22 +1,25 @@
+import argparse
 import asyncio
 import logging
 from collections import namedtuple
-
+from pathlib import Path
 
 from aiohttp import ClientSession
 
+from web3 import HTTPProvider, Web3
 from web3.contract import ConciseContract
 
-from apps.utils import fetch_contract, wait_for_receipt
+from apps.masks.config import CONTRACT_ADDRESS_FILEPATH
+from apps.utils import fetch_contract, get_contract_address, wait_for_receipt
 
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.field import GF
 from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from honeybadgermpc.utils.misc import print_exception_callback
 
+PARENT_DIR = Path(__file__).resolve().parent
 field = GF(Subgroup.BLS12_381)
-
-Server = namedtuple("Server", ("host", "port"))
+Server = namedtuple("Server", ("id", "host", "port"))
 
 
 class Client:
@@ -38,10 +41,9 @@ class Client:
             Contract attributes needed to interact with the contract
             using web3. Should contain the address, name and source code
             file path.
-        mpc_network : dict
-            Dictionary of MPC servers where the key is the server id, and the
-            value is a dictionary of server attributes necessary to interact with
-            the server. The expected server attributes are: host and port.
+        mpc_network : list or tuple or set
+            List or tuple or set of MPC servers, where each element is a
+            dictionary of server attributes: "id", "host", and "port".
         """
         self.sid = sid
         self.myid = myid
@@ -49,9 +51,38 @@ class Client:
         self.contract = fetch_contract(w3, **contract_context)
         self.w3 = w3
         self.req_mask = req_mask
-        self.mpc_network = {i: Server(**attrs) for i, attrs in mpc_network.items()}
+        self.mpc_network = [Server(**server_attrs) for server_attrs in mpc_network]
         self._task = asyncio.create_task(self._run())
         self._task.add_done_callback(print_exception_callback)
+
+    @classmethod
+    def from_config(cls, config):
+        eth_config = config["eth"]
+
+        # contract
+        contract_context = {
+            "address": get_contract_address(CONTRACT_ADDRESS_FILEPATH),
+            "filepath": PARENT_DIR.joinpath(eth_config["contract_filename"]),
+            "name": eth_config["contract_name"],
+        }
+
+        # web3
+        eth_rpc_hostname = eth_config["rpc_host"]
+        eth_rpc_port = eth_config["rpc_port"]
+        w3_endpoint_uri = f"http://{eth_rpc_hostname}:{eth_rpc_port}"
+        w3 = Web3(HTTPProvider(w3_endpoint_uri))
+
+        # mpc network
+        mpc_network = config["servers"]
+
+        return cls(
+            config["session_id"],
+            config["id"],
+            w3,
+            None,  # TODO remove or pass callable for GET /inputmasks/{id}
+            contract_context=contract_context,
+            mpc_network=mpc_network,
+        )
 
     async def _run(self):
         contract_concise = ConciseContract(self.contract)
@@ -84,7 +115,7 @@ class Client:
 
     def _request_mask_shares(self, mpc_network, mask_idx):
         shares = []
-        for server in mpc_network.values():
+        for server in mpc_network:
             share = self._request_mask_share(server, mask_idx)
             shares.append(share)
         return shares
@@ -169,51 +200,27 @@ class Client:
         logging.info(f"tx receipt hash is: {tx_receipt['transactionHash'].hex()}")
 
 
-def create_client(w3, *, contract_context):
-    # TODO put in a toml config file, that could perhaps be auto-generated
-    server_host = "mpcnet"
-    mpc_network = {
-        0: {"host": server_host, "port": 8080},
-        1: {"host": server_host, "port": 8081},
-        2: {"host": server_host, "port": 8082},
-        3: {"host": server_host, "port": 8083},
-    }
-    client = Client(
-        "sid",
-        "client",
-        w3,
-        None,
-        contract_context=contract_context,
-        mpc_network=mpc_network,
-    )
-    return client
-
-
-async def main(w3, *, contract_context):
-    client = create_client(w3, contract_context=contract_context)
+async def main(config):
+    client = Client.from_config(config)
     await client.join()
 
 
 if __name__ == "__main__":
-    from pathlib import Path
-    from web3 import HTTPProvider, Web3
-    from apps.masks.config import CONTRACT_ADDRESS_FILEPATH
-    from apps.utils import get_contract_address
+    import toml
+
+    # arg parsing
+    default_config_path = PARENT_DIR.joinpath("client.toml")
+    parser = argparse.ArgumentParser(description="MPC client.")
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        default=str(default_config_path),
+        help=f"Configuration file to use. Defaults to '{default_config_path}'.",
+    )
+    args = parser.parse_args()
+    config_file = args.config_file
+    config = toml.load(config_file)
+    print(config)
 
     # Launch a client
-    contract_name = "MpcCoordinator"
-    contract_filename = "contract.sol"
-    contract_filepath = Path(__file__).resolve().parent.joinpath(contract_filename)
-    contract_address = get_contract_address(CONTRACT_ADDRESS_FILEPATH)
-    contract_context = {
-        "address": contract_address,
-        "filepath": contract_filepath,
-        "name": contract_name,
-    }
-
-    eth_rpc_hostname = "blockchain"
-    eth_rpc_port = 8545
-    n, t = 4, 1
-    w3_endpoint_uri = f"http://{eth_rpc_hostname}:{eth_rpc_port}"
-    w3 = Web3(HTTPProvider(w3_endpoint_uri))
-    asyncio.run(main(w3, contract_context=contract_context))
+    asyncio.run(main(config))
