@@ -30,19 +30,25 @@ clean-pyc: ## remove Python file artifacts
 down: ## stop and remove containers, networks, images, and volumes
 	docker-compose down
 
-run: down ## run the example
+stop:
+	docker-compose stop blockchain mpcnet
+
+rm:
+	docker-compose rm --stop --force blockchain setup mpcnet client
+
+run: rm ## run the example
 	docker-compose up -d blockchain
 	docker-compose up setup
 	docker-compose up -d client
 	sh follow-logs-with-tmux.sh
 
-run-without-tmux: down ## run the example
+run-without-tmux: rm ## run the example
 	docker-compose up -d blockchain
 	docker-compose up setup
 	docker-compose up -d client
 	docker-compose logs --follow blockchain mpcnet client
 
-setup: down
+setup: rm
 	docker-compose up -d blockchain
 	docker-compose up setup
-	docker-compose down blockchain
+	docker-compose rm --stop --force blockchain
