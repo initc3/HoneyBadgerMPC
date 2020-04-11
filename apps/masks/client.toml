@@ -1,4 +1,8 @@
 # Client configuation
+
+# the context is used to evaluate relative file paths
+context = "."
+
 id = "client"
 session_id = "sid"
 eth_address = ''
@@ -11,7 +15,10 @@ t = 1
 [eth]
 rpc_host = "blockchain"
 rpc_port = 8545
-contract_filename = "contract.sol"
+
+# contract
+# the contract file path can be relative or absolute
+contract_path = "contract.sol"
 contract_name = "MpcCoordinator"
 public_data_dir = "public-data"
 
