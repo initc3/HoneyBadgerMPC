@@ -1,3 +1,10 @@
+"""
+TODO:
+
+Consider renaming to FakePreprocessing ...
+
+Real preprocsseing takes place in offline_randousha
+"""
 import asyncio
 import logging
 import os
@@ -8,6 +15,7 @@ from enum import Enum
 from itertools import chain
 from os import listdir, makedirs
 from os.path import isfile, join
+from pathlib import Path
 from random import randint
 from shutil import rmtree
 from uuid import uuid4
@@ -16,6 +24,10 @@ from .elliptic_curve import Subgroup
 from .field import GF
 from .ntl import vandermonde_batch_evaluate
 from .polynomial import polynomials_over
+
+logger = logging.getLogger(__name__)
+# FIXME move log level setting to an entrypoint (e.g. __init__ or an app main entry)
+logger.setLevel(os.environ.get("HBMPC_LOGLEVEL", logging.INFO))
 
 
 class PreProcessingConstants(Enum):
@@ -28,9 +40,11 @@ class PreProcessingConstants(Enum):
     BITS = "bits"
     POWERS = "powers"
     SHARES = "share"
-    ONE_MINUS_ONE = "one_minus_one"
+    ONE_MINUS_ONES = "one_minus_ones"
     DOUBLE_SHARES = "double_shares"
     SHARE_BITS = "share_bits"
+    INTERSHARD_MASKS = "intershards_masks"
+    SHARE_FILE_EXT = ".share"
 
     def __str__(self):
         return self.value
@@ -73,6 +87,14 @@ class PreProcessingMixin(ABC):
         """
         return f"{self.data_dir}{self.preprocessing_name}"
 
+    @property
+    def data_dir_path(self):
+        return Path(self.data_dir)
+
+    def key(self, myid, n, t, shard_id=None):
+        _id = myid if shard_id is None else f"{myid}-{shard_id}"
+        return _id, n, t
+
     def min_count(self, n, t):
         """ Returns the minimum number of preprocessing stored in the cache across all
         of the keys with the given n, t values.
@@ -87,7 +109,7 @@ class PreProcessingMixin(ABC):
 
         return min(counts) // self._preprocessing_stride
 
-    def get_value(self, context, *args, **kwargs):
+    def get_value(self, context, *args, shard_id=None, **kwargs):
         """ Given an MPC context, retrieve one preprocessing value.
 
         args:
@@ -96,10 +118,14 @@ class PreProcessingMixin(ABC):
         outputs:
             Preprocessing value for this mixin
         """
-        key = (context.myid, context.N, context.t)
+        context_id = context.myid if shard_id is None else f"{context.myid}-{shard_id}"
+        key = (context_id, context.N, context.t)
 
         to_return, used = self._get_value(context, key, *args, **kwargs)
+        logger.debug(f'got value "{to_return}" and used "{used}"')
+        logger.debug(f"decrement count by {used}")
         self.count[key] -= used
+        logger.debug(f"count is now: {self.count}")
 
         return to_return
 
@@ -123,7 +149,7 @@ class PreProcessingMixin(ABC):
             return values[3:]
 
     def _write_preprocessing_file(
-        self, file_name, degree, context_id, values, append=False
+        self, file_name, degree, context_id, values, append=False, refresh_cache=False
     ):
         """ Write the values to the preprocessing file given by the filename.
         When append is true, this will append to an existing file, otherwise, it will
@@ -148,8 +174,10 @@ class PreProcessingMixin(ABC):
 
         print(*values, file=f, sep="\n")
         f.close()
+        if refresh_cache:
+            self._refresh_cache()
 
-    def build_filename(self, n, t, context_id, prefix=None):
+    def build_filename(self, n, t, context_id, prefix=None, **kwargs):
         """ Given a file prefix, and metadata, return the filename to put
         the shares in.
 
@@ -189,6 +217,10 @@ class PreProcessingMixin(ABC):
         """ Refreshes the cache by reading in sharedata files, and
         updating the cache values and count variables.
         """
+        logger.debug(f"(- {self.preprocessing_name} -) refreshing cache")
+        logger.debug(
+            f"(- {self.preprocessing_name} -) before cache refresh, count is: {dict(self.count)}"
+        )
         self.cache = defaultdict(chain)
         self.count = defaultdict(int)
 
@@ -204,11 +236,16 @@ class PreProcessingMixin(ABC):
             (n, t, context_id) = groups
             key = (context_id, n, t)
             values = self._read_preprocessing_file(file_name)
-
             self.cache[key] = chain(values)
             self.count[key] = len(values)
 
-    def _write_polys(self, n, t, polys, append=False, prefix=None):
+        logger.debug(
+            f"(- {self.preprocessing_name} -) after cache refresh, count is: {dict(self.count)}"
+        )
+
+    def _write_polys(
+        self, n, t, polys, append=False, prefix=None, shard_id=None, recv_shard_id=None
+    ):
         """ Given a file prefix, a list of polynomials, and associated n, t values,
         write the preprocessing for the share values represented by the polnomials.
 
@@ -218,6 +255,12 @@ class PreProcessingMixin(ABC):
             t: number of faults tolerated by this preprocessing
             polys: polynomials corresponding to secret share values to write
             append: Whether or not to append shares to an existing file, or to overwrite.
+            shard_id: If in a sharded network, id of the shard the elements need
+                to be written to file for.
+            recv_shard_id: For intershard operations, the id of the shard that is
+                on the receiving end. That is, the elements to be written to file,
+                are meant to be used when shard_id needs to send "secured" data
+                to another shard.
         """
         polys = [[coeff.value for coeff in poly.coeffs] for poly in polys]
         all_values = vandermonde_batch_evaluate(
@@ -226,10 +269,13 @@ class PreProcessingMixin(ABC):
 
         for i in range(n):
             values = [v[i] for v in all_values]
-            file_name = self.build_filename(n, t, i, prefix=prefix)
+            file_name = self.build_filename(
+                n, t, i, prefix=prefix, shard_id=shard_id, recv_shard_id=recv_shard_id,
+            )
             self._write_preprocessing_file(file_name, t, i, values, append=append)
 
-            key = (i, n, t)
+            context_id = i if shard_id is None else f"{i}-{shard_id}"
+            key = (context_id, n, t)
             if append:
                 self.cache[key] = chain(self.cache[key], values)
                 self.count[key] += len(values)
@@ -410,8 +456,144 @@ class RandomPreProcessing(PreProcessingMixin):
 
     def _get_value(self, context, key, t=None):
         t = t if t is not None else context.t
-        assert self.count[key] >= 1
+        assert self.count[key] >= 1, f"key is: {key}\ncount is: {self.count}\n"
         return context.Share(next(self.cache[key]), t), 1
+
+
+class InterShardMasksPreProcessing(PreProcessingMixin):
+    preprocessing_name = PreProcessingConstants.INTERSHARD_MASKS.value
+    _preprocessing_stride = 1
+
+    def mk_subdirs(self, context_id):
+        """Create intermediate sub directories for the given server id, aka
+        context id.
+
+        Parameters:
+        -----------
+        context_id : str or int
+            The id of a server. In a sharded network it MUST be a string
+            of the form: ``"{myid}:{shard_id}"`` where ``myid`` is the integer
+            used to identify a server within a shard.
+
+        Returns
+        -------
+        Path object.
+        """
+        new_path = self.data_dir_path.joinpath(context_id, self.preprocessing_name)
+        new_path.mkdir(exist_ok=True)
+        return new_path
+
+    def build_filename(
+        self, n, t, context_id, prefix=None, shard_id=None, recv_shard_id=None, **kwargs
+    ):
+        """ Given context id, shard ids, and metadata, return the filename to put
+        the shares in.
+
+        The filename structure is as follows:
+
+            data_dir/context_id/preprocessing_name/n_t-sh1_sh2.share
+
+        For example, for node 1, in shard 5, and shard 108 as a receiving shard, in a
+        network of n=1000 and t=300:
+
+            sharedata/1-5/intershard_masks/1000_300-5_8.share
+
+        The reasoning behind the above file path is that by having the context id as
+        a base directory it helps to remind one that the files are meant to be seen
+        only by the node in question. In other words, everything under the directory
+        "sharedata/1-5/" would be private in a real world scenario.
+
+        Parsing this kind of file path should also be easier, such that regular
+        expressions will not be needed.
+
+        Parameters
+        ----------
+        n : int
+            Total number of nodes in the shard.
+        t : int
+            Polynomial degree, and maximum fault tolerance for the
+            number of nodes that may deviate from the protocol.
+        context_id : str
+            The id of the mpc context/server the file belongs to.
+        shard_id : str or int
+            The id of the shard the server belongs to.
+        recv_shard_idc: str or int
+            The id of the receiving shard.
+
+        output:
+            Filename to use
+        """
+        context_id = f"{context_id}-{shard_id}"
+        dir_path = self.data_dir_path.joinpath(context_id, self.preprocessing_name)
+        dir_path.mkdir(parents=True, exist_ok=True)
+        file_path = dir_path.joinpath(f"{n}_{t}-{shard_id}_{recv_shard_id}")
+        full_file_path = file_path.with_suffix(
+            PreProcessingConstants.SHARE_FILE_EXT.value
+        )
+        return str(full_file_path)
+
+    def generate_values(self, k, n, t, *, shard_1_id, shard_2_id, append=False):
+        polys = self._generate_polys(
+            k, n, t, shard_1_id=shard_1_id, shard_2_id=shard_2_id
+        )
+        shard_ids = {shard_1_id, shard_2_id}
+        for shard_id, polys in polys.items():
+            recv_shard_id = (shard_ids - {shard_id}).pop()
+            self._write_polys(
+                n,
+                t,
+                polys,
+                append=False,
+                shard_id=shard_id,
+                recv_shard_id=recv_shard_id,
+            )
+
+    def _generate_polys(self, k, n, t, *, shard_1_id, shard_2_id):
+        """Return a pair of polys for each k value.
+
+        .. note:: negligible chance that coeffs is empty
+        """
+        polys = defaultdict(list)
+        for _ in range(k):
+            poly_1 = self.poly.random(t)
+            poly_2 = self.poly.random(t, y0=poly_1.coeffs[0])
+            polys[shard_1_id].append(poly_1)
+            polys[shard_2_id].append(poly_2)
+        return polys
+
+    def _get_value(self, context, key, t=None):
+        t = t if t is not None else context.t
+        assert self.count[key] >= 1, f"key is: {key}\ncount is: {self.count}\n"
+        return context.Share(next(self.cache[key]), t), 1
+
+    def _refresh_cache(self):
+        """ Refreshes the cache by reading in sharedata files, and
+        updating the cache values and count variables.
+        """
+        logger.debug(f"(- {self.preprocessing_name} -) refreshing cache")
+        logger.debug(
+            f"(- {self.preprocessing_name} -) before cache refresh, count is: {dict(self.count)}"
+        )
+        self.cache = defaultdict(chain)
+        self.count = defaultdict(int)
+
+        for server_dir in self.data_dir_path.iterdir():
+            if server_dir.is_file():
+                continue
+            context_id = server_dir.stem
+            for pp_elements_dir in server_dir.iterdir():
+                for share_file in pp_elements_dir.iterdir():
+                    # expected filename format is: "n_t-sh1_sh2.share"
+                    n, t = (int(v) for v in share_file.stem.split("-")[0].split("_"))
+                    key = (context_id, n, t)
+                    values = self._read_preprocessing_file(share_file)
+
+            self.cache[key] = chain(values)
+            self.count[key] = len(values)
+
+        logger.debug(
+            f"(- {self.preprocessing_name} -) after cache refresh, count is: {dict(self.count)}"
+        )
 
 
 class SimplePreProcessing(PreProcessingMixin):
@@ -426,9 +608,12 @@ class SimplePreProcessing(PreProcessingMixin):
         assert self.count[key] >= self._preprocessing_stride, (
             f"Expected "
             f"{self._preprocessing_stride} elements of {self.preprocessing_name}, "
-            f"but found only {self.count[key]}"
+            f"but found only {self.count[key]}\n"
+            f"key is: {key}\n"
+            f"count is: {self.count}\n"
         )
 
+        logger.debug("getting value ...")
         values = tuple(
             context.Share(next(self.cache[key]))
             for _ in range(self._preprocessing_stride)
@@ -487,7 +672,7 @@ class BitPreProcessing(SimplePreProcessing):
 
 
 class SignedBitPreProcessing(SimplePreProcessing):
-    preprocessing_name = PreProcessingConstants.ONE_MINUS_ONE.value
+    preprocessing_name = PreProcessingConstants.ONE_MINUS_ONES.value
     _preprocessing_stride = 1
 
     def _generate_polys(self, k, n, t):
@@ -557,6 +742,9 @@ class PreProcessedElements:
         self._share_bits = ShareBitsPreProcessing(
             self.field, self.poly, self.data_directory
         )
+        self._intershard_masks = InterShardMasksPreProcessing(
+            self.field, self.poly, self.data_directory
+        )
 
     @classmethod
     def reset_cache(cls):
@@ -572,11 +760,12 @@ class PreProcessedElements:
     def clear_preprocessing(self):
         """ Delete all things from the preprocessing folder
         """
+        logger.debug(
+            f"Deleting all files from preprocessing folder: {self.data_directory}"
+        )
         rmtree(
             self.data_directory,
-            onerror=lambda f, p, e: logging.debug(
-                f"Error deleting data directory: {e}"
-            ),
+            onerror=lambda f, p, e: logger.debug(f"Error deleting data directory: {e}"),
         )
 
         self._init_data_dir()
@@ -585,7 +774,7 @@ class PreProcessedElements:
         """ Block until the ready file is created
         """
         while not os.path.exists(self._ready_file):
-            logging.info(f"waiting for preprocessing {self._ready_file}")
+            logger.debug(f"waiting for preprocessing {self._ready_file}")
             await asyncio.sleep(timeout)
 
     def preprocessing_done(self):
@@ -635,6 +824,16 @@ class PreProcessedElements:
     def generate_share(self, n, t, *args, **kwargs):
         return self._generate(self._shares, 1, n, t, *args, **kwargs)
 
+    def generate_intershard_masks(self, k, n, t, *, shard_1_id, shard_2_id):
+        return self._generate(
+            self._intershard_masks,
+            k,
+            n,
+            t,
+            shard_1_id=shard_1_id,
+            shard_2_id=shard_2_id,
+        )
+
     ## Preprocessing retrieval methods:
 
     def get_triples(self, context):
@@ -666,3 +865,6 @@ class PreProcessedElements:
 
     def get_share_bits(self, context):
         return self._share_bits.get_value(context)
+
+    def get_intershard_masks(self, context, shard_id):
+        return self._intershard_masks.get_value(context, shard_id=shard_id)

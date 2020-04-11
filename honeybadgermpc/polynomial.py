@@ -127,6 +127,7 @@ def polynomials_over(field):
             return fft(self, omega, n)
 
         @classmethod
+        # TODO def random(cls, degree, *, y0=None):
         def random(cls, degree, y0=None):
             coeffs = [field.random() for _ in range(degree + 1)]
             if y0 is not None:

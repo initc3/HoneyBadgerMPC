@@ -1,47 +1,56 @@
 pragma solidity >=0.4.22 <0.6.0;
 
-contract AsynchromixCoordinator {
-    /* A blockchain-based MPC coordinator for Asychromix.
+contract MpcCoordinator {
+    /* A blockchain-based MPC coordinator.
      * 1. Keeps track of the MPC "preprocessing buffer"
      * 2. Accepts client input 
      *      (makes use of preprocess randoms)
-     * 3. Initiates mixing epochs (MPC computations)
-     *      (makes use of preprocess triples, bits, powers)
+     * 3. Initiates MPC epochs (MPC computations)
+     *      (can make use of preprocessing values if needed)
      */
 
     // Session parameters
     uint public n;
     uint public t;
-    address[] public servers;
+    address[] public shard_1;
+    address[] public shard_2;
     mapping (address => uint) public servermap;
+    // mapping (address => uint) public shard_1_map;
+    // mapping (address => uint) public shard_2_map;
 
-    constructor(address[] _servers, uint _t) public {
-	    n = _servers.length;
+    // Who shards?
+    // ===========
+    // A different approach could be that that a list of servers is
+    // passed and then split into shards, as opposed to expect shards.
+    // 
+    // In other words, the task of assigning servers to shards can be:
+    // 
+    // 1. the responsibility of the code that instantiates the contract
+    // 2. the responsibility of the contract code
+    constructor(address[] _shard_1, address[] _shard_2, uint _t) public {
+        // for simplicity, both shards have the same number of servers
+        require(_shard_1.length == _shard_2.length);
+	    n = _shard_1.length;
 	    t  = _t;
 	    require(3*t < n);
-	    servers.length = n;
+	    shard_1.length = n;
+	    shard_2.length = n;
 	    for (uint i = 0; i < n; i++) {
-	        servers[i] = _servers[i];
-    	    servermap[_servers[i]] = i+1; // servermap is off-by-one
-    	}
+	        shard_1[i] = _shard_1[i];
+	        shard_2[i] = _shard_2[i];
+	        servermap[_shard_1[i]] = i+1;   // servermap is off-by-one
+	        servermap[_shard_2[i]] = i+1+n; // servermap is off-by-one
+	        // shard_1_map[_shard_1[i]] = i+1; // servermap is off-by-one
+	        // shard_2_map[_shard_2[i]] = i+1; // servermap is off-by-one
+	    }
     }
-   /*
-    * It's necessary to paste JSON into the "_servers" constructor to use the Remix IDE
-    * Copy and paste the following for n=4:
-["0xca35b7d915458ef540ade6068dfe2f44e8fa733c",
- "0xca35b7d915458ef540ade6068dfe2f44e8fa733c",
- "0xca35b7d915458ef540ade6068dfe2f44e8fa733c",
- "0xca35b7d915458ef540ade6068dfe2f44e8fa733c"]
-    *
-    */
 
     // ###############################################
     // 1. Preprocessing Buffer (the MPC offline phase)
     // ###############################################
 
     struct PreProcessCount {
-        uint triples;        // [a],[b],[ab]
-        uint bits;           // [b] with b in {-1,1}
+        uint intershardmasks;
         uint inputmasks;     // [r]
     }
 
@@ -68,32 +77,22 @@ contract AsynchromixCoordinator {
         return a > b ? a : b;
     }
 
-    function preprocess_report(uint[3] rep) public {
+    function preprocess_report(uint[1] rep) public {
         // Update the Report 
         require(servermap[msg.sender] > 0);   // only valid servers
         uint id = servermap[msg.sender] - 1;
-        preprocess_reports[id].triples    = rep[0];
-        preprocess_reports[id].bits       = rep[1];
-        preprocess_reports[id].inputmasks = rep[2];
+        preprocess_reports[id].inputmasks = rep[0];
 
         // Update the consensus
         // .triples = min (over each id) of _reports[id].triples; same for bits, etc. 
         PreProcessCount memory mins;
-        mins.triples    = preprocess_reports[0].triples;
-        mins.bits       = preprocess_reports[0].bits;
         mins.inputmasks = preprocess_reports[0].inputmasks;
         for (uint i = 1; i < n; i++) {
-            mins.triples    = min(mins.triples,    preprocess_reports[i].triples);
-            mins.bits       = min(mins.bits,       preprocess_reports[i].bits);
             mins.inputmasks = min(mins.inputmasks, preprocess_reports[i].inputmasks);
         }
-        if (preprocess.triples    < mins.triples ||
-            preprocess.bits       < mins.bits    ||
-            preprocess.inputmasks < mins.inputmasks) {
+        if (preprocess.inputmasks < mins.inputmasks) {
             emit PreProcessUpdated();
         }
-        preprocess.triples    = mins.triples;
-        preprocess.bits       = mins.bits;
         preprocess.inputmasks = mins.inputmasks;
     }
 
@@ -170,56 +169,95 @@ contract AsynchromixCoordinator {
         inputmasks_claimed[inputmask_idx] = address(0);
     }
 
-    // #########################
-    // 3. Initiate Mixing Epochs
-    // #########################
+    // ######################
+    // 3. Initiate MPC Epochs
+    // ######################
 
-    uint public constant K = 32; // Mix Size 
+    uint public constant K = 1; // number of messages per epoch
 
     // Preprocessing requirements
-    uint public constant PER_MIX_TRIPLES = (K / 2) * 5 * 5; // k log^2 k
-    uint public constant PER_MIX_BITS    = (K / 2) * 5 * 5;
+    uint public constant PER_EPOCH_INTERSHARDMASKS = K * n * 2;
 
     // Return the maximum number of mixes that can be run with the
     // available preprocessing
-    function mixes_available() public view returns(uint) {
-        uint triples_available = preprocess.triples - preprocess_used.triples;
-        uint bits_available    = preprocess.bits    - preprocess_used.bits;
-        return min(triples_available / PER_MIX_TRIPLES,
-                   bits_available    / PER_MIX_BITS);
+    function intershardmasks_available() public view returns(uint) {
+        return preprocess.intershardmasks - preprocess_used.intershardmasks;
     }
 
-    // Step 3.a. Trigger a mix to start
-    uint public inputs_mixed;
+    // Step 3.a. Trigger MPC to start
+    uint public inputs_unmasked;
     uint public epochs_initiated;
-    event MixingEpochInitiated(uint epoch);
+    event MpcEpochInitiated(uint epoch);
 
     function inputs_ready() public view returns(uint) {
-        return input_queue.length - inputs_mixed;
+        return input_queue.length - inputs_unmasked;
     }
 
-    function initiate_mix() public {
+    function initiate_mpc() public {
         // Must mix eactly K values in each epoch
-        require(input_queue.length >= inputs_mixed + K);
-
-        // Can only initiate mix if enough preprocessings are ready
-        require(preprocess.triples >= preprocess_used.triples + PER_MIX_TRIPLES);
-        require(preprocess.bits    >= preprocess_used.bits    + PER_MIX_BITS);
-        preprocess_used.triples += PER_MIX_TRIPLES;
-        preprocess_used.bits    += PER_MIX_BITS;
-
-        inputs_mixed += K;
-        emit MixingEpochInitiated(epochs_initiated);
+        require(input_queue.length >= inputs_unmasked + K);
+        inputs_unmasked += K;
+        emit MpcEpochInitiated(epochs_initiated);
         epochs_initiated += 1;
+        intershard_msg_votes.length = epochs_initiated;
+        intershard_messages.length = epochs_initiated;
         output_votes.length = epochs_initiated;
         output_hashes.length = epochs_initiated;
     }
 
     // Step 3.b. Output reporting: the output is considered "approved" once
     //           at least t+1 servers report it 
+    struct IntershardMessage {
+        bytes32 masked_msg; // (m+r)
+        uint mask_idx;     // index of intershard mask
+    }
+
+    IntershardMessage[] public intershard_msg_queue; // All inputs sent so far
+    function intershard_msg_queue_length() public view returns(uint) {
+        return intershard_msg_queue.length;
+    }
+
+    uint public intershard_msg_ready;
+    event IntershardMessageReady(uint epoch, uint msg_idx, bytes32 masked_msg);
+    bytes32[] public intershard_messages;
+    uint[] public intershard_msg_votes;
+    mapping (uint => uint) public server_voted_in_epoch; // highest epoch voted in
+
+    // function propose_intershard_secrets(uint epoch, uint[] secrets) public {
+    function transfer_intershard_message(uint epoch, bytes32 masked_msg) public {
+        require(epoch < epochs_initiated);    // can't provide output if it hasn't been initiated
+        require(servermap[msg.sender] > 0);   // only valid servers
+        uint id = servermap[msg.sender] - 1;
+
+        // Each server can only vote once per epoch
+        // Hazard note: honest servers must vote in strict ascending order, or votes
+        //              will be lost!
+        require(epoch <= server_voted_in_epoch[id]);
+        server_voted_in_epoch[id] = max(epoch + 1, server_voted_in_epoch[id]);
+
+        if (intershard_messages[epoch] > 0) {
+            // All the votes must match
+            require(masked_msg == intershard_messages[epoch]);
+        } else {
+            intershard_messages[epoch] = masked_msg;
+        }
+
+        intershard_msg_votes[epoch] += 1;
+        if (intershard_msg_votes[epoch] == t + 1) {    // at least one honest node agrees
+            uint idx = intershard_msg_queue.length;
+            intershard_msg_queue.length += 1;
+            intershard_msg_queue[idx].masked_msg = masked_msg;
+            intershard_msg_queue[idx].mask_idx = epoch;
+            emit IntershardMessageReady(epoch, idx, masked_msg);
+            intershard_msg_ready += 1;
+        }
+    }
+
+    // Output reporting: the output is considered "approved" once
+    // at least t+1 servers report it 
 
     uint public outputs_ready;
-    event MixOutput(uint epoch, string output);
+    event MpcOutput(uint epoch, string output);
     bytes32[] public output_hashes;
     uint[] public output_votes;
     mapping (uint => uint) public server_voted; // highest epoch voted in
@@ -246,7 +284,7 @@ contract AsynchromixCoordinator {
 
         output_votes[epoch] += 1;
         if (output_votes[epoch] == t + 1) {    // at least one honest node agrees
-            emit MixOutput(epoch, output);
+            emit MpcOutput(epoch, output);
             outputs_ready += 1;
         }
     }

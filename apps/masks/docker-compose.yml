@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  blockchain:
+    container_name: blockchain
+    image: trufflesuite/ganache-cli
+    command: --accounts 50 --blockTime 1 > acctKeys.json 2>&1
+  setup:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/honeybadgermpc/honeybadgermpc
+    depends_on:
+      - blockchain
+    command: ["./apps/wait-for-it.sh", "blockchain:8545", "--", "python", "apps/masks/setup_phase.py"]
+  mpcnet:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/honeybadgermpc/honeybadgermpc
+    depends_on:
+      - setup
+    command: ["./apps/wait-for-it.sh", "blockchain:8545", "--", "python", "apps/masks/mpcnet.py"]
+  client:
+    image: honeybadgermpc-local
+    build:
+        context: ../..
+        dockerfile: Dockerfile
+    volumes:
+      - ../../apps:/usr/src/HoneyBadgerMPC/apps
+      - ../../honeybadgermpc:/usr/src/honeybadgermpc/honeybadgermpc
+    depends_on:
+      - mpcnet
+    command: ["./apps/wait-for-it.sh", "mpcnet:8083", "--", "python", "apps/masks/client.py"]

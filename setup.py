@@ -13,7 +13,7 @@ DESCRIPTION = "honeybadgermpc"
 REQUIRES_PYTHON = ">=3.7.0"
 VERSION = None
 
-REQUIRED = ["gmpy2", "zfec", "pycrypto", "cffi", "psutil", "pyzmq"]
+REQUIRED = ["aiohttp", "gmpy2", "zfec", "pycrypto", "cffi", "psutil", "pyzmq", "toml"]
 
 TESTS_REQUIRES = [
     "black",
@@ -36,13 +36,15 @@ DEV_REQUIRES = ["ipdb", "ipython"]
 DOCS_REQUIRE = [
     "Sphinx",
     "sphinx-autobuild",
+    "sphinxcontrib-bibtex",
+    "sphinxcontrib-soliditydomain",
     "sphinx_rtd_theme",
     "sphinx_tabs",
     "m2r",
     "doc8",
 ]
 
-ETH_REQUIRES = ["web3", "ethereum"]
+ETH_REQUIRES = ["bitcoin", "web3", "ethereum"]
 
 AWS_REQUIRES = ["boto3", "paramiko"]
 
