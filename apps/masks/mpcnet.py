@@ -1,60 +1,71 @@
+import argparse
 import asyncio
 from pathlib import Path
 
-from web3 import HTTPProvider, Web3
+import toml
 
-from apps.masks.config import CONTRACT_ADDRESS_FILEPATH
 from apps.masks.server import Server
-from apps.utils import get_contract_address
 
 from honeybadgermpc.preprocessing import PreProcessedElements
 from honeybadgermpc.router import SimpleRouter
 
-MPCNET_HOST = "mpcnet"
+PARENT_DIR = Path(__file__).resolve().parent
 
 
-def create_servers(w3, *, n, contract_context):
-    pp_elements = PreProcessedElements()
-    pp_elements.clear_preprocessing()  # deletes sharedata/ if present
+class MPCNet:
+    def __init__(self, servers):
+        self.servers = servers
+        pp_elements = PreProcessedElements()
+        pp_elements.clear_preprocessing()  # deletes sharedata/ if present
 
-    router = SimpleRouter(n)
-    sends, recvs = router.sends, router.recvs
-    return [
-        Server(
-            "sid",
-            i,
-            sends[i],
-            recvs[i],
-            w3,
-            contract_context=contract_context,
-            http_host=MPCNET_HOST,
-            http_port=8080 + i,
+    @classmethod
+    def from_toml_config(cls, config_path):
+        config = toml.load(config_path)
+
+        # TODO extract resolving of relative path into utils
+        context_path = Path(config_path).resolve().parent.joinpath(config["context"])
+        config["eth"]["contract_path"] = context_path.joinpath(
+            config["eth"]["contract_path"]
         )
-        for i in range(n)
-    ]
+
+        n = config["n"]
+
+        # communication channels
+        router = SimpleRouter(n)
+        sends, recvs = router.sends, router.recvs
+
+        base_config = {k: v for k, v in config.items() if k != "servers"}
+        servers = []
+        for i in range(n):
+            server_config = {k: v for k, v in config["servers"][i].items()}
+            server_config.update(base_config, session_id="sid")
+            server = Server.from_dict_config(
+                server_config, send=sends[i], recv=recvs[i]
+            )
+            servers.append(server)
+        return cls(servers)
+
+    async def start(self):
+        for server in self.servers:
+            await server.join()
 
 
-async def main(w3, *, n, contract_context):
-    servers = create_servers(w3, n=n, contract_context=contract_context)
-    for server in servers:
-        await server.join()
+async def main(config_file):
+    mpcnet = MPCNet.from_toml_config(config_file)
+    await mpcnet.start()
 
 
 if __name__ == "__main__":
-    # Launch MPC network
-    contract_name = "MpcCoordinator"
-    contract_filename = "contract.sol"
-    contract_filepath = Path(__file__).resolve().parent.joinpath(contract_filename)
-    contract_address = get_contract_address(CONTRACT_ADDRESS_FILEPATH)
-    contract_context = {
-        "address": contract_address,
-        "filepath": contract_filepath,
-        "name": contract_name,
-    }
+    # arg parsing
+    default_config_path = PARENT_DIR.joinpath("mpcnet.toml")
+    parser = argparse.ArgumentParser(description="MPC network.")
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        default=str(default_config_path),
+        help=f"Configuration file to use. Defaults to '{default_config_path}'.",
+    )
+    args = parser.parse_args()
 
-    eth_rpc_hostname = "blockchain"
-    eth_rpc_port = 8545
-    n, t = 4, 1
-    w3_endpoint_uri = f"http://{eth_rpc_hostname}:{eth_rpc_port}"
-    w3 = Web3(HTTPProvider(w3_endpoint_uri))
-    asyncio.run(main(w3, n=n, contract_context=contract_context))
+    # Launch MPC network
+    asyncio.run(main(args.config_file))

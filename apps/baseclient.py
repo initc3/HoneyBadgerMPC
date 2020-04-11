@@ -102,6 +102,7 @@ class Client:
             ``Client`` instance.
         """
         config = toml.load(config_path)
+        # TODO extract resolving of relative path into utils
         context_path = Path(config_path).resolve().parent.joinpath(config["context"])
         config["eth"]["contract_path"] = context_path.joinpath(
             config["eth"]["contract_path"]

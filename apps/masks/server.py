@@ -1,8 +1,11 @@
 import asyncio
 import logging
 import time
+from pathlib import Path
 
 from aiohttp import web
+
+import toml
 
 from web3.contract import ConciseContract
 
@@ -81,6 +84,70 @@ class Server:
         self._task4.add_done_callback(print_exception_callback)
         # self._http_server = asyncio.create_task(self._client_request_loop())
         # self._http_server.add_done_callback(print_exception_callback)
+
+    @classmethod
+    def from_dict_config(cls, config, *, send, recv):
+        """Create a ``Server`` class instance from a config dict.
+
+        Parameters
+        ----------
+        config : dict
+            The configuration to create the ``Server`` instance.
+        send:
+            Function used to send messages.
+        recv:
+            Function used to receive messages.
+        """
+        from web3 import HTTPProvider, Web3
+        from apps.masks.config import CONTRACT_ADDRESS_FILEPATH
+        from apps.utils import get_contract_address
+
+        eth_config = config["eth"]
+        # contract
+        contract_context = {
+            "address": get_contract_address(CONTRACT_ADDRESS_FILEPATH),
+            "filepath": eth_config["contract_path"],
+            "name": eth_config["contract_name"],
+        }
+
+        # web3
+        eth_rpc_hostname = eth_config["rpc_host"]
+        eth_rpc_port = eth_config["rpc_port"]
+        w3_endpoint_uri = f"http://{eth_rpc_hostname}:{eth_rpc_port}"
+        w3 = Web3(HTTPProvider(w3_endpoint_uri))
+
+        return cls(
+            config["session_id"],
+            config["id"],
+            send,
+            recv,
+            w3,
+            contract_context=contract_context,
+            http_host=config["host"],
+            http_port=config["port"],
+        )
+
+    @classmethod
+    def from_toml_config(cls, config_path, *, send, recv):
+        """Create a ``Server`` class instance from a config TOML file.
+
+        Parameters
+        ----------
+        config_path : str
+            The path to the TOML configuration file to create the
+            ``Server`` instance.
+        send:
+            Function used to send messages.
+        recv:
+            Function used to receive messages.
+        """
+        config = toml.load(config_path)
+        # TODO extract resolving of relative path into utils
+        context_path = Path(config_path).resolve().parent.joinpath(config["context"])
+        config["eth"]["contract_path"] = context_path.joinpath(
+            config["eth"]["contract_path"]
+        )
+        return cls.from_dict_config(config, send=send, recv=recv)
 
     async def join(self):
         await self._task1
