@@ -9,10 +9,10 @@ from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiplyArrays,
     DivideShareArrays,
     DivideShares,
-    Equality,
     InvertShare,
     InvertShareArray,
 )
+from honeybadgermpc.progs.mixins.share_comparison import Equality
 
 CONFIG = {
     BeaverMultiply.name: BeaverMultiply(),
