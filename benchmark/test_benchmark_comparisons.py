@@ -13,9 +13,7 @@ from honeybadgermpc.progs.mixins.share_arithmetic import (
     InvertShare,
     InvertShareArray,
 )
-from honeybadgermpc.progs.mixins.share_comparison import (
-    Equality
-)
+from honeybadgermpc.progs.mixins.share_comparison import Equality
 
 MIXINS = [
     BeaverMultiply(),
@@ -45,20 +43,26 @@ def run_benchmark(
 @mark.parametrize("comparator", ALL_BIT_NUMBERS)
 def test_benchmark_fixedpoint_lt(benchmark_runner, comparator):
     async def _prog(context):
-        base = FixedPoint(context, 6846412461894745224441235558443359243034138132682534265960483512729196124138)
+        base = FixedPoint(
+            context,
+            6846412461894745224441235558443359243034138132682534265960483512729196124138,
+        )
         result = await base.lt(FixedPoint(context, comparator))
         await result.open()
 
     run_benchmark(benchmark_runner, _prog)
 
+
 @mark.parametrize("comparator", ALL_BIT_NUMBERS)
 def test_benchmark_share_eq(benchmark_runner, comparator):
     equality = Equality()
+
     async def _prog(context):
-        base = context.Share(6846412461894745224441235558443359243034138132682534265960483512729196124138)
+        base = context.Share(
+            6846412461894745224441235558443359243034138132682534265960483512729196124138
+        )
         comp = context.Share(comparator)
         result = await equality(context, base, comp)
         await result.open()
 
     run_benchmark(benchmark_runner, _prog)
-

@@ -13,9 +13,7 @@ from honeybadgermpc.progs.mixins.share_arithmetic import (
     InvertShare,
     InvertShareArray,
 )
-from honeybadgermpc.progs.mixins.share_comparison import (
-    Equality
-)
+from honeybadgermpc.progs.mixins.share_comparison import Equality
 
 MIXINS = [
     BeaverMultiply(),
@@ -37,17 +35,19 @@ COUNT_MAX = 2
 
 
 def run_benchmark(
-    runner, prog, n=n, t=t, preprocessing=TEST_PREPROCESSING, k=k, mixins=MIXINS
-):
+    runner, prog, n=n, t=t, preprocessing=TEST_PREPROCESSING, k=k,
+    /mixins=MIXINS):
     runner(prog, n, t, preprocessing, k, mixins)
-
 
 
 @mark.parametrize("multiplier", ALL_BIT_NUMBERS)
 def test_benchmark_beaver_mul_shares(benchmark_runner, multiplier):
     multiply = BeaverMultiply()
+
     async def _prog(context):
-        base = context.Share(6846412461894745224441235558443359243034138132682534265960483512729196124138)
+        base = context.Share(
+            6846412461894745224441235558443359243034138132682534265960483512729196124138
+        )
         mult = context.Share(multiplier)
         result = await multiply(context, base, mult)
         await result.open()
