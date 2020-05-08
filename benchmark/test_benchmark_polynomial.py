@@ -2,7 +2,7 @@ from random import randint
 
 from pytest import mark
 
-from honeybadgermpc.ntl.helpers import fft_interpolate, lagrange_interpolate
+from honeybadgermpc.ntl import fft_interpolate, lagrange_interpolate
 from honeybadgermpc.polynomial import get_omega
 
 cache = {}

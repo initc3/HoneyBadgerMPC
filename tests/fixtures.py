@@ -197,8 +197,7 @@ def benchmark_runner(benchmark):
     from honeybadgermpc.preprocessing import PreProcessedElements
 
     def _benchmark_runner(prog, n=4, t=1, to_generate=[], k=1000, mixins=[]):
-        pp_elements = PreProcessedElements()
-        _preprocess(pp_elements, n, t, k, to_generate)
+        _preprocess(n, t, k, to_generate)
 
         config = _build_config(mixins)
         program_runner = TaskProgramRunner(n, t, config)
@@ -208,6 +207,6 @@ def benchmark_runner(benchmark):
         def _work():
             loop.run_until_complete(program_runner.join())
 
-        benchmark(_work)
+        benchmark.pedantic(_work, iterations=100, rounds=10, warmup_rounds=10)
 
     return _benchmark_runner
