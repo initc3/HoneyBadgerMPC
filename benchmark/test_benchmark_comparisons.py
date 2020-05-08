@@ -1,10 +1,7 @@
 from pytest import mark
 
-from honeybadgermpc.progs.fixedpoint import FixedPoint, from_fixed_point_repr
+from honeybadgermpc.progs.fixedpoint import FixedPoint
 
-from random import randint
-
-from honeybadgermpc.progs.mixins.dataflow import Share, ShareFuture
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply,
     BeaverMultiplyArrays,

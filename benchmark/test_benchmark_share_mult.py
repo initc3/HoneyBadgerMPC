@@ -1,10 +1,5 @@
 from pytest import mark
 
-from honeybadgermpc.progs.fixedpoint import FixedPoint, from_fixed_point_repr
-
-from random import randint
-
-from honeybadgermpc.progs.mixins.dataflow import Share, ShareFuture
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply,
     BeaverMultiplyArrays,
@@ -35,8 +30,8 @@ COUNT_MAX = 2
 
 
 def run_benchmark(
-    runner, prog, n=n, t=t, preprocessing=TEST_PREPROCESSING, k=k,
-    /mixins=MIXINS):
+    runner, prog, n=n, t=t, preprocessing=TEST_PREPROCESSING, k=k, mixins=MIXINS
+):
     runner(prog, n, t, preprocessing, k, mixins)
 
 

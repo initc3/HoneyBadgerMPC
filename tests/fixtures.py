@@ -194,7 +194,6 @@ def test_runner():
 
 @fixture
 def benchmark_runner(benchmark):
-    from honeybadgermpc.preprocessing import PreProcessedElements
 
     def _benchmark_runner(prog, n=4, t=1, to_generate=[], k=1000, mixins=[]):
         _preprocess(n, t, k, to_generate)
