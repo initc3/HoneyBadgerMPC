@@ -12,7 +12,6 @@ from honeybadgermpc.progs.mixins.share_arithmetic import (
     InvertShare,
     InvertShareArray,
 )
-
 from honeybadgermpc.progs.mixins.share_comparison import Equality
 
 CONFIG = {

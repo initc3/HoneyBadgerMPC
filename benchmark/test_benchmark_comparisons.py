@@ -1,7 +1,6 @@
 from pytest import mark
 
 from honeybadgermpc.progs.fixedpoint import FixedPoint
-
 from honeybadgermpc.progs.mixins.share_arithmetic import (
     BeaverMultiply,
     BeaverMultiplyArrays,
