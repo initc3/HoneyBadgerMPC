@@ -11,7 +11,7 @@ handlers:
     stream: ext://sys.stdout
   benchmark_log_file:
     class: logging.FileHandler
-    filename: benchmark-logs/benchmark.log
+    filename: /var/log/hbmpc/benchmark.log
     formatter: with_node_id
   basic_log_file:
     class: logging.FileHandler

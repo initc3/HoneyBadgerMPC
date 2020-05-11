@@ -11,6 +11,7 @@ services:
       - ./apps:/usr/src/HoneyBadgerMPC/apps
       - ./progs:/usr/src/HoneyBadgerMPC/progs
       - ./benchmark:/usr/src/HoneyBadgerMPC/benchmark
+      - ./logs:/var/log/hbmpc
       - ./aws:/usr/src/HoneyBadgerMPC/aws
       - ./conf:/usr/src/HoneyBadgerMPC/conf
       - ./docs:/usr/src/HoneyBadgerMPC/docs

@@ -24,6 +24,8 @@ RUN pip install -e .[$SETUP_EXTRAS]
 
 FROM pre-tests AS tests
 COPY . .
+# default location for logs, such as benchmark logs
+RUN mkdir -p /var/log/hbmpc
 
 FROM tests as pre-dev
 WORKDIR /
