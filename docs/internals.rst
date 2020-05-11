@@ -16,20 +16,25 @@ mpc
 =======
 .. automodule:: honeybadgermpc.mpc
 
-commonsubset
-============
-.. automodule:: honeybadgermpc.commonsubset_functionality
-
-rand
-====
-.. automodule:: honeybadgermpc.rand_functionality
-.. automodule:: honeybadgermpc.rand_protocol
-.. automodule:: honeybadgermpc.rand_batch
-
-secretshare
-===========
-.. automodule:: honeybadgermpc.secretshare_functionality
+ipc
+===
+.. automodule:: honeybadgermpc.ipc
 
 router
 ======
 .. automodule:: honeybadgermpc.router
+
+commitments
+===========
+.. automodule:: honeybadgermpc.poly_commit_const
+.. automodule:: honeybadgermpc.poly_commit_lin
+
+offline preprocessing
+=====================
+.. automodule:: honeybadgermpc.offline_randousha
+.. automodule:: honeybadgermpc.offline_robust
+
+Mocked preprocessing for testing
+--------------------------------
+.. automodule:: honeybadgermpc.preprocessing
+

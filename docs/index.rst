@@ -6,9 +6,6 @@
 .. HoneyBadgerMPC
 .. ==============
 
-.. .. mdinclude:: ../README.md
-
-
 .. toctree::
     :maxdepth: 1
     :caption: The Honeybadger of MPC Protocols
@@ -16,7 +13,6 @@
     intro
     subprotocols
     performance
-    roadmap
 
 .. .. toctree::
 ..     :maxdepth: 1
@@ -36,17 +32,9 @@
 
 .. toctree::
     :maxdepth: 2
-    :caption: Library Reference
+    :caption: Internals
 
-    libref/honeybadgermpc
-..    libref/passive
-..    libref/commonsubset
-..    libref/triple_refinement
-..    libref/rand
-..    libref/secretshare
-..    libref/field
-..    libref/polynomial
-..    libref/router
+    internals
 
 .. development/index
 .. toctree::
