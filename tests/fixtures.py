@@ -202,10 +202,10 @@ def benchmark_runner(benchmark):
 
         config = _build_config(mixins)
         program_runner = TaskProgramRunner(n, t, config)
-        program_runner.add(prog)
         loop = asyncio.get_event_loop()
 
         def _work():
+            program_runner.add(prog)            
             loop.run_until_complete(program_runner.join())
 
         benchmark(_work)
