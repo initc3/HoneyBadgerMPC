@@ -49,7 +49,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx_tabs.tabs",
-    "m2r",
+    "recommonmark",
 ]
 
 autodoc_default_options = {
