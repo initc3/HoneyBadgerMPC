@@ -204,10 +204,13 @@ def benchmark_runner(benchmark):
         program_runner = TaskProgramRunner(n, t, config)
         loop = asyncio.get_event_loop()
 
+        def _setup():
+            program_runner.tasks.clear()
+            program_runner.add(prog)
+
         def _work():
-            program_runner.add(prog)            
             loop.run_until_complete(program_runner.join())
 
-        benchmark(_work)
+        benchmark(_work, setup=_setup)
 
     return _benchmark_runner
