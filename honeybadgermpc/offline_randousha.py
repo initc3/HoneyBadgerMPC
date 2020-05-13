@@ -183,7 +183,7 @@ async def generate_triples(n, t, k, my_id, _send, _recv, field):
 
     # TODO: compute triples through degree reduction
     send, recv = _get_send_recv("opening")
-    ctx = Mpc(f"mpc:opening", n, t, my_id, send, recv, prog, {})
+    ctx = Mpc("mpc:opening", n, t, my_id, send, recv, prog, {})
 
     result = await ctx._run()
     subscribe_recv_task.cancel()
@@ -225,7 +225,7 @@ async def generate_bits(n, t, k, my_id, _send, _recv, field):
 
     # TODO: compute triples through degree reduction
     send, recv = _get_send_recv("opening")
-    ctx = Mpc(f"mpc:opening", n, t, my_id, send, recv, prog, {})
+    ctx = Mpc("mpc:opening", n, t, my_id, send, recv, prog, {})
     result = await ctx._run()
     # print(f'[{my_id}] Generate triples complete')
     subscribe_recv_task.cancel()

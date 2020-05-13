@@ -111,7 +111,8 @@ def test_fft_batch_evaluate_big(galois_field, galois_field_roots):
         for j in range(k):
             x = pow(omega, j, p)
             assert (
-                fft_rep[i][j] == sum(coeffs[i][l] * pow(x, l, p) for l in range(d)) % p
+                fft_rep[i][j]
+                == sum(coeffs[i][l] * pow(x, l, p) for l in range(d)) % p  # noqa E741
             )
 
 
