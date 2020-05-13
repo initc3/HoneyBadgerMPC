@@ -75,7 +75,7 @@ docs: ## generate Sphinx HTML documentation
 	docker-compose --file docs.yml run --rm build make -C docs clean
 	docker-compose --file docs.yml up build
 	docker-compose --file docs.yml stop view
-	docker-compose --file docs.yml up --detach view
+	docker-compose --file docs.yml up -d view
 
 docs-browser: docs ## generate Sphinx HTML documentation
 	$(BROWSER) index.html
@@ -84,7 +84,7 @@ servedocs: docs-browser ## compile the docs watching for changes
 	docker-compose --file docs.yml up watch
 
 servedocs-detach: docs-browser ## compile the docs watching for changes
-	docker-compose --file docs.yml up --detach watch
+	docker-compose --file docs.yml up -d watch
 
 servedocs-stop:
 	docker-compose --file docs.yml stop watch
