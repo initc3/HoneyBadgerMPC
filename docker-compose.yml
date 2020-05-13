@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
   honeybadgermpc:
+    image: honeybadgermpc-local
     build:
       context: .
       dockerfile: Dockerfile

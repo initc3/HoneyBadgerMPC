@@ -1,18 +1,27 @@
 version: '3'
 
 services:
-  builddocs:
+  build:
+    image: honeybadgermpc-local
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        BUILD: docs
     volumes:
       - .:/usr/src/HoneyBadgerMPC
     environment:
       - O=-W --keep-going
     command: make -C docs html
-  viewdocs:
+  watch:
+    image: honeybadgermpc-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/usr/src/HoneyBadgerMPC
+    environment:
+      - O=-W --keep-going
+    command: watchmedo shell-command -p '*.rst' -c 'make -C docs html' -R -D .
+  view:
     image: nginx
     ports:
       - '58888:80'
