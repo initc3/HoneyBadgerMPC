@@ -280,75 +280,104 @@ Flake8 configuration file
 `Configuration for flake8`_ is under the :file:`.flake8` file.
 
 
-
 Building and viewing the documentation
 --------------------------------------
 Documentation for ``honeybadgermpc`` is located under the :file:`docs/`
 directory. `Sphinx`_ is used to build the documentation, which is written
 using the markup language `reStructuredText`_.
 
-The :file:`docker-compose.yml` can be used to quickly build the docs and view
-them.
+The :file:`Makefile` can be used to build and serve the docs.
 
-**To build the docs:**
+Prerequisite: up-to-date docker image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``make`` targets to build the documentation do not update or rebuild
+the docker image (``honeybadgermpc-local``) being used, so make sure you have
+an up-to-date image.
 
-.. # run `O=-W --keep-going make -C docs html` in a container, which will
-.. # write the html docs locally under docs/_build/html
+To check whether the ``honeybadgermpc-local`` image was recently created:
+
 .. code-block:: shell-session
 
-    $ docker-compose up builddocs
+    $ docker images honeybadgermpc-local
+    REPOSITORY             TAG                 IMAGE ID            CREATED             SIZE
+    honeybadgermpc-local   latest              628fdc4f0200        18 minutes ago      2.58GB
 
-**To view the docs**:
+To (re)build it:
 
-.. # start nginx which is used to host the docs locally
 .. code-block:: shell-session
 
-    $ docker-compose up -d viewdocs
+    $ docker-compose build
 
-Visit http://localhost:58888/ in a web browser.
+Build, serve and view the docs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: shell-session
+
+    $ make servedocs
+
+This will build the docs and open a tab or window in your default web browser
+at http://localhost:58888/.
+
+When you make and save changes to ``.rst`` files the documentation will be
+rebuilt automatically. You should see the output in the terminal where you
+ran ``make servedocs``.
+
+.. note:: The automatic documentation generation uses `watchdog`_. You can
+    look at the `docs.yml`_ file to understand better how it works.
+
+If you prefer you can run the automatic documentation generation in the
+background with:
+
+.. code-block:: shell-session
+
+    $ make servedocs-detach
+
+To monitor the output of the documentation generation you can follow
+the logs like so:
+
+.. code-block:: shell-session
+
+    $ make docs-follow-logs
+
+To simply get a dump of the latest logs:
+
+.. code-block:: shell-session
+
+    $ make docs-logs
+
+To stop serving and watching the docs:
+
+.. code-block:: shell-session
+
+    $ make servedocs-stop
 
 
-.. tip:: To view the port mapping you can use the command:
+Just building the docs
+""""""""""""""""""""""
 
-    .. code-block:: shell-session
+.. code-block:: shell-session
 
-        $ docker-compose port viewdocs 80
+    $ make docs
 
-    or, alternatively
+You then have to go to http://localhost:58888/ in a web browser.
 
-    .. code-block:: shell-session
+To build the docs and have the browser automatically launch at
+http://localhost:58888/ run:
 
-        $ docker-compose ps viewdocs
+.. code-block:: shell-session
 
+    $ make docs-browser
 
-.. tip:: One may get a ``403 Forbidden`` error when trying to view the docs
-    at http://localhost:58888/. This may because the generated html docs were
-    removed. Using the ``make clean`` command under the :file:`docs/`
-    directory, e.g.:
-
-    .. code-block:: shell-session
-
-        $ docker-compose run --rm builddocs make -C docs clean
-
-    wipes out the :file:`_build/` directory, and one has to restart the
-    ``viewdocs`` (``nginx``) service, i.e.:
-
-    .. code-block:: shell-session
-
-        $ docker-compose restart viewdocs
-
-    and then re-build the docs:
-
-    .. code-block:: shell-session
-
-        $ docker-compose up builddocs
-
-    Or vice-versa: build the docs and restart the server.
 
 Alternative ways to build and view the docs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To build the documentation, one can use the :file:`Makefile` under the
-:file:`docs/` directory:
+There are many other ways to generate the documentation. The ``Makefile``
+targets and ``docker-compose`` ``docs.yml`` file are provided for
+convenience.
+
+If you prefer not to use the ``Makefile`` and/or the ``docker-compose``
+``docs.yml`` file, then you can use the :file:`Makefile`, provided by
+Sphinx, under the :file:`docs/` directory:
 
 .. code-block:: shell-session
 
@@ -376,7 +405,6 @@ building the docs when a warning occurs:
 .. code-block:: shell-session
 
     $ O='-W --keep-going' make html
-
 
 By default the generated docs are under :file:`docs/_build/html/` and one
 can view them using a browser, e.g.:
@@ -418,3 +446,5 @@ can view them using a browser, e.g.:
 .. _The Hitchhiker’s Guide to Python: https://docs.python-guide.org/
 .. _black: https://github.com/ambv/black
 .. _pre-commit: https://pre-commit.com
+.. _watchdog: https://github.com/gorakhargosh/watchdog
+.. _docs.yml: https://github.com/initc3/HoneyBadgerMPC/blob/dev/docs.yml
