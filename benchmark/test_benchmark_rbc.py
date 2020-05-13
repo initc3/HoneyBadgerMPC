@@ -82,7 +82,7 @@ async def rbc(params):
     (sends, recvs, t, n, msg) = params
     rbc_tasks = [None] * n
     dealer_id = randint(0, n - 1)
-    tag = f"RBC"
+    tag = "RBC"
 
     for i in range(n):
         if i == dealer_id:
@@ -101,5 +101,5 @@ async def rbc(params):
 async def rbc_dealer(params):
 
     (sends, recvs, t, n, msg) = params
-    tag = f"RBC"
+    tag = "RBC"
     await reliablebroadcast(tag, 0, n, t, 0, msg, recvs[0], sends[0], client_mode=True)

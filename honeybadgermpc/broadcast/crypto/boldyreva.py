@@ -64,7 +64,7 @@ def polynom_eval(x, coefficients):
 class TBLSPublicKey(object):
     """ """
 
-    def __init__(self, l, k, vk, vks):
+    def __init__(self, l, k, vk, vks):  # noqa E741
         """ """
         self.l = l  # noqa: E741
         self.k = k
@@ -136,7 +136,7 @@ class TBLSPublicKey(object):
 class TBLSPrivateKey(TBLSPublicKey):
     """ """
 
-    def __init__(self, l, k, vk, vks, sk, i):
+    def __init__(self, l, k, vk, vks, sk, i):  # noqa E741
         """ """
         super(TBLSPrivateKey, self).__init__(l, k, vk, vks)
         assert 0 <= i < self.l

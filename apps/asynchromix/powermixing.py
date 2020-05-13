@@ -122,11 +122,11 @@ async def async_mixing(n, t, k):
 
 
 async def build_newton_solver():
-    await run_command_sync(f"python apps/shuffle/solver/solver_build.py")
+    await run_command_sync("python apps/shuffle/solver/solver_build.py")
 
 
 async def build_powermixing_cpp_code():
-    await run_command_sync(f"make -C apps/shuffle/cpp")
+    await run_command_sync("make -C apps/shuffle/cpp")
 
 
 async def async_mixing_in_processes(network_info, n, t, k, run_id, node_id):
