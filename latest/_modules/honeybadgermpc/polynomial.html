@@ -90,15 +90,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Integrations</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Library Reference</span></p>
+<p class="caption"><span class="caption-text">Internals</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals.html">Internals</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
 <ul>
@@ -185,7 +184,7 @@
 <span class="kn">from</span> <span class="nn">.field</span> <span class="kn">import</span> <span class="n">GF</span><span class="p">,</span> <span class="n">GFElement</span>
 
 
-<div class="viewcode-block" id="strip_trailing_zeros"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.strip_trailing_zeros">[docs]</a><span class="k">def</span> <span class="nf">strip_trailing_zeros</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<div class="viewcode-block" id="strip_trailing_zeros"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.polynomial.strip_trailing_zeros">[docs]</a><span class="k">def</span> <span class="nf">strip_trailing_zeros</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
@@ -197,7 +196,7 @@
 <span class="n">_poly_cache</span> <span class="o">=</span> <span class="p">{}</span>
 
 
-<div class="viewcode-block" id="polynomials_over"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.polynomials_over">[docs]</a><span class="k">def</span> <span class="nf">polynomials_over</span><span class="p">(</span><span class="n">field</span><span class="p">):</span>
+<div class="viewcode-block" id="polynomials_over"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.polynomial.polynomials_over">[docs]</a><span class="k">def</span> <span class="nf">polynomials_over</span><span class="p">(</span><span class="n">field</span><span class="p">):</span>
     <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="ow">is</span> <span class="n">GF</span> <span class="ow">or</span> <span class="n">field</span> <span class="o">==</span> <span class="n">ZR</span>
     <span class="n">field_type</span> <span class="o">=</span> <span class="n">GFElement</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="ow">is</span> <span class="n">GF</span> <span class="k">else</span> <span class="n">ZR</span>
     <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">_poly_cache</span><span class="p">:</span>
@@ -422,7 +421,7 @@
     <span class="k">return</span> <span class="n">Polynomial</span></div>
 
 
-<div class="viewcode-block" id="get_omega"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.get_omega">[docs]</a><span class="k">def</span> <span class="nf">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="get_omega"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.polynomial.get_omega">[docs]</a><span class="k">def</span> <span class="nf">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given a field, this method returns an n^th root of unity.</span>
 <span class="sd">    If the seed is not None then this method will return the</span>
@@ -440,7 +439,7 @@
     <span class="k">return</span> <span class="n">y</span></div>
 
 
-<div class="viewcode-block" id="fft_helper"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fft_helper">[docs]</a><span class="k">def</span> <span class="nf">fft_helper</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+<div class="viewcode-block" id="fft_helper"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.polynomial.fft_helper">[docs]</a><span class="k">def</span> <span class="nf">fft_helper</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given coefficients A of polynomial this method does FFT and returns</span>
 <span class="sd">    the evaluation of the polynomial at [omega^0, omega^(n-1)]</span>
@@ -464,7 +463,7 @@
     <span class="k">return</span> <span class="n">a_bar</span></div>
 
 
-<div class="viewcode-block" id="fft"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fft">[docs]</a><span class="k">def</span> <span class="nf">fft</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<div class="viewcode-block" id="fft"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.polynomial.fft">[docs]</a><span class="k">def</span> <span class="nf">fft</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
     <span class="k">assert</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n must be a power of 2&quot;</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">n</span>
     <span class="k">assert</span> <span class="nb">pow</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
@@ -474,7 +473,7 @@
     <span class="k">return</span> <span class="n">fft_helper</span><span class="p">(</span><span class="n">padded_coeffs</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">poly</span><span class="o">.</span><span class="n">field</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="fnt_decode_step1"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fnt_decode_step1">[docs]</a><span class="k">def</span> <span class="nf">fnt_decode_step1</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">omega2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<div class="viewcode-block" id="fnt_decode_step1"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.polynomial.fnt_decode_step1">[docs]</a><span class="k">def</span> <span class="nf">fnt_decode_step1</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">omega2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This needs to be run once for decoding a batch of secret shares</span>
 <span class="sd">    It depends only on the x values (the points the polynomial is</span>
@@ -516,7 +515,7 @@
     <span class="k">return</span> <span class="n">as_</span><span class="p">,</span> <span class="n">ais_</span></div>
 
 
-<div class="viewcode-block" id="fnt_decode_step2"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.fnt_decode_step2">[docs]</a><span class="k">def</span> <span class="nf">fnt_decode_step2</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">as_</span><span class="p">,</span> <span class="n">ais_</span><span class="p">,</span> <span class="n">omega2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<div class="viewcode-block" id="fnt_decode_step2"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.polynomial.fnt_decode_step2">[docs]</a><span class="k">def</span> <span class="nf">fnt_decode_step2</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">as_</span><span class="p">,</span> <span class="n">ais_</span><span class="p">,</span> <span class="n">omega2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a polynomial P such that P(omega**zi) = yi</span>
 
@@ -554,7 +553,7 @@
     <span class="k">return</span> <span class="n">prec</span></div>
 
 
-<div class="viewcode-block" id="EvalPoint"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.EvalPoint">[docs]</a><span class="k">class</span> <span class="nc">EvalPoint</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="EvalPoint"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.polynomial.EvalPoint">[docs]</a><span class="k">class</span> <span class="nc">EvalPoint</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Helper to generate evaluation points for polynomials between n parties</span>
 
 <span class="sd">    If FFT is being used:</span>
@@ -591,7 +590,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
-<div class="viewcode-block" id="EvalPoint.zero"><a class="viewcode-back" href="../../libref/polynomial.html#honeybadgermpc.polynomial.EvalPoint.zero">[docs]</a>    <span class="k">def</span> <span class="nf">zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="EvalPoint.zero"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.polynomial.EvalPoint.zero">[docs]</a>    <span class="k">def</span> <span class="nf">zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div></div>
 
 

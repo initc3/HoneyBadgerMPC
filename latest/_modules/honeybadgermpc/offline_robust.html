@@ -1,0 +1,457 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>honeybadgermpc.offline_robust &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../internals.html">Internals</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>honeybadgermpc.offline_robust</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for honeybadgermpc.offline_robust</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">from</span> <span class="nn">honeybadgermpc.avss_value_processor</span> <span class="kn">import</span> <span class="n">AvssValueProcessor</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.betterpairing</span> <span class="kn">import</span> <span class="n">G1</span><span class="p">,</span> <span class="n">ZR</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.broadcast.crypto.boldyreva</span> <span class="kn">import</span> <span class="n">dealer</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.elliptic_curve</span> <span class="kn">import</span> <span class="n">Subgroup</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.field</span> <span class="kn">import</span> <span class="n">GF</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.hbavss</span> <span class="kn">import</span> <span class="n">HbAvssLight</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.progs.random_refinement</span> <span class="kn">import</span> <span class="n">refine_randoms</span>
+<span class="kn">from</span> <span class="nn">honeybadgermpc.utils.misc</span> <span class="kn">import</span> <span class="n">subscribe_recv</span><span class="p">,</span> <span class="n">wrap_send</span>
+
+
+<div class="viewcode-block" id="get_avss_params"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.get_avss_params">[docs]</a><span class="k">def</span> <span class="nf">get_avss_params</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">):</span>
+    <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">G1</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">G1</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+    <span class="n">public_keys</span><span class="p">,</span> <span class="n">private_keys</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">private_keys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ZR</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">17</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">public_keys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">private_keys</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">public_keys</span><span class="p">,</span> <span class="n">private_keys</span><span class="p">[</span><span class="n">my_id</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="PreProcessingBase"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.PreProcessingBase">[docs]</a><span class="k">class</span> <span class="nc">PreProcessingBase</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="n">PERIOD_IN_SECONDS</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">,</span>
+        <span class="n">t</span><span class="p">,</span>
+        <span class="n">my_id</span><span class="p">,</span>
+        <span class="n">send</span><span class="p">,</span>
+        <span class="n">recv</span><span class="p">,</span>
+        <span class="n">tag</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">avss_value_processor_chunk_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span> <span class="o">=</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tag</span> <span class="o">=</span> <span class="n">tag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avss_value_processor_chunk_size</span> <span class="o">=</span> <span class="n">avss_value_processor_chunk_size</span>
+
+        <span class="c1"># Batch size of values to AVSS from a node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="c1"># Minimum number of values before triggering another set of AVSSes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low_watermark</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_queue</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+
+        <span class="c1"># Create a mechanism to split the `send` and `recv` channels based on `tag`</span>
+        <span class="n">subscribe_recv_task</span><span class="p">,</span> <span class="n">subscribe</span> <span class="o">=</span> <span class="n">subscribe_recv</span><span class="p">(</span><span class="n">recv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">subscribe_recv_task</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">_get_send_recv</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">wrap_send</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">send</span><span class="p">),</span> <span class="n">subscribe</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_send_recv</span> <span class="o">=</span> <span class="n">_get_send_recv</span>
+
+<div class="viewcode-block" id="PreProcessingBase.get"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.PreProcessingBase.get">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PreProcessingBase._get_input_batch"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.PreProcessingBase._get_input_batch">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_get_input_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="PreProcessingBase._trigger_and_wait_for_avss"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.PreProcessingBase._trigger_and_wait_for_avss">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_trigger_and_wait_for_avss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">avss_id</span><span class="p">):</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_input_batch</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span>
+        <span class="n">avss_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">avss_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">avss_instance</span><span class="o">.</span><span class="n">avss_parallel</span><span class="p">(</span>
+                    <span class="n">avss_id</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">values</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">dealer_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">my_id</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">:</span>
+                <span class="n">avss_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">avss_instance</span><span class="o">.</span><span class="n">avss_parallel</span><span class="p">(</span>
+                            <span class="n">avss_id</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">dealer_id</span><span class="o">=</span><span class="n">i</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">avss_tasks</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessingBase._runner"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.PreProcessingBase._runner">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] Starting preprocessing runner: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="c1"># If the number of values in the output queue are below the lower</span>
+            <span class="c1"># watermark then we want to trigger the next set of AVSSes.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">low_watermark</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] Starting AVSS Batch: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">,</span> <span class="n">counter</span><span class="p">)</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trigger_and_wait_for_avss</span><span class="p">(</span><span class="n">counter</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] AVSS Batch Completed: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">,</span> <span class="n">counter</span><span class="p">)</span>
+                <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1"># Wait for sometime before checking again.</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">PreProcessingBase</span><span class="o">.</span><span class="n">PERIOD_IN_SECONDS</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessingBase._get_output_batch"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.PreProcessingBase._get_output_batch">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_get_output_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">avss_value_processor</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span> <span class="o">/</span> <span class="n">group_size</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span> <span class="o">/</span> <span class="n">group_size</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span>
+            <span class="k">yield</span> <span class="n">batch</span></div>
+
+<div class="viewcode-block" id="PreProcessingBase._extract"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.PreProcessingBase._extract">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_extract</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span>
+        <span class="n">send</span><span class="p">,</span> <span class="n">recv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_send_recv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="si">}</span><span class="s2">-AVSS&quot;</span><span class="p">)</span>
+        <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">pks</span><span class="p">,</span> <span class="n">sk</span> <span class="o">=</span> <span class="n">get_avss_params</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">)</span>
+        <span class="n">crs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avss_instance</span> <span class="o">=</span> <span class="n">HbAvssLight</span><span class="p">(</span><span class="n">pks</span><span class="p">,</span> <span class="n">sk</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avss_instance</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_runner</span><span class="p">()))</span>
+
+        <span class="n">send</span><span class="p">,</span> <span class="n">recv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_send_recv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="si">}</span><span class="s2">-AVSS_VALUE_PROCESSOR&quot;</span><span class="p">)</span>
+        <span class="n">pk</span><span class="p">,</span> <span class="n">sks</span> <span class="o">=</span> <span class="n">dealer</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">17</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avss_value_processor</span> <span class="o">=</span> <span class="n">AvssValueProcessor</span><span class="p">(</span>
+            <span class="n">pk</span><span class="p">,</span>
+            <span class="n">sks</span><span class="p">[</span><span class="n">my_id</span><span class="p">],</span>
+            <span class="n">n</span><span class="p">,</span>
+            <span class="n">t</span><span class="p">,</span>
+            <span class="n">my_id</span><span class="p">,</span>
+            <span class="n">send</span><span class="p">,</span>
+            <span class="n">recv</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">avss_instance</span><span class="o">.</span><span class="n">output_queue</span><span class="o">.</span><span class="n">get</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">avss_value_processor_chunk_size</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avss_value_processor</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extract</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avss_instance</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avss_value_processor</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RandomGenerator"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.RandomGenerator">[docs]</a><span class="k">class</span> <span class="nc">RandomGenerator</span><span class="p">(</span><span class="n">PreProcessingBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RandomGenerator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">,</span> <span class="s2">&quot;rand&quot;</span><span class="p">,</span> <span class="n">batch_size</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">GF</span><span class="p">(</span><span class="n">Subgroup</span><span class="o">.</span><span class="n">BLS12_381</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RandomGenerator._get_input_batch"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.RandomGenerator._get_input_batch">[docs]</a>    <span class="k">def</span> <span class="nf">_get_input_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="RandomGenerator._extract"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.RandomGenerator._extract">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_extract</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_output_batch</span><span class="p">():</span>
+                <span class="n">random_shares_int</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">)</span>
+                <span class="n">output_shares_int</span> <span class="o">=</span> <span class="n">refine_randoms</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="n">random_shares_int</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">output_shares_int</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">output_queue</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">value</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="TripleGenerator"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.TripleGenerator">[docs]</a><span class="k">class</span> <span class="nc">TripleGenerator</span><span class="p">(</span><span class="n">PreProcessingBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TripleGenerator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">n</span><span class="p">,</span>
+            <span class="n">t</span><span class="p">,</span>
+            <span class="n">my_id</span><span class="p">,</span>
+            <span class="n">send</span><span class="p">,</span>
+            <span class="n">recv</span><span class="p">,</span>
+            <span class="s2">&quot;triple&quot;</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">avss_value_processor_chunk_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">GF</span><span class="p">(</span><span class="n">Subgroup</span><span class="o">.</span><span class="n">BLS12_381</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TripleGenerator._get_input_batch"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.TripleGenerator._get_input_batch">[docs]</a>    <span class="k">def</span> <span class="nf">_get_input_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+            <span class="n">ab</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+            <span class="n">inputs</span> <span class="o">+=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ab</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">inputs</span></div>
+
+<div class="viewcode-block" id="TripleGenerator._extract"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.TripleGenerator._extract">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_extract</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_output_batch</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                <span class="n">triple_shares_int</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">)</span>
+                <span class="c1"># Number of nodes which have contributed values to this batch</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">triple_shares_int</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+                    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">ab</span> <span class="o">=</span> <span class="n">triple_shares_int</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">output_queue</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">ab</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="get_random"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.get_random">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">get_random</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">RandomGenerator</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">)</span> <span class="k">as</span> <span class="n">random_generator</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="k">await</span> <span class="n">random_generator</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="_mpc_prog"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust._mpc_prog">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">_mpc_prog</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">randoms</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;randoms&quot;</span><span class="p">]</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">random</span> <span class="ow">in</span> <span class="n">randoms</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;i: </span><span class="si">%d</span><span class="s2"> =&gt; </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="k">await</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="n">random</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">())</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">await</span> <span class="n">randoms</span><span class="o">.</span><span class="n">aclose</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="_prog"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust._prog">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">_prog</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">ProcessProgramRunner</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">)</span> <span class="k">as</span> <span class="n">runner</span><span class="p">:</span>
+        <span class="n">send</span><span class="p">,</span> <span class="n">recv</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">get_send_recv</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">runner</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_mpc_prog</span><span class="p">,</span> <span class="n">randoms</span><span class="o">=</span><span class="n">get_random</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">send</span><span class="p">,</span> <span class="n">recv</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">honeybadgermpc.config</span> <span class="kn">import</span> <span class="n">HbmpcConfig</span>
+    <span class="kn">from</span> <span class="nn">honeybadgermpc.ipc</span> <span class="kn">import</span> <span class="n">ProcessProgramRunner</span>
+
+    <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">load_config</span><span class="p">()</span>
+
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">())</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+    <span class="n">loop</span><span class="o">.</span><span class="n">set_debug</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span>
+            <span class="n">_prog</span><span class="p">(</span><span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">peers</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">my_id</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

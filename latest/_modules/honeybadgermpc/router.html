@@ -90,15 +90,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Integrations</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Library Reference</span></p>
+<p class="caption"><span class="caption-text">Internals</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals.html">Internals</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
 <ul>
@@ -180,7 +179,7 @@
 <span class="kn">from</span> <span class="nn">honeybadgermpc.utils.typecheck</span> <span class="kn">import</span> <span class="n">TypeCheck</span>
 
 
-<div class="viewcode-block" id="Router"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router">[docs]</a><span class="k">class</span> <span class="nc">Router</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="Router"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.Router">[docs]</a><span class="k">class</span> <span class="nc">Router</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for Router objects defining the recv and send methods.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -192,7 +191,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">broadcasts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_broadcasts</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">debug</span>
 
-<div class="viewcode-block" id="Router.recv"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router.recv">[docs]</a>    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Router.recv"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.Router.recv">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">recv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Receives a message from player with id `player_id`</span>
 
@@ -204,7 +203,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="ne">NotImplementedError</span></div>
 
-<div class="viewcode-block" id="Router.send"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router.send">[docs]</a>    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Router.send"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.Router.send">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dest_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Sends a message to player with id `dest` from `player_id`</span>
 
@@ -216,7 +215,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="ne">NotImplementedError</span></div>
 
-<div class="viewcode-block" id="Router.broadcast"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router.broadcast">[docs]</a>    <span class="nd">@TypeCheck</span><span class="p">()</span>
+<div class="viewcode-block" id="Router.broadcast"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.Router.broadcast">[docs]</a>    <span class="nd">@TypeCheck</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Sends a message from player to all other players</span>
 
@@ -227,17 +226,17 @@
         <span class="k">for</span> <span class="n">dest_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">player_id</span><span class="p">,</span> <span class="n">dest_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Router._make_recvs"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router._make_recvs">[docs]</a>    <span class="k">def</span> <span class="nf">_make_recvs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Router._make_recvs"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.Router._make_recvs">[docs]</a>    <span class="k">def</span> <span class="nf">_make_recvs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recv</span><span class="p">,</span> <span class="n">player_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">player_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span></div>
 
-<div class="viewcode-block" id="Router._make_sends"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router._make_sends">[docs]</a>    <span class="k">def</span> <span class="nf">_make_sends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Router._make_sends"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.Router._make_sends">[docs]</a>    <span class="k">def</span> <span class="nf">_make_sends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">,</span> <span class="n">player_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">player_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span></div>
 
-<div class="viewcode-block" id="Router._make_broadcasts"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.Router._make_broadcasts">[docs]</a>    <span class="k">def</span> <span class="nf">_make_broadcasts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Router._make_broadcasts"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.Router._make_broadcasts">[docs]</a>    <span class="k">def</span> <span class="nf">_make_broadcasts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">broadcast</span><span class="p">,</span> <span class="n">player_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">player_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span></div></div>
 
 
-<div class="viewcode-block" id="SimpleRouter"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.SimpleRouter">[docs]</a><span class="k">class</span> <span class="nc">SimpleRouter</span><span class="p">(</span><span class="n">Router</span><span class="p">):</span>
+<div class="viewcode-block" id="SimpleRouter"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.SimpleRouter">[docs]</a><span class="k">class</span> <span class="nc">SimpleRouter</span><span class="p">(</span><span class="n">Router</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Simple router which uses queues as a mechanism for sending messages between players</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -248,7 +247,7 @@
         <span class="c1"># Mailboxes for each party</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_queues</span> <span class="o">=</span> <span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_parties</span><span class="p">)]</span>
 
-<div class="viewcode-block" id="SimpleRouter.recv"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.SimpleRouter.recv">[docs]</a>    <span class="nd">@TypeCheck</span><span class="p">()</span>
+<div class="viewcode-block" id="SimpleRouter.recv"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.SimpleRouter.recv">[docs]</a>    <span class="nd">@TypeCheck</span><span class="p">()</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">recv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Retrieves a message for player_id.</span>
 
@@ -265,7 +264,7 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SimpleRouter.send"><a class="viewcode-back" href="../../libref/router.html#honeybadgermpc.router.SimpleRouter.send">[docs]</a>    <span class="nd">@TypeCheck</span><span class="p">()</span>
+<div class="viewcode-block" id="SimpleRouter.send"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.router.SimpleRouter.send">[docs]</a>    <span class="nd">@TypeCheck</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dest_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Sends  message from player_id to dest_id</span>
 

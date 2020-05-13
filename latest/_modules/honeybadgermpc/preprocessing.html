@@ -1,0 +1,883 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>honeybadgermpc.preprocessing &mdash; HoneyBadgerMPC 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> HoneyBadgerMPC
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">The Honeybadger of MPC Protocols</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../internals.html">Internals</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/contributing.html">Contributing new code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/docker-images.html">HoneyBadgerMPC Docker Image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/reviewing-contributions.html">Reviewing and merging pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ci.html">Continuous integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packaging.html">Packaging and Distributing HoneyBadgerMPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">HoneyBadgerMPC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>honeybadgermpc.preprocessing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for honeybadgermpc.preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">listdir</span><span class="p">,</span> <span class="n">makedirs</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">isfile</span><span class="p">,</span> <span class="n">join</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">rmtree</span>
+<span class="kn">from</span> <span class="nn">uuid</span> <span class="kn">import</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span> <span class="nn">.elliptic_curve</span> <span class="kn">import</span> <span class="n">Subgroup</span>
+<span class="kn">from</span> <span class="nn">.field</span> <span class="kn">import</span> <span class="n">GF</span>
+<span class="kn">from</span> <span class="nn">.ntl</span> <span class="kn">import</span> <span class="n">vandermonde_batch_evaluate</span>
+<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="kn">import</span> <span class="n">polynomials_over</span>
+
+
+<div class="viewcode-block" id="PreProcessingConstants"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingConstants">[docs]</a><span class="k">class</span> <span class="nc">PreProcessingConstants</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">SHARED_DATA_DIR</span> <span class="o">=</span> <span class="s2">&quot;sharedata/&quot;</span>
+    <span class="n">READY_FILE_NAME</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">SHARED_DATA_DIR</span><span class="si">}</span><span class="s2">READY&quot;</span>
+    <span class="n">TRIPLES</span> <span class="o">=</span> <span class="s2">&quot;triples&quot;</span>
+    <span class="n">CUBES</span> <span class="o">=</span> <span class="s2">&quot;cubes&quot;</span>
+    <span class="n">ZEROS</span> <span class="o">=</span> <span class="s2">&quot;zeros&quot;</span>
+    <span class="n">RANDS</span> <span class="o">=</span> <span class="s2">&quot;rands&quot;</span>
+    <span class="n">BITS</span> <span class="o">=</span> <span class="s2">&quot;bits&quot;</span>
+    <span class="n">POWERS</span> <span class="o">=</span> <span class="s2">&quot;powers&quot;</span>
+    <span class="n">SHARES</span> <span class="o">=</span> <span class="s2">&quot;share&quot;</span>
+    <span class="n">ONE_MINUS_ONE</span> <span class="o">=</span> <span class="s2">&quot;one_minus_one&quot;</span>
+    <span class="n">DOUBLE_SHARES</span> <span class="o">=</span> <span class="s2">&quot;double_shares&quot;</span>
+    <span class="n">SHARE_BITS</span> <span class="o">=</span> <span class="s2">&quot;share_bits&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="PreProcessingMixin"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin">[docs]</a><span class="k">class</span> <span class="nc">PreProcessingMixin</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Abstract base class of preprocessing mixins.</span>
+<span class="sd">    The interface exposed is composed of a few parts:</span>
+<span class="sd">    - metadata:</span>
+<span class="sd">        - _preprocessing_stride dictates how many values are needed per element</span>
+<span class="sd">          when retrieving preprocessing</span>
+<span class="sd">        - preprocessing_name dictates the type of preprocessing-- e.g. &quot;rands&quot;,</span>
+<span class="sd">          &quot;triples&quot;, etc.</span>
+<span class="sd">            - file_prefix uses this to determine the filename to store preprocessed</span>
+<span class="sd">              values in.</span>
+<span class="sd">        - min_count returns the minimal amount of preprocessing remaining for a</span>
+<span class="sd">          given n, t combination.</span>
+<span class="sd">    - generation:</span>
+<span class="sd">        - generate_values is the public interface to generate preprocessing values from</span>
+<span class="sd">          the mixin</span>
+<span class="sd">        - _generate_polys is the private interface for doing the same thing, which is</span>
+<span class="sd">          what is overridden by subclasses.</span>
+<span class="sd">    - retrieval:</span>
+<span class="sd">        - get_value is the public interface to retrieve a value from preprocessing</span>
+<span class="sd">        - _get_value is the private interface for doing the same thing, which is what is</span>
+<span class="sd">          overridden by subclasses</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">poly</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">field</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poly</span> <span class="o">=</span> <span class="n">poly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">data_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_cache</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">file_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Beginning prefix of filenames storing preprocessing values for this mixin</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="PreProcessingMixin.min_count"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.min_count">[docs]</a>    <span class="k">def</span> <span class="nf">min_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the minimum number of preprocessing stored in the cache across all</span>
+<span class="sd">        of the keys with the given n, t values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">id_</span><span class="p">,</span> <span class="n">n_</span><span class="p">,</span> <span class="n">t_</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">n_</span><span class="p">,</span> <span class="n">t_</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+                <span class="n">counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">id_</span><span class="p">,</span> <span class="n">n_</span><span class="p">,</span> <span class="n">t_</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_stride</span></div>
+
+<div class="viewcode-block" id="PreProcessingMixin.get_value"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.get_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Given an MPC context, retrieve one preprocessing value.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            context: MPC context to use when fetching the value</span>
+
+<span class="sd">        outputs:</span>
+<span class="sd">            Preprocessing value for this mixin</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+
+        <span class="n">to_return</span><span class="p">,</span> <span class="n">used</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">-=</span> <span class="n">used</span>
+
+        <span class="k">return</span> <span class="n">to_return</span></div>
+
+<div class="viewcode-block" id="PreProcessingMixin._read_preprocessing_file"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._read_preprocessing_file">[docs]</a>    <span class="k">def</span> <span class="nf">_read_preprocessing_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Given the filename of the preprocessing file to read, fetch all of the</span>
+<span class="sd">        values stored in the preprocessing file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">lines</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span>
+
+            <span class="n">modulus</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">modulus</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="p">,</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected file &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;to have modulus </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="si">}</span><span class="s2">, but found </span><span class="si">{</span><span class="n">modulus</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+            <span class="c1"># The second and third lines of the file contain the degree and context id</span>
+            <span class="c1"># correspondingly.</span>
+            <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span></div>
+
+<div class="viewcode-block" id="PreProcessingMixin._write_preprocessing_file"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._write_preprocessing_file">[docs]</a>    <span class="k">def</span> <span class="nf">_write_preprocessing_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">context_id</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Write the values to the preprocessing file given by the filename.</span>
+<span class="sd">        When append is true, this will append to an existing file, otherwise, it will</span>
+<span class="sd">        overwrite.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+            <span class="n">append</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">append</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">meta</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+                <span class="n">expected_meta</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">context_id</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="n">meta</span> <span class="o">==</span> <span class="n">expected_meta</span><span class="p">,</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;expected to have metadata </span><span class="si">{</span><span class="n">expected_meta</span><span class="si">}</span><span class="s2">, but had </span><span class="si">{</span><span class="n">meta</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">context_id</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PreProcessingMixin.build_filename"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.build_filename">[docs]</a>    <span class="k">def</span> <span class="nf">build_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">context_id</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Given a file prefix, and metadata, return the filename to put</span>
+<span class="sd">        the shares in.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            n: Value of n used in preprocessing</span>
+<span class="sd">            t: Value of t used in preprocessing</span>
+<span class="sd">            context_id: myid of the mpc context we&#39;re preprocessing for.</span>
+<span class="sd">            prefix: filename prefix, e.g. &quot;sharedata/triples&quot;.</span>
+<span class="sd">                Defaults to self.file_prefix</span>
+
+<span class="sd">        output:</span>
+<span class="sd">            Filename to use</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_prefix</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">context_id</span><span class="si">}</span><span class="s2">.share&quot;</span></div>
+
+<div class="viewcode-block" id="PreProcessingMixin._parse_file_name"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._parse_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">_parse_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Given a potential filename, return (n, t, context_id) of the</span>
+<span class="sd">        file if it&#39;s a valid file, otherwise, return None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_prefix</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">reg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_prefix</span><span class="si">}</span><span class="s2">_(</span><span class="se">\\</span><span class="s2">d+)_(</span><span class="se">\\</span><span class="s2">d+)-(</span><span class="se">\\</span><span class="s2">d+).share&quot;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">groups</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">groups</span><span class="p">()))</span></div>
+
+<div class="viewcode-block" id="PreProcessingMixin._refresh_cache"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._refresh_cache">[docs]</a>    <span class="k">def</span> <span class="nf">_refresh_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Refreshes the cache by reading in sharedata files, and</span>
+<span class="sd">        updating the cache values and count variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">):</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">isfile</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_file_name</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">context_id</span><span class="p">)</span> <span class="o">=</span> <span class="n">groups</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">context_id</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_preprocessing_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessingMixin._write_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._write_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_write_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">polys</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Given a file prefix, a list of polynomials, and associated n, t values,</span>
+<span class="sd">        write the preprocessing for the share values represented by the polnomials.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            prefix: prefix to use when writing the file</span>
+<span class="sd">            n: number of nodes this is preprocessing for</span>
+<span class="sd">            t: number of faults tolerated by this preprocessing</span>
+<span class="sd">            polys: polynomials corresponding to secret share values to write</span>
+<span class="sd">            append: Whether or not to append shares to an existing file, or to overwrite.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">polys</span> <span class="o">=</span> <span class="p">[[</span><span class="n">coeff</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">poly</span><span class="o">.</span><span class="n">coeffs</span><span class="p">]</span> <span class="k">for</span> <span class="n">poly</span> <span class="ow">in</span> <span class="n">polys</span><span class="p">]</span>
+        <span class="n">all_values</span> <span class="o">=</span> <span class="n">vandermonde_batch_evaluate</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">polys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_values</span><span class="p">]</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_filename</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_preprocessing_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="n">append</span><span class="p">)</span>
+
+            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">append</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">values</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessingMixin.generate_values"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.generate_values">[docs]</a>    <span class="k">def</span> <span class="nf">generate_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Given some n, t, generate k values and write them to disk.</span>
+<span class="sd">        If append is true, this will add on to existing preprocessing. Otherwise,</span>
+<span class="sd">        this will overwrite existing preprocessing.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            k: number of values to generate</span>
+<span class="sd">            n: number of nodes to generate for</span>
+<span class="sd">            t: number of faults that should be tolerated in generation</span>
+<span class="sd">            append: set to true if this should append, or false to overwrite.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">polys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_polys</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_polys</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">polys</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="n">append</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">preprocessing_name</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot; String representation of the type of preprocessing done by this mixin</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_preprocessing_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Mixins should override this to return the number of values required from the</span>
+<span class="sd">        preprocessing file in order to fetch one preprocessing element.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="PreProcessingMixin._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._generate_polys">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Private helper method to generate polynomials for use in preprocessing.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            k: number of elements to generate</span>
+<span class="sd">            n: number of nodes to generate for</span>
+<span class="sd">            t: number of faults that should be tolerated by preprocessing</span>
+
+<span class="sd">        outputs: A list of polynomials corresponding to share values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="PreProcessingMixin._get_value"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._get_value">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Private helper method to retrieve a value from the cache for</span>
+<span class="sd">        this mixin.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            context: MPC context to retrieve the value for</span>
+<span class="sd">            key: tuple of (n, t, i) used to index the cache</span>
+
+<span class="sd">        outputs:</span>
+<span class="sd">            Preprocessing value for this mixin</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+
+
+<div class="viewcode-block" id="ShareBitsPreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing">[docs]</a><span class="k">class</span> <span class="nc">ShareBitsPreProcessing</span><span class="p">(</span><span class="n">PreProcessingMixin</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">SHARE_BITS</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_preprocessing_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="ShareBitsPreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="n">bit_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
+        <span class="n">polys</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+            <span class="n">r_bits</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">reversed</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2">0:0</span><span class="si">{</span><span class="n">bit_length</span><span class="si">}</span><span class="s2">b</span><span class="se">}}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">value</span><span class="p">)))</span>
+            <span class="p">]</span>
+
+            <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+            <span class="n">polys</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">r_bits</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">polys</span></div>
+
+<div class="viewcode-block" id="ShareBitsPreProcessing._get_value"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._get_value">[docs]</a>    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="n">bit_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">modulus</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+
+        <span class="n">share</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+        <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bit_length</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">share</span><span class="p">,</span> <span class="n">bits</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_stride</span></div></div>
+
+
+<div class="viewcode-block" id="DoubleSharingPreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing">[docs]</a><span class="k">class</span> <span class="nc">DoubleSharingPreProcessing</span><span class="p">(</span><span class="n">PreProcessingMixin</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">DOUBLE_SHARES</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">_preprocessing_stride</span> <span class="o">=</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="DoubleSharingPreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="n">polys</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+            <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+            <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">polys</span></div>
+
+<div class="viewcode-block" id="DoubleSharingPreProcessing._get_value"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._get_value">[docs]</a>    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+        <span class="n">r_t</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+        <span class="n">r_2t</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">context</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">r_t</span><span class="p">,</span> <span class="n">r_2t</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_stride</span></div></div>
+
+
+<div class="viewcode-block" id="PowersPreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PowersPreProcessing">[docs]</a><span class="k">class</span> <span class="nc">PowersPreProcessing</span><span class="p">(</span><span class="n">PreProcessingMixin</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">POWERS</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">_preprocessing_stride</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="PowersPreProcessing.generate_values"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PowersPreProcessing.generate_values">[docs]</a>    <span class="k">def</span> <span class="nf">generate_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">polys_arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_polys</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">polys</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">polys_arr</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_polys</span><span class="p">(</span>
+                <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">polys</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="PowersPreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">powers</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+            <span class="n">powers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">powers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">power</span><span class="p">)</span> <span class="k">for</span> <span class="n">power</span> <span class="ow">in</span> <span class="n">powers</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">z</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="PowersPreProcessing._get_value"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._get_value">[docs]</a>    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">pid</span><span class="p">):</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">N</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">t</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="si">}</span><span class="s2">&quot;</span> <span class="sa">f</span><span class="s2">&quot;.share&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_preprocessing_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">))),</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="PowersPreProcessing._refresh_cache"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._refresh_cache">[docs]</a>    <span class="k">def</span> <span class="nf">_refresh_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="SharePreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.SharePreProcessing">[docs]</a><span class="k">class</span> <span class="nc">SharePreProcessing</span><span class="p">(</span><span class="n">PreProcessingMixin</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">SHARES</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">_preprocessing_stride</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="SharePreProcessing.generate_values"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.SharePreProcessing.generate_values">[docs]</a>    <span class="k">def</span> <span class="nf">generate_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">sid</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
+        <span class="n">polys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_polys</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_polys</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">polys</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">sid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sid</span></div>
+
+<div class="viewcode-block" id="SharePreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.SharePreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="SharePreProcessing._get_value"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.SharePreProcessing._get_value">[docs]</a>    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">sid</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">t</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_filename</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">myid</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">sid</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_preprocessing_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">),</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="SharePreProcessing._refresh_cache"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.SharePreProcessing._refresh_cache">[docs]</a>    <span class="k">def</span> <span class="nf">_refresh_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="RandomPreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.RandomPreProcessing">[docs]</a><span class="k">class</span> <span class="nc">RandomPreProcessing</span><span class="p">(</span><span class="n">PreProcessingMixin</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">RANDS</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">_preprocessing_stride</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="RandomPreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="RandomPreProcessing._get_value"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._get_value">[docs]</a>    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">t</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">context</span><span class="o">.</span><span class="n">t</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span> <span class="n">t</span><span class="p">),</span> <span class="mi">1</span></div></div>
+
+
+<div class="viewcode-block" id="SimplePreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.SimplePreProcessing">[docs]</a><span class="k">class</span> <span class="nc">SimplePreProcessing</span><span class="p">(</span><span class="n">PreProcessingMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Subclass of PreProcessingMixin to be used in the trivial case</span>
+<span class="sd">    where the only thing required to get a value is to read _preprocessing_stride</span>
+<span class="sd">    values, turn them in to shares, and return a tuple of them.</span>
+
+<span class="sd">    Subclasses of this class must only overwrite _generate_polys</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SimplePreProcessing._get_value"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._get_value">[docs]</a>    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_stride</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Expected &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_stride</span><span class="si">}</span><span class="s2"> elements of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_name</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;but found only </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">Share</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_stride</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_stride</span></div></div>
+
+
+<div class="viewcode-block" id="CubePreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.CubePreProcessing">[docs]</a><span class="k">class</span> <span class="nc">CubePreProcessing</span><span class="p">(</span><span class="n">SimplePreProcessing</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">CUBES</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">_preprocessing_stride</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="CubePreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.CubePreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="n">polys</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">a</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+            <span class="n">polys</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">polys</span></div></div>
+
+
+<div class="viewcode-block" id="TriplePreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.TriplePreProcessing">[docs]</a><span class="k">class</span> <span class="nc">TriplePreProcessing</span><span class="p">(</span><span class="n">SimplePreProcessing</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">TRIPLES</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">_preprocessing_stride</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="TriplePreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="n">polys</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+            <span class="n">polys</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">polys</span></div></div>
+
+
+<div class="viewcode-block" id="ZeroPreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing">[docs]</a><span class="k">class</span> <span class="nc">ZeroPreProcessing</span><span class="p">(</span><span class="n">SimplePreProcessing</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">ZEROS</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">_preprocessing_stride</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="ZeroPreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span></div></div>
+
+
+<div class="viewcode-block" id="BitPreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.BitPreProcessing">[docs]</a><span class="k">class</span> <span class="nc">BitPreProcessing</span><span class="p">(</span><span class="n">SimplePreProcessing</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">BITS</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">_preprocessing_stride</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="BitPreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.BitPreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span></div></div>
+
+
+<div class="viewcode-block" id="SignedBitPreProcessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing">[docs]</a><span class="k">class</span> <span class="nc">SignedBitPreProcessing</span><span class="p">(</span><span class="n">SimplePreProcessing</span><span class="p">):</span>
+    <span class="n">preprocessing_name</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">ONE_MINUS_ONE</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">_preprocessing_stride</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="SignedBitPreProcessing._generate_polys"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._generate_polys">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_polys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span></div></div>
+
+
+<div class="viewcode-block" id="PreProcessedElements"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements">[docs]</a><span class="k">class</span> <span class="nc">PreProcessedElements</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Main accessor of preprocessing</span>
+<span class="sd">    This class is a singleton, that only has one object per field being</span>
+<span class="sd">    preprocessed for.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">DEFAULT_DIRECTORY</span> <span class="o">=</span> <span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">SHARED_DATA_DIR</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">DEFAULT_FIELD</span> <span class="o">=</span> <span class="n">GF</span><span class="p">(</span><span class="n">Subgroup</span><span class="o">.</span><span class="n">BLS12_381</span><span class="p">)</span>
+
+    <span class="n">_cached_elements</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Called when a new PreProcessedElements is created.</span>
+<span class="sd">        This creates a multiton based on the directory used in preprocessing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">data_directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_directory</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">DEFAULT_DIRECTORY</span>
+
+        <span class="k">return</span> <span class="n">PreProcessedElements</span><span class="o">.</span><span class="n">_cached_elements</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+            <span class="n">data_directory</span><span class="p">,</span> <span class="nb">super</span><span class="p">(</span><span class="n">PreProcessedElements</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        args:</span>
+<span class="sd">            field: GF to use when generating preprocessing</span>
+<span class="sd">            append: whether or not we should append to existing preprocessing when</span>
+<span class="sd">                generating, or if we should overwrite existing preprocessing.</span>
+<span class="sd">            data_dir_name: directory name to write preprocessing to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">data_directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_directory</span> <span class="o">=</span> <span class="n">PreProcessedElements</span><span class="o">.</span><span class="n">DEFAULT_DIRECTORY</span>
+
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">PreProcessedElements</span><span class="o">.</span><span class="n">DEFAULT_FIELD</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">field</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poly</span> <span class="o">=</span> <span class="n">polynomials_over</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span> <span class="o">=</span> <span class="n">data_directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_data_dir</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ready_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PreProcessingConstants</span><span class="o">.</span><span class="n">READY_FILE_NAME</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append</span> <span class="o">=</span> <span class="n">append</span>
+
+        <span class="c1"># Instantiate preprocessing mixins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_triples</span> <span class="o">=</span> <span class="n">TriplePreProcessing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cubes</span> <span class="o">=</span> <span class="n">CubePreProcessing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zeros</span> <span class="o">=</span> <span class="n">ZeroPreProcessing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rands</span> <span class="o">=</span> <span class="n">RandomPreProcessing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bits</span> <span class="o">=</span> <span class="n">BitPreProcessing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_powers</span> <span class="o">=</span> <span class="n">PowersPreProcessing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shares</span> <span class="o">=</span> <span class="n">SharePreProcessing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_one_minus_ones</span> <span class="o">=</span> <span class="n">SignedBitPreProcessing</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_double_shares</span> <span class="o">=</span> <span class="n">DoubleSharingPreProcessing</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_share_bits</span> <span class="o">=</span> <span class="n">ShareBitsPreProcessing</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="PreProcessedElements.reset_cache"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.reset_cache">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">reset_cache</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Reset the class-wide cache of PreProcessedElements objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_cached_elements</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements._init_data_dir"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements._init_data_dir">[docs]</a>    <span class="k">def</span> <span class="nf">_init_data_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Ensures that the data directory exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.clear_preprocessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.clear_preprocessing">[docs]</a>    <span class="k">def</span> <span class="nf">clear_preprocessing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Delete all things from the preprocessing folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rmtree</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">,</span>
+            <span class="n">onerror</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Error deleting data directory: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_data_dir</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.wait_for_preprocessing"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.wait_for_preprocessing">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_for_preprocessing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Block until the ready file is created</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ready_file</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;waiting for preprocessing </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_ready_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.preprocessing_done"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.preprocessing_done">[docs]</a>    <span class="k">def</span> <span class="nf">preprocessing_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create a ready file. This unblocks any calls to wait_for_preprocessing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mknod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ready_file</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements._generate"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements._generate">[docs]</a>    <span class="k">def</span> <span class="nf">_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mixin</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Generate k elements with given n, t values for the given kind of</span>
+<span class="sd">        preprocessing.</span>
+<span class="sd">        If we already have preprocessing for that kind, we only generate enough</span>
+<span class="sd">        such that we have k elements cached.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">-=</span> <span class="n">mixin</span><span class="o">.</span><span class="n">min_count</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mixin</span><span class="o">.</span><span class="n">generate_values</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_triples"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_triples">[docs]</a>    <span class="k">def</span> <span class="nf">generate_triples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_triples</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_cubes"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_cubes">[docs]</a>    <span class="k">def</span> <span class="nf">generate_cubes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cubes</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_zeros"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_zeros">[docs]</a>    <span class="k">def</span> <span class="nf">generate_zeros</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_zeros</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_rands"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_rands">[docs]</a>    <span class="k">def</span> <span class="nf">generate_rands</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rands</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_bits"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_bits">[docs]</a>    <span class="k">def</span> <span class="nf">generate_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bits</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_one_minus_ones"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_one_minus_ones">[docs]</a>    <span class="k">def</span> <span class="nf">generate_one_minus_ones</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_one_minus_ones</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_double_shares"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_double_shares">[docs]</a>    <span class="k">def</span> <span class="nf">generate_double_shares</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_double_shares</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_share_bits"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_share_bits">[docs]</a>    <span class="k">def</span> <span class="nf">generate_share_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_share_bits</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_powers"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_powers">[docs]</a>    <span class="k">def</span> <span class="nf">generate_powers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_powers</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.generate_share"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_share">[docs]</a>    <span class="k">def</span> <span class="nf">generate_share</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shares</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="c1">## Preprocessing retrieval methods:</span>
+
+<div class="viewcode-block" id="PreProcessedElements.get_triples"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_triples">[docs]</a>    <span class="k">def</span> <span class="nf">get_triples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_triples</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.get_cubes"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_cubes">[docs]</a>    <span class="k">def</span> <span class="nf">get_cubes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cubes</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.get_zero"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_zero">[docs]</a>    <span class="k">def</span> <span class="nf">get_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zeros</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.get_rand"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_rand">[docs]</a>    <span class="k">def</span> <span class="nf">get_rand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rands</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.get_bit"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_bit">[docs]</a>    <span class="k">def</span> <span class="nf">get_bit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bits</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.get_powers"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_powers">[docs]</a>    <span class="k">def</span> <span class="nf">get_powers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_powers</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.get_share"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_share">[docs]</a>    <span class="k">def</span> <span class="nf">get_share</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">sid</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shares</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">sid</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.get_one_minus_ones"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_one_minus_ones">[docs]</a>    <span class="k">def</span> <span class="nf">get_one_minus_ones</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_minus_ones</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.get_double_shares"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_double_shares">[docs]</a>    <span class="k">def</span> <span class="nf">get_double_shares</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_double_shares</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreProcessedElements.get_share_bits"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_share_bits">[docs]</a>    <span class="k">def</span> <span class="nf">get_share_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_share_bits</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Andrew Miller et al. -- Decentralized Systems Lab (UIUC)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

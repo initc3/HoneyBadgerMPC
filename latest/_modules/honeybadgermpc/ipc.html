@@ -90,15 +90,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Integrations</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Library Reference</span></p>
+<p class="caption"><span class="caption-text">Internals</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals.html">Internals</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
 <ul>
@@ -190,7 +189,7 @@
 <span class="p">)</span>
 
 
-<div class="viewcode-block" id="NodeCommunicator"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator">[docs]</a><span class="k">class</span> <span class="nc">NodeCommunicator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="NodeCommunicator"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.NodeCommunicator">[docs]</a><span class="k">class</span> <span class="nc">NodeCommunicator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="n">LAST_MSG</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peers_config</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">linger_timeout</span><span class="p">):</span>
@@ -216,11 +215,11 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_sender_queues</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
 
-<div class="viewcode-block" id="NodeCommunicator.send"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<div class="viewcode-block" id="NodeCommunicator.send"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.NodeCommunicator.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">my_id</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span> <span class="k">if</span> <span class="n">node_id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span> <span class="k">else</span> <span class="n">msg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sender_queues</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="NodeCommunicator.recv"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.recv">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">recv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="NodeCommunicator.recv"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.NodeCommunicator.recv">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">recv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_receiver_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
 
     <span class="k">async</span> <span class="k">def</span> <span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -239,7 +238,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">zmq_context</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">linger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">linger_timeout</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Total bytes sent out: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytes_sent</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NodeCommunicator._setup"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._setup">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="NodeCommunicator._setup"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.NodeCommunicator._setup">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Setup one router for a party, this acts as a</span>
         <span class="c1"># server for receiving messages from other parties.</span>
         <span class="n">router</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zmq_context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">ROUTER</span><span class="p">)</span>
@@ -269,14 +268,14 @@
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_dealer_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="NodeCommunicator._recv_loop"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._recv_loop">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_recv_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">router</span><span class="p">):</span>
+<div class="viewcode-block" id="NodeCommunicator._recv_loop"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.NodeCommunicator._recv_loop">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_recv_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">router</span><span class="p">):</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="n">sender_id</span><span class="p">,</span> <span class="n">raw_msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">router</span><span class="o">.</span><span class="n">recv_multipart</span><span class="p">()</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="n">loads</span><span class="p">(</span><span class="n">raw_msg</span><span class="p">)</span>
             <span class="c1"># logging.debug(&quot;[RECV] FROM: %s, MSG: %s,&quot;, sender_id, msg)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_receiver_queue</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">sender_id</span><span class="p">),</span> <span class="n">msg</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="NodeCommunicator._process_node_messages"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._process_node_messages">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_process_node_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node_msg_queue</span><span class="p">,</span> <span class="n">send_to_node</span><span class="p">):</span>
+<div class="viewcode-block" id="NodeCommunicator._process_node_messages"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.NodeCommunicator._process_node_messages">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_process_node_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node_msg_queue</span><span class="p">,</span> <span class="n">send_to_node</span><span class="p">):</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">node_msg_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">msg</span> <span class="ow">is</span> <span class="n">NodeCommunicator</span><span class="o">.</span><span class="n">LAST_MSG</span><span class="p">:</span>
@@ -288,7 +287,7 @@
             <span class="k">await</span> <span class="n">send_to_node</span><span class="p">([</span><span class="n">raw_msg</span><span class="p">])</span></div></div>
 
 
-<div class="viewcode-block" id="ProcessProgramRunner"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner">[docs]</a><span class="k">class</span> <span class="nc">ProcessProgramRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="ProcessProgramRunner"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.ProcessProgramRunner">[docs]</a><span class="k">class</span> <span class="nc">ProcessProgramRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peers_config</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">mpc_config</span><span class="o">=</span><span class="p">{},</span> <span class="n">linger_timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">peers_config</span> <span class="o">=</span> <span class="n">peers_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
@@ -300,7 +299,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">node_communicator</span> <span class="o">=</span> <span class="n">NodeCommunicator</span><span class="p">(</span><span class="n">peers_config</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">linger_timeout</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">progs</span> <span class="o">=</span> <span class="p">[]</span>
 
-<div class="viewcode-block" id="ProcessProgramRunner.execute"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sid</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="ProcessProgramRunner.execute"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.ProcessProgramRunner.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sid</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">send</span><span class="p">,</span> <span class="n">recv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_send_recv</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
         <span class="n">context</span> <span class="o">=</span> <span class="n">Mpc</span><span class="p">(</span>
             <span class="n">sid</span><span class="p">,</span>
@@ -324,7 +323,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">progs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">program_result</span></div>
 
-<div class="viewcode-block" id="ProcessProgramRunner.get_send_recv"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner.get_send_recv">[docs]</a>    <span class="k">def</span> <span class="nf">get_send_recv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
+<div class="viewcode-block" id="ProcessProgramRunner.get_send_recv"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.ProcessProgramRunner.get_send_recv">[docs]</a>    <span class="k">def</span> <span class="nf">get_send_recv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">wrap_send</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span></div>
 
     <span class="k">async</span> <span class="k">def</span> <span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -344,7 +343,7 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Subscribe task cancelled.&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="verify_all_connections"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.verify_all_connections">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">verify_all_connections</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">my_id</span><span class="p">):</span>
+<div class="viewcode-block" id="verify_all_connections"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.verify_all_connections">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">verify_all_connections</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">my_id</span><span class="p">):</span>
     <span class="c1"># Uncomment this if you want to test on multiple processes.</span>
     <span class="c1"># No need to uncomment this when running across servers</span>
     <span class="c1"># since the network latency is already present there.</span>
@@ -369,7 +368,7 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Verfification completed.&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="test_mpc_programs"><a class="viewcode-back" href="../../libref/ipc.html#honeybadgermpc.ipc.test_mpc_programs">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">test_mpc_programs</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">):</span>
+<div class="viewcode-block" id="test_mpc_programs"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.test_mpc_programs">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">test_mpc_programs</span><span class="p">(</span><span class="n">peers</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">honeybadgermpc.mpc</span> <span class="kn">import</span> <span class="n">test_prog1</span><span class="p">,</span> <span class="n">test_prog2</span><span class="p">,</span> <span class="n">test_batchopening</span>
     <span class="kn">from</span> <span class="nn">honeybadgermpc.preprocessing</span> <span class="kn">import</span> <span class="n">PreProcessedElements</span>
     <span class="kn">from</span> <span class="nn">honeybadgermpc.preprocessing</span> <span class="kn">import</span> <span class="n">wait_for_preprocessing</span><span class="p">,</span> <span class="n">preprocessing_done</span>

@@ -90,15 +90,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Integrations</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Library Reference</span></p>
+<p class="caption"><span class="caption-text">Internals</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../libref/honeybadgermpc.html">honeybadgermpc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals.html">Internals</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
 <ul>
@@ -199,11 +198,11 @@
 <span class="kn">from</span> <span class="nn">gmpy2</span> <span class="kn">import</span> <span class="n">is_prime</span><span class="p">,</span> <span class="n">mpz</span>
 
 
-<div class="viewcode-block" id="FieldsNotIdentical"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.FieldsNotIdentical">[docs]</a><span class="k">class</span> <span class="nc">FieldsNotIdentical</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="FieldsNotIdentical"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.FieldsNotIdentical">[docs]</a><span class="k">class</span> <span class="nc">FieldsNotIdentical</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="FieldElement"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.FieldElement">[docs]</a><span class="k">class</span> <span class="nc">FieldElement</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="FieldElement"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.FieldElement">[docs]</a><span class="k">class</span> <span class="nc">FieldElement</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Common base class for elements.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -212,7 +211,7 @@
     <span class="n">__long__</span> <span class="o">=</span> <span class="fm">__int__</span></div>
 
 
-<div class="viewcode-block" id="GF"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GF">[docs]</a><span class="k">class</span> <span class="nc">GF</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="GF"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.GF">[docs]</a><span class="k">class</span> <span class="nc">GF</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="c1"># Class is implemented following the &#39;multiton&#39; design pattern</span>
     <span class="c1"># When the constructor is called with a value that&#39;s been used</span>
     <span class="c1"># before, it returns the previously created field, such that all</span>
@@ -235,11 +234,11 @@
     <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">GF</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modulus</span><span class="p">,))</span>
 
-<div class="viewcode-block" id="GF.random"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GF.random">[docs]</a>    <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="GF.random"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.GF.random">[docs]</a>    <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">GFElement</span><span class="p">(</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="GFElement"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement">[docs]</a><span class="k">class</span> <span class="nc">GFElement</span><span class="p">(</span><span class="n">FieldElement</span><span class="p">):</span>
+<div class="viewcode-block" id="GFElement"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.GFElement">[docs]</a><span class="k">class</span> <span class="nc">GFElement</span><span class="p">(</span><span class="n">FieldElement</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">gf</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">modulus</span> <span class="o">=</span> <span class="n">gf</span><span class="o">.</span><span class="n">modulus</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">gf</span>
@@ -341,7 +340,7 @@
     <span class="fm">__rtruediv__</span> <span class="o">=</span> <span class="n">__rdiv__</span>
     <span class="fm">__rfloordiv__</span> <span class="o">=</span> <span class="n">__rdiv__</span>
 
-<div class="viewcode-block" id="GFElement.sqrt"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.sqrt">[docs]</a>    <span class="k">def</span> <span class="nf">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GFElement.sqrt"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.GFElement.sqrt">[docs]</a>    <span class="k">def</span> <span class="nf">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Square root.</span>
 <span class="sd">        No attempt is made the to return the positive square root.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -381,11 +380,11 @@
                     <span class="n">x2</span> <span class="o">=</span> <span class="n">cipolla_mult</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">x1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="GFElement.bit"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.bit">[docs]</a>    <span class="k">def</span> <span class="nf">bit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<div class="viewcode-block" id="GFElement.bit"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.GFElement.bit">[docs]</a>    <span class="k">def</span> <span class="nf">bit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Extract a bit (index is counted from zero).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;&gt;</span> <span class="n">index</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span></div>
 
-<div class="viewcode-block" id="GFElement.signed"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.signed">[docs]</a>    <span class="k">def</span> <span class="nf">signed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GFElement.signed"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.GFElement.signed">[docs]</a>    <span class="k">def</span> <span class="nf">signed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a signed integer representation of the value.</span>
 
 <span class="sd">        If x &gt; floor(p/2) then subtract p to obtain negative integer.</span>
@@ -395,7 +394,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
 
-<div class="viewcode-block" id="GFElement.unsigned"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.GFElement.unsigned">[docs]</a>    <span class="k">def</span> <span class="nf">unsigned</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GFElement.unsigned"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.GFElement.unsigned">[docs]</a>    <span class="k">def</span> <span class="nf">unsigned</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a unsigned representation of the value&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
 
@@ -463,7 +462,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="mi">0</span></div>
 
 
-<div class="viewcode-block" id="fake_gf"><a class="viewcode-back" href="../../libref/field.html#honeybadgermpc.field.fake_gf">[docs]</a><span class="k">def</span> <span class="nf">fake_gf</span><span class="p">(</span><span class="n">modulus</span><span class="p">):</span>
+<div class="viewcode-block" id="fake_gf"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.field.fake_gf">[docs]</a><span class="k">def</span> <span class="nf">fake_gf</span><span class="p">(</span><span class="n">modulus</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Construct a fake field.</span>
 
 <span class="sd">    These fields should only be used in benchmarking. They work like</span>

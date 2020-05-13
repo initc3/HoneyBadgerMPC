@@ -1,3 +1,0 @@
-field
-=====
-.. automodule:: honeybadgermpc.field

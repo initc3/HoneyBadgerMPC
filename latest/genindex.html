@@ -91,15 +91,14 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="subprotocols.html">Protocol Descriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Development tasks for HoneyBadgerMPC prototype</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Integrations</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="integrations/hyperledger-fabric.html">Integration with Hyperledger Fabric</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Library Reference</span></p>
+<p class="caption"><span class="caption-text">Internals</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="libref/honeybadgermpc.html">honeybadgermpc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals.html">Internals</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Contributing to HoneyBadgerMPC</span></p>
 <ul>
@@ -203,57 +202,357 @@
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.router.Router._abc_impl">_abc_impl (honeybadgermpc.router.Router attribute)</a>, <a href="libref/router.html#honeybadgermpc.router.Router._abc_impl">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.PreProcessingBase._abc_impl">_abc_impl (honeybadgermpc.offline_robust.PreProcessingBase attribute)</a>
 
       <ul>
-        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._abc_impl">(honeybadgermpc.router.SimpleRouter attribute)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter._abc_impl">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.RandomGenerator._abc_impl">(honeybadgermpc.offline_robust.RandomGenerator attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.TripleGenerator._abc_impl">(honeybadgermpc.offline_robust.TripleGenerator attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing._abc_impl">(honeybadgermpc.preprocessing.BitPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing._abc_impl">(honeybadgermpc.preprocessing.CubePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._abc_impl">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._abc_impl">(honeybadgermpc.preprocessing.PowersPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._abc_impl">(honeybadgermpc.preprocessing.PreProcessingMixin attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._abc_impl">(honeybadgermpc.preprocessing.RandomPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._abc_impl">(honeybadgermpc.preprocessing.ShareBitsPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing._abc_impl">(honeybadgermpc.preprocessing.SharePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._abc_impl">(honeybadgermpc.preprocessing.SignedBitPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._abc_impl">(honeybadgermpc.preprocessing.SimplePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._abc_impl">(honeybadgermpc.preprocessing.TriplePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._abc_impl">(honeybadgermpc.preprocessing.ZeroPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.router.Router._abc_impl">(honeybadgermpc.router.Router attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._abc_impl">(honeybadgermpc.router.SimpleRouter attribute)</a>
 </li>
       </ul></li>
-      <li><a href="internals.html#honeybadgermpc.field.GF._field_cache">_field_cache (honeybadgermpc.field.GF attribute)</a>, <a href="libref/field.html#honeybadgermpc.field.GF._field_cache">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements._cached_elements">_cached_elements (honeybadgermpc.preprocessing.PreProcessedElements attribute)</a>
 </li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.PreProcessingBase._extract">_extract() (honeybadgermpc.offline_robust.PreProcessingBase method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.RandomGenerator._extract">(honeybadgermpc.offline_robust.RandomGenerator method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.TripleGenerator._extract">(honeybadgermpc.offline_robust.TripleGenerator method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.field.GF._field_cache">_field_cache (honeybadgermpc.field.GF attribute)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements._generate">_generate() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing._generate_polys">_generate_polys() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing._generate_polys">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._generate_polys">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._generate_polys">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._generate_polys">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._generate_polys">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._generate_polys">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing._generate_polys">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._generate_polys">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._generate_polys">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._generate_polys">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._generate_polys">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.PreProcessingBase._get_input_batch">_get_input_batch() (honeybadgermpc.offline_robust.PreProcessingBase method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.RandomGenerator._get_input_batch">(honeybadgermpc.offline_robust.RandomGenerator method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.TripleGenerator._get_input_batch">(honeybadgermpc.offline_robust.TripleGenerator method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.PreProcessingBase._get_output_batch">_get_output_batch() (honeybadgermpc.offline_robust.PreProcessingBase method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.RandomGenerator._get_output_batch">(honeybadgermpc.offline_robust.RandomGenerator method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.TripleGenerator._get_output_batch">(honeybadgermpc.offline_robust.TripleGenerator method)</a>
+</li>
+      </ul></li>
       <li><a href="internals.html#honeybadgermpc.mpc.Mpc._get_share_id">_get_share_id() (honeybadgermpc.mpc.Mpc method)</a>
 </li>
-      <li><a href="internals.html#honeybadgermpc.router.Router._make_broadcasts">_make_broadcasts() (honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router._make_broadcasts">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing._get_value">_get_value() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
 
       <ul>
-        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._make_broadcasts">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter._make_broadcasts">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing._get_value">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._get_value">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._get_value">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._get_value">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._get_value">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._get_value">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing._get_value">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._get_value">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._get_value">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._get_value">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._get_value">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
 </li>
       </ul></li>
-      <li><a href="internals.html#honeybadgermpc.router.Router._make_recvs">_make_recvs() (honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router._make_recvs">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements._init_data_dir">_init_data_dir() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.router.Router._make_broadcasts">_make_broadcasts() (honeybadgermpc.router.Router method)</a>
 
       <ul>
-        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._make_recvs">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter._make_recvs">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._make_broadcasts">(honeybadgermpc.router.SimpleRouter method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.router.Router._make_recvs">_make_recvs() (honeybadgermpc.router.Router method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._make_recvs">(honeybadgermpc.router.SimpleRouter method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.router.Router._make_sends">_make_sends() (honeybadgermpc.router.Router method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._make_sends">(honeybadgermpc.router.SimpleRouter method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust._mpc_prog">_mpc_prog() (in module honeybadgermpc.offline_robust)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing._parse_file_name">_parse_file_name() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing._parse_file_name">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._parse_file_name">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._parse_file_name">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._parse_file_name">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._parse_file_name">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._parse_file_name">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing._parse_file_name">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._parse_file_name">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._parse_file_name">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._parse_file_name">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._parse_file_name">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.router.Router._make_sends">_make_sends() (honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router._make_sends">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing._preprocessing_stride">_preprocessing_stride (honeybadgermpc.preprocessing.BitPreProcessing attribute)</a>
 
       <ul>
-        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter._make_sends">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter._make_sends">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.CubePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.PowersPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.RandomPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.SharePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.SignedBitPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.TriplePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.ZeroPreProcessing attribute)</a>
 </li>
       </ul></li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._process_node_messages">_process_node_messages() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._preprocessing_stride">_preprocessing_stride() (honeybadgermpc.preprocessing.PreProcessingMixin property)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.ShareBitsPreProcessing property)</a>
 </li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._recv_loop">_recv_loop() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._preprocessing_stride">(honeybadgermpc.preprocessing.SimplePreProcessing property)</a>
 </li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.ipc.NodeCommunicator._process_node_messages">_process_node_messages() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust._prog">_prog() (in module honeybadgermpc.offline_robust)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing._read_preprocessing_file">_read_preprocessing_file() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._read_preprocessing_file">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._read_preprocessing_file">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.ipc.NodeCommunicator._recv_loop">_recv_loop() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_randousha._recv_loop">(in module honeybadgermpc.offline_randousha)</a>
+</li>
+      </ul></li>
       <li><a href="internals.html#honeybadgermpc.mpc.Mpc._recvloop">_recvloop() (honeybadgermpc.mpc.Mpc method)</a>
 </li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing._refresh_cache">_refresh_cache() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing._refresh_cache">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._refresh_cache">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._refresh_cache">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._refresh_cache">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._refresh_cache">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._refresh_cache">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing._refresh_cache">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._refresh_cache">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._refresh_cache">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._refresh_cache">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._refresh_cache">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
+</li>
+      </ul></li>
       <li><a href="internals.html#honeybadgermpc.mpc.Mpc._run">_run() (honeybadgermpc.mpc.Mpc method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_randousha._run">(in module honeybadgermpc.offline_randousha)</a>
 </li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator._setup">_setup() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.PreProcessingBase._runner">_runner() (honeybadgermpc.offline_robust.PreProcessingBase method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.RandomGenerator._runner">(honeybadgermpc.offline_robust.RandomGenerator method)</a>
 </li>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.TripleGenerator._runner">(honeybadgermpc.offline_robust.TripleGenerator method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.ipc.NodeCommunicator._setup">_setup() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.PreProcessingBase._trigger_and_wait_for_avss">_trigger_and_wait_for_avss() (honeybadgermpc.offline_robust.PreProcessingBase method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.RandomGenerator._trigger_and_wait_for_avss">(honeybadgermpc.offline_robust.RandomGenerator method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.TripleGenerator._trigger_and_wait_for_avss">(honeybadgermpc.offline_robust.TripleGenerator method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing._write_polys">_write_polys() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing._write_polys">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._write_polys">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._write_polys">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._write_polys">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._write_polys">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._write_polys">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing._write_polys">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._write_polys">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._write_polys">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._write_polys">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._write_polys">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing._write_preprocessing_file">_write_preprocessing_file() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin._write_preprocessing_file">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing._write_preprocessing_file">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.mpc.TaskProgramRunner.add">add() (honeybadgermpc.mpc.TaskProgramRunner method)</a>
+      <li><a href="internals.html#honeybadgermpc.offline_randousha.HyperInvMessageType.ABORT">ABORT (honeybadgermpc.offline_randousha.HyperInvMessageType attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.field.FieldsNotIdentical.args">args (honeybadgermpc.field.FieldsNotIdentical attribute)</a>, <a href="libref/field.html#honeybadgermpc.field.FieldsNotIdentical.args">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.mpc.TaskProgramRunner.add">add() (honeybadgermpc.mpc.TaskProgramRunner method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.field.FieldsNotIdentical.args">args (honeybadgermpc.field.FieldsNotIdentical attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -261,14 +560,48 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.field.GFElement.bit">bit() (honeybadgermpc.field.GFElement method)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement.bit">[1]</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.router.Router.broadcast">broadcast() (honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router.broadcast">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_const.PolyCommitConst.batch_verify_eval">batch_verify_eval() (honeybadgermpc.poly_commit_const.PolyCommitConst method)</a>
 
       <ul>
-        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter.broadcast">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter.broadcast">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.poly_commit_lin.PolyCommitLin.batch_verify_eval">(honeybadgermpc.poly_commit_lin.PolyCommitLin method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement.bit">bit() (honeybadgermpc.field.GFElement method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing">BitPreProcessing (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.BITS">BITS (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.router.Router.broadcast">broadcast() (honeybadgermpc.router.Router method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter.broadcast">(honeybadgermpc.router.SimpleRouter method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing.build_filename">build_filename() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing.build_filename">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing.build_filename">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing.build_filename">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.build_filename">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing.build_filename">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing.build_filename">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing.build_filename">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing.build_filename">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing.build_filename">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing.build_filename">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing.build_filename">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -279,9 +612,25 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="internals.html#honeybadgermpc.mpc.Mpc.call_mixin">call_mixin() (honeybadgermpc.mpc.Mpc method)</a>
 </li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.clear_preprocessing">clear_preprocessing() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_const.PolyCommitConst.commit">commit() (honeybadgermpc.poly_commit_const.PolyCommitConst method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.poly_commit_lin.PolyCommitLin.commit">(honeybadgermpc.poly_commit_lin.PolyCommitLin method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/config.html#honeybadgermpc.config.ConfigVars">ConfigVars (class in honeybadgermpc.config)</a>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_const.PolyCommitConst.create_witness">create_witness() (honeybadgermpc.poly_commit_const.PolyCommitConst method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.poly_commit_lin.PolyCommitLin.create_witness">(honeybadgermpc.poly_commit_lin.PolyCommitLin method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing">CubePreProcessing (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.CUBES">CUBES (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -289,7 +638,15 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/config.html#honeybadgermpc.config.ReconstructionConfig.default">default() (honeybadgermpc.config.ReconstructionConfig class method)</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.DEFAULT_DIRECTORY">DEFAULT_DIRECTORY (honeybadgermpc.preprocessing.PreProcessedElements attribute)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.DEFAULT_FIELD">DEFAULT_FIELD (honeybadgermpc.preprocessing.PreProcessedElements attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.DOUBLE_SHARES">DOUBLE_SHARES (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing">DoubleSharingPreProcessing (class in honeybadgermpc.preprocessing)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -306,11 +663,9 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.polynomial.EvalPoint">EvalPoint (class in honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.EvalPoint">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.EvalPoint">EvalPoint (class in honeybadgermpc.polynomial)</a>
 </li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner.execute">execute() (honeybadgermpc.ipc.ProcessProgramRunner method)</a>
-</li>
-      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.extras">extras (honeybadgermpc.config.HbmpcConfig attribute)</a>
+      <li><a href="internals.html#honeybadgermpc.ipc.ProcessProgramRunner.execute">execute() (honeybadgermpc.ipc.ProcessProgramRunner method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -318,23 +673,47 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.field.fake_gf">fake_gf() (in module honeybadgermpc.field)</a>, <a href="libref/field.html#honeybadgermpc.field.fake_gf">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.field.fake_gf">fake_gf() (in module honeybadgermpc.field)</a>
 </li>
-      <li><a href="internals.html#honeybadgermpc.polynomial.fft">fft() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.fft">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.fft">fft() (in module honeybadgermpc.polynomial)</a>
 </li>
-      <li><a href="internals.html#honeybadgermpc.polynomial.fft_helper">fft_helper() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.fft_helper">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.fft_helper">fft_helper() (in module honeybadgermpc.polynomial)</a>
 </li>
-      <li><a href="internals.html#honeybadgermpc.field.FieldElement">FieldElement (class in honeybadgermpc.field)</a>, <a href="libref/field.html#honeybadgermpc.field.FieldElement">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.field.FieldElement">FieldElement (class in honeybadgermpc.field)</a>
 </li>
+      <li><a href="internals.html#honeybadgermpc.field.FieldsNotIdentical">FieldsNotIdentical</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing.file_prefix">file_prefix() (honeybadgermpc.preprocessing.BitPreProcessing property)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing.file_prefix">(honeybadgermpc.preprocessing.CubePreProcessing property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing.file_prefix">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing.file_prefix">(honeybadgermpc.preprocessing.PowersPreProcessing property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.file_prefix">(honeybadgermpc.preprocessing.PreProcessingMixin property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing.file_prefix">(honeybadgermpc.preprocessing.RandomPreProcessing property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing.file_prefix">(honeybadgermpc.preprocessing.ShareBitsPreProcessing property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing.file_prefix">(honeybadgermpc.preprocessing.SharePreProcessing property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing.file_prefix">(honeybadgermpc.preprocessing.SignedBitPreProcessing property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing.file_prefix">(honeybadgermpc.preprocessing.SimplePreProcessing property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing.file_prefix">(honeybadgermpc.preprocessing.TriplePreProcessing property)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing.file_prefix">(honeybadgermpc.preprocessing.ZeroPreProcessing property)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.field.FieldsNotIdentical">FieldsNotIdentical</a>, <a href="libref/field.html#honeybadgermpc.field.FieldsNotIdentical">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.fnt_decode_step1">fnt_decode_step1() (in module honeybadgermpc.polynomial)</a>
 </li>
-      <li><a href="internals.html#honeybadgermpc.polynomial.fnt_decode_step1">fnt_decode_step1() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.fnt_decode_step1">[1]</a>
-</li>
-      <li><a href="internals.html#honeybadgermpc.polynomial.fnt_decode_step2">fnt_decode_step2() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.fnt_decode_step2">[1]</a>
-</li>
-      <li><a href="libref/config.html#honeybadgermpc.config.ReconstructionConfig.from_json">from_json() (honeybadgermpc.config.ReconstructionConfig class method)</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.fnt_decode_step2">fnt_decode_step2() (in module honeybadgermpc.polynomial)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -342,15 +721,129 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.polynomial.get_omega">get_omega() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.get_omega">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_const.gen_pc_const_crs">gen_pc_const_crs() (in module honeybadgermpc.poly_commit_const)</a>
 </li>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner.get_send_recv">get_send_recv() (honeybadgermpc.ipc.ProcessProgramRunner method)</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_bits">generate_bits() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_randousha.generate_bits">(in module honeybadgermpc.offline_randousha)</a>
 </li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_cubes">generate_cubes() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_double_shares">generate_double_shares() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_one_minus_ones">generate_one_minus_ones() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_powers">generate_powers() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_rands">generate_rands() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_share">generate_share() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_share_bits">generate_share_bits() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_triples">generate_triples() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_randousha.generate_triples">(in module honeybadgermpc.offline_randousha)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing.generate_values">generate_values() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing.generate_values">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing.generate_values">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing.generate_values">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.generate_values">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing.generate_values">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing.generate_values">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing.generate_values">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing.generate_values">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing.generate_values">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing.generate_values">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing.generate_values">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.generate_zeros">generate_zeros() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.PreProcessingBase.get">get() (honeybadgermpc.offline_robust.PreProcessingBase method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.RandomGenerator.get">(honeybadgermpc.offline_robust.RandomGenerator method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.TripleGenerator.get">(honeybadgermpc.offline_robust.TripleGenerator method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.field.GF">GF (class in honeybadgermpc.field)</a>, <a href="libref/field.html#honeybadgermpc.field.GF">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.get_avss_params">get_avss_params() (in module honeybadgermpc.offline_robust)</a>
 </li>
-      <li><a href="internals.html#honeybadgermpc.field.GFElement">GFElement (class in honeybadgermpc.field)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_bit">get_bit() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_cubes">get_cubes() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_double_shares">get_double_shares() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.polynomial.get_omega">get_omega() (in module honeybadgermpc.polynomial)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_one_minus_ones">get_one_minus_ones() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_powers">get_powers() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_rand">get_rand() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.get_random">get_random() (in module honeybadgermpc.offline_robust)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.ipc.ProcessProgramRunner.get_send_recv">get_send_recv() (honeybadgermpc.ipc.ProcessProgramRunner method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_share">get_share() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_share_bits">get_share_bits() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_triples">get_triples() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing.get_value">get_value() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing.get_value">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing.get_value">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing.get_value">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.get_value">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing.get_value">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing.get_value">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing.get_value">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing.get_value">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing.get_value">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing.get_value">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing.get_value">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.get_zero">get_zero() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.field.GF">GF (class in honeybadgermpc.field)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement">GFElement (class in honeybadgermpc.field)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -360,23 +853,86 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="internals.html#honeybadgermpc.mpc.handle_async_exception">handle_async_exception() (in module honeybadgermpc.mpc)</a>
 </li>
-      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig">HbmpcConfig (class in honeybadgermpc.config)</a>
+      <li>
+    honeybadgermpc
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc">module</a>
 </li>
-      <li><a href="internals.html#module-honeybadgermpc">honeybadgermpc (module)</a>, <a href="libref/honeybadgermpc.html#module-honeybadgermpc">[1]</a>
+      </ul></li>
+      <li>
+    honeybadgermpc.field
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.field">module</a>
 </li>
-      <li><a href="libref/config.html#module-honeybadgermpc.config">honeybadgermpc.config (module)</a>
+      </ul></li>
+      <li>
+    honeybadgermpc.ipc
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.ipc">module</a>
 </li>
+      </ul></li>
+      <li>
+    honeybadgermpc.mpc
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.mpc">module</a>
+</li>
+      </ul></li>
+      <li>
+    honeybadgermpc.offline_randousha
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.offline_randousha">module</a>
+</li>
+      </ul></li>
+      <li>
+    honeybadgermpc.offline_robust
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.offline_robust">module</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#module-honeybadgermpc.field">honeybadgermpc.field (module)</a>, <a href="libref/field.html#module-honeybadgermpc.field">[1]</a>
+      <li>
+    honeybadgermpc.poly_commit_const
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.poly_commit_const">module</a>
 </li>
-      <li><a href="libref/ipc.html#module-honeybadgermpc.ipc">honeybadgermpc.ipc (module)</a>
+      </ul></li>
+      <li>
+    honeybadgermpc.poly_commit_lin
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.poly_commit_lin">module</a>
 </li>
-      <li><a href="internals.html#module-honeybadgermpc.mpc">honeybadgermpc.mpc (module)</a>
+      </ul></li>
+      <li>
+    honeybadgermpc.polynomial
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.polynomial">module</a>
 </li>
-      <li><a href="internals.html#module-honeybadgermpc.polynomial">honeybadgermpc.polynomial (module)</a>, <a href="libref/polynomial.html#module-honeybadgermpc.polynomial">[1]</a>
+      </ul></li>
+      <li>
+    honeybadgermpc.preprocessing
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.preprocessing">module</a>
 </li>
-      <li><a href="internals.html#module-honeybadgermpc.router">honeybadgermpc.router (module)</a>, <a href="libref/router.html#module-honeybadgermpc.router">[1]</a>
+      </ul></li>
+      <li>
+    honeybadgermpc.router
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc.router">module</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.offline_randousha.HyperInvMessageType">HyperInvMessageType (class in honeybadgermpc.offline_randousha)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -392,11 +948,7 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.LAST_MSG">LAST_MSG (honeybadgermpc.ipc.NodeCommunicator attribute)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.load_config">load_config() (honeybadgermpc.config.HbmpcConfig static method)</a>
+      <li><a href="internals.html#honeybadgermpc.ipc.NodeCommunicator.LAST_MSG">LAST_MSG (honeybadgermpc.ipc.NodeCommunicator attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -404,11 +956,62 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.mpc.Mpc">Mpc (class in honeybadgermpc.mpc)</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing.min_count">min_count() (honeybadgermpc.preprocessing.BitPreProcessing method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing.min_count">(honeybadgermpc.preprocessing.CubePreProcessing method)</a>
 </li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing.min_count">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing.min_count">(honeybadgermpc.preprocessing.PowersPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.min_count">(honeybadgermpc.preprocessing.PreProcessingMixin method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing.min_count">(honeybadgermpc.preprocessing.RandomPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing.min_count">(honeybadgermpc.preprocessing.ShareBitsPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing.min_count">(honeybadgermpc.preprocessing.SharePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing.min_count">(honeybadgermpc.preprocessing.SignedBitPreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing.min_count">(honeybadgermpc.preprocessing.SimplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing.min_count">(honeybadgermpc.preprocessing.TriplePreProcessing method)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing.min_count">(honeybadgermpc.preprocessing.ZeroPreProcessing method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.my_id">my_id (honeybadgermpc.config.HbmpcConfig attribute)</a>
+      <li>
+    module
+
+      <ul>
+        <li><a href="internals.html#module-honeybadgermpc">honeybadgermpc</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.field">honeybadgermpc.field</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.ipc">honeybadgermpc.ipc</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.mpc">honeybadgermpc.mpc</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.offline_randousha">honeybadgermpc.offline_randousha</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.offline_robust">honeybadgermpc.offline_robust</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.poly_commit_const">honeybadgermpc.poly_commit_const</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.poly_commit_lin">honeybadgermpc.poly_commit_lin</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.polynomial">honeybadgermpc.polynomial</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.preprocessing">honeybadgermpc.preprocessing</a>
+</li>
+        <li><a href="internals.html#module-honeybadgermpc.router">honeybadgermpc.router</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.mpc.Mpc">Mpc (class in honeybadgermpc.mpc)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -416,13 +1019,7 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.N">N (honeybadgermpc.config.HbmpcConfig attribute)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator">NodeCommunicator (class in honeybadgermpc.ipc)</a>
-</li>
-      <li><a href="libref/config.html#honeybadgermpc.config.NodeDetails">NodeDetails (class in honeybadgermpc.config)</a>
+      <li><a href="internals.html#honeybadgermpc.ipc.NodeCommunicator">NodeCommunicator (class in honeybadgermpc.ipc)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -430,10 +1027,12 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.mpc.Mpc.open_share">open_share() (honeybadgermpc.mpc.Mpc method)</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.ONE_MINUS_ONE">ONE_MINUS_ONE (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#honeybadgermpc.mpc.Mpc.open_share">open_share() (honeybadgermpc.mpc.Mpc method)</a>
+</li>
       <li><a href="internals.html#honeybadgermpc.mpc.Mpc.open_share_array">open_share_array() (honeybadgermpc.mpc.Mpc method)</a>
 </li>
   </ul></td>
@@ -442,13 +1041,71 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.peers">peers (honeybadgermpc.config.HbmpcConfig attribute)</a>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.PreProcessingBase.PERIOD_IN_SECONDS">PERIOD_IN_SECONDS (honeybadgermpc.offline_robust.PreProcessingBase attribute)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.RandomGenerator.PERIOD_IN_SECONDS">(honeybadgermpc.offline_robust.RandomGenerator attribute)</a>
 </li>
-      <li><a href="internals.html#honeybadgermpc.polynomial.polynomials_over">polynomials_over() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.polynomials_over">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.offline_robust.TripleGenerator.PERIOD_IN_SECONDS">(honeybadgermpc.offline_robust.TripleGenerator attribute)</a>
 </li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_const.PolyCommitConst">PolyCommitConst (class in honeybadgermpc.poly_commit_const)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_lin.PolyCommitLin">PolyCommitLin (class in honeybadgermpc.poly_commit_lin)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.polynomial.polynomials_over">polynomials_over() (in module honeybadgermpc.polynomial)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.POWERS">POWERS (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing">PowersPreProcessing (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_lin.PolyCommitLin.preprocess">preprocess() (honeybadgermpc.poly_commit_lin.PolyCommitLin method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_const.PolyCommitConst.preprocess_prover">preprocess_prover() (honeybadgermpc.poly_commit_const.PolyCommitConst method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_const.PolyCommitConst.preprocess_verifier">preprocess_verifier() (honeybadgermpc.poly_commit_const.PolyCommitConst method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements">PreProcessedElements (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.preprocessing_done">preprocessing_done() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.BitPreProcessing.preprocessing_name">preprocessing_name (honeybadgermpc.preprocessing.BitPreProcessing attribute)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.CubePreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.CubePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.DoubleSharingPreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.DoubleSharingPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.PowersPreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.PowersPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.RandomPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.ShareBitsPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.SharePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.SignedBitPreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.TriplePreProcessing attribute)</a>
+</li>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.ZeroPreProcessing attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.ProcessProgramRunner">ProcessProgramRunner (class in honeybadgermpc.ipc)</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin.preprocessing_name">preprocessing_name() (honeybadgermpc.preprocessing.PreProcessingMixin property)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing.preprocessing_name">(honeybadgermpc.preprocessing.SimplePreProcessing property)</a>
+</li>
+      </ul></li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.PreProcessingBase">PreProcessingBase (class in honeybadgermpc.offline_robust)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants">PreProcessingConstants (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingMixin">PreProcessingMixin (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.ipc.ProcessProgramRunner">ProcessProgramRunner (class in honeybadgermpc.ipc)</a>
 </li>
       <li><a href="development/troubleshooting.html#index-0">PYTHONPATH</a>
 </li>
@@ -458,25 +1115,31 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.field.GF.random">random() (honeybadgermpc.field.GF method)</a>, <a href="libref/field.html#honeybadgermpc.field.GF.random">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.field.GF.random">random() (honeybadgermpc.field.GF method)</a>
 </li>
-      <li><a href="libref/config.html#honeybadgermpc.config.ConfigVars.Reconstruction">Reconstruction (honeybadgermpc.config.ConfigVars attribute)</a>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.RandomGenerator">RandomGenerator (class in honeybadgermpc.offline_robust)</a>
 </li>
-      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.reconstruction">reconstruction (honeybadgermpc.config.HbmpcConfig attribute)</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.RandomPreProcessing">RandomPreProcessing (class in honeybadgermpc.preprocessing)</a>
 </li>
-      <li><a href="libref/config.html#honeybadgermpc.config.ReconstructionConfig">ReconstructionConfig (class in honeybadgermpc.config)</a>
+      <li><a href="internals.html#honeybadgermpc.offline_randousha.randousha">randousha() (in module honeybadgermpc.offline_randousha)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.RANDS">RANDS (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.recv">recv() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.READY_FILE_NAME">READY_FILE_NAME (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.ipc.NodeCommunicator.recv">recv() (honeybadgermpc.ipc.NodeCommunicator method)</a>
 
       <ul>
-        <li><a href="internals.html#honeybadgermpc.router.Router.recv">(honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router.recv">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.router.Router.recv">(honeybadgermpc.router.Router method)</a>
 </li>
-        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter.recv">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter.recv">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter.recv">(honeybadgermpc.router.SimpleRouter method)</a>
 </li>
       </ul></li>
-      <li><a href="internals.html#honeybadgermpc.router.Router">Router (class in honeybadgermpc.router)</a>, <a href="libref/router.html#honeybadgermpc.router.Router">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.reset_cache">reset_cache() (honeybadgermpc.preprocessing.PreProcessedElements class method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.router.Router">Router (class in honeybadgermpc.router)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -484,25 +1147,39 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.NodeCommunicator.send">send() (honeybadgermpc.ipc.NodeCommunicator method)</a>
+      <li><a href="internals.html#honeybadgermpc.ipc.NodeCommunicator.send">send() (honeybadgermpc.ipc.NodeCommunicator method)</a>
 
       <ul>
-        <li><a href="internals.html#honeybadgermpc.router.Router.send">(honeybadgermpc.router.Router method)</a>, <a href="libref/router.html#honeybadgermpc.router.Router.send">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.router.Router.send">(honeybadgermpc.router.Router method)</a>
 </li>
-        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter.send">(honeybadgermpc.router.SimpleRouter method)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter.send">[1]</a>
+        <li><a href="internals.html#honeybadgermpc.router.SimpleRouter.send">(honeybadgermpc.router.SimpleRouter method)</a>
 </li>
       </ul></li>
-      <li><a href="internals.html#honeybadgermpc.field.GFElement.signed">signed() (honeybadgermpc.field.GFElement method)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement.signed">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.SHARE_BITS">SHARE_BITS (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.ShareBitsPreProcessing">ShareBitsPreProcessing (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.SHARED_DATA_DIR">SHARED_DATA_DIR (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.SharePreProcessing">SharePreProcessing (class in honeybadgermpc.preprocessing)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.router.SimpleRouter">SimpleRouter (class in honeybadgermpc.router)</a>, <a href="libref/router.html#honeybadgermpc.router.SimpleRouter">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.SHARES">SHARES (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
 </li>
-      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.skip_preprocessing">skip_preprocessing (honeybadgermpc.config.HbmpcConfig attribute)</a>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement.signed">signed() (honeybadgermpc.field.GFElement method)</a>
 </li>
-      <li><a href="internals.html#honeybadgermpc.field.GFElement.sqrt">sqrt() (honeybadgermpc.field.GFElement method)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement.sqrt">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.SignedBitPreProcessing">SignedBitPreProcessing (class in honeybadgermpc.preprocessing)</a>
 </li>
-      <li><a href="internals.html#honeybadgermpc.polynomial.strip_trailing_zeros">strip_trailing_zeros() (in module honeybadgermpc.polynomial)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.strip_trailing_zeros">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.SimplePreProcessing">SimplePreProcessing (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.router.SimpleRouter">SimpleRouter (class in honeybadgermpc.router)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement.sqrt">sqrt() (honeybadgermpc.field.GFElement method)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.polynomial.strip_trailing_zeros">strip_trailing_zeros() (in module honeybadgermpc.polynomial)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.offline_randousha.HyperInvMessageType.SUCCESS">SUCCESS (honeybadgermpc.offline_randousha.HyperInvMessageType attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -510,19 +1187,23 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/config.html#honeybadgermpc.config.HbmpcConfig.t">t (honeybadgermpc.config.HbmpcConfig attribute)</a>
-</li>
       <li><a href="internals.html#honeybadgermpc.mpc.TaskProgramRunner">TaskProgramRunner (class in honeybadgermpc.mpc)</a>
 </li>
       <li><a href="internals.html#honeybadgermpc.mpc.test_batchopening">test_batchopening() (in module honeybadgermpc.mpc)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.test_mpc_programs">test_mpc_programs() (in module honeybadgermpc.ipc)</a>
+      <li><a href="internals.html#honeybadgermpc.ipc.test_mpc_programs">test_mpc_programs() (in module honeybadgermpc.ipc)</a>
 </li>
       <li><a href="internals.html#honeybadgermpc.mpc.test_prog1">test_prog1() (in module honeybadgermpc.mpc)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="internals.html#honeybadgermpc.mpc.test_prog2">test_prog2() (in module honeybadgermpc.mpc)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.offline_robust.TripleGenerator">TripleGenerator (class in honeybadgermpc.offline_robust)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.TriplePreProcessing">TriplePreProcessing (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.TRIPLES">TRIPLES (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -530,7 +1211,7 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.field.GFElement.unsigned">unsigned() (honeybadgermpc.field.GFElement method)</a>, <a href="libref/field.html#honeybadgermpc.field.GFElement.unsigned">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.field.GFElement.unsigned">unsigned() (honeybadgermpc.field.GFElement method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -538,15 +1219,27 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="libref/ipc.html#honeybadgermpc.ipc.verify_all_connections">verify_all_connections() (in module honeybadgermpc.ipc)</a>
+      <li><a href="internals.html#honeybadgermpc.ipc.verify_all_connections">verify_all_connections() (in module honeybadgermpc.ipc)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#honeybadgermpc.poly_commit_const.PolyCommitConst.verify_eval">verify_eval() (honeybadgermpc.poly_commit_const.PolyCommitConst method)</a>
+
+      <ul>
+        <li><a href="internals.html#honeybadgermpc.poly_commit_lin.PolyCommitLin.verify_eval">(honeybadgermpc.poly_commit_lin.PolyCommitLin method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.field.FieldsNotIdentical.with_traceback">with_traceback() (honeybadgermpc.field.FieldsNotIdentical method)</a>, <a href="libref/field.html#honeybadgermpc.field.FieldsNotIdentical.with_traceback">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessedElements.wait_for_preprocessing">wait_for_preprocessing() (honeybadgermpc.preprocessing.PreProcessedElements method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#honeybadgermpc.field.FieldsNotIdentical.with_traceback">with_traceback() (honeybadgermpc.field.FieldsNotIdentical method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -554,7 +1247,13 @@
 <h2 id="Z">Z</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#honeybadgermpc.polynomial.EvalPoint.zero">zero() (honeybadgermpc.polynomial.EvalPoint method)</a>, <a href="libref/polynomial.html#honeybadgermpc.polynomial.EvalPoint.zero">[1]</a>
+      <li><a href="internals.html#honeybadgermpc.polynomial.EvalPoint.zero">zero() (honeybadgermpc.polynomial.EvalPoint method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.ZeroPreProcessing">ZeroPreProcessing (class in honeybadgermpc.preprocessing)</a>
+</li>
+      <li><a href="internals.html#honeybadgermpc.preprocessing.PreProcessingConstants.ZEROS">ZEROS (honeybadgermpc.preprocessing.PreProcessingConstants attribute)</a>
 </li>
   </ul></td>
 </tr></table>
