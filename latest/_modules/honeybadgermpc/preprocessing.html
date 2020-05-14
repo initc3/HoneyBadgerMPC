@@ -390,7 +390,8 @@
 <span class="sd">            n: number of nodes this is preprocessing for</span>
 <span class="sd">            t: number of faults tolerated by this preprocessing</span>
 <span class="sd">            polys: polynomials corresponding to secret share values to write</span>
-<span class="sd">            append: Whether or not to append shares to an existing file, or to overwrite.</span>
+<span class="sd">            append: Whether or not to append shares to an existing file, or</span>
+<span class="sd">                to overwrite.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">polys</span> <span class="o">=</span> <span class="p">[[</span><span class="n">coeff</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">poly</span><span class="o">.</span><span class="n">coeffs</span><span class="p">]</span> <span class="k">for</span> <span class="n">poly</span> <span class="ow">in</span> <span class="n">polys</span><span class="p">]</span>
         <span class="n">all_values</span> <span class="o">=</span> <span class="n">vandermonde_batch_evaluate</span><span class="p">(</span>

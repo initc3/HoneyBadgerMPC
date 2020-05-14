@@ -446,7 +446,7 @@ and returns their plaintext values.</p>
 
 <dl class="py class">
 <dt id="honeybadgermpc.mpc.TaskProgramRunner">
-<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.mpc.</code><code class="sig-name descname">TaskProgramRunner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#TaskProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.TaskProgramRunner" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.mpc.</code><code class="sig-name descname">TaskProgramRunner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/mpc.html#TaskProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.mpc.TaskProgramRunner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">honeybadgermpc.program_runner.ProgramRunner</span></code></p>
 <dl class="py method">
 <dt id="honeybadgermpc.mpc.TaskProgramRunner.add">
@@ -521,7 +521,7 @@ and returns their plaintext values.</p>
 
 <dl class="py class">
 <dt id="honeybadgermpc.ipc.ProcessProgramRunner">
-<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.ipc.</code><code class="sig-name descname">ProcessProgramRunner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">peers_config</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">my_id</span></em>, <em class="sig-param"><span class="n">mpc_config</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">linger_timeout</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/ipc.html#ProcessProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.ProcessProgramRunner" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">honeybadgermpc.ipc.</code><code class="sig-name descname">ProcessProgramRunner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">peers_config</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">my_id</span></em>, <em class="sig-param"><span class="n">mpc_config</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">linger_timeout</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/ipc.html#ProcessProgramRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.ipc.ProcessProgramRunner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="py method">
 <dt id="honeybadgermpc.ipc.ProcessProgramRunner.execute">
@@ -1020,12 +1020,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.BitPreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -1171,12 +1174,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.CubePreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -1322,12 +1328,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.DoubleSharingPreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -1473,12 +1482,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.PowersPreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -1897,12 +1909,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybadgermpc/preprocessing.html#PreProcessingMixin._write_polys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#honeybadgermpc.preprocessing.PreProcessingMixin._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -2066,12 +2081,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.RandomPreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -2219,12 +2237,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.ShareBitsPreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -2370,12 +2391,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.SharePreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -2521,12 +2545,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.SignedBitPreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -2678,12 +2705,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.SimplePreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -2847,12 +2877,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.TriplePreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>
@@ -2998,12 +3031,15 @@ updating the cache values and count variables.</p>
 <code class="sig-name descname">_write_polys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">polys</span></em>, <em class="sig-param"><span class="n">append</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#honeybadgermpc.preprocessing.ZeroPreProcessing._write_polys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a file prefix, a list of polynomials, and associated n, t values,
 write the preprocessing for the share values represented by the polnomials.</p>
-<dl class="simple">
+<dl>
 <dt>args:</dt><dd><p>prefix: prefix to use when writing the file
 n: number of nodes this is preprocessing for
 t: number of faults tolerated by this preprocessing
 polys: polynomials corresponding to secret share values to write
-append: Whether or not to append shares to an existing file, or to overwrite.</p>
+append: Whether or not to append shares to an existing file, or</p>
+<blockquote>
+<div><p>to overwrite.</p>
+</div></blockquote>
 </dd>
 </dl>
 </dd></dl>

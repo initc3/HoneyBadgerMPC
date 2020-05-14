@@ -272,7 +272,7 @@
             <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">PreProcessingBase</span><span class="o">.</span><span class="n">PERIOD_IN_SECONDS</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PreProcessingBase._get_output_batch"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.offline_robust.PreProcessingBase._get_output_batch">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">_get_output_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">):</span>
             <span class="n">batch</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">avss_value_processor</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>

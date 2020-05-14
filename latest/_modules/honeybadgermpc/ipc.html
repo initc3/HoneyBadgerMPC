@@ -288,12 +288,12 @@
 
 
 <div class="viewcode-block" id="ProcessProgramRunner"><a class="viewcode-back" href="../../internals.html#honeybadgermpc.ipc.ProcessProgramRunner">[docs]</a><span class="k">class</span> <span class="nc">ProcessProgramRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peers_config</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">mpc_config</span><span class="o">=</span><span class="p">{},</span> <span class="n">linger_timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peers_config</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">mpc_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">linger_timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">peers_config</span> <span class="o">=</span> <span class="n">peers_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">my_id</span> <span class="o">=</span> <span class="n">my_id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mpc_config</span> <span class="o">=</span> <span class="n">mpc_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mpc_config</span> <span class="o">=</span> <span class="n">mpc_config</span> <span class="k">if</span> <span class="n">mpc_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mpc_config</span><span class="p">[</span><span class="n">ConfigVars</span><span class="o">.</span><span class="n">Reconstruction</span><span class="p">]</span> <span class="o">=</span> <span class="n">HbmpcConfig</span><span class="o">.</span><span class="n">reconstruction</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">node_communicator</span> <span class="o">=</span> <span class="n">NodeCommunicator</span><span class="p">(</span><span class="n">peers_config</span><span class="p">,</span> <span class="n">my_id</span><span class="p">,</span> <span class="n">linger_timeout</span><span class="p">)</span>
@@ -356,7 +356,7 @@
             <span class="n">node_communicator</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="n">sender_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">node_communicator</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
             <span class="n">sender_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>

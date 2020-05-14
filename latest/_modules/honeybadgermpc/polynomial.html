@@ -202,6 +202,8 @@
     <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">_poly_cache</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_poly_cache</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
 
+    <span class="n">zero_field</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
     <span class="k">class</span> <span class="nc">Polynomial</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
         <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">strip_trailing_zeros</span><span class="p">(</span><span class="n">coeffs</span><span class="p">))</span>
@@ -236,7 +238,7 @@
             <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Polynomial</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span>
 
         <span class="nd">@classmethod</span>
-        <span class="k">def</span> <span class="nf">interpolate_at</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">shares</span><span class="p">,</span> <span class="n">x_recomb</span><span class="o">=</span><span class="n">field</span><span class="p">(</span><span class="mi">0</span><span class="p">)):</span>
+        <span class="k">def</span> <span class="nf">interpolate_at</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">shares</span><span class="p">,</span> <span class="n">x_recomb</span><span class="o">=</span><span class="n">zero_field</span><span class="p">):</span>
             <span class="c1"># shares are in the form (x, y=f(x))</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">x_recomb</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
                 <span class="n">x_recomb</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">x_recomb</span><span class="p">)</span>
@@ -623,7 +625,7 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">omega</span><span class="o">**</span><span class="n">i</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x3</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;How many omegas are there?&quot;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="n">get_omega</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">20</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">omega</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">omega</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">17</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
