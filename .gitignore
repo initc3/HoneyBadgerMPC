@@ -141,3 +141,6 @@ sharedata/
 
 .ci/deploy_key
 .ci/deploy_key.pub
+
+# benchmark
+.benchmarks

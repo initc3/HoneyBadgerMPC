@@ -54,6 +54,11 @@ jobs:
     install: .ci/pull-or-build-image.sh
     script: .ci/run-tests.sh
     after_success: .ci/upload-coverage-report.sh
+  - name: Benchmark Tests - logic only
+    env:
+    - SETUP_EXTRAS: "tests"
+    install: .ci/pull-or-build-image.sh
+    script: .ci/run-benchmark-tests-logic-only.sh
   - if: |
       type = pull_request OR \
       repo != initc3/HoneyBadgerMPC OR \

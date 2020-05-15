@@ -1,6 +1,6 @@
 from random import randint
 
-from pytest import mark
+from pytest import mark, param
 
 from honeybadgermpc.elliptic_curve import Subgroup
 from honeybadgermpc.field import GF
@@ -8,7 +8,9 @@ from honeybadgermpc.polynomial import EvalPoint, polynomials_over
 from honeybadgermpc.reed_solomon import GaoRobustDecoder
 
 
-@mark.parametrize("t", [1, 3, 5, 10, 25, 33, 50, 100, 256])
+@mark.parametrize(
+    "t", [param(1, marks=mark.skip_bench), 3, 5, 10, 25, 33, 50, 100, 256]
+)
 def test_benchmark_gao_robust_decode(benchmark, t, galois_field):
     n = 3 * t + 1
     galois_field = GF(Subgroup.BLS12_381)
@@ -34,11 +36,13 @@ def test_benchmark_gao_robust_decode(benchmark, t, galois_field):
     # assert set(faults) == set(decoded_faults)
 
 
-@mark.parametrize("t", [1, 3, 5, 10, 25, 33, 50, 100, 256])
+@mark.parametrize(
+    "t", [param(1, marks=mark.skip_bench), 3, 5, 10, 25, 33, 50, 100, 256]
+)
 def test_benchmark_gao_robust_decode_fft(benchmark, t, galois_field):
     n = 3 * t + 1
     galois_field = GF(Subgroup.BLS12_381)
-    point = EvalPoint(galois_field, n, use_fft=True)
+    point = EvalPoint(galois_field, n, use_omega_powers=True)
     omega = point.omega.value
     p = galois_field.modulus
     dec = GaoRobustDecoder(t, point)
