@@ -2,7 +2,7 @@ import asyncio
 import os
 from random import randint
 
-from pytest import mark
+from pytest import mark, param
 
 from honeybadgermpc.broadcast.reliablebroadcast import reliablebroadcast
 
@@ -10,7 +10,7 @@ from honeybadgermpc.broadcast.reliablebroadcast import reliablebroadcast
 @mark.parametrize(
     "t, msglen",
     [
-        (1, 200),
+        param(1, 200, marks=mark.skip_bench),
         (1, 10000),
         (3, 200),
         (3, 10000),
@@ -45,7 +45,7 @@ def test_benchmark_rbc(test_router, benchmark, t, msglen):
 @mark.parametrize(
     "t, msglen",
     [
-        (1, 200),
+        param(1, 200, marks=mark.skip_bench),
         (1, 10000),
         (3, 200),
         (3, 10000),

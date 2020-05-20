@@ -216,6 +216,6 @@ def benchmark_runner(benchmark):
         def _work():
             loop.run_until_complete(program_runner.join())
 
-        benchmark(_work, setup=_setup)
+        benchmark.pedantic(_work, setup=_setup)
 
     return _benchmark_runner

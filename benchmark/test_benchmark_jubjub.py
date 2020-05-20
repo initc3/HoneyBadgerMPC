@@ -1,4 +1,4 @@
-from pytest import mark
+from pytest import mark, param
 
 from honeybadgermpc.elliptic_curve import Jubjub, Point
 from honeybadgermpc.progs.jubjub import SharedPoint, share_mul
@@ -32,7 +32,11 @@ TEST_POINT = Point(
     TEST_CURVE,
 )  # noqa: E501
 
-ALL_BIT_NUMBERS = [int(f"0b{'1' * i}", 2) for i in [1, 64, 128]]
+
+ALL_BIT_NUMBERS = [
+    param(int(f"0b{'1' * i}", 2), marks=(mark.skip_bench if i == 1 else []))
+    for i in [1, 64, 128]
+]
 
 n, t = 4, 1
 k = 50000
@@ -45,6 +49,7 @@ def run_benchmark(
     runner(prog, n, t, preprocessing, k, mixins)
 
 
+@mark.skip_bench
 def test_benchmark_shared_point_add(benchmark_runner):
     async def _prog(context):
         result = SharedPoint.from_point(context, TEST_POINT)
@@ -54,6 +59,7 @@ def test_benchmark_shared_point_add(benchmark_runner):
     run_benchmark(benchmark_runner, _prog)
 
 
+@mark.skip_bench
 def test_benchmark_shared_point_double(benchmark_runner):
     async def _prog(context):
         result = SharedPoint.from_point(context, TEST_POINT)
@@ -87,7 +93,10 @@ def test_benchmark_shared_point_montgomery_mul(benchmark_runner, multiplier):
     run_benchmark(benchmark_runner, _prog)
 
 
-@mark.parametrize("bit_length", list(range(64, 257, 64)))
+@mark.parametrize(
+    "bit_length",
+    [param(i, marks=mark.skip_bench) if i == 64 else i for i in range(64, 257, 64)],
+)
 def test_benchmark_share_mul(bit_length, benchmark_runner):
     p = TEST_POINT
 

@@ -1,6 +1,6 @@
 from random import randint
 
-from pytest import mark
+from pytest import mark, param
 
 from honeybadgermpc.elliptic_curve import Jubjub
 from honeybadgermpc.progs.mimc import mimc_mpc_batch
@@ -34,7 +34,10 @@ TEST_KEY = TEST_FIELD(randint(0, TEST_FIELD.modulus))
 
 
 # All iterations take around 30min total.
-@mark.parametrize("batch_size", [10 ** i for i in range(4)])
+@mark.parametrize(
+    "batch_size",
+    [param(10 ** i, marks=mark.skip_bench) if i == 0 else 10 ** i for i in range(4)],
+)
 def test_benchmark_mimc_mpc_batch(batch_size, benchmark_runner):
     async def _prog(context):
         xs = [context.preproc.get_rand(context) for _ in range(batch_size)]

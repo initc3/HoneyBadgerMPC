@@ -2,7 +2,7 @@ import asyncio
 from contextlib import ExitStack
 from random import randint
 
-from pytest import mark
+from pytest import mark, param
 
 from honeybadgermpc.betterpairing import G1, ZR
 from honeybadgermpc.elliptic_curve import Subgroup
@@ -24,7 +24,7 @@ def get_avss_params(n, t):
 @mark.parametrize(
     "t, k",
     [
-        (1, 5),
+        param(1, 5, marks=mark.skip_bench),
         (3, 5),
         (5, 5),
         (16, 5),
@@ -70,7 +70,7 @@ def test_benchmark_hbavss_lite_dealer(test_router, benchmark, t, k):
 @mark.parametrize(
     "t, k",
     [
-        (1, 5),
+        param(1, 5, marks=mark.skip_bench),
         (3, 5),
         (5, 5),
         (16, 5),
@@ -113,7 +113,7 @@ def test_benchmark_hbavss_dealer(test_router, benchmark, t, k):
 @mark.parametrize(
     "t, k",
     [
-        (1, 5),
+        param(1, 5, marks=mark.skip_bench),
         (3, 5),
         (5, 5),
         (16, 5),
@@ -160,7 +160,7 @@ def test_benchmark_hbavss_lite(test_router, benchmark, t, k):
 @mark.parametrize(
     "t, k",
     [
-        (1, 5),
+        param(1, 5, marks=mark.skip_bench),
         (3, 5),
         (5, 5),
         (16, 5),
