@@ -8,6 +8,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .:/usr/src/HoneyBadgerMPC
+      - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
     environment:
       - O=-W --keep-going
     command: make -C docs html

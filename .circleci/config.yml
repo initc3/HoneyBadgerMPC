@@ -20,7 +20,11 @@ jobs:
           name: install dependencies
           # The "--editable" option is needed until we resolve issue #377.
           # See https://github.com/initc3/HoneyBadgerMPC/issues/377 for more info.
-          command: mkdir -p /var/log/hbmpc && pip install --editable .[docs]
+          command: |
+              make -C apps/asynchromix/cpp
+              pip install -v pairing/
+              mkdir -p /var/log/hbmpc
+              pip install --editable .[docs]
 
       - save_cache:
           paths:
