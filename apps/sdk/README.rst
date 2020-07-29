@@ -12,8 +12,27 @@ one or more Ethereum contracts, written in Vyper.
 The SDK provides boilerplate code that can be used to develop the clients,
 the MPC servers, and the Vyper contracts.
 
---
+Quickstart
+----------
+The quickest way to start a new application is to copy the ``asynchromix2``
+directory and customize it the need of your application.
 
+The key components that will need attention are most likely:
+
+* smart contract (``contract.rl``) which also includes the MPC function
+  to execute
+* the client, which can be developed using the basic one found under
+  ``apps/sdk/client.py``
+* ``preprocessor.py`` for preprocessing elements
+* ``mpcprogrunner.py`` to execute the MPC functions as a continously running
+  service
+
+Below is some documentation that aims to explain the current way the framework
+functions, and this may be helpful to figure out how to use it and what to
+modify for specific applications.
+
+Background
+----------
 The first app was asynchromix which uses Ethereum as a "trusted" coordinator
 to mix messages from clients.
 
