@@ -61,6 +61,9 @@ event SpecialBreedFlag:
     partnerId: indexed(uint256)
     momId: indexed(uint256)
 
+event ChildIsBorn:
+    tokenId: indexed(uint256)
+
 # @dev Mapping from NFT ID to the address that owns it.
 idToOwner: HashMap[uint256, address]
 
@@ -87,10 +90,11 @@ ERC721_INTERFACE_ID: constant(bytes32) = 0x0000000000000000000000000000000000000
 
 # additional stuff for robohash MPC app:
 idToPublicGenome: HashMap[uint256, bytes32]
-idToApprovedPartners: HashMap[uint256, HashMap[uint256, bool]]
-GENDER_MASK: constant(bytes32) = 0x000000000000000000000000000000000000FF00000000000000000000000000
-
-
+# idToApprovedPartners: HashMap[uint256, HashMap[uint256, bool]]
+# GENDER_MASK: constant(bytes32) = 0x000000000000000000000000000000000000FF00000000000000000000000000
+# MAX_TOKENS: constant(uint256) = 100
+# ownerToTokenIds: HashMap[address, uint256[MAX_TOKENS]] # not sure if this is a valid structure
+CREATED_TOKEN_COUNT: uint256 = 0
 
 @external
 def __init__():
@@ -195,6 +199,7 @@ def _addTokenTo(_to: address, _tokenId: uint256):
     self.idToOwner[_tokenId] = _to
     # Change count tracking
     self.ownerToNFTokenCount[_to] += 1
+    # update the owner's token list
 
 
 @internal
@@ -388,57 +393,79 @@ def isFemale(_tokenId) -> bool:
     masked: bytes32 = bitwise_and(genes, GENDER_MASK)
     return masked % 2 == 0
 
-@external
-def approveForBreeding(_tokenId: uint256, _partnerId: uint256):
-    """
-    @dev Approve _partnerId to breed with _tokenId.
-    """
-    assert self._isApprovedOrOwner(msg.sender, _tokenId)
-    owner: address = self.idToOwner[_tokenId]
-    assert owner != ZERO_ADDRESS
-    owned_female: bool = self.isFemale(_tokenId)
-    partner_female: bool = self.isFemale(_partnerId)
-    if owned_female == partner_female:
-        # not sure that this is how you properly throw an error in Vyper
-        raise TypeMismatch
-    mom_id: uint256 = _tokenId
-    dad_id: uint256 = _partnerId
-    # if we got this wrong, flip them
-    if not self.isFemale(mom_id):
-        mom_id = _partnerId
-        dad_id = _tokenId
-    self.idToApprovedPartners[_tokenId][_partnerId] = True
-    log ApprovalForBreeding(owner, _tokenId, _partnerId, True)
-    # check if this was the "mutual approval" for breeding to begin:
-    if idToApprovedPartners[_partnerId][_tokenId]:
-        # mom_id is redundant here but it makes this easier
-        # not sure if we need both this event emission AND the self.breed() call
-        log SpecialBreedFlag(_tokenId, _partnerId, mom_id)
-        _mom_genome = self.idToPublicGenome[mom_id]
-        _dad_genome = self.idToPublicGenome[dad_id]
-        self.breed(mom_genome=_mom_genome, dad_genome=_dad_genome, mom_id=mom_id, dad_id=dad_id)
+# @external
+# def approveForBreeding(_tokenId: uint256, _partnerId: uint256):
+#     """
+#     @dev Approve _partnerId to breed with _tokenId.
+#     """
+#     assert self._isApprovedOrOwner(msg.sender, _tokenId)
+#     owner: address = self.idToOwner[_tokenId]
+#     assert owner != ZERO_ADDRESS
+#     owned_female: bool = self.isFemale(_tokenId)
+#     partner_female: bool = self.isFemale(_partnerId)
+#     if owned_female == partner_female:
+#         # not sure that this is how you properly throw an error in Vyper
+#         raise TypeMismatch
+#     mom_id: uint256 = _tokenId
+#     dad_id: uint256 = _partnerId
+#     # if we got this wrong, flip them
+#     if not self.isFemale(mom_id):
+#         mom_id = _partnerId
+#         dad_id = _tokenId
+#     self.idToApprovedPartners[_tokenId][_partnerId] = True
+#     log ApprovalForBreeding(owner, _tokenId, _partnerId, True)
+#     # check if this was the "mutual approval" for breeding to begin:
+#     if idToApprovedPartners[_partnerId][_tokenId]:
+#         # mom_id is redundant here but it makes this easier
+#         # not sure if we need both this event emission AND the self.breed() call
+#         log SpecialBreedFlag(_tokenId, _partnerId, mom_id)
+#         _mom_genome = self.idToPublicGenome[mom_id]
+#         _dad_genome = self.idToPublicGenome[dad_id]
+#         self.breed(mom_genome=_mom_genome, dad_genome=_dad_genome, mom_id=mom_id, dad_id=dad_id)
+
+# @external
+# def revokeBreedingApproval(_tokenId: uint256, _partnerId: uint256):
+#     """
+#     @dev Revoke approval for _partnerId to breed with _tokenId.
+#     """
+#     assert self._isApprovedOrOwner(msg.sender, _tokenId)
+#     owner: address = self.idToOwner[_tokenId]
+#     assert owner != ZERO_ADDRESS
+#     self.idToApprovedPartners[_tokenId][_partnerId] = False
+#     log ApprovalForBreeding(owner, _tokenId, _partnerId, False)
 
 @external
-def revokeBreedingApproval(_tokenId: uint256, _partnerId: uint256):
+def createRobot(_genes: bytes32):
     """
-    @dev Revoke approval for _partnerId to breed with _tokenId.
+    @dev Use this to create a robot directly for demo.
     """
-    assert self._isApprovedOrOwner(msg.sender, _tokenId)
-    owner: address = self.idToOwner[_tokenId]
-    assert owner != ZERO_ADDRESS
-    self.idToApprovedPartners[_tokenId][_partnerId] = False
-    log ApprovalForBreeding(owner, _tokenId, _partnerId, False)
+    _tokenId: uint256 = self.CREATED_TOKEN_COUNT
+    self._addTokenTo(msg.sender, _tokenId)
+    self.idToPublicGenome[_tokenId] = _genes
+    self.CREATED_TOKEN_COUNT += 1
+
+@external
+def breedRobots(_tokenId1: uint256, _tokenId2: uint256):
+    """
+    @dev Breed any 2 token Ids.
+    """
+    _mom_genome: bytes32 = self.idToPublicGenome[_tokenId1]
+    _dad_genome: bytes32 = self.idToPublicGenome[_tokenId2]
+    self.breed(mom_genome=_mom_genome, dad_genome=_dad_genome, mom_id=mom_id, dad_id=dad_id)
+
 
 @external
 def childIsBorn(_momId: uint256, _genes: bytes32) -> bool:
     '''
     Special callback for MPC to deliver the new baby to.
+    This is basically an alternative to self.mint().
     '''
     tokenOwner: address = self.ownerOf(_momId)
-    # I guess we can just use the _genes as a token ID? or try to:
-    _newTokenId = uint256(_genes)
-    self._addTokenTo(tokenOwner, _newTokenId)
-    self.idToPublicGenome[_newTokenId] = _genes
+    _tokenId: uint256 = self.CREATED_TOKEN_COUNT
+    self._addTokenTo(tokenOwner, _tokenId)
+    self.idToPublicGenome[_tokenId] = _genes
+    self.CREATED_TOKEN_COUNT += 1
+    log ChildIsBorn(_newTokenId)
     return True
 
 # when converted to a .rl file, this decorator will set up oracle services
