@@ -15,4 +15,4 @@ tmux $TMUX_CMD "docker-compose logs -f eth.blockchain.io; sh" \; \
     splitw -v -p 60 "docker-compose logs -f hbmpc.peer3.io; sh" \; \
     selectp -t 0 \; \
     splitw -h -p 60 "docker-compose logs -f hbmpc.coordinator.io; sh" \; \
-    splitw -h -p 60 "docker-compose logs -f hbmpc.client.io; sh"
+    splitw -h -p 60 "docker-compose logs -f eth.robohash.org; sh"

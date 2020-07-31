@@ -45,5 +45,5 @@ rm:
 run: down rm clean ## run the example
 	docker-compose up -d eth.blockchain.io
 	docker-compose up hbmpc.coordinator.io
-	docker-compose up -d hbmpc.client.io
+	docker-compose up -d eth.robohash.org
 	sh follow-sim-logs-with-tmux.sh

@@ -86,7 +86,7 @@ services:
       - hbmpc.coordinator.io
     command: ["./apps/sdk/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/asynchromix2/server.py"]
 
-  hbmpc.client.io:
+  eth.robohash.org:
     image: honeybadgermpc-local
     build:
         context: ../..
