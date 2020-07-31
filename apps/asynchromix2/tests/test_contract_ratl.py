@@ -29,7 +29,7 @@ def test_initial_state(w3, contract):
     assert contract.inputmasks_available() == 0
     assert contract.inputs_ready() == 0
     assert contract.preprocess() == 0
-    assert contract.mixes_available() == 0
+    assert contract.pp_elems_available() == 0
     assert contract.K() == 32
     expected_mix_constant = contract.K() / 2 * math.log2(contract.K()) ** 2
     assert expected_mix_constant == 400
