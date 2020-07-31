@@ -33,15 +33,25 @@ struct OutputVotes:
 #####################################################################
 # NOTE not sure if needed, commenting for now
 # PreProcessUpdated: event({})
-InputMaskClaimed: event({client: address, inputmask_idx: uint256})
-MessageSubmitted: event({idx: uint256, inputmask_idx: uint256, masked_input: bytes32})
-MpcEpochInitiated: event({epoch: uint256})
+event InputMaskClaimed:
+    client: address
+    inputmask_idx: uint256
+
+event MessageSubmitted:
+    idx: uint256
+    inputmask_idx: uint256
+    masked_input: bytes32
+
+event MpcEpochInitiated:
+    epoch: uint256
 
 # NOTE vyper does not allow dynamic arrays, so we have to set the maximum
-# expected length of the output. The output string can contain up through
-# the maximum number of characters. Meaning: x = string[1000], x can be
+# expected length of the output. The output String can contain up through
+# the maximum number of characters. Meaning: x = String[1000], x can be
 # 1 to 1000 character long.
-MpcOutput: event({epoch: uint256, output: string[1000]})
+event MpcOutput:
+    epoch: uint256
+    output: String[1000]
 
 # NOTE: Not sure if there's a way around this ... must
 # hardcode number of participants
@@ -50,7 +60,7 @@ N: constant(uint256) = 4
 # Session parameters
 t: public(uint256)
 servers: public(address[4])
-servermap: public(map(address, int128))
+servermap: public(HashMap[address, int128])
 
 # Consensus count (min of the player report counts)
 _preprocess: PreProcessCount
@@ -59,11 +69,11 @@ _preprocess: PreProcessCount
 preprocess_used: public(PreProcessCount)
 
 # Report of preprocess buffer size from each server
-preprocess_reports: public(map(int128, PreProcessCount))
+preprocess_reports: public(HashMap[int128, PreProcessCount])
 
 # maps each element of preprocess.inputmasks to the client (if any) that claims it
-inputmasks_claimed: public(map(uint256, address))
-inputmask_map: public(map(uint256, bool))   # Maps a mask
+inputmasks_claimed: public(HashMap[uint256, address])
+inputmask_map: public(HashMap[uint256, bool])   # Maps a mask
 _input_queue: InputQueue     # All inputs sent so far
 
 inputs_unmasked: public(uint256)
@@ -71,16 +81,16 @@ epochs_initiated: public(uint256)
 outputs_ready: public(uint256)
 output_hashes: public(OutputHashes)
 output_votes: public(OutputVotes)
-server_voted: public(map(int128, uint256))     # highest epoch voted in
+server_voted: public(HashMap[int128, uint256])     # highest epoch voted in
 
 
-@public
-@constant
+@external
+@view
 def n() -> uint256:
     return N
 
 
-@public
+@external
 def __init__(_servers: address[N], _t: uint256):
     assert 3 * _t < N
     self.t = _t
@@ -93,17 +103,17 @@ def __init__(_servers: address[N], _t: uint256):
 ##############################################################################
 # 1. Preprocessing Buffer (the MPC offline phase)                            #
 ##############################################################################
-@public
+@external
 def preprocess() -> uint256:
     return self._preprocess.inputmasks
 
 
-@public
+@external
 def inputmasks_available() -> uint256:
     return self._preprocess.inputmasks - self.preprocess_used.inputmasks
 
 
-@public
+@external
 def input_queue(idx: int128) -> Input:
     # TODO clean up / simplify
     _input: Input = self._input_queue.queue[idx]
@@ -111,7 +121,7 @@ def input_queue(idx: int128) -> Input:
     return _input
 
 
-@public
+@external
 def preprocess_report(rep: uint256[3]):
     # Update the Report
     assert self.servermap[msg.sender] > 0   # only valid servers
@@ -147,7 +157,7 @@ def preprocess_report(rep: uint256[3]):
 # ######################
 
 # Step 2.a. Clients can reserve an input mask [r] from Preprocessing
-@public
+@external
 def reserve_inputmask() -> uint256:
     """Client reserves a random values.
     
@@ -160,13 +170,13 @@ def reserve_inputmask() -> uint256:
     idx: uint256 = self.preprocess_used.inputmasks
     self.inputmasks_claimed[idx] = msg.sender
     self.preprocess_used.inputmasks += 1
-    log.InputMaskClaimed(msg.sender, idx)
+    log InputMaskClaimed(msg.sender, idx)
     return idx
 
 
 # Step 2.b. Client requests (out of band, e.g. over https) shares of [r]
 #           from each server. 
-@public
+@external
 def is_client_authorized(client: address, idx: uint256) -> bool:
     """Servers use this function to check authorization.
     
@@ -180,7 +190,7 @@ def is_client_authorized(client: address, idx: uint256) -> bool:
 
 # Step 2.c. Clients publish masked message (m+r) to provide a new input [m]
 #           and bind it to the preprocess input
-@public
+@external
 def submit_message(inputmask_idx: uint256, masked_input: bytes32):
     # TODO See whether using a map to maintain the input queue would work.
     # The caller would be required to pass a unique id along with the submitted
@@ -205,7 +215,7 @@ def submit_message(inputmask_idx: uint256, masked_input: bytes32):
     self._input_queue.queue[idx].inputmask = inputmask_idx
 
     # QUESTION: What is the purpose of this event?
-    log.MessageSubmitted(idx, inputmask_idx, masked_input)
+    log MessageSubmitted(idx, inputmask_idx, masked_input)
 
     # The input masks are deactivated after first use
     self.inputmasks_claimed[inputmask_idx] = ZERO_ADDRESS
@@ -220,39 +230,39 @@ _K: constant(uint256) = 32  # mix size
 _PER_MIX_TRIPLES: constant(uint256) = (_K / 2) * 5 * 5   # k log^2 k
 _PER_MIX_BITS: constant(uint256) = (_K / 2) * 5 * 5
 
-@public
-@constant
+@external
+@view
 def K() -> uint256:
     return _K
 
 
-@public
-@constant
+@external
+@view
 def PER_MIX_TRIPLES() -> uint256:
     return _PER_MIX_TRIPLES
 
 
-@public
-@constant
+@external
+@view
 def PER_MIX_BITS() -> uint256:
     return _PER_MIX_BITS
 
 
 # Return the maximum number of mixes that can be run with the
 # available preprocessing
-@public
+@external
 def pp_elems_available() -> uint256:
     triples_available: uint256 = self._preprocess.triples - self.preprocess_used.triples
     bits_available: uint256 = self._preprocess.bits - self.preprocess_used.bits
     return min(triples_available / _PER_MIX_TRIPLES, bits_available / _PER_MIX_BITS)
 
 # Step 3.a. Trigger MPC to start
-@public
+@external
 def inputs_ready() -> uint256:
     return self._input_queue.size - self.inputs_unmasked
 
 
-@public
+@external
 def initiate_mpc():
     # Must unmask eactly K values in each epoch
     assert self._input_queue.size >= self.inputs_unmasked + _K
@@ -262,7 +272,7 @@ def initiate_mpc():
     self.preprocess_used.triples += _PER_MIX_TRIPLES
     self.preprocess_used.bits += _PER_MIX_BITS
     self.inputs_unmasked += _K
-    log.MpcEpochInitiated(self.epochs_initiated)
+    log MpcEpochInitiated(self.epochs_initiated)
     self.epochs_initiated += 1
     # FIXME not sure this is needed as the size does not appear to be used, at
     # least in the contract ... MUST check if needed by contract consumer(s).
@@ -273,8 +283,8 @@ def initiate_mpc():
 # Step 3.b. Output reporting: the output is considered "approved" once
 #           at least t+1 servers report it
 
-@public
-def propose_output(epoch: uint256,  output: string[1000]):
+@external
+def propose_output(epoch: uint256,  output: String[1000]):
     assert epoch < self.epochs_initiated    # can't provide output if it hasn't been initiated
     assert self.servermap[msg.sender] > 0   # only valid servers
     id: int128 = self.servermap[msg.sender] - 1
@@ -295,7 +305,7 @@ def propose_output(epoch: uint256,  output: string[1000]):
 
     self.output_votes.votes[epoch] += 1
     if self.output_votes.votes[epoch] == self.t + 1:   # at least one honest node agrees
-        log.MpcOutput(epoch, output)
+        log MpcOutput(epoch, output)
         self.outputs_ready += 1
 
 
