@@ -11,5 +11,5 @@ Contracts are written in Ratel, a Vyper-based language that allows writing MPC
 programs.
 
 
-Each secret CryptoDNA of a new RoboHash is selected from the finest Galois
-Fields that mathematics has to offer.
+Each secret CryptoDNA of a new RoboHash is randomly selected from the finest
+Galois Fields that mathematics has to offer.
