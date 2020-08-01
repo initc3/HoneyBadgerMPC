@@ -59,7 +59,7 @@ class Client:
         self._task = asyncio.create_task(self._run())
         self._task.add_done_callback(print_exception_callback)
         self.number_of_epoch = kwargs.get("number_of_epoch", 10)
-        self.msg_batch_size = kwargs.get("msg_batch_size", 32)
+        self.msg_batch_size = kwargs.get("msg_batch_size", 16)
         self.eve = 0
         self.adam = 1
 

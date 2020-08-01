@@ -293,7 +293,7 @@ def request_robot(_token_id_1: uint256, _token_id_2: uint256):
 # ######################
 
 # Preprocessing requirements
-_K: constant(uint256) = 32  # mix size
+_K: constant(uint256) = 16  # mix size
 _PER_MIX_TRIPLES: constant(uint256) = (_K / 2) * 5 * 5   # k log^2 k
 _PER_MIX_BITS: constant(uint256) = (_K / 2) * 5 * 5
 
@@ -424,7 +424,7 @@ async def prog(ctx, *, robot_details):
     child_genome = ''.join(hex(g).lstrip('0x') for g, _ in hasharray)
 
     # NOTE Beautiful ouput of Crypto DNA
-    # revealed_DNAs = await cryptodna_sharearray.open()
-    # return zip((p1[0], p2[0], kd[0]), revealed_DNAs)
+    revealed_DNAs = await cryptodna_sharearray.open()
+    cryptodna = zip((p1[0], p2[0], kd[0]), revealed_DNAs)
 
-    return child_genome
+    return child_genome, cryptodna

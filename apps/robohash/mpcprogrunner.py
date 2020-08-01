@@ -222,12 +222,12 @@ class MPCProgRunner:
                 self.mpc_config,
                 **prog_kwargs,
             )
-            _result = await ctx._run()
-            # crypto_DNAs = ", ".join(
-            #     ": ".join((f"ROBOT-{token_id:05d}", f"{cryptodna}"))
-            #     for token_id, cryptodna in _result
-            # )
-            # logging.info(f"[{self.myid}] MPC complete {crypto_DNAs}")
+            _result, cryptodnas = await ctx._run()
+            crypto_DNAs = ", ".join(
+                ": ".join((f"ROBOT-{token_id:05d}", f"{cryptodna}"))
+                for token_id, cryptodna in cryptodnas
+            )
+            logging.info(f"[{self.myid}] MPC complete {crypto_DNAs}")
             logging.info(f"[{self.myid}] MPC complete - child genome: {_result}")
 
             # 3.e. Output the published messages to contract
