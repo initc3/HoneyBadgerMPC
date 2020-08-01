@@ -24,6 +24,9 @@ clean: clean-pyc rm-dbs rm-preprocessing
 rm-dbs:
 	docker-compose run --no-deps --rm hbmpc.peer0.io rm -rf apps/asynchromix2/db*
 
+rm-contract-address-file:
+	docker-compose run --no-deps --rm hbmpc.peer0.io rm -rf apps/asynchromix2/public-data/contract_address
+
 rm-preprocessing:
 	docker-compose run --no-deps --rm hbmpc.peer0.io rm -rf sharedata/*
 
