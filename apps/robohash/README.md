@@ -7,9 +7,19 @@ secured by an EthBadgerMPC network, in which Ethereum acts as a coordinator
 meanwhile HoneyBadgerMPC secures the secret CryptoDNA material, used to create
 RoboHashes.
 
+## Vyper-based, Ratel contract
 Contracts are written in Ratel, a Vyper-based language that allows writing MPC
 programs.
 
-
+## Galois Field -based Secret CryptoDNA
 Each secret CryptoDNA of a new RoboHash is randomly selected from the finest
 Galois Fields that mathematics has to offer.
+
+## Try it!
+
+```shell
+$ git clone --single-branch --branch robohash-ic3-bcc20 git@github.com:initc3/HoneyBadgerMPC.git
+
+$ cd apps/robohash
+$ make run
+```
