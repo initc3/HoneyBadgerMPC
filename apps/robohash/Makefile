@@ -22,7 +22,10 @@ help:
 clean: clean-pyc rm-dbs rm-preprocessing
 
 rm-dbs:
-	docker-compose run --no-deps --rm hbmpc.peer0.io rm -rf apps/asynchromix2/db*
+	docker-compose run --no-deps --rm hbmpc.peer0.io rm -rf apps/robohash/db*
+
+rm-contract-address-file:
+	docker-compose run --no-deps --rm hbmpc.peer0.io rm -rf apps/robohash/public-data/contract_address
 
 rm-preprocessing:
 	docker-compose run --no-deps --rm hbmpc.peer0.io rm -rf sharedata/*

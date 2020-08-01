@@ -3,8 +3,8 @@ if __name__ == "__main__":
 
     import toml
 
-    from apps.asynchromix2.mpcprogrunner import MPCProgRunner
-    from apps.asynchromix2.preprocessor import PreProcessor
+    from apps.robohash.mpcprogrunner import MPCProgRunner
+    from apps.robohash.preprocessor import PreProcessor
 
     from apps.sdk.httpserver import HTTPServer
     from apps.sdk.mpcserver import runner

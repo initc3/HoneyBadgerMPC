@@ -7,7 +7,7 @@ t = 1
 
 @pytest.fixture
 def contract_code():
-    with open("apps/asynchromix2/contract.rl") as f:
+    with open("apps/robohash/contract.rl") as f:
         contract_code = f.read()
     return contract_code
 
@@ -21,15 +21,18 @@ def contract(w3, get_ratl_contract, contract_code):
 
 def test_initial_state(w3, contract):
     # Check if the constructor of the contract is set up properly
+    assert contract.god()  # Check that god exists
     assert contract.n() == 4
     assert contract.t() == t
     for i in range(n):
         assert contract.servers(i) == w3.eth.accounts[i]
 
+    # assert contract.CREATED_TOKEN_COUNT == 2
+    assert contract.eve_token_id() == 0
+    assert contract.adam_token_id() == 1
     assert contract.inputmasks_available() == 0
-    assert contract.inputs_ready() == 0
     assert contract.preprocess() == 0
-    assert contract.mixes_available() == 0
+    assert contract.pp_elems_available() == 0
     assert contract.K() == 32
     expected_mix_constant = contract.K() / 2 * math.log2(contract.K()) ** 2
     assert expected_mix_constant == 400

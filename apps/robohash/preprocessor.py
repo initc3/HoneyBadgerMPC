@@ -5,7 +5,9 @@ import time
 
 from web3.contract import ConciseContract
 
-from apps.sdk.preprocessor import PreProcessor as _PreProcessor, field
+from apps.robohash._preprocessor import PreProcessor as _PreProcessor, field
+
+# from apps.sdk.preprocessor import PreProcessor as _PreProcessor, field
 
 from honeybadgermpc.offline_randousha import generate_bits, generate_triples
 from honeybadgermpc.utils.misc import _create_task

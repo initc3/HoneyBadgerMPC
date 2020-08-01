@@ -1,33 +1,33 @@
 n = 4
 t = 1
-deployer_address = "0xa1B8f6B93BAE3b279E980E72F080CcD833890B5E"
+deployer_address = "0xf435E1D0cB0b84B8E40B1f10FBCFe7686BBDaD0b"
 [[peers]]
 id = 0
 host = "hbmpc.peer0.io"
 http_port = 8080
 mpc_port = 7000
-eth_address = "0x36000dDA63623341F7E527f4AC8804EA7998f67f"
+eth_address = "0x41650Ee310F7FD7DA4C4F891496d39264eDaCA00"
 
 [[peers]]
 id = 1
 host = "hbmpc.peer1.io"
 http_port = 8080
 mpc_port = 7000
-eth_address = "0xEE098ab08278B43986C41969BE97750E6DE3d4a7"
+eth_address = "0x5DCe2Adbc683ea4EC520D4bB02a4f2A2Bf5af2E4"
 
 [[peers]]
 id = 2
 host = "hbmpc.peer2.io"
 http_port = 8080
 mpc_port = 7000
-eth_address = "0x540EeB17BC327B27a75d3061183497bD713f5d38"
+eth_address = "0x85f18a384aa0ff7Fe29f983f23556F20d261f61b"
 
 [[peers]]
 id = 3
 host = "hbmpc.peer3.io"
 http_port = 8080
 mpc_port = 7000
-eth_address = "0xB35161D57f1dE55aeC0cdeda086Ce27eED267a03"
+eth_address = "0x9769689f21726704440329b135498E9510C3fc32"
 
 [eth]
 rpc_host = "eth.blockchain.io"
@@ -37,4 +37,4 @@ rpc_port = 8545
 path = "~/.coordinator/contract.rl"
 lang = "ratel"
 name = "MpcCoordinator"
-address = "0x3648F6641CE4B36f91C1B6Fe93fe892ed565FFA7"
+address = "0xF6501166149E9Ef0498657276423DED92CF44A74"

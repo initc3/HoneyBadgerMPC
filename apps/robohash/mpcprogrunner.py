@@ -8,7 +8,6 @@ from honeybadgermpc.mpc import Mpc
 from honeybadgermpc.utils.misc import _create_task
 
 # imports needed for asynchromix
-from apps.asynchromix.butterfly_network import iterated_butterfly_network
 from honeybadgermpc.preprocessing import PreProcessedElements
 
 field = GF(Subgroup.BLS12_381)
@@ -92,9 +91,9 @@ class MPCProgRunner:
         self.db = db
         self.prog = prog
         self.mpc_config = mpc_config or {}
-        self.elements = {}  # cache of elements (inputmasks, triples, bits, etc)
-        # self._init_elements("inputmasks", "triples", "bits")
-        self._init_elements("inputmasks")
+        self.elements = {}  # cache of elements (cryptodna, triples, bits, etc)
+        # self._init_elements("cryptodna", "triples", "bits")
+        self._init_elements("cryptodna")
 
     def _init_elements(self, *element_names):
         for element_name in element_names:
@@ -144,29 +143,58 @@ class MPCProgRunner:
                     break
                 await asyncio.sleep(5)
 
+            # XXX START HERE
             # 3.b. Collect the input
             # Get the public input (masked message)
-            inputs = []
+            robot_details = []
             for idx in range(epoch * K, (epoch + 1) * K):
-                masked_message_bytes, inputmask_idx = self.contract.caller.input_queue(
-                    idx
-                )
-                logging.info(f"masked_message_bytes: {masked_message_bytes}")
-                logging.info(f"inputmask_idx: {inputmask_idx}")
-                masked_message = field(int.from_bytes(masked_message_bytes, "big"))
-                logging.info(f"masked_message: {masked_message}")
-                if inputmask_idx not in self.elements["inputmasks"]:
-                    self.elements["inputmasks"] = pickle.loads(self.db[b"inputmasks"])
+                (
+                    token_id_1,
+                    public_genome_1,
+                    token_id_2,
+                    public_genome_2,
+                    token_id_3,
+                ) = self.contract.caller.robot_request_queue(idx)
+                logging.info(f"token_id_1: {token_id_1}")
+                logging.info(f"public_genome_1: {public_genome_1}")
+                logging.info(f"token_id_2: {token_id_2}")
+                logging.info(f"public_genome_2: {public_genome_2}")
+                logging.info(f"token_id_3: {token_id_3}")
+                if (
+                    token_id_1 not in self.elements["cryptodna"]
+                    or token_id_2 not in self.elements["cryptodna"]
+                    or token_id_3 not in self.elements["cryptodna"]
+                ):
+                    self.elements["cryptodna"] = pickle.loads(self.db[b"cryptodna"])
                 try:
-                    inputmask = self.elements["inputmasks"][inputmask_idx]
+                    cryptodna_1 = self.elements["cryptodna"][token_id_1]
                 except IndexError as err:
                     logging.error(
-                        f"inputmasks id: {inputmask_idx} not in {self.elements['inputmasks']}"
+                        f"token id: {token_id_1} not in {self.elements['cryptodna']}"
+                    )
+                    raise err
+                try:
+                    cryptodna_2 = self.elements["cryptodna"][token_id_2]
+                except IndexError as err:
+                    logging.error(
+                        f"token id: {token_id_2} not in {self.elements['cryptodna']}"
+                    )
+                    raise err
+                try:
+                    cryptodna_3 = self.elements["cryptodna"][token_id_3]
+                except IndexError as err:
+                    logging.error(
+                        f"token id: {token_id_3} not in {self.elements['cryptodna']}"
                     )
                     raise err
 
-                msg_field_elem = masked_message - inputmask
-                inputs.append(msg_field_elem)
+                robot_details.append(
+                    {
+                        "parent_1": (token_id_1, public_genome_1, cryptodna_1),
+                        "parent_2": (token_id_2, public_genome_2, cryptodna_2),
+                        "kid": (token_id_3, cryptodna_3),
+                    }
+                )
 
             _load_pp_elements(
                 self.myid,
@@ -181,8 +209,7 @@ class MPCProgRunner:
             logging.info(f"[{self.myid}] MPC initiated:{epoch}")
 
             prog_kwargs = {
-                "field_elements": inputs,
-                "mixer": iterated_butterfly_network,
+                "robot_details": robot_details,
             }
             ctx = Mpc(
                 f"mpc:{epoch}",
@@ -195,14 +222,20 @@ class MPCProgRunner:
                 self.mpc_config,
                 **prog_kwargs,
             )
-            result = await ctx._run()
-            logging.info(f"[{self.myid}] MPC complete {result}")
+            _result = await ctx._run()
+            # crypto_DNAs = ", ".join(
+            #     ": ".join((f"ROBOT-{token_id:05d}", f"{cryptodna}"))
+            #     for token_id, cryptodna in _result
+            # )
+            # logging.info(f"[{self.myid}] MPC complete {crypto_DNAs}")
+            logging.info(f"[{self.myid}] MPC complete - child genome: {_result}")
 
             # 3.e. Output the published messages to contract
-            result = ",".join(result)
-            tx_hash = self.contract.functions.propose_output(epoch, result).transact(
-                {"from": self.w3.eth.accounts[self.myid]}
-            )
+            tx_hash = self.contract.functions.propose_output(
+                # epoch, crypto_DNAs
+                epoch,
+                _result,
+            ).transact({"from": self.w3.eth.accounts[self.myid]})
             tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
             rich_logs = self.contract.events.MpcOutput().processReceipt(tx_receipt)
             if rich_logs:
@@ -224,18 +257,13 @@ class MPCProgRunner:
         while True:
             logging.info(f"looping to initiate MPC for epoch {epoch} ...")
             # Step 4.a. Wait until there are k values then call initiate_mpc
-            while True:
-                logging.info("waiting loop for enough inputs and mixes ready ...")
-                logging.info("querying contract for inputs_ready()")
-                # inputs_ready = contract_concise.inputs_ready()
-                inputs_ready = self.contract.caller.inputs_ready()
-                logging.info(f"number of inputs ready: {inputs_ready}")
 
-                logging.info("querying contract for mixes_available()")
-                # mixes_avail = contract_concise.mixes_available()
-                mixes_avail = self.contract.caller.pp_elems_available()
-                logging.info(f"number of mixes available: {mixes_avail}")
-                if inputs_ready >= K and mixes_avail >= 1:
+            while True:
+                number_of_robot_requests = self.contract.caller.start_robot_assembly()
+                pp_elems_available = self.contract.caller.pp_elems_available()
+                logging.info(f"NUMBER OF ROBOT REQUESTS: {number_of_robot_requests}")
+                logging.info(f"PREPROCESSING ELEMENTS AVAILABLE?: {pp_elems_available}")
+                if number_of_robot_requests >= K and pp_elems_available >= 1:
                     break
                 await asyncio.sleep(5)
 

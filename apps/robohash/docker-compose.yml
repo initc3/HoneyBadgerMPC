@@ -6,6 +6,7 @@ services:
     image: trufflesuite/ganache-cli
     command: --accounts 50 --blockTime 1 > acctKeys.json 2>&1
 
+  # contract bootstrapper
   hbmpc.coordinator.io:
     image: honeybadgermpc-local
     build:
@@ -34,9 +35,7 @@ services:
       - ../../apps:/usr/src/HoneyBadgerMPC/apps
       - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
       - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
-    depends_on:
-      - hbmpc.coordinator.io
-    command: ["./apps/sdk/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/asynchromix2/server.py"]
+    command: ["./apps/sdk/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/robohash/server.py"]
 
   hbmpc.peer1.io:
     image: honeybadgermpc-local
@@ -50,9 +49,7 @@ services:
       - ../../apps:/usr/src/HoneyBadgerMPC/apps
       - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
       - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
-    depends_on:
-      - hbmpc.coordinator.io
-    command: ["./apps/sdk/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/asynchromix2/server.py"]
+    command: ["./apps/sdk/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/robohash/server.py"]
 
   hbmpc.peer2.io:
     image: honeybadgermpc-local
@@ -66,9 +63,7 @@ services:
       - ../../apps:/usr/src/HoneyBadgerMPC/apps
       - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
       - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
-    depends_on:
-      - hbmpc.coordinator.io
-    command: ["./apps/sdk/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/asynchromix2/server.py"]
+    command: ["./apps/sdk/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/robohash/server.py"]
 
   hbmpc.peer3.io:
     image: honeybadgermpc-local
@@ -82,9 +77,7 @@ services:
       - ../../apps:/usr/src/HoneyBadgerMPC/apps
       - ../../honeybadgermpc:/usr/src/HoneyBadgerMPC/honeybadgermpc
       - /usr/src/HoneyBadgerMPC/honeybadgermpc/ntl  # Directory _not_ mounted from host
-    depends_on:
-      - hbmpc.coordinator.io
-    command: ["./apps/sdk/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/asynchromix2/server.py"]
+    command: ["./apps/sdk/wait-for-it.sh", "eth.blockchain.io:8545", "--", "python", "apps/robohash/server.py"]
 
   eth.robohash.org:
     image: honeybadgermpc-local
@@ -103,4 +96,4 @@ services:
       - hbmpc.peer1.io
       - hbmpc.peer2.io
       - hbmpc.peer3.io
-    command: ["./apps/sdk/wait-for-it.sh", "hbmpc.peer3.io:8080", "--", "python", "apps/sdk/client.py", "--config-file", "~/.hbmpc/config.toml"]
+    command: ["./apps/sdk/wait-for-it.sh", "hbmpc.peer3.io:8080", "--", "python", "apps/robohash/client.py", "--config-file", "~/.hbmpc/config.toml"]

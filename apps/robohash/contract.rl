@@ -1,20 +1,26 @@
 struct PreProcessCount:
-    inputmasks: uint256     # [r]
+    #inputmasks: uint256     # [r]
+    cryptodna: uint256     # [r]
     triples: uint256        # [a],[b],[ab]
     bits: uint256           # [b] with b in {-1,1}
 
-struct Input:
-    masked_input: bytes32   # (m+r)
-    inputmask: uint256      # index in inputmask of mask [r]
-    # Extension point: add more metadata about each input
+struct RobotRequest:
+    # robot 1 details
+    token_id_1: uint256         # robot unique id (maps to private genome aka cryptodna)
+    public_genome_1: bytes32
+    # robot 2 details
+    token_id_2: uint256         # robot unique id (maps to private genome aka cryptodna)
+    public_genome_2: bytes32
+    # cryptodna
+    token_id_3: uint256         # robot unique id (maps to private genome aka cryptodna)
 
 # NOTE This is a work around the problem of not having dynamic arrays
 # in vyper, and not being able to get how many elements have been inserted
 # at a given point in time in a queue.
 # FIXME Perhaps a mapping would be sufficient, such that the key would point
 # to a unique id for an element that is being queued ...
-struct InputQueue:
-    queue: Input[500]
+struct RobotRequestQueue:
+    queue: RobotRequest[500]
     size: uint256
 
 # FIXME A map may be enough.
@@ -29,18 +35,52 @@ struct OutputVotes:
 
 
 #####################################################################
+# NOTE BEGIN ROBOHASH state vars, structs, events
+#####################################################################
+# @dev Mapping from NFT ID to the address that owns it.
+idToOwner: HashMap[uint256, address]
+
+# @dev Mapping from NFT ID to approved address.
+#idToApprovals: HashMap[uint256, address]
+#
+## @dev Mapping from owner address to count of his tokens.
+ownerToNFTokenCount: HashMap[address, uint256]
+#
+## @dev Mapping from owner address to mapping of operator addresses.
+#ownerToOperators: HashMap[address, HashMap[address, bool]]
+#
+## @dev Address of minter, who can mint a token
+#minter: address
+#
+## @dev Mapping of interface id to bool about whether or not it's supported
+#supportedInterfaces: HashMap[bytes32, bool]
+#
+## @dev ERC165 interface ID of ERC165
+#ERC165_INTERFACE_ID: constant(bytes32) = 0x0000000000000000000000000000000000000000000000000000000001ffc9a7
+#
+## @dev ERC165 interface ID of ERC721
+#ERC721_INTERFACE_ID: constant(bytes32) = 0x0000000000000000000000000000000000000000000000000000000080ac58cd
+
+# additional stuff for robohash MPC app:
+idToPublicGenome: HashMap[uint256, bytes32]
+# idToApprovedPartners: HashMap[uint256, HashMap[uint256, bool]]
+# GENDER_MASK: constant(bytes32) = 0x000000000000000000000000000000000000FF00000000000000000000000000
+# MAX_TOKENS: constant(uint256) = 100
+# ownerToTokenIds: HashMap[address, uint256[MAX_TOKENS]] # not sure if this is a valid structure
+CREATED_TOKEN_COUNT: uint256
+
+#####################################################################
+# NOTE END - ROBOHASH
+#####################################################################
+
+#####################################################################
 # events
 #####################################################################
 # NOTE not sure if needed, commenting for now
 # PreProcessUpdated: event({})
-event InputMaskClaimed:
+event RobotRequestSubmitted:
     client: address
-    inputmask_idx: uint256
-
-event MessageSubmitted:
-    idx: uint256
-    inputmask_idx: uint256
-    masked_input: bytes32
+    token_id: uint256
 
 event MpcEpochInitiated:
     epoch: uint256
@@ -74,14 +114,32 @@ preprocess_reports: public(HashMap[int128, PreProcessCount])
 # maps each element of preprocess.inputmasks to the client (if any) that claims it
 inputmasks_claimed: public(HashMap[uint256, address])
 inputmask_map: public(HashMap[uint256, bool])   # Maps a mask
-_input_queue: InputQueue     # All inputs sent so far
+_robot_request_queue: RobotRequestQueue
 
-inputs_unmasked: public(uint256)
+robots_assembled: public(uint256)
 epochs_initiated: public(uint256)
 outputs_ready: public(uint256)
 output_hashes: public(OutputHashes)
 output_votes: public(OutputVotes)
 server_voted: public(HashMap[int128, uint256])     # highest epoch voted in
+
+# NOTE Our extensive testing confirm that god exists
+# see apps/robohash/tests to test it yourself
+god: public(address)
+_eve_token_id: constant(uint256) = 0
+_adam_token_id: constant(uint256) = 1
+_eve_public_genome: constant(bytes32) = keccak256("eve")
+_adam_public_genome: constant(bytes32) = keccak256("adam")
+
+@external
+@view
+def eve_token_id() -> uint256:
+    return _eve_token_id
+
+@external
+@view
+def adam_token_id() -> uint256:
+    return _adam_token_id
 
 
 @external
@@ -95,6 +153,11 @@ def __init__(_servers: address[N], _t: uint256):
     assert 3 * _t < N
     self.t = _t
 
+    self.idToPublicGenome[_eve_token_id] = _eve_public_genome
+    self.idToPublicGenome[_adam_token_id] = _adam_public_genome
+    self.god = msg.sender
+    self.CREATED_TOKEN_COUNT = 2
+
     for i in range(N):
         self.servers[i] = _servers[i]
         self.servermap[_servers[i]] = i + 1   # servermap is off-by-one
@@ -105,20 +168,24 @@ def __init__(_servers: address[N], _t: uint256):
 ##############################################################################
 @external
 def preprocess() -> uint256:
-    return self._preprocess.inputmasks
+    #return self._preprocess.inputmasks
+    return self._preprocess.cryptodna
+
+# XXX
+#@external
+#def inputmasks_available() -> uint256:
+#    return self._preprocess.inputmasks - self.preprocess_used.inputmasks
 
 
 @external
-def inputmasks_available() -> uint256:
-    return self._preprocess.inputmasks - self.preprocess_used.inputmasks
+def cryptodna_available() -> uint256:
+    return self._preprocess.cryptodna - self.preprocess_used.cryptodna
 
 
 @external
-def input_queue(idx: int128) -> Input:
-    # TODO clean up / simplify
-    _input: Input = self._input_queue.queue[idx]
-    #return _input.inputmask, _input.inputmask_idx
-    return _input
+def robot_request_queue(idx: int128) -> RobotRequest:
+    _robot_request: RobotRequest = self._robot_request_queue.queue[idx]
+    return _robot_request
 
 
 @external
@@ -126,28 +193,28 @@ def preprocess_report(rep: uint256[3]):
     # Update the Report
     assert self.servermap[msg.sender] > 0   # only valid servers
     id: int128 = self.servermap[msg.sender] - 1
-    self.preprocess_reports[id].inputmasks = rep[0]
+    self.preprocess_reports[id].cryptodna = rep[0]
     self.preprocess_reports[id].triples = rep[1]
     self.preprocess_reports[id].bits = rep[2]
 
     # Update the consensus
     mins: PreProcessCount = PreProcessCount({
-        inputmasks: self.preprocess_reports[0].inputmasks,
+        cryptodna: self.preprocess_reports[0].cryptodna,
         triples: self.preprocess_reports[0].triples,
         bits: self.preprocess_reports[0].bits,
     })
     for i in range(1, N):
-        mins.inputmasks = min(mins.inputmasks, self.preprocess_reports[i].inputmasks)
+        mins.cryptodna = min(mins.cryptodna, self.preprocess_reports[i].cryptodna)
         mins.triples = min(mins.triples, self.preprocess_reports[i].triples)
         mins.bits = min(mins.bits, self.preprocess_reports[i].bits)
 
     # NOTE not sure if needed, commenting for now
-    # if (self._preprocess.inputmasks < mins.inputmasks or
+    # if (self._preprocess.cryptodna < mins.cryptodna or
     #     self._preprocess.triples < mins.triples or
     #     self._preprocess.bits < mins.bits):
     #     emit PreProcessUpdated()
 
-    self._preprocess.inputmasks = mins.inputmasks
+    self._preprocess.cryptodna = mins.cryptodna
     self._preprocess.triples = mins.triples
     self._preprocess.bits = mins.bits
 
@@ -155,24 +222,6 @@ def preprocess_report(rep: uint256[3]):
 # ######################
 # 2. Accept client input 
 # ######################
-
-# Step 2.a. Clients can reserve an input mask [r] from Preprocessing
-@external
-def reserve_inputmask() -> uint256:
-    """Client reserves a random values.
-    
-    Extension point: override this function to add custom token rules
-    """
-    # An unclaimed input mask must already be available
-    assert self._preprocess.inputmasks > self.preprocess_used.inputmasks
-
-    # Acquire this input mask for msg.sender
-    idx: uint256 = self.preprocess_used.inputmasks
-    self.inputmasks_claimed[idx] = msg.sender
-    self.preprocess_used.inputmasks += 1
-    log InputMaskClaimed(msg.sender, idx)
-    return idx
-
 
 # Step 2.b. Client requests (out of band, e.g. over https) shares of [r]
 #           from each server. 
@@ -188,38 +237,56 @@ def is_client_authorized(client: address, idx: uint256) -> bool:
     return self.inputmasks_claimed[idx] == client
 
 
-# Step 2.c. Clients publish masked message (m+r) to provide a new input [m]
-#           and bind it to the preprocess input
+##############################################################################
+# NOTE ROBOHASH
+@internal
+def _addTokenTo(_to: address, _tokenId: uint256):
+    """
+    @dev Add a NFT to a given address
+         Throws if `_tokenId` is owned by someone.
+    """
+    # Throws if `_tokenId` is owned by someone
+    assert self.idToOwner[_tokenId] == ZERO_ADDRESS
+    # Change the owner
+    self.idToOwner[_tokenId] = _to
+    # Change count tracking
+    self.ownerToNFTokenCount[_to] += 1
+    # update the owner's token list
+
 @external
-def submit_message(inputmask_idx: uint256, masked_input: bytes32):
-    # TODO See whether using a map to maintain the input queue would work.
-    # The caller would be required to pass a unique id along with the submitted
-    # masked_input.
-    #
-    # Three elements:
-    #
-    # 1. masked_input
-    # 2. identifier of the mask that was used
-    # 3. identifier of the masked input, used for storing and retrieval
+def create_robot(_genes: bytes32):
+    """
+    @dev Use this to create a robot directly for demo.
+    """
+    _tokenId: uint256 = self.CREATED_TOKEN_COUNT
+    self._addTokenTo(msg.sender, _tokenId)
+    self.idToPublicGenome[_tokenId] = _genes
+    self.CREATED_TOKEN_COUNT += 1
 
-    # Must be authorized to use this input mask
-    assert self.inputmasks_claimed[inputmask_idx] == msg.sender
+@external
+def request_robot(_token_id_1: uint256, _token_id_2: uint256):
+    """
+    @dev Breed any 2 token Ids.
+    """
+    self.CREATED_TOKEN_COUNT += 1
+    _token_id_3: uint256 = self.CREATED_TOKEN_COUNT
+    self._addTokenTo(msg.sender, _token_id_3)
+    log RobotRequestSubmitted(msg.sender, _token_id_3)
+    # TODO Check that the token ids DO NOT map to EMPTY_BYTES32
+    _mom_genome: bytes32 = self.idToPublicGenome[_token_id_1]
+    assert _mom_genome != EMPTY_BYTES32
+    _dad_genome: bytes32 = self.idToPublicGenome[_token_id_2]
+    assert _dad_genome != EMPTY_BYTES32
+    idx: uint256 = self._robot_request_queue.size
+    self._robot_request_queue.size += 1
+    self._robot_request_queue.queue[idx].token_id_1 = _token_id_1
+    self._robot_request_queue.queue[idx].token_id_2 = _token_id_2
+    self._robot_request_queue.queue[idx].public_genome_1 = _mom_genome
+    self._robot_request_queue.queue[idx].public_genome_2 = _dad_genome
+    self._robot_request_queue.queue[idx].token_id_3 = _token_id_3
 
-    # Extension point: add additional client authorizations,
-    # e.g. prevent the client from submitting more than one message per mix
-
-    idx: uint256 = self._input_queue.size
-    self._input_queue.size += 1
-
-    self._input_queue.queue[idx].masked_input = masked_input
-    self._input_queue.queue[idx].inputmask = inputmask_idx
-
-    # QUESTION: What is the purpose of this event?
-    log MessageSubmitted(idx, inputmask_idx, masked_input)
-
-    # The input masks are deactivated after first use
-    self.inputmasks_claimed[inputmask_idx] = ZERO_ADDRESS
-
+# NOTE END ROBOHASH
+##############################################################################
 
 # ######################
 # 3. Initiate MPC Epochs
@@ -258,20 +325,20 @@ def pp_elems_available() -> uint256:
 
 # Step 3.a. Trigger MPC to start
 @external
-def inputs_ready() -> uint256:
-    return self._input_queue.size - self.inputs_unmasked
+def start_robot_assembly() -> uint256:
+    return self._robot_request_queue.size - self.robots_assembled
 
 
 @external
 def initiate_mpc():
     # Must unmask eactly K values in each epoch
-    assert self._input_queue.size >= self.inputs_unmasked + _K
+    assert self._robot_request_queue.size >= self.robots_assembled + _K
     # Can only initiate mix if enough preprocessings are ready
     assert self._preprocess.triples >= self.preprocess_used.triples + _PER_MIX_TRIPLES
     assert self._preprocess.bits >= self.preprocess_used.bits + _PER_MIX_BITS
     self.preprocess_used.triples += _PER_MIX_TRIPLES
     self.preprocess_used.bits += _PER_MIX_BITS
-    self.inputs_unmasked += _K
+    self.robots_assembled += _K
     log MpcEpochInitiated(self.epochs_initiated)
     self.epochs_initiated += 1
     # FIXME not sure this is needed as the size does not appear to be used, at
@@ -310,14 +377,54 @@ def propose_output(epoch: uint256,  output: String[1000]):
 
 
 @mpc
-async def prog(ctx, *, field_elements, mixer):
+async def prog(ctx, *, robot_details):
     logging.info(f"[{ctx.myid}] Running MPC network")
-    shares = (ctx.Share(field_element) for field_element in field_elements)
-    shuffled = await mixer(ctx, shares)
-    shuffled_shares = ctx.ShareArray(ctx.Share(s) for s in shuffled)
-    opened_values = await shuffled_shares.open()
-    msgs = [
-        m.value.to_bytes(32, "big").decode().strip("\x00")
-        for m in opened_values
-    ]
-    return msgs
+    p1 = robot_details[0]['parent_1']
+    p2 = robot_details[0]['parent_2']
+    kd = robot_details[0]['kid']
+    p1_genome = p1[1].hex()
+    p2_genome = p2[1].hex()
+    p1_cryptodna = p1[2]
+    p2_cryptodna = p2[2]
+    kd_cryptodna = kd[1]
+    cryptodna_shares = (
+        ctx.Share(p1_cryptodna),
+        ctx.Share(p2_cryptodna),
+        ctx.Share(kd_cryptodna),
+    )
+    cryptodna_sharearray = ctx.ShareArray(cryptodna_shares)
+    hasharray = []
+    blocksize = int(len(p1_genome) / 11)
+    p1_color = int(p1_genome[0:blocksize], 16)
+    p2_color = int(p2_genome[0:blocksize], 16)
+    for i in range(0, 11):
+        # Get 1/numblocks of the hash
+        currentstart = (1 + i) * blocksize - blocksize
+        currentend = (1 + i) * blocksize
+        # this is the part where Amit's code goes to flip biased coin
+        #secret_biased_coin = await flip_biased_coin(ctx, mom_secret_genome)
+        #biased_coin = await secret_biased_coin.open()
+
+        # NOTE Failed attempts -- I don't know what I am doing
+        #b = ctx.preproc.get_bit(ctx)
+        #b_flipped = ctx.field(1) - b
+        #mystery_cryptodna = b * p1_cryptodna + b_flipped * p2_cryptodna
+        #b_revealed = await b.open()
+        #if b_revealed.value:
+        #o = ctx.preproc.get_one_minus_ones(ctx)
+        #o_revealed = await o.open()
+        #if o_revealed.value * -1 > 0:
+        import random
+        if random.getrandbits(1):
+            hasharray.append((int(p1_genome[currentstart:currentend], 16), p1_color))
+        else:
+            hasharray.append((int(p2_genome[currentstart:currentend], 16), p2_color))
+
+    # child_genome = b''.join(bytes.fromhex(hex(i).lstrip('0x')) for i in hasharray)
+    child_genome = ''.join(hex(g).lstrip('0x') for g, _ in hasharray)
+
+    # NOTE Beautiful ouput of Crypto DNA
+    # revealed_DNAs = await cryptodna_sharearray.open()
+    # return zip((p1[0], p2[0], kd[0]), revealed_DNAs)
+
+    return child_genome
