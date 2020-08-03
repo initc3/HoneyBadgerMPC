@@ -15,7 +15,8 @@ field = GF(Subgroup.BLS12_381)
 # TODO if possible, avoid the need for such a map. One way to do so would be to
 # simply adopt the same naming convention for the db and the PreProcessingElements
 # methods.
-PP_ELEMENTS_MIXIN_MAP = {"triples": "_triples", "bits": "_one_minus_ones"}
+# PP_ELEMENTS_MIXIN_MAP = {"triples": "_triples", "bits": "_one_minus_ones"}
+PP_ELEMENTS_MIXIN_MAP = {"triples": "_triples", "bits": "_bits"}
 
 
 def _load_pp_elements(node_id, n, t, epoch, db, cache, elements_metadata):
@@ -238,6 +239,10 @@ class MPCProgRunner:
             ).transact({"from": self.w3.eth.accounts[self.myid]})
             tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
             rich_logs = self.contract.events.MpcOutput().processReceipt(tx_receipt)
+            logging.info("MPC output submitted to ethereum ...")
+            logging.info(f"transaction hash is: {tx_hash}")
+            logging.info(f"transaction receipt is: {tx_receipt}")
+            logging.info(f"MPC Output accepted Event log: {rich_logs}")
             if rich_logs:
                 epoch = rich_logs[0]["args"]["epoch"]
                 output = rich_logs[0]["args"]["output"]

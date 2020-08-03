@@ -24,6 +24,17 @@ field = GF(Subgroup.BLS12_381)
 Server = namedtuple("Server", ("id", "host", "port"))
 
 
+# TODO move to utils
+# TODO shares should be a mapping of server ids to shares, so that the
+# reconstruction does not rely on the shares being ordered
+def reconstruct_mask(shares, n):
+    poly = polynomials_over(field)
+    eval_point = EvalPoint(field, n, use_omega_powers=False)
+    shares = [(eval_point(i), share) for i, share in enumerate(shares)]
+    mask = poly.interpolate_at(shares, 0)
+    return mask
+
+
 class Client:
     """An MPC client that sends "masked" messages to an Ethereum contract."""
 
@@ -77,7 +88,9 @@ class Client:
             receipts = await asyncio.gather(*receipts)
 
             while True:  # wait before sending next
-                if contract_concise.outputs_ready() > epoch:
+                next_epoch = contract_concise.outputs_ready()
+                logging.info(f"next epoch: {next_epoch}")
+                if next_epoch > epoch:
                     break
                 await asyncio.sleep(5)
 
@@ -114,11 +127,6 @@ class Client:
 
     async def _get_inputmask(self, idx):
         # Private reconstruct
-        contract_concise = ConciseContract(self.contract)
-        n = contract_concise.n()
-        poly = polynomials_over(field)
-        eval_point = EvalPoint(field, n, use_omega_powers=False)
-        # shares = self._req_masks(range(n), idx)
         shares = self._request_mask_shares(self.mpc_network, idx)
         shares = await asyncio.gather(*shares)
         logging.info(
@@ -128,8 +136,9 @@ class Client:
         logging.info(
             "privately reconstruct the input mask from the received shares ..."
         )
-        shares = [(eval_point(i), share) for i, share in enumerate(shares)]
-        mask = poly.interpolate_at(shares, 0)
+        contract_concise = ConciseContract(self.contract)
+        n = contract_concise.n()
+        mask = reconstruct_mask(shares, n)
         return mask
 
     async def join(self):

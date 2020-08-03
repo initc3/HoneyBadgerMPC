@@ -406,7 +406,6 @@ async def prog(ctx, *, robot_details):
         #biased_coin = await secret_biased_coin.open()
 
         # NOTE Failed attempts -- I don't know what I am doing
-        #b = ctx.preproc.get_bit(ctx)
         #b_flipped = ctx.field(1) - b
         #mystery_cryptodna = b * p1_cryptodna + b_flipped * p2_cryptodna
         #b_revealed = await b.open()
@@ -414,8 +413,12 @@ async def prog(ctx, *, robot_details):
         #o = ctx.preproc.get_one_minus_ones(ctx)
         #o_revealed = await o.open()
         #if o_revealed.value * -1 > 0:
-        import random
-        if random.getrandbits(1):
+
+        # get a random bit (0 or 1), shared among the MPC nodes
+        b = ctx.preproc.get_bit(ctx)
+        b_revealed = b.open()
+        # if 1 pick the genome of the p1 (mom), else p2 (dad)
+        if b_revealed:
             hasharray.append((int(p1_genome[currentstart:currentend], 16), p1_color))
         else:
             hasharray.append((int(p2_genome[currentstart:currentend], 16), p2_color))
