@@ -23,3 +23,16 @@ $ git clone --single-branch --branch robohash-ic3-bcc20 git@github.com:initc3/Ho
 $ cd apps/robohash
 $ make run
 ```
+
+## Original Contributors
+This project was started at the
+[IC3 Blockchain Camp 2020](https://www.initc3.org/events/2020-07-26-IC3-Blockchain-Camp.html)
+and was the result of a great team effort by:
+
+* Andrew Miller, @amiller
+* Amit Agarwal, @amitgtx
+* Alexander Lee, @cs79
+* Chang Yang Jiao, @jiaochangyang
+* Nicolás Serrano, @NicoSerranoP
+* Sylvain Bellemare, @sbellem
+* Zhengxun Wu
