@@ -1,6 +1,10 @@
 import asyncio
 import logging
 
+from honeybadgermpc.field import GF
+from honeybadgermpc.polynomial import EvalPoint, polynomials_over
+from honeybadgermpc.elliptic_curve import Subgroup
+
 from ethereum.tools._solidity import compile_code as compile_solidity
 from ratl import RatelCompiler
 from vyper.compiler import compile_code as compile_vyper
@@ -11,6 +15,8 @@ from web3.exceptions import TransactionNotFound
 SOLIDITY_LANG = "solidity"
 RATEL_LANG = "ratel"
 VYPER_LANG = "vyper"
+
+field = GF(Subgroup.BLS12_381)
 
 
 def compile_ratel(
@@ -260,3 +266,14 @@ def _create_w3(eth_config):
     eth_rpc_port = eth_config["rpc_port"]
     w3_endpoint_uri = f"http://{eth_rpc_hostname}:{eth_rpc_port}"
     return Web3(HTTPProvider(w3_endpoint_uri))
+
+
+# TODO shares should be a mapping of server ids to shares, so that the
+# reconstruction does not rely on the shares being ordered
+def reconstruct_mask(shares, n):
+    print(f"XYZ - shares: {shares}")
+    poly = polynomials_over(field)
+    eval_point = EvalPoint(field, n, use_omega_powers=False)
+    shares = [(eval_point(i), share) for i, share in enumerate(shares)]
+    mask = poly.interpolate_at(shares, 0)
+    return mask

@@ -13,14 +13,15 @@ import toml
 from web3 import HTTPProvider, Web3
 from web3.contract import ConciseContract
 
-from apps.sdk.utils import fetch_contract, get_contract_address, wait_for_receipt
-
-from honeybadgermpc.elliptic_curve import Subgroup
-from honeybadgermpc.field import GF
-from honeybadgermpc.polynomial import EvalPoint, polynomials_over
+from apps.sdk.utils import (
+    fetch_contract,
+    get_contract_address,
+    reconstruct_mask,
+    wait_for_receipt,
+)
 from honeybadgermpc.utils.misc import print_exception_callback
 
-field = GF(Subgroup.BLS12_381)
+
 Server = namedtuple("Server", ("id", "host", "port"))
 
 
@@ -114,9 +115,6 @@ class Client:
         # Private reconstruct
         contract_concise = ConciseContract(self.contract)
         n = contract_concise.n()
-        poly = polynomials_over(field)
-        eval_point = EvalPoint(field, n, use_omega_powers=False)
-        # shares = self._req_masks(range(n), idx)
         shares = self._request_mask_shares(self.mpc_network, idx)
         shares = await asyncio.gather(*shares)
         logging.info(
@@ -126,8 +124,7 @@ class Client:
         logging.info(
             "privately reconstruct the input mask from the received shares ..."
         )
-        shares = [(eval_point(i), share) for i, share in enumerate(shares)]
-        mask = poly.interpolate_at(shares, 0)
+        mask = reconstruct_mask(shares, n)
         return mask
 
     async def join(self):

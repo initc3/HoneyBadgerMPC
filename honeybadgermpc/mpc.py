@@ -159,7 +159,7 @@ class Mpc(object):
             p, errors = r.result()
             if p is None:
                 logging.error(
-                    f"Robust reconstruction for share (id: {shareid}) "
+                    f"Robust reconstruction for share {share} (id: {shareid}) "
                     f"failed with errors: {errors}!"
                 )
                 res.set_exception(

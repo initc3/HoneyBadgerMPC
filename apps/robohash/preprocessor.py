@@ -51,7 +51,7 @@ class PreProcessor(_PreProcessor):
                 ppelems_available = contract_concise.pp_elems_available()
 
                 # Policy: try to maintain a buffer of mixes
-                target = 10
+                target = 100
                 if ppelems_available < target:
                     break
                 # already have enough triples/bits, sleep

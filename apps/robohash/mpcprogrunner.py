@@ -157,9 +157,9 @@ class MPCProgRunner:
                     token_id_3,
                 ) = self.contract.caller.robot_request_queue(idx)
                 logging.info(f"token_id_1: {token_id_1}")
-                logging.info(f"public_genome_1: {public_genome_1}")
+                logging.info(f"public_genome_1: {public_genome_1.hex()}")
                 logging.info(f"token_id_2: {token_id_2}")
-                logging.info(f"public_genome_2: {public_genome_2}")
+                logging.info(f"public_genome_2: {public_genome_2.hex()}")
                 logging.info(f"token_id_3: {token_id_3}")
                 if (
                     token_id_1 not in self.elements["cryptodna"]
@@ -209,8 +209,11 @@ class MPCProgRunner:
             send, recv = self.get_send_recv(f"mpc:{epoch}")
             logging.info(f"[{self.myid}] MPC initiated:{epoch}")
 
+            from apps.cryptokitties.biasedCoin import flip_biased_coin_2
+
             prog_kwargs = {
                 "robot_details": robot_details,
+                "coin_flipper": flip_biased_coin_2,
             }
             ctx = Mpc(
                 f"mpc:{epoch}",
@@ -228,8 +231,10 @@ class MPCProgRunner:
                 ": ".join((f"ROBOT-{token_id:05d}", f"{cryptodna}"))
                 for token_id, cryptodna in cryptodnas
             )
-            logging.info(f"[{self.myid}] MPC complete {crypto_DNAs}")
-            logging.info(f"[{self.myid}] MPC complete - child genome: {_result}")
+            logging.info(f"[{self.myid} | epoch: {epoch}] MPC complete {crypto_DNAs}")
+            logging.info(
+                f"[{self.myid} | epoch: {epoch}] MPC complete - child genome: {_result}"
+            )
 
             # 3.e. Output the published messages to contract
             tx_hash = self.contract.functions.propose_output(

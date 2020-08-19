@@ -6,4 +6,4 @@ Apps
 
     auctions
 
-.. include:: ../../apps/README.rst
+.. include:: ../../apps/sdk/README.rst

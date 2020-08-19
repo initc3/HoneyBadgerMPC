@@ -294,8 +294,10 @@ def request_robot(_token_id_1: uint256, _token_id_2: uint256):
 
 # Preprocessing requirements
 _K: constant(uint256) = 16  # mix size
-_PER_MIX_TRIPLES: constant(uint256) = (_K / 2) * 5 * 5   # k log^2 k
-_PER_MIX_BITS: constant(uint256) = (_K / 2) * 5 * 5
+#_PER_MIX_TRIPLES: constant(uint256) = (_K / 2) * 5 * 5   # k log^2 k
+_PER_MIX_TRIPLES: constant(uint256) = _K * 100
+#_PER_MIX_BITS: constant(uint256) = (_K / 2) * 5 * 5
+_PER_MIX_BITS: constant(uint256) = _K * 200
 
 @external
 @view
@@ -377,7 +379,7 @@ def propose_output(epoch: uint256,  output: String[1000]):
 
 
 @mpc
-async def prog(ctx, *, robot_details):
+async def prog(ctx, *, robot_details, coin_flipper):
     logging.info(f"[{ctx.myid}] Running MPC network")
     p1 = robot_details[0]['parent_1']
     p2 = robot_details[0]['parent_2']
@@ -397,28 +399,31 @@ async def prog(ctx, *, robot_details):
     blocksize = int(len(p1_genome) / 11)
     p1_color = int(p1_genome[0:blocksize], 16)
     p2_color = int(p2_genome[0:blocksize], 16)
+
+    #secret_biased_coin = await coin_flipper(ctx, p1_cryptodna, p2_cryptodna)
+    #secret_biased_coin = await coin_flipper(ctx, cryptodna_shares[0], cryptodna_shares[1])
+    #biased_coin = await secret_biased_coin.open()
+    #print(f'biased coin: {biased_coin}')
+    #print(f'secret biased coin: {secret_biased_coin}')
+
     for i in range(0, 11):
         # Get 1/numblocks of the hash
         currentstart = (1 + i) * blocksize - blocksize
         currentend = (1 + i) * blocksize
         # this is the part where Amit's code goes to flip biased coin
-        #secret_biased_coin = await flip_biased_coin(ctx, mom_secret_genome)
-        #biased_coin = await secret_biased_coin.open()
+        #secret_biased_coin = await coin_flipper(ctx, p1_cryptodna, p2_cryptodna)
+        secret_biased_coin = await coin_flipper(ctx, cryptodna_shares[0], cryptodna_shares[1])
+        print(f'secret biased coin: {secret_biased_coin}')
+        biased_coin = await secret_biased_coin.open()
+        print(f'biased coin: {biased_coin}')
 
-        # NOTE Failed attempts -- I don't know what I am doing
-        #b_flipped = ctx.field(1) - b
-        #mystery_cryptodna = b * p1_cryptodna + b_flipped * p2_cryptodna
-        #b_revealed = await b.open()
-        #if b_revealed.value:
-        #o = ctx.preproc.get_one_minus_ones(ctx)
-        #o_revealed = await o.open()
-        #if o_revealed.value * -1 > 0:
-
-        # get a random bit (0 or 1), shared among the MPC nodes
-        b = ctx.preproc.get_bit(ctx)
-        b_revealed = b.open()
-        # if 1 pick the genome of the p1 (mom), else p2 (dad)
-        if b_revealed:
+        ## get a random bit (0 or 1), shared among the MPC nodes
+        #b = ctx.preproc.get_bit(ctx)
+        ##b_revealed =  await (bit_share * secret_biased_coin).open()
+        #b_revealed = b.open()
+        ## if 1 pick the genome of the p1 (mom), else p2 (dad)
+        #if b_revealed:
+        if biased_coin:
             hasharray.append((int(p1_genome[currentstart:currentend], 16), p1_color))
         else:
             hasharray.append((int(p2_genome[currentstart:currentend], 16), p2_color))

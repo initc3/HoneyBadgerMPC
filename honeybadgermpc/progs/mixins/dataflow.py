@@ -173,6 +173,9 @@ class Share(ABC):
     def __str__(self):
         return "{%d}" % (self.v)
 
+    def __repr__(self):
+        return "{%d}" % (self.v)
+
 
 class ShareArray(ABC):
     @property

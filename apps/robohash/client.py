@@ -28,6 +28,7 @@ Server = namedtuple("Server", ("id", "host", "port"))
 # TODO shares should be a mapping of server ids to shares, so that the
 # reconstruction does not rely on the shares being ordered
 def reconstruct_mask(shares, n):
+    print(f"XYZ - shares: {shares}")
     poly = polynomials_over(field)
     eval_point = EvalPoint(field, n, use_omega_powers=False)
     shares = [(eval_point(i), share) for i, share in enumerate(shares)]

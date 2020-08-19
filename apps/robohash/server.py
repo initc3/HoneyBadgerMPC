@@ -11,7 +11,10 @@ if __name__ == "__main__":
     from apps.sdk.parsers import ServerArgumentParser
 
     from honeybadgermpc.progs.mixins.constants import MixinConstants
-    from honeybadgermpc.progs.mixins.share_arithmetic import BeaverMultiplyArrays
+    from honeybadgermpc.progs.mixins.share_arithmetic import (
+        BeaverMultiply,
+        BeaverMultiplyArrays,
+    )
 
     # arg parsing
     parser = ServerArgumentParser()
@@ -35,6 +38,9 @@ if __name__ == "__main__":
             preprocessor_class=PreProcessor,
             httpserver_class=HTTPServer,
             mpcprogrunner_class=MPCProgRunner,
-            mpc_config={MixinConstants.MultiplyShareArray: BeaverMultiplyArrays()},
+            mpc_config={
+                MixinConstants.MultiplyShareArray: BeaverMultiplyArrays(),
+                MixinConstants.MultiplyShare: BeaverMultiply(),
+            },
         )
     )

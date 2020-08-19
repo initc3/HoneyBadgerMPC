@@ -89,6 +89,7 @@ def binary_repr(x, k):
 # MPC operations for fixed point
 # Get a random integer from [0  ... 2**m -1) range or m bit random number
 async def random2m(ctx, m):
+    logging.info(f"entering random2m function for context {ctx}, m {m} ...")
     result = ctx.Share(0)
     bits = []
     for i in range(m):
@@ -110,11 +111,18 @@ async def trunc_pr(ctx, x, k, m):
     k: Maximum number of bits
     m: Truncation bits
     """
+    logging.info(f"entering trunc_pr() for ctx {ctx}, share {x}, ...")
     assert k > m
     r1, _ = await random2m(ctx, m)
     r2, _ = await random2m(ctx, k + KAPPA - m)
     r2 = ctx.Share(r2.v * Field(2) ** m)
-    c = await (x + Field(2 ** (k - 1)) + r1.v + r2.v).open()
+
+    _c = x + Field(2 ** (k - 1)) + r1.v + r2.v
+    logging.info(f"opening share {_c} ...")
+    # c = await (x + Field(2 ** (k - 1)) + r1.v + r2.v).open()
+    c = await _c.open()
+    logging.info(f"opened _c: {c}")
+
     c2 = c.value % (2 ** m)
     d = ctx.Share((x.v - Field(c2) + r1.v) * ~(Field(2) ** m))
     return d
@@ -129,22 +137,29 @@ represents the all one vector.
 
 
 async def get_carry_bit(ctx, a_bits, b_bits, low_carry_bit=1):
+    logging.info("entering get_carry_bit() ...")
     a_bits.reverse()
     b_bits.reverse()
     assert len(a_bits) == len(b_bits)
 
     async def _bit_ltl_reduce(x):
+        logging.info("entering _bit_ltl_reduce() ...")
         if len(x) == 1:
             return x[0]
         carry1, all_one1 = await _bit_ltl_reduce(x[: len(x) // 2])
+        logging.info(f"carry1, all_one1: {(carry1, all_one1)}")
         carry2, all_one2 = await _bit_ltl_reduce(x[len(x) // 2 :])
+        logging.info(f"carry2, all_one2: {(carry2, all_one2)}")
         return carry1 + (await (all_one1 * carry2)), (await (all_one1 * all_one2))
 
+    logging.info(f"computing carry bits from {a_bits} and {b_bits}")
     carry_bits = [(await (ai * bi)) for ai, bi in zip(a_bits, b_bits)]
+    logging.info(f"carry bits: {carry_bits}")
     all_one_bits = [
         ctx.Share(ai.v + bi.v - 2 * carryi.v)
         for ai, bi, carryi in zip(a_bits, b_bits, carry_bits)
     ]
+    logging.info(f"all_one_bits: {all_one_bits}")
     carry_bits.append(ctx.Share(low_carry_bit))
     all_one_bits.append(ctx.Share(0))
     return (await _bit_ltl_reduce(list(zip(carry_bits, all_one_bits))))[0]
@@ -165,10 +180,12 @@ async def bit_ltl(ctx, a, b_bits):
     a: Public
     b: List of private bit shares. Least significant digit first
     """
+    logging.info("entering bit_ltl() ...")
     b_bits = [ctx.Share(Field(1) - bi.v) for bi in b_bits]
     a_bits = [ctx.Share(ai) for ai in binary_repr(int(a), len(b_bits))]
 
     carry = await get_carry_bit(ctx, a_bits, b_bits)
+    logging.info(f"result of get_carry_bit(): {carry}")
     return ctx.Share(Field(1) - carry.v)
 
 
@@ -182,12 +199,21 @@ returns the secret shares of [x//2^m]
 
 
 async def div2m(ctx, x, k, m):
+    logging.info(f"entering div2m function for context {ctx}, share {x} ...")
     r1, r1_bits = await random2m(ctx, m)
     r2, _ = await random2m(ctx, k + KAPPA - m)
     r2 = ctx.Share(r2.v * Field(2) ** m)
 
-    c = await (x + r2 + r1 + Field(2) ** (k - 1)).open()
+    _c = x + r2 + r1 + Field(2) ** (k - 1)
+    logging.info(f"opening share {_c} ...")
+
+    # c = await (x + r2 + r1 + Field(2) ** (k - 1)).open()
+    c = await _c.open()
+
+    logging.info(f"opened _c: {c}")
+
     c2 = int(c) % (2 ** m)
+    logging.info(f"call to bit_ltl() for ctx {ctx}, c2 {c2}, r1_bits {r1_bits}")
     u = await bit_ltl(ctx, c2, r1_bits)
     a2 = ctx.Share(Field(c2) - r1.v + (2 ** m) * u.v)
     return a2
@@ -195,7 +221,7 @@ async def div2m(ctx, x, k, m):
 
 """
 Given the secret shared [x] calcuate the secret shares of [x%2^m] for known  public m.
-This is calcuated by first calculating the value of [x//2^m] usiinig
+This is calcuated by first calculating the value of [x//2^m] using
 div2m and substracting that from [x]
 
 
@@ -206,7 +232,9 @@ Returns the (share)value: [x % 2^m]
 
 
 async def trunc(ctx, x, k, m):
+    logging.info(f"entering trunc function for context {ctx}, share {x} ...")
     a2 = await div2m(ctx, x, k, m)
+    logging.info(f"result of div2m: {a2}")
     d = ctx.Share((x.v - a2.v) / (Field(2)) ** m)
     return d
 
@@ -215,7 +243,8 @@ class FixedPoint:
     def __init__(self, ctx, x):
         self.ctx = ctx
         if isinstance(x, (float, int)):
-            self.share = ctx.preproc.get_zero(ctx) + ctx.Share(int(x * 2 ** F))
+            # self.share = ctx.preproc.get_zero(ctx) + ctx.Share(int(x * 2 ** F))
+            self.share = ctx.Share(int(x * 2 ** F))
         elif type(x) is ctx.Share:
             self.share = x
         else:
@@ -238,6 +267,7 @@ class FixedPoint:
     """
 
     async def __mul__(self, x):
+        logging.info("entering __mul__() ...")
         if type(x) is FixedPoint:
             start_time = time.time()
             res_share = await (self.share * x.share)
@@ -264,7 +294,9 @@ class FixedPoint:
     """
 
     async def ltz(self):
+        logging.info(f"entering ltz function for {self}...")
         t = await trunc(self.ctx, self.share, K, K - 1)
+        logging.info(f"result of trunc: {t}")
         return self.ctx.Share(-t.v)
 
     """
@@ -278,6 +310,9 @@ class FixedPoint:
         if type(x) in [float, int]:
             return await self.__mul__(FixedPoint(self.ctx, 1.0 / x))
         raise NotImplementedError
+
+    def __repr__(self):
+        return f"<FixedPoint {self.share}>"
 
 
 async def _prog(ctx):
