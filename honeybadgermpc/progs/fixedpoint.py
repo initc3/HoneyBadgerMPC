@@ -150,10 +150,25 @@ async def get_carry_bit(ctx, a_bits, b_bits, low_carry_bit=1):
         logging.info(f"carry1, all_one1: {(carry1, all_one1)}")
         carry2, all_one2 = await _bit_ltl_reduce(x[len(x) // 2 :])
         logging.info(f"carry2, all_one2: {(carry2, all_one2)}")
-        return carry1 + (await (all_one1 * carry2)), (await (all_one1 * all_one2))
+        logging.info(f"computing all_one1 * carry2 ... ({all_one1} * {carry2})")
+        logging.info(f"type of carry1, all_one1: {(type(carry1), type(all_one1))}")
+        _x = await (all_one1 * carry2)
+        logging.info(f"result of all_one1 * carry2: {_x}")
+        logging.info(f"computing all_one1 * all_one2 ... ({all_one1} * {all_one2})")
+        _y = await (all_one1 * all_one2)
+        logging.info(f"result of all_one1 * all_one2: {_y}")
+        return carry1 + _x, _y
+        # return carry1 + (await (all_one1 * carry2)), (await (all_one1 * all_one2))
 
     logging.info(f"computing carry bits from {a_bits} and {b_bits}")
-    carry_bits = [(await (ai * bi)) for ai, bi in zip(a_bits, b_bits)]
+    # carry_bits = [(await (ai * bi)) for ai, bi in zip(a_bits, b_bits)]
+    carry_bits = []
+    for a_i, b_i in zip(a_bits, b_bits):
+        logging.info(f"computing carry bit a_i * b_i: {a_i} * {b_i} ...")
+        logging.info(f"types for a_i and b_i: {(type(a_i), type(b_i))}")
+        carry_bit = await (a_i * b_i)
+        carry_bits.append(carry_bit)
+
     logging.info(f"carry bits: {carry_bits}")
     all_one_bits = [
         ctx.Share(ai.v + bi.v - 2 * carryi.v)

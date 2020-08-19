@@ -1,3 +1,4 @@
+import logging
 from asyncio import gather
 
 from honeybadgermpc.progs.mixins.base import AsyncMixin
@@ -14,9 +15,21 @@ class BeaverMultiply(AsyncMixin):
     @staticmethod
     @TypeCheck()
     async def _prog(context: Mpc, x: Share, y: Share):
+        logging.info(f"beaver multiplication for shares: {x} and {y} ...")
         a, b, ab = context.preproc.get_triples(context)
-
-        d, e = await gather(*[(x - a).open(), (y - b).open()])
+        logging.info(f"using triples (a, b, ab): ({a}, {b}, {ab})")
+        logging.info("computing d and e ...")
+        _d = x - a
+        _e = y - b
+        logging.info(f"opening d and e; shares: {_d}, {_e}")
+        # d, e = await gather(*[(x - a).open(), (y - b).open()])
+        # d, e = await gather(*[_d.open(), _e.open()])
+        logging.info("opening d ...")
+        d = await _d.open()
+        logging.info(f"d is: {d}")
+        logging.info("opening e ...")
+        e = await _e.open()
+        logging.info(f"e is: {e}")
         xy = d * e + d * b + e * a + ab
         return xy
 
