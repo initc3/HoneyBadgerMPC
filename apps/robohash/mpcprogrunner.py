@@ -209,7 +209,7 @@ class MPCProgRunner:
             send, recv = self.get_send_recv(f"mpc:{epoch}")
             logging.info(f"[{self.myid}] MPC initiated:{epoch}")
 
-            from apps.cryptokitties.biasedCoin import flip_biased_coin_2
+            from apps.robohash.biased_coin import flip_biased_coin_2
 
             prog_kwargs = {
                 "robot_details": robot_details,
