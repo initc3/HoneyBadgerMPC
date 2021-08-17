@@ -245,7 +245,8 @@ async def _run(peers, n, t, k, my_id):
         await randousha(n, t, k, my_id, send, recv, field)
         end_time = time.time()
         logging.info("[%d] Finished in %s", my_id, end_time - start_time)
-
+        bytes_sent = runner.node_communicator.bytes_sent
+        print(f"[{my_id}] Total bytes sent out: {bytes_sent}")
 
 if __name__ == "__main__":
     HbmpcConfig.load_config()
